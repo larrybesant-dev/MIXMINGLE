@@ -39,3 +39,24 @@ final roomsStreamProvider = StreamProvider<List<RoomModel>>((ref) {
 final eventsStreamProvider = StreamProvider<List<EventModel>>((ref) {
   return ref.read(feedRepositoryProvider).eventsStream();
 });
+
+/// Real-time count of users whose presence doc has isOnline == true.
+/// Capped at 500 reads to keep costs low; shows "500+" when saturated.
+final onlineUsersCountProvider = StreamProvider.autoDispose<int>((ref) {
+  return FirebaseFirestore.instance
+      .collection('presence')
+      .where('isOnline', isEqualTo: true)
+      .limit(501)
+      .snapshots()
+      .map((snap) => snap.size);
+});
+
+/// Real-time count of currently live rooms.
+final liveRoomsCountProvider = StreamProvider.autoDispose<int>((ref) {
+  return FirebaseFirestore.instance
+      .collection('rooms')
+      .where('isLive', isEqualTo: true)
+      .limit(501)
+      .snapshots()
+      .map((snap) => snap.size);
+});

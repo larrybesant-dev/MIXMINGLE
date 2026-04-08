@@ -67,15 +67,22 @@ class WebRtcRoomService implements RtcRoomService {
   final int _maxMeshPeers;
   final List<Map<String, dynamic>>? _iceServers;
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────
   // State
-  // ──────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────
   bool _initialized = false;
   bool _isJoined = false;
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
   String? _roomId;
   int? _localUid;
+
+  // Heartbeat: prevents stale webrtc_peers docs from showing as active after
+  // a tab-close or network drop. Written every 20 s; viewers ignore any
+  // broadcaster whose lastHeartbeatAt is older than 60 s.
+  static const _kHeartbeatInterval = Duration(seconds: 20);
+  static const _kHeartbeatStaleDuration = Duration(seconds: 60);
+  Timer? _heartbeatTimer;
 
   // Voice-activity detection
   bool _localSpeaking = false;
@@ -86,6 +93,12 @@ class WebRtcRoomService implements RtcRoomService {
   // System audio (PC audio / loopback) sharing via getDisplayMedia
   MediaStream? _systemAudioStream;
   bool _isSharingSystemAudio = false;
+
+  // AudioContext mixer: combines mic + system audio so both are heard
+  // simultaneously. Kept alive while system audio sharing is active.
+  web.AudioContext? _mixerCtx;
+  // ignore: unused_field — held to prevent GC of the destination node.
+  web.MediaStreamAudioDestinationNode? _mixerDest;
 
   /// Called when system-audio sharing stops automatically (e.g. the Chrome
   /// share bar is dismissed).  Set from the UI to sync local state.
@@ -312,6 +325,16 @@ class WebRtcRoomService implements RtcRoomService {
       'uid': uid,
       'isBroadcasting': false,
       'joinedAt': FieldValue.serverTimestamp(),
+      'lastHeartbeatAt': FieldValue.serverTimestamp(),
+    });
+
+    // Start heartbeat — keeps our peer doc fresh so viewers can detect
+    // tab-close / network drop within one heartbeat window.
+    _heartbeatTimer = Timer.periodic(_kHeartbeatInterval, (_) {
+      if (_roomId == null) return;
+      _peersCol.doc(_localUserId).update({
+        'lastHeartbeatAt': FieldValue.serverTimestamp(),
+      }).ignore();
     });
 
     // Watch who is broadcasting — create/close viewer connections as needed
@@ -578,14 +601,13 @@ class WebRtcRoomService implements RtcRoomService {
           'video': true,
         });
 
-        // Stop any video tracks Chrome included despite video:false.
+        // Stop any video tracks Chrome included.
         for (final t in displayStream.getVideoTracks()) {
           t.stop();
         }
 
         final sysAudioTracks = displayStream.getAudioTracks();
         if (sysAudioTracks.isEmpty) {
-          // User did not grant audio sharing — abort gracefully.
           for (final t in displayStream.getTracks()) {
             t.stop();
           }
@@ -595,14 +617,14 @@ class WebRtcRoomService implements RtcRoomService {
           );
         }
 
-        // Stop previous system audio if any.
+        // Stop previous system audio mixer if any.
+        _teardownMixer();
         _systemAudioStream?.getTracks().forEach((t) => t.stop());
         _systemAudioStream = displayStream;
         _isSharingSystemAudio = true;
         _log('system audio sharing started — ${sysAudioTracks.length} track(s)');
 
-        // When the user dismisses the share bar (or closes the tab being
-        // shared), the track fires an "ended" event.  Auto-stop sharing.
+        // When the user dismisses the share bar, auto-stop.
         for (final track in sysAudioTracks) {
           track.onEnded = () {
             if (_isSharingSystemAudio) {
@@ -613,19 +635,19 @@ class WebRtcRoomService implements RtcRoomService {
           };
         }
 
-        // Replace the audio sender in every active answer PC.
-        final sysTrack = sysAudioTracks.first;
-        for (final pc in _answerPcs.values) {
-          final senders = await pc.getSenders();
-          for (final sender in senders) {
-            if (sender.track?.kind == 'audio') {
-              try { await sender.replaceTrack(sysTrack); } catch (_) {}
-            }
-          }
-        }
+        // Build the track that goes into senders.  If the user also has a
+        // microphone active, mix mic + system audio via AudioContext so both
+        // are heard simultaneously.  Otherwise use the system audio track
+        // directly.
+        final micTracks = _localStream?.getAudioTracks() ?? [];
+        final mixedJsTrack = _buildMixedJsTrack(
+          sysStream: displayStream,
+          micStream: micTracks.isNotEmpty ? _localStream : null,
+        );
 
-        // If we are not yet a broadcaster (no mic active), become one so
-        // viewers can hear the system audio.
+        await _replaceAudioInSendersJs(mixedJsTrack);
+
+        // If not yet a broadcaster, become one so viewers hear the audio.
         if (!_broadcasterMode) {
           _localStream = displayStream;
           _broadcasterMode = true;
@@ -635,27 +657,98 @@ class WebRtcRoomService implements RtcRoomService {
       } catch (error) {
         _isSharingSystemAudio = false;
         _systemAudioStream = null;
+        _teardownMixer();
         if (error is AgoraServiceException) rethrow;
         _throwMapped(error, 'share system audio');
       }
     } else {
       // --- Stop system audio sharing ---
+      _teardownMixer();
       _systemAudioStream?.getTracks().forEach((t) => t.stop());
       _systemAudioStream = null;
       _isSharingSystemAudio = false;
       _log('system audio sharing stopped');
 
-      // Restore mic audio track in all active senders.
-      final micTracks = _localStream?.getAudioTracks() ?? [];
-      if (micTracks.isNotEmpty) {
-        final micTrack = micTracks.first;
-        for (final pc in _answerPcs.values) {
-          final senders = await pc.getSenders();
-          for (final sender in senders) {
-            if (sender.track?.kind == 'audio') {
-              try { await sender.replaceTrack(micTrack); } catch (_) {}
+      // Restore plain mic track in all active senders.
+      final micJs = _jsStream(_localStream);
+      final micJsTracks = micJs?.getAudioTracks();
+      if (micJsTracks != null && micJsTracks.length > 0) {
+        await _replaceAudioInSendersJs(micJsTracks.toDart[0]);
+      }
+    }
+  }
+
+  /// Creates a mixed JS audio track combining [sysStream] and [micStream]
+  /// using Web AudioContext → MediaStreamDestinationNode.
+  /// Returns a raw [web.MediaStreamTrack] (so we can call jsRtpSender
+  /// .replaceTrack directly — MediaStreamTrackWeb is not exported by
+  /// flutter_webrtc).  Falls back to the system-audio track on error.
+  web.MediaStreamTrack _buildMixedJsTrack({
+    required MediaStream sysStream,
+    required MediaStream? micStream,
+  }) {
+    final sysJs = _jsStream(sysStream);
+    final sysJsTracks = sysJs?.getAudioTracks();
+    final fallback = (sysJsTracks != null && sysJsTracks.length > 0)
+        ? sysJsTracks.toDart[0]
+        : null;
+
+    final micJs = _jsStream(micStream);
+    final micJsTracks = micJs?.getAudioTracks();
+
+    if (micJs == null || micJsTracks == null || micJsTracks.length == 0 ||
+        sysJs == null || fallback == null) {
+      // No mic (or can't cast) — system audio only, no mixer needed.
+      _log('system audio only (no mic to mix)');
+      return fallback ?? sysJsTracks!.toDart[0];
+    }
+
+    try {
+      final ctx = web.AudioContext();
+      _mixerCtx = ctx;
+      ctx.resume();
+
+      final dest = ctx.createMediaStreamDestination();
+      _mixerDest = dest;
+
+      ctx.createMediaStreamSource(sysJs).connect(dest);
+      ctx.createMediaStreamSource(micJs).connect(dest);
+
+      final mixedTracks = dest.stream.getAudioTracks();
+      if (mixedTracks.length > 0) {
+        _log('mixer created: mic + system audio blended');
+        return mixedTracks.toDart[0];
+      }
+    } catch (e) {
+      _log('mixer setup failed ($e) — falling back to system-audio-only');
+      _teardownMixer();
+    }
+
+    return fallback;
+  }
+
+  /// Tears down the AudioContext mixer (called on stop or error).
+  void _teardownMixer() {
+    try { _mixerCtx?.close(); } catch (_) {}
+    _mixerCtx = null;
+    _mixerDest = null;
+  }
+
+  /// Replaces the audio track using a raw JS [web.MediaStreamTrack], bypassing
+  /// the flutter_webrtc wrapper (needed for AudioContext destination tracks
+  /// which are not wrapped in MediaStreamTrackWeb).
+  Future<void> _replaceAudioInSendersJs(web.MediaStreamTrack jsTrack) async {
+    for (final pc in _answerPcs.values) {
+      final senders = await pc.getSenders();
+      for (final sender in senders) {
+        if (sender.track?.kind == 'audio') {
+          try {
+            final jsSender =
+                (sender as dynamic).jsRtpSender as web.RTCRtpSender?;
+            if (jsSender != null) {
+              await jsSender.replaceTrack(jsTrack).toDart;
             }
-          }
+          } catch (_) {}
         }
       }
     }
@@ -724,6 +817,8 @@ class WebRtcRoomService implements RtcRoomService {
 
   @override
   Future<void> dispose() async {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
     await _presenceSub?.cancel();
     await _incomingCallsSub?.cancel();
     _presenceSub = null;
@@ -826,6 +921,23 @@ class WebRtcRoomService implements RtcRoomService {
 
       final isBroadcasting = data?['isBroadcasting'] as bool? ?? false;
       if (isBroadcasting) {
+        // Reject stale broadcaster docs — guards against tab-close not
+        // cleaning up the peer doc (unawaited dispose / sudden disconnect).
+        final hbRaw = data?['lastHeartbeatAt'];
+        if (hbRaw is Timestamp) {
+          final age = DateTime.now().difference(hbRaw.toDate());
+          if (age > _kHeartbeatStaleDuration) {
+            _log('ignoring stale broadcaster $remoteBroadcasterId '
+                '(heartbeat ${age.inSeconds}s ago)');
+            // Best-effort cleanup so subsequent viewers don't see the tile.
+            _peersCol.doc(remoteBroadcasterId).delete().ignore();
+            continue;
+          }
+        } else if (hbRaw == null) {
+          // Legacy doc with no heartbeat field — treat as stale.
+          _log('ignoring broadcaster $remoteBroadcasterId (no heartbeat field)');
+          continue;
+        }
         // Detect a stream-refresh signal written by the broadcaster when they
         // switch streams (e.g. mic-only → mic+video).  A changed timestamp means
         // the broadcaster's MediaStream was replaced.  Immediately close the
@@ -1200,6 +1312,7 @@ class WebRtcRoomService implements RtcRoomService {
 
   Future<void> _stopLocalStream() async {
     _stopLocalVad();
+    _teardownMixer();
     if (_localStream != null) {
       for (final track in _localStream!.getTracks()) {
         track.stop();

@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/messaging_provider.dart';
 import '../../../services/web_popout_service.dart';
+import '../../../core/theme.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -131,8 +133,46 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat'),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: NeonPulse.primaryDim,
+              backgroundImage: widget.avatarUrl != null
+                  ? CachedNetworkImageProvider(widget.avatarUrl!)
+                  : null,
+              child: widget.avatarUrl == null
+                  ? Text(
+                      widget.username.isNotEmpty
+                          ? widget.username[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.username,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: NeonPulse.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
         elevation: 0,
+        backgroundColor: NeonPulse.surfaceLow,
         actions: [
           if (kIsWeb)
             IconButton(
@@ -231,80 +271,164 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                     return Align(
                       alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Column(
-                        crossAxisAlignment:
-                            isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onLongPress: () => _showReactionPicker(
-                              context,
-                              ref,
-                              message.id,
-                            ),
-                            child: Container(
-                              constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (!isOwn) ...[
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor: NeonPulse.primaryDim,
+                                backgroundImage: widget.avatarUrl != null
+                                    ? CachedNetworkImageProvider(widget.avatarUrl!)
+                                    : null,
+                                child: widget.avatarUrl == null
+                                    ? Text(
+                                        widget.username.isNotEmpty
+                                            ? widget.username[0].toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      )
+                                    : null,
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isOwn
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Flexible(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: isOwn
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
                                 children: [
-                                  if (!isOwn)
-                                    Text(
-                                      message.senderName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
+                                  GestureDetector(
+                                    onLongPress: () => _showReactionPicker(
+                                      context,
+                                      ref,
+                                      message.id,
+                                    ),
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width * 0.72,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: isOwn
+                                            ? const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  NeonPulse.primary,
+                                                  NeonPulse.primaryDim,
+                                                ],
+                                              )
+                                            : null,
+                                        color: isOwn
+                                            ? null
+                                            : NeonPulse.surfaceHigh,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: const Radius.circular(18),
+                                          topRight: const Radius.circular(18),
+                                          bottomLeft:
+                                              Radius.circular(isOwn ? 18 : 4),
+                                          bottomRight:
+                                              Radius.circular(isOwn ? 4 : 18),
+                                        ),
+                                        border: isOwn
+                                            ? null
+                                            : Border.all(
+                                                color: NeonPulse.outlineVariant
+                                                    .withValues(alpha: 0.4),
+                                                width: 1,
+                                              ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: isOwn
+                                                ? NeonPulse.primaryDim
+                                                    .withValues(alpha: 0.25)
+                                                : Colors.black
+                                                    .withValues(alpha: 0.15),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (!isOwn) ...[
+                                            Text(
+                                              message.senderName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 12,
+                                                color: NeonPulse.secondary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+                                          ],
+                                          Text(
+                                            message.content,
+                                            style: TextStyle(
+                                              color: isOwn
+                                                  ? Colors.white
+                                                  : NeonPulse.onSurface,
+                                              fontSize: 14,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  if (!isOwn) const SizedBox(height: 4),
-                                  Text(
-                                    message.content,
-                                    style: TextStyle(
-                                      color: isOwn ? Colors.white : Colors.black,
+                                  ),
+                                  _ReactionRow(
+                                    conversationId: widget.conversationId,
+                                    messageId: message.id,
+                                    currentUserId: widget.userId,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 3, left: 4, right: 4),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _formatTime(message.createdAt),
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: NeonPulse.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        if (isOwn) ...[
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            isReadByOther
+                                                ? Icons.done_all
+                                                : Icons.done,
+                                            size: 13,
+                                            color: isReadByOther
+                                                ? NeonPulse.secondary
+                                                : NeonPulse.onSurfaceVariant,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          _ReactionRow(
-                            conversationId: widget.conversationId,
-                            messageId: message.id,
-                            currentUserId: widget.userId,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4, left: 8, right: 8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _formatTime(message.createdAt),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.grey,
-                                      ),
-                                ),
-                                if (isOwn) ...[
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    isReadByOther ? Icons.done_all : Icons.done,
-                                    size: 14,
-                                    color: isReadByOther ? Colors.blue : Colors.grey,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
+                            if (isOwn) const SizedBox(width: 4),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -324,36 +448,70 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
-              left: 16,
-              right: 16,
+              left: 12,
+              right: 12,
               top: 8,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              decoration: BoxDecoration(
+                color: NeonPulse.surfaceHigh,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: NeonPulse.outlineVariant.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.emoji_emotions_outlined,
+                        color: NeonPulse.onSurfaceVariant),
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    onPressed: () => _showReactionPicker(
+                      context,
+                      ref,
+                      '__input__',
                     ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: const InputDecoration(
+                        hintText: 'Message…',
+                        hintStyle:
+                            TextStyle(color: NeonPulse.onSurfaceVariant),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                      ),
+                      style: const TextStyle(
+                          color: NeonPulse.onSurface, fontSize: 14),
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: _sendMessage,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        gradient: NeonPulse.primaryGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.send_rounded,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),

@@ -1,296 +1,460 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../shared/widgets/top_app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/theme.dart';
 import '../feed/providers/feed_providers.dart';
+import '../feed/controllers/feed_controller.dart';
 import '../feed/widgets/post_card.dart';
+import '../feed/widgets/live_room_card.dart';
 import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
 import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
+import '../../models/user.dart' as feed_user;
 
-import '../../models/room_model.dart';
-import '../feed/models/event_model.dart';
-import '../../core/firestore/firestore_error_utils.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Kick off the feed on first load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(feedControllerProvider.notifier).loadFeed();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final postsAsync = ref.watch(postsStreamProvider);
     final roomsAsync = ref.watch(roomsStreamProvider);
-    final eventsAsync = ref.watch(eventsStreamProvider);
+    final feedState = ref.watch(feedControllerProvider);
     final profileState = ref.watch(profileControllerProvider);
     final setupItems = ProfileCompletion.guidedSetupItems(profileState);
-    final profileCompletion = ProfileCompletion.completeness(profileState);
     final currentUser = ref.watch(userProvider);
 
     return Scaffold(
-      appBar: const TopAppBar(title: 'MixVy'),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateMenu(context),
-        tooltip: 'Create',
-        child: const Icon(Icons.add),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const StoriesRow(),
-            const SizedBox(height: 12),
-            if (setupItems.isNotEmpty)
-              _profileNudgeCard(
-                context: context,
-                completion: profileCompletion,
-                missingCount: setupItems.length,
-                firstAction: setupItems.first,
-              ),
-            if (setupItems.isNotEmpty) const SizedBox(height: 12),
-            _quickActions(context),
-            const SizedBox(height: 20),
-            const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            postsAsync.when(
-              data: (posts) => posts.isEmpty
-                  ? const Text('No posts yet.')
-                  : Column(
-                      children: posts
-                          .map((p) => PostCard(
-                                post: p,
-                                currentUserId: currentUser?.id ?? '',
-                              ))
-                          .toList()),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => firestoreErrorCard(
-                section: 'posts',
-                error: e,
+      backgroundColor: NeonPulse.surface,
+      floatingActionButton: _CreateFAB(),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, _) => [
+          SliverAppBar(
+            floating: true,
+            snap: true,
+            backgroundColor: NeonPulse.surface,
+            surfaceTintColor: Colors.transparent,
+            titleSpacing: 16,
+            title: ShaderMask(
+              shaderCallback: (rect) =>
+                  NeonPulse.primaryGradient.createShader(rect),
+              blendMode: BlendMode.srcIn,
+              child: const Text(
+                'MixVy',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 24,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
-            const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            roomsAsync.when(
-              data: (rooms) => rooms.isEmpty
-                  ? const Text('No active rooms.')
-                  : Column(children: rooms.map((r) => _roomCard(context, r)).toList()),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => firestoreErrorCard(
-                section: 'active rooms',
-                error: e,
+            centerTitle: false,
+            actions: [
+              _StatsBarWidget(
+                onlineAsync: ref.watch(onlineUsersCountProvider),
+                liveAsync: ref.watch(liveRoomsCountProvider),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            eventsAsync.when(
-              data: (events) => events.isEmpty
-                  ? const Text('No upcoming events.')
-                  : Column(children: events.map((e) => _eventCard(e)).toList()),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => firestoreErrorCard(
-                section: 'events',
-                error: e,
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined,
+                    color: NeonPulse.onSurface),
+                onPressed: () => context.go('/notifications'),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  void _showCreateMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => Wrap(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.article_outlined),
-            title: const Text('New Post'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/create-post');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.auto_stories_outlined),
-            title: const Text('New Story'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/create-story');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.meeting_room_outlined),
-            title: const Text('Browse Rooms'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/rooms');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-    Widget _quickActions(BuildContext context) {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          ActionChip(
-            avatar: const Icon(Icons.search, size: 18),
-            label: const Text('Discover People'),
-            onPressed: () => context.go('/discover'),
-          ),
-          ActionChip(
-            avatar: const Icon(Icons.flash_on, size: 18),
-            label: const Text('Speed Dating'),
-            onPressed: () => context.go('/speed-dating'),
-          ),
-          ActionChip(
-            avatar: const Icon(Icons.notifications, size: 18),
-            label: const Text('Notifications'),
-            onPressed: () => context.go('/notifications'),
-          ),
-          ActionChip(
-            avatar: const Icon(Icons.payments, size: 18),
-            label: const Text('Payments'),
-            onPressed: () => context.go('/payments'),
-          ),
-          ActionChip(
-            avatar: const Icon(Icons.meeting_room_outlined, size: 18),
-            label: const Text('Room Directory'),
-            onPressed: () => context.go('/rooms'),
-          ),
-        ],
-      );
-    }
-
-    Widget _profileNudgeCard({
-    required BuildContext context,
-    required double completion,
-    required int missingCount,
-    required String firstAction,
-  }) {
-      final pct = (completion * 100).round();
-      final isAlmostDone = pct >= 70;
-      final Color accent = isAlmostDone ? Colors.green : Colors.deepPurple;
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              accent.withValues(alpha: 0.18),
-              accent.withValues(alpha: 0.06),
             ],
           ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withValues(alpha: 0.35)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: accent.withValues(alpha: 0.18),
-                  child: Text(
-                    '$pct%',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: accent,
-                    ),
+        ],
+        body: RefreshIndicator(
+          color: NeonPulse.primary,
+          backgroundColor: NeonPulse.surfaceHigh,
+          onRefresh: () =>
+              ref.read(feedControllerProvider.notifier).loadFeed(),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // Stories
+              const SliverToBoxAdapter(child: StoriesRow()),
+              const SliverToBoxAdapter(child: SizedBox(height: 4)),
+
+              // Profile nudge
+              if (setupItems.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: _ProfileNudge(
+                        setupItems: setupItems, profileState: profileState),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    isAlmostDone
-                        ? 'Almost there! $missingCount step${missingCount == 1 ? '' : 's'} left'
-                        : 'Complete your profile ($pct%)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: accent,
-                    ),
+
+              // Live Now header
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Live Now',
+                  dotColor: NeonPulse.error,
+                  topPadding: 20,
+                  trailing: TextButton(
+                    onPressed: () => context.go('/rooms'),
+                    child: const Text('See all',
+                        style: TextStyle(
+                            color: NeonPulse.primary, fontSize: 13)),
                   ),
                 ),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  tooltip: 'Go to profile',
-                  onPressed: () => context.go('/profile'),
-                  icon: Icon(Icons.arrow_forward_ios, size: 14, color: accent),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: completion,
-                minHeight: 8,
-                backgroundColor: accent.withValues(alpha: 0.14),
-                valueColor: AlwaysStoppedAnimation<Color>(accent),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.tips_and_updates_outlined, size: 14),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    'Next: $firstAction',
-                    style: const TextStyle(fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
+
+              // Live rooms horizontal strip
+              SliverToBoxAdapter(
+                child: roomsAsync.when(
+                  data: (rooms) => rooms.isEmpty
+                      ? const _EmptyPill(label: 'No live rooms right now')
+                      : SizedBox(
+                          height: 200,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            itemCount: rooms.length.clamp(0, 12),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(width: 12),
+                            itemBuilder: (context, i) => LiveRoomCard(
+                              room: rooms[i],
+                              onTap: () =>
+                                  context.go('/rooms/${rooms[i].id}'),
+                            ),
+                          ),
+                        ),
+                  loading: () =>
+                      const _HorizontalSkeleton(height: 200),
+                  error: (e, _) => const _ErrorCard(message: 'Could not load live rooms'),
+                ),
+              ),
+
+              // Top Creators
+              if (feedState.trendingUsers.isNotEmpty ||
+                  feedState.isLoading) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: 'Top Creators',
+                    dotColor: NeonPulse.secondary,
+                    topPadding: 24,
+                    trailing: TextButton(
+                      onPressed: () => context.go('/discover'),
+                      child: const Text('Discover',
+                          style: TextStyle(
+                              color: NeonPulse.primary, fontSize: 13)),
+                    ),
                   ),
                 ),
+                SliverToBoxAdapter(
+                  child: feedState.isLoading
+                      ? const _HorizontalSkeleton(height: 88)
+                      : SizedBox(
+                          height: 88,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            itemCount: feedState.trendingUsers.length
+                                .clamp(0, 12),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(width: 16),
+                            itemBuilder: (context, i) => _CreatorChip(
+                              user: feedState.trendingUsers[i],
+                              onTap: () => context.go(
+                                  '/profile/${feedState.trendingUsers[i].id}'),
+                            ),
+                          ),
+                        ),
+                ),
               ],
+
+              // Recent Posts header
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Recent Posts',
+                  dotColor: NeonPulse.primary,
+                  topPadding: 24,
+                ),
+              ),
+
+              // Posts feed
+              postsAsync.when(
+                data: (posts) {
+                  if (posts.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: _EmptyPill(
+                          label: 'No posts yet — follow someone!'),
+                    );
+                  }
+                  final capped = posts.take(30).toList();
+                  return SliverList.builder(
+                    itemCount: capped.length,
+                    itemBuilder: (ctx, i) => PostCard(
+                      post: capped[i],
+                      currentUserId: currentUser?.id ?? '',
+                    ),
+                  );
+                },
+                loading: () => const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(
+                        child: CircularProgressIndicator(
+                            color: NeonPulse.primary)),
+                  ),
+                ),
+                error: (e, _) => const SliverToBoxAdapter(child: _ErrorCard(message: 'Could not load posts')),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stats bar (online count + live rooms count) shown in the AppBar actions
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StatsBarWidget extends StatelessWidget {
+  final AsyncValue<int> onlineAsync;
+  final AsyncValue<int> liveAsync;
+
+  const _StatsBarWidget(
+      {required this.onlineAsync, required this.liveAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    final online = onlineAsync.valueOrNull ?? 0;
+    final live = liveAsync.valueOrNull ?? 0;
+    return Row(
+      children: [
+        _StatPill(
+          dot: const Color(0xFF00E676),
+          label: online >= 500 ? '500+' : '$online',
+          tooltip: 'online now',
+        ),
+        const SizedBox(width: 6),
+        _StatPill(
+          dot: NeonPulse.error,
+          label: '$live',
+          tooltip: 'live rooms',
+        ),
+      ],
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final Color dot;
+  final String label;
+  final String tooltip;
+  const _StatPill(
+      {required this.dot, required this.label, required this.tooltip});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: NeonPulse.surfaceHigh,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: NeonPulse.outlineVariant),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                  color: dot, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: NeonPulse.onSurface),
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
+}
 
-    // Midnight Error Card pattern
-    Widget midnightErrorCard(String message) => Card(
-          color: Colors.black87,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.redAccent),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
+// ─────────────────────────────────────────────────────────────────────────────
+// Section header with coloured left bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final Color dotColor;
+  final double topPadding;
+  final Widget? trailing;
+
+  const _SectionHeader({
+    required this.title,
+    required this.dotColor,
+    this.topPadding = 0,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding:
+          EdgeInsets.fromLTRB(16, topPadding, 16, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 18,
+            decoration: BoxDecoration(
+              color: dotColor,
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
-        );
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: NeonPulse.onSurface,
+            ),
+          ),
+          const Spacer(),
+          ?trailing,
+        ],
+      ),
+    );
+  }
+}
 
-    Widget firestoreErrorCard({required String section, required Object error}) {
-      final info = parseFirestoreError(error);
-      final friendly = friendlyFirestoreMessage(error, fallbackContext: section);
+// ─────────────────────────────────────────────────────────────────────────────
+// Creator chip: avatar + username + gradient ring
+// ─────────────────────────────────────────────────────────────────────────────
 
-      return Card(
-        color: Colors.black87,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+class _CreatorChip extends StatelessWidget {
+  final feed_user.User user;
+  final VoidCallback onTap;
+  const _CreatorChip({required this.user, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: NeonPulse.primaryGradient,
+            ),
+            child: CircleAvatar(
+              radius: 26,
+              backgroundColor: NeonPulse.surfaceHigh,
+              backgroundImage: user.avatarUrl.isNotEmpty
+                  ? CachedNetworkImageProvider(user.avatarUrl)
+                  : null,
+              child: user.avatarUrl.isEmpty
+                  ? Text(
+                      user.username.isNotEmpty
+                          ? user.username[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                          color: NeonPulse.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18),
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 60,
+            child: Text(
+              user.username,
+              style: const TextStyle(
+                  fontSize: 10,
+                  color: NeonPulse.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile nudge banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ProfileNudge extends StatelessWidget {
+  final List<String> setupItems;
+  final dynamic profileState;
+  const _ProfileNudge(
+      {required this.setupItems, required this.profileState});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct =
+        (ProfileCompletion.completeness(profileState) * 100).round();
+    final isAlmostDone = pct >= 70;
+    final Color accent =
+        isAlmostDone ? const Color(0xFF00E676) : NeonPulse.primary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: () => context.go('/profile'),
+        child: Container(
+          width: double.infinity,
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: NeonPulse.surfaceContainer,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: accent.withValues(alpha: 0.35)),
+          ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                info.isPermissionOrAuth ? Icons.lock_outline : Icons.error_outline,
-                color: info.isPermissionOrAuth ? Colors.amberAccent : Colors.redAccent,
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: accent.withValues(alpha: 0.15),
+                child: Text(
+                  '$pct%',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: accent),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -298,43 +462,195 @@ class DashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      friendly,
-                      style: const TextStyle(color: Colors.white),
+                      isAlmostDone
+                          ? 'Almost there!'
+                          : 'Complete your profile',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: accent),
                     ),
-                    if (error is FirebaseException)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          'Firestore (${error.code}): ${error.message ?? 'No additional details'}',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
-                        ),
-                      ),
+                    Text(
+                      '${setupItems.length} step${setupItems.length == 1 ? '' : 's'} left',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: NeonPulse.onSurfaceVariant),
+                    ),
                   ],
                 ),
               ),
+              const Icon(Icons.chevron_right,
+                  color: NeonPulse.onSurfaceVariant, size: 20),
             ],
           ),
         ),
-      );
-    }
-
-    // Card widget for rooms
-  Widget _roomCard(BuildContext context, RoomModel r) => Card(
-          child: ListTile(
-            title: Text(r.name.isNotEmpty ? r.name : 'Room'),
-            subtitle: const Text('Live room'),
-            trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
-            onTap: () => context.go('/room/${r.id}'),
-          ),
-        );
-
-    // Card widget for events (dynamic fallback)
-    Widget _eventCard(dynamic e) => Card(
-          child: ListTile(
-            title: e is EventModel
-                ? Text(e.title.toString().trim().isNotEmpty ? e.title : 'Event')
-                : Text(e.toString()),
-            subtitle: e is EventModel ? Text('Event • ${e.date}') : null,
-          ),
-        );
+      ),
+    );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Create FAB with NeonPulse bottom sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CreateFAB extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => _showCreateMenu(context),
+      backgroundColor: NeonPulse.primaryDim,
+      tooltip: 'Create',
+      child: const Icon(Icons.add, color: NeonPulse.onSurface),
+    );
+  }
+
+  void _showCreateMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: NeonPulse.surfaceContainer,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Wrap(
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 4),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: NeonPulse.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.article_outlined,
+                color: NeonPulse.primary),
+            title: const Text('New Post',
+                style: TextStyle(color: NeonPulse.onSurface)),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/create-post');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.auto_stories_outlined,
+                color: NeonPulse.secondary),
+            title: const Text('New Story',
+                style: TextStyle(color: NeonPulse.onSurface)),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/create-story');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.meeting_room_outlined,
+                color: NeonPulse.primaryDim),
+            title: const Text('Browse Rooms',
+                style: TextStyle(color: NeonPulse.onSurface)),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/rooms');
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty state pill
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EmptyPill extends StatelessWidget {
+  final String label;
+  const _EmptyPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: NeonPulse.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(label,
+            style: const TextStyle(
+                color: NeonPulse.onSurfaceVariant, fontSize: 13)),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inline error card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ErrorCard extends StatelessWidget {
+  final String message;
+  const _ErrorCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: NeonPulse.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border:
+              Border.all(color: NeonPulse.error.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline,
+                size: 16, color: NeonPulse.error),
+            const SizedBox(width: 8),
+            Text(message,
+                style: const TextStyle(
+                    fontSize: 12, color: NeonPulse.onSurfaceVariant)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Horizontal skeleton loader
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HorizontalSkeleton extends StatelessWidget {
+  final double height;
+  const _HorizontalSkeleton({this.height = 200});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        itemCount: 4,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) => Container(
+          width: height < 100 ? 60 : 140,
+          height: height,
+          decoration: BoxDecoration(
+            color: NeonPulse.surfaceContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
+}

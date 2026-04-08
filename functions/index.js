@@ -6,11 +6,13 @@ const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const Stripe = require("stripe");
 const {RtcTokenBuilder, RtcRole} = require("agora-access-token");
+const nodeFetch = require("node-fetch");
 const {
   STRIPE_SECRET,
   STRIPE_WEBHOOK_SECRET,
   AGORA_APP_ID,
   AGORA_APP_CERTIFICATE,
+  METERED_API_KEY,
 } = require("./params");
 
 admin.initializeApp();
@@ -37,6 +39,7 @@ const RATE_LIMITS = {
   createStripeConnectOnboardingLink: {windowMs: 60 * 1000, maxRequests: 10},
   createStripeConnectDashboardLink: {windowMs: 60 * 1000, maxRequests: 20},
   generateAgoraToken: {windowMs: 60 * 1000, maxRequests: 30},
+  generateTurnCredentials: {windowMs: 60 * 1000, maxRequests: 30},
   requestRefund: {windowMs: 60 * 1000, maxRequests: 12},
 };
 
@@ -1170,6 +1173,37 @@ async function generateAgoraTokenHandler(request, deps = {}) {
 }
 
 exports.generateAgoraToken = onCall({secrets: [AGORA_APP_ID, AGORA_APP_CERTIFICATE]}, async (request) => generateAgoraTokenHandler(request));
+
+async function generateTurnCredentialsHandler(request) {
+  const authUid = requireAuth(request);
+  enforceRateLimit("generateTurnCredentials", authUid);
+
+  const apiKey = process.env.METERED_API_KEY;
+  if (!apiKey) {
+    throw new HttpsError("failed-precondition", "TURN credentials are not configured.");
+  }
+
+  const url = `https://mixvy.metered.live/api/v1/turn/credentials?apiKey=${encodeURIComponent(apiKey)}`;
+  let response;
+  try {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 5000);
+    response = await fetch(url, {signal: ac.signal});
+    clearTimeout(timer);
+  } catch (err) {
+    throw new HttpsError("unavailable", "Failed to reach TURN credential service.");
+  }
+  if (!response.ok) {
+    throw new HttpsError("unavailable", `TURN service returned ${response.status}.`);
+  }
+  const iceServers = await response.json();
+  if (!Array.isArray(iceServers) || iceServers.length === 0) {
+    throw new HttpsError("unavailable", "TURN service returned empty credentials.");
+  }
+  return {iceServers};
+}
+
+exports.generateTurnCredentials = onCall({secrets: [METERED_API_KEY]}, async (request) => generateTurnCredentialsHandler(request));
 
 async function requestRefundHandler(request, deps = {}) {
   const requesterId = requireAuth(request);

@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mixvy/models/room_model.dart';
+import '../../../core/theme.dart';
 
 class LiveRoomCard extends StatelessWidget {
   final RoomModel room;
@@ -18,156 +19,208 @@ class LiveRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final memberCount = room.memberCount > 0
+        ? room.memberCount
+        : room.stageUserIds.length + room.audienceUserIds.length;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 160,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: NeonPulse.surfaceHigh,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: NeonPulse.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: NeonPulse.primaryDim.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Room image or fallback visual
-            if (room.thumbnailUrl != null && room.thumbnailUrl!.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: room.thumbnailUrl!,
-                  height: 80,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Container(
-                    height: 80,
-                    width: double.infinity,
-                    color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.1).toInt()),
-                    child: const Icon(Icons.broken_image, size: 40, color: Colors.white54),
-                  ),
-                ),
-              )
-            else
-              Container(
-                height: 80,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.1).toInt()),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.videocam, size: 40, color: Colors.white70),
-              ),
-            const SizedBox(height: 12),
-            if (room.name.isNotEmpty)
-              Text(
-                room.name,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              )
-            else
-              Text(
-                'Untitled Room',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha((255 * 0.5).toInt()),
-                      fontStyle: FontStyle.italic,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            const SizedBox(height: 4),
-            Text(
-              room.description?.isNotEmpty == true ? room.description! : 'No description provided.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha((255 * 0.7).toInt()),
-                  ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (room.category != null && room.category!.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .tertiaryContainer
-                      .withAlpha((255 * 0.9).toInt()),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  room.category!,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onTertiaryContainer,
-                        fontWeight: FontWeight.w700,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-            if (recommendationTier != null && recommendationTier!.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withAlpha((255 * 0.18).toInt()),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  recommendationTier!,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-            if (recommendationReason != null && recommendationReason!.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.14).toInt()),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  recommendationReason!,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-            const Spacer(),
-            Row(
+            // Thumbnail / hero area
+            Stack(
               children: [
-                const Icon(Icons.people, size: 16, color: Colors.white54),
-                const SizedBox(width: 4),
-                Text(
-                  '${room.stageUserIds.length + room.audienceUserIds.length} online',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white54,
+                if (room.thumbnailUrl != null &&
+                    room.thumbnailUrl!.isNotEmpty)
+                  CachedNetworkImage(
+                    imageUrl: room.thumbnailUrl!,
+                    height: 96,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) =>
+                        _FallbackThumbnail(category: room.category),
+                  )
+                else
+                  _FallbackThumbnail(category: room.category),
+
+                // LIVE badge top-left
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: NeonPulse.error,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      '● LIVE',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
+                    ),
+                  ),
+                ),
+
+                // Member count top-right
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.people,
+                            size: 11,
+                            color: NeonPulse.secondary),
+                        const SizedBox(width: 3),
+                        Text(
+                          '$memberCount',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: NeonPulse.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
+
+            // Info section
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    room.name.isNotEmpty ? room.name : 'Live Room',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: NeonPulse.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (room.description?.isNotEmpty == true) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      room.description!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: NeonPulse.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+
+                  // Category badge
+                  if (room.category?.isNotEmpty == true) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: NeonPulse.secondary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                            color: NeonPulse.secondary.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        room.category!,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: NeonPulse.secondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+
+                  // Tier badge (optional)
+                  if (recommendationTier?.isNotEmpty == true) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: NeonPulse.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        recommendationTier!,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: NeonPulse.primary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Fallback thumbnail when no image is set — uses a gradient with a camera icon
+class _FallbackThumbnail extends StatelessWidget {
+  final String? category;
+  const _FallbackThumbnail({this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 96,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [NeonPulse.primaryDim, NeonPulse.surfaceBright],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.videocam,
+            size: 32, color: Colors.white54),
       ),
     );
   }
