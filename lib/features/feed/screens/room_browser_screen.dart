@@ -54,7 +54,7 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       drawer: const MixVyDrawer(),
       body: _showGrid
           ? _RoomListView(
@@ -126,7 +126,7 @@ class _CategoryDirectory extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF1B1216), NeonPulse.surface],
+                colors: [Color(0xFF1B1216), VelvetNoir.surface],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -139,7 +139,7 @@ class _CategoryDirectory extends StatelessWidget {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 30,
                     fontWeight: FontWeight.w700,
-                    color: NeonPulse.onSurface,
+                    color: VelvetNoir.onSurface,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -148,7 +148,7 @@ class _CategoryDirectory extends StatelessWidget {
                   'Pick a room, join the moment.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: NeonPulse.onSurfaceVariant,
+                    color: VelvetNoir.onSurfaceVariant,
                     letterSpacing: 0.2,
                   ),
                 ),
@@ -174,7 +174,7 @@ class _CategoryDirectory extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: NeonPulse.primary.withValues(alpha: 0.7),
+                color: VelvetNoir.primary.withValues(alpha: 0.7),
                 letterSpacing: 2.0,
               ),
             ),
@@ -192,7 +192,7 @@ class _CategoryDirectory extends StatelessWidget {
                 (_, i) {
                   final cat = categories[i];
                   final grads = _gradients[cat.value] ?? _gradients[null]!;
-                  final accent = _accents[cat.value] ?? NeonPulse.primary;
+                  final accent = _accents[cat.value] ?? VelvetNoir.primary;
                   return _CategoryCard(
                     label: cat.label,
                     emoji: cat.emoji,
@@ -282,7 +282,7 @@ class _GoLiveBanner extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: NeonPulse.primary.withValues(alpha: 0.4),
+                          color: VelvetNoir.primary.withValues(alpha: 0.4),
                           blurRadius: 12,
                         ),
                       ],
@@ -421,7 +421,7 @@ class _CategoryCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: NeonPulse.onSurface,
+                      color: VelvetNoir.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -510,7 +510,7 @@ class _RoomListView extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(8, 52, 16, 16),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF1B1216), NeonPulse.surface],
+                colors: [Color(0xFF1B1216), VelvetNoir.surface],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -519,7 +519,7 @@ class _RoomListView extends ConsumerWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: NeonPulse.onSurface, size: 20),
+                      color: VelvetNoir.onSurface, size: 20),
                   onPressed: onBack,
                 ),
                 const SizedBox(width: 4),
@@ -528,7 +528,7 @@ class _RoomListView extends ConsumerWidget {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: NeonPulse.onSurface,
+                    color: VelvetNoir.onSurface,
                   ),
                 ),
               ],
@@ -543,36 +543,36 @@ class _RoomListView extends ConsumerWidget {
               controller: searchController,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: NeonPulse.onSurface,
+                color: VelvetNoir.onSurface,
               ),
               decoration: InputDecoration(
                 hintText: 'Search rooms...',
                 hintStyle: GoogleFonts.inter(
-                    fontSize: 14, color: NeonPulse.onSurfaceVariant),
+                    fontSize: 14, color: VelvetNoir.onSurfaceVariant),
                 prefixIcon: const Icon(Icons.search_rounded,
-                    color: NeonPulse.onSurfaceVariant, size: 20),
+                    color: VelvetNoir.onSurfaceVariant, size: 20),
                 suffixIcon: searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.close_rounded,
-                            color: NeonPulse.onSurfaceVariant, size: 18),
+                            color: VelvetNoir.onSurfaceVariant, size: 18),
                         onPressed: () => searchController.clear(),
                       )
                     : null,
                 filled: true,
-                fillColor: NeonPulse.surfaceContainer,
+                fillColor: VelvetNoir.surfaceContainer,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide:
-                      BorderSide(color: NeonPulse.outlineVariant.withValues(alpha: 0.4)),
+                      BorderSide(color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide:
-                      BorderSide(color: NeonPulse.outlineVariant.withValues(alpha: 0.4)),
+                      BorderSide(color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: NeonPulse.primary),
+                  borderSide: const BorderSide(color: VelvetNoir.primary),
                 ),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -604,7 +604,7 @@ class _RoomListView extends ConsumerWidget {
                         'No live rooms right now',
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 18,
-                          color: NeonPulse.onSurface,
+                          color: VelvetNoir.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -613,18 +613,18 @@ class _RoomListView extends ConsumerWidget {
                         'Be the first to start one!',
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          color: NeonPulse.onSurfaceVariant,
+                          color: VelvetNoir.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 20),
                       TextButton.icon(
                         onPressed: () => context.go('/create-room'),
                         icon: const Icon(Icons.mic_rounded,
-                            color: NeonPulse.primary),
+                            color: VelvetNoir.primary),
                         label: Text(
                           'Start a Room',
                           style: GoogleFonts.inter(
-                              color: NeonPulse.primary,
+                              color: VelvetNoir.primary,
                               fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -660,7 +660,7 @@ class _RoomListView extends ConsumerWidget {
             });
           },
           loading: () => const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator(color: NeonPulse.primary)),
+            child: Center(child: CircularProgressIndicator(color: VelvetNoir.primary)),
           ),
           error: (e, _) => SliverFillRemaining(
             child: Center(child: Text('Error loading rooms: $e')),

@@ -20,21 +20,21 @@ class GroupsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: NeonPulse.surface,
+        backgroundColor: VelvetNoir.surface,
         appBar: AppBar(
-          backgroundColor: NeonPulse.surface,
+          backgroundColor: VelvetNoir.surface,
           title: const Text(
             'Groups',
             style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 22,
-              color: NeonPulse.onSurface,
+              color: VelvetNoir.onSurface,
             ),
           ),
           bottom: const TabBar(
-            indicatorColor: NeonPulse.primary,
-            labelColor: NeonPulse.primary,
-            unselectedLabelColor: NeonPulse.onSurfaceVariant,
+            indicatorColor: VelvetNoir.primary,
+            labelColor: VelvetNoir.primary,
+            unselectedLabelColor: VelvetNoir.onSurfaceVariant,
             indicatorWeight: 2,
             tabs: [
               Tab(text: 'Discover'),
@@ -44,7 +44,7 @@ class GroupsScreen extends ConsumerWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.add_circle_outline,
-                  color: NeonPulse.primary),
+                  color: VelvetNoir.primary),
               tooltip: 'Create group',
               onPressed: () => context.push('/create-group?userId=$userId'),
             ),
@@ -59,7 +59,7 @@ class GroupsScreen extends ConsumerWidget {
                   return const Center(
                     child: Text('No groups yet',
                         style:
-                            TextStyle(color: NeonPulse.onSurfaceVariant)),
+                            TextStyle(color: VelvetNoir.onSurfaceVariant)),
                   );
                 }
                 return ListView.builder(
@@ -72,10 +72,10 @@ class GroupsScreen extends ConsumerWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
-                        color: NeonPulse.surfaceContainer,
+                        color: VelvetNoir.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: NeonPulse.outlineVariant
+                            color: VelvetNoir.outlineVariant
                                 .withValues(alpha: 0.5)),
                       ),
                       child: InkWell(
@@ -94,7 +94,7 @@ class GroupsScreen extends ConsumerWidget {
                                     Text(
                                       group.name,
                                       style: const TextStyle(
-                                        color: NeonPulse.onSurface,
+                                        color: VelvetNoir.onSurface,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 15,
                                       ),
@@ -104,7 +104,7 @@ class GroupsScreen extends ConsumerWidget {
                                     Text(
                                       '${group.memberCount} members',
                                       style: const TextStyle(
-                                        color: NeonPulse.onSurfaceVariant,
+                                        color: VelvetNoir.onSurfaceVariant,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -134,9 +134,9 @@ class GroupsScreen extends ConsumerWidget {
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: isMember
-                                        ? NeonPulse.surfaceBright
-                                        : NeonPulse.primaryDim,
-                                    foregroundColor: NeonPulse.onSurface,
+                                        ? VelvetNoir.surfaceBright
+                                        : VelvetNoir.primaryDim,
+                                    foregroundColor: VelvetNoir.onSurface,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 8),
                                     shape: RoundedRectangleBorder(
@@ -163,11 +163,11 @@ class GroupsScreen extends ConsumerWidget {
               },
               loading: () => const Center(
                   child: CircularProgressIndicator(
-                      color: NeonPulse.primary)),
+                      color: VelvetNoir.primary)),
               error: (e, _) => const Center(
                 child: Text('Could not load groups',
                     style:
-                        TextStyle(color: NeonPulse.onSurfaceVariant)),
+                        TextStyle(color: VelvetNoir.onSurfaceVariant)),
               ),
             ),
             // My Groups tab
@@ -178,7 +178,7 @@ class GroupsScreen extends ConsumerWidget {
                     child: Text(
                       'You haven\'t joined any groups yet',
                       style:
-                          TextStyle(color: NeonPulse.onSurfaceVariant),
+                          TextStyle(color: VelvetNoir.onSurfaceVariant),
                     ),
                   );
                 }
@@ -191,10 +191,10 @@ class GroupsScreen extends ConsumerWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
-                        color: NeonPulse.surfaceContainer,
+                        color: VelvetNoir.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: NeonPulse.outlineVariant
+                            color: VelvetNoir.outlineVariant
                                 .withValues(alpha: 0.5)),
                       ),
                       child: ListTile(
@@ -203,17 +203,17 @@ class GroupsScreen extends ConsumerWidget {
                         title: Text(
                           group.name,
                           style: const TextStyle(
-                            color: NeonPulse.onSurface,
+                            color: VelvetNoir.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           '${group.memberCount} members',
                           style: const TextStyle(
-                              color: NeonPulse.onSurfaceVariant),
+                              color: VelvetNoir.onSurfaceVariant),
                         ),
                         trailing: const Icon(Icons.chevron_right,
-                            color: NeonPulse.onSurfaceVariant),
+                            color: VelvetNoir.onSurfaceVariant),
                         onTap: () =>
                             context.push('/group/${group.id}'),
                       ),
@@ -223,11 +223,11 @@ class GroupsScreen extends ConsumerWidget {
               },
               loading: () => const Center(
                   child: CircularProgressIndicator(
-                      color: NeonPulse.primary)),
+                      color: VelvetNoir.primary)),
               error: (e, _) => const Center(
                 child: Text('Could not load your groups',
                     style:
-                        TextStyle(color: NeonPulse.onSurfaceVariant)),
+                        TextStyle(color: VelvetNoir.onSurfaceVariant)),
               ),
             ),
           ],

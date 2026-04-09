@@ -120,7 +120,7 @@ class _BuyCoinsSheetContentState
 
     return Container(
       decoration: BoxDecoration(
-        color: NeonPulse.surfaceContainer,
+        color: VelvetNoir.surfaceContainer,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(
@@ -139,7 +139,7 @@ class _BuyCoinsSheetContentState
               height: 4,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: NeonPulse.outlineVariant,
+                color: VelvetNoir.outlineVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -155,7 +155,7 @@ class _BuyCoinsSheetContentState
                   'Buy Coins',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: NeonPulse.primary,
+                    color: VelvetNoir.primary,
                   ),
                 ),
               ),
@@ -164,9 +164,9 @@ class _BuyCoinsSheetContentState
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: NeonPulse.surfaceHigh,
+                  color: VelvetNoir.surfaceHigh,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: NeonPulse.primary.withValues(alpha: 0.4)),
+                  border: Border.all(color: VelvetNoir.primary.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -176,7 +176,7 @@ class _BuyCoinsSheetContentState
                     Text(
                       '$coinBalance',
                       style: theme.textTheme.labelLarge?.copyWith(
-                        color: NeonPulse.primary,
+                        color: VelvetNoir.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -221,7 +221,7 @@ class _BuyCoinsSheetContentState
                 ? 'You\'ll be redirected to Stripe to complete your purchase securely.'
                 : 'Coins are credited to your wallet instantly after purchase.',
             style: theme.textTheme.bodySmall
-                ?.copyWith(color: NeonPulse.onSurfaceVariant),
+                ?.copyWith(color: VelvetNoir.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ],
@@ -263,14 +263,14 @@ class _PackageTile extends StatelessWidget {
                   ? const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [NeonPulse.surfaceHigh, NeonPulse.surfaceHighest],
+                      colors: [VelvetNoir.surfaceHigh, VelvetNoir.surfaceHighest],
                     )
                   : null,
-              color: isPopular ? null : NeonPulse.surfaceHigh,
+              color: isPopular ? null : VelvetNoir.surfaceHigh,
               border: Border.all(
                 color: isPopular
-                    ? NeonPulse.primary
-                    : NeonPulse.outlineVariant,
+                    ? VelvetNoir.primary
+                    : VelvetNoir.outlineVariant,
                 width: isPopular ? 1.5 : 1,
               ),
             ),
@@ -295,7 +295,7 @@ class _PackageTile extends StatelessWidget {
                             _formatNumber(package.totalCoins),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
-                              color: NeonPulse.primary,
+                              color: VelvetNoir.primary,
                             ),
                           ),
                         ],
@@ -305,7 +305,7 @@ class _PackageTile extends StatelessWidget {
                         Text(
                           '+${_formatNumber(package.bonusCoins)} bonus',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: NeonPulse.secondary,
+                            color: VelvetNoir.secondary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -316,16 +316,16 @@ class _PackageTile extends StatelessWidget {
                             horizontal: 16, vertical: 4),
                         decoration: BoxDecoration(
                           color: isPopular
-                              ? NeonPulse.primary
-                              : NeonPulse.surfaceHighest,
+                              ? VelvetNoir.primary
+                              : VelvetNoir.surfaceHighest,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           package.priceLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: isPopular
-                                ? NeonPulse.surface
-                                : NeonPulse.onSurface,
+                                ? VelvetNoir.surface
+                                : VelvetNoir.onSurface,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -344,7 +344,7 @@ class _PackageTile extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: NeonPulse.secondary,
+                color: VelvetNoir.secondary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(

@@ -153,7 +153,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF1C1F2C),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: NeonPulse.primary.withAlpha(60)),
+        border: Border.all(color: VelvetNoir.primary.withAlpha(60)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,8 +161,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Profile completion', style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.w600)),
-              Text('$pctInt%', style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.bold)),
+              Text('Profile completion', style: TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w600)),
+              Text('$pctInt%', style: TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 6),
@@ -171,7 +171,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             child: LinearProgressIndicator(
               value: pct,
               backgroundColor: const Color(0xFF2E2F3A),
-              valueColor: AlwaysStoppedAnimation<Color>(NeonPulse.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(VelvetNoir.primary),
               minHeight: 6,
             ),
           ),
@@ -266,7 +266,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                     ),
                     CircleAvatar(
                       radius: 12,
-                      backgroundColor: NeonPulse.primary,
+                      backgroundColor: VelvetNoir.primary,
                       child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
                     ),
                   ],
@@ -377,9 +377,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 .map((i) => Chip(
                       label: Text(i),
                       onDeleted: () => setState(() => _interests.remove(i)),
-                      deleteIconColor: NeonPulse.primary,
+                      deleteIconColor: VelvetNoir.primary,
                       backgroundColor: const Color(0xFF1C1F2C),
-                      side: BorderSide(color: NeonPulse.primary.withAlpha(80)),
+                      side: BorderSide(color: VelvetNoir.primary.withAlpha(80)),
                       labelStyle: const TextStyle(color: Colors.white),
                     ))
                 .toList(),
@@ -431,9 +431,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final state = ref.watch(profileControllerProvider);
 
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
-        backgroundColor: NeonPulse.surface,
+        backgroundColor: VelvetNoir.surface,
         title: const Text('Edit Profile'),
         actions: [
           TextButton(
@@ -442,13 +442,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 ? const SizedBox(
                     width: 18, height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2))
-                : Text('Save', style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.bold)),
+                : Text('Save', style: TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.bold)),
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: NeonPulse.primary,
-          labelColor: NeonPulse.primary,
+          indicatorColor: VelvetNoir.primary,
+          labelColor: VelvetNoir.primary,
           unselectedLabelColor: Colors.white54,
           tabs: const [
             Tab(text: 'Basics'),

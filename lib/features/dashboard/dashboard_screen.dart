@@ -65,19 +65,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final newMembersAsync = ref.watch(newMembersStreamProvider);
 
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       drawer: const MixVyDrawer(),
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
             floating: true,
             snap: true,
-            backgroundColor: NeonPulse.surface,
+            backgroundColor: VelvetNoir.surface,
             surfaceTintColor: Colors.transparent,
             titleSpacing: 16,
             title: ShaderMask(
               shaderCallback: (rect) =>
-                  NeonPulse.primaryGradient.createShader(rect),
+                  VelvetNoir.primaryGradient.createShader(rect),
               blendMode: BlendMode.srcIn,
               child: const Text(
                 'MixVy',
@@ -96,21 +96,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline,
-                    color: NeonPulse.onSurface),
+                    color: VelvetNoir.onSurface),
                 tooltip: 'Create',
                 onPressed: () => _showCreateMenu(context),
               ),
               IconButton(
                 icon: const Icon(Icons.notifications_outlined,
-                    color: NeonPulse.onSurface),
+                    color: VelvetNoir.onSurface),
                 onPressed: () => context.go('/notifications'),
               ),
             ],
           ),
         ],
         body: RefreshIndicator(
-          color: NeonPulse.primary,
-          backgroundColor: NeonPulse.surfaceHigh,
+          color: VelvetNoir.primary,
+          backgroundColor: VelvetNoir.surfaceHigh,
           onRefresh: () =>
               ref.read(feedControllerProvider.notifier).loadFeed(),
           child: CustomScrollView(
@@ -140,13 +140,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: _SectionHeader(
                   title: 'Live Now',
-                  dotColor: NeonPulse.error,
+                  dotColor: VelvetNoir.error,
                   topPadding: 20,
                   trailing: TextButton(
                     onPressed: () => context.go('/rooms'),
                     child: const Text('See all',
                         style: TextStyle(
-                            color: NeonPulse.primary, fontSize: 13)),
+                            color: VelvetNoir.primary, fontSize: 13)),
                   ),
                 ),
               ),
@@ -183,13 +183,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 SliverToBoxAdapter(
                   child: _SectionHeader(
                     title: 'Top Creators',
-                    dotColor: NeonPulse.secondary,
+                    dotColor: VelvetNoir.secondary,
                     topPadding: 24,
                     trailing: TextButton(
                       onPressed: () => context.go('/discover'),
                       child: const Text('Discover',
                           style: TextStyle(
-                              color: NeonPulse.primary, fontSize: 13)),
+                              color: VelvetNoir.primary, fontSize: 13)),
                     ),
                   ),
                 ),
@@ -220,7 +220,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: _SectionHeader(
                   title: 'New Members',
-                    dotColor: NeonPulse.primary,
+                    dotColor: VelvetNoir.primary,
                   topPadding: 24,
                 ),
               ),
@@ -253,7 +253,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: _SectionHeader(
                   title: 'Recent Posts',
-                  dotColor: NeonPulse.primary,
+                  dotColor: VelvetNoir.primary,
                   topPadding: 24,
                 ),
               ),
@@ -281,7 +281,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     padding: EdgeInsets.all(32),
                     child: Center(
                         child: CircularProgressIndicator(
-                            color: NeonPulse.primary)),
+                            color: VelvetNoir.primary)),
                   ),
                 ),
                 error: (e, _) => const SliverToBoxAdapter(child: _ErrorCard(message: 'Could not load posts')),
@@ -314,13 +314,13 @@ class _StatsBarWidget extends StatelessWidget {
     return Row(
       children: [
         _StatPill(
-          dot: NeonPulse.primary,
+          dot: VelvetNoir.primary,
           label: online >= 500 ? '500+' : '$online',
           tooltip: 'online now',
         ),
         const SizedBox(width: 6),
         _StatPill(
-          dot: NeonPulse.error,
+          dot: VelvetNoir.error,
           label: '$live',
           tooltip: 'live rooms',
         ),
@@ -343,9 +343,9 @@ class _StatPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: NeonPulse.surfaceHigh,
+          color: VelvetNoir.surfaceHigh,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: NeonPulse.outlineVariant),
+          border: Border.all(color: VelvetNoir.outlineVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -362,7 +362,7 @@ class _StatPill extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: NeonPulse.onSurface),
+                  color: VelvetNoir.onSurface),
             ),
           ],
         ),
@@ -409,7 +409,7 @@ class _SectionHeader extends StatelessWidget {
             style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: NeonPulse.onSurface,
+              color: VelvetNoir.onSurface,
             ),
           ),
           const Spacer(),
@@ -440,11 +440,11 @@ class _CreatorChip extends StatelessWidget {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: NeonPulse.primaryGradient,
+              gradient: VelvetNoir.primaryGradient,
             ),
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: NeonPulse.surfaceHigh,
+              backgroundColor: VelvetNoir.surfaceHigh,
               backgroundImage: (user.avatarUrl ?? '').isNotEmpty
                   ? CachedNetworkImageProvider(user.avatarUrl!)
                   : null,
@@ -454,7 +454,7 @@ class _CreatorChip extends StatelessWidget {
                           ? user.username[0].toUpperCase()
                           : '?',
                       style: const TextStyle(
-                          color: NeonPulse.primary,
+                          color: VelvetNoir.primary,
                           fontWeight: FontWeight.w800,
                           fontSize: 18),
                     )
@@ -468,7 +468,7 @@ class _CreatorChip extends StatelessWidget {
               user.username,
               style: const TextStyle(
                   fontSize: 10,
-                  color: NeonPulse.onSurfaceVariant),
+                  color: VelvetNoir.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -504,13 +504,13 @@ class _NewMemberChip extends StatelessWidget {
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: NeonPulse.primary.withValues(alpha: 0.25),
+                  color: VelvetNoir.primary.withValues(alpha: 0.25),
                   border: Border.all(
-                      color: NeonPulse.primary, width: 2),
+                      color: VelvetNoir.primary, width: 2),
                 ),
                 child: CircleAvatar(
                   radius: 26,
-                  backgroundColor: NeonPulse.surfaceHigh,
+                  backgroundColor: VelvetNoir.surfaceHigh,
                   backgroundImage: avatarUrl.isNotEmpty
                       ? CachedNetworkImageProvider(avatarUrl)
                       : null,
@@ -520,7 +520,7 @@ class _NewMemberChip extends StatelessWidget {
                               ? user.username[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              color: NeonPulse.primary,
+                              color: VelvetNoir.primary,
                               fontWeight: FontWeight.w800,
                               fontSize: 18),
                         )
@@ -534,7 +534,7 @@ class _NewMemberChip extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                      color: NeonPulse.primary,
+                      color: VelvetNoir.primary,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
@@ -542,7 +542,7 @@ class _NewMemberChip extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 8,
                           fontWeight: FontWeight.w800,
-                          color: NeonPulse.surface),
+                          color: VelvetNoir.surface),
                   ),
                 ),
               ),
@@ -554,7 +554,7 @@ class _NewMemberChip extends StatelessWidget {
             child: Text(
               user.username,
               style: const TextStyle(
-                  fontSize: 10, color: NeonPulse.onSurfaceVariant),
+                  fontSize: 10, color: VelvetNoir.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -592,7 +592,7 @@ class _ProfileNudge extends StatelessWidget {
       (ProfileCompletion.homeNudgeCompleteness(profileState) * 100).round();
     final isAlmostDone = pct >= 70;
     final Color accent =
-        isAlmostDone ? NeonPulse.secondary : NeonPulse.primary;
+        isAlmostDone ? VelvetNoir.secondary : VelvetNoir.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -606,7 +606,7 @@ class _ProfileNudge extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: NeonPulse.surfaceContainer,
+            color: VelvetNoir.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: accent.withValues(alpha: 0.35)),
           ),
@@ -641,13 +641,13 @@ class _ProfileNudge extends StatelessWidget {
                       '${setupItems.length} step${setupItems.length == 1 ? '' : 's'} left',
                       style: const TextStyle(
                           fontSize: 11,
-                          color: NeonPulse.onSurfaceVariant),
+                          color: VelvetNoir.onSurfaceVariant),
                     ),
                   ],
                 ),
               ),
               const Icon(Icons.chevron_right,
-                  color: NeonPulse.onSurfaceVariant, size: 20),
+                  color: VelvetNoir.onSurfaceVariant, size: 20),
             ],
           ),
         ),
@@ -663,7 +663,7 @@ class _ProfileNudge extends StatelessWidget {
 void _showCreateMenu(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: NeonPulse.surfaceContainer,
+    backgroundColor: VelvetNoir.surfaceContainer,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -676,7 +676,7 @@ void _showCreateMenu(BuildContext context) {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: NeonPulse.outlineVariant,
+                color: VelvetNoir.outlineVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -684,9 +684,9 @@ void _showCreateMenu(BuildContext context) {
         ),
         ListTile(
           leading: const Icon(Icons.article_outlined,
-              color: NeonPulse.primary),
+              color: VelvetNoir.primary),
           title: const Text('New Post',
-              style: TextStyle(color: NeonPulse.onSurface)),
+              style: TextStyle(color: VelvetNoir.onSurface)),
           onTap: () {
             Navigator.pop(context);
             context.go('/create-post');
@@ -694,9 +694,9 @@ void _showCreateMenu(BuildContext context) {
         ),
         ListTile(
           leading: const Icon(Icons.auto_stories_outlined,
-              color: NeonPulse.secondary),
+              color: VelvetNoir.secondary),
           title: const Text('New Story',
-              style: TextStyle(color: NeonPulse.onSurface)),
+              style: TextStyle(color: VelvetNoir.onSurface)),
           onTap: () {
             Navigator.pop(context);
             context.go('/create-story');
@@ -704,9 +704,9 @@ void _showCreateMenu(BuildContext context) {
         ),
         ListTile(
           leading: const Icon(Icons.meeting_room_outlined,
-              color: NeonPulse.primaryDim),
+              color: VelvetNoir.primaryDim),
           title: const Text('Browse Rooms',
-              style: TextStyle(color: NeonPulse.onSurface)),
+              style: TextStyle(color: VelvetNoir.onSurface)),
           onTap: () {
             Navigator.pop(context);
             context.go('/rooms');
@@ -734,12 +734,12 @@ class _EmptyPill extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: NeonPulse.surfaceContainer,
+          color: VelvetNoir.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(label,
             style: const TextStyle(
-                color: NeonPulse.onSurfaceVariant, fontSize: 13)),
+                color: VelvetNoir.onSurfaceVariant, fontSize: 13)),
       ),
     );
   }
@@ -760,19 +760,19 @@ class _ErrorCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: NeonPulse.error.withValues(alpha: 0.1),
+          color: VelvetNoir.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border:
-              Border.all(color: NeonPulse.error.withValues(alpha: 0.3)),
+              Border.all(color: VelvetNoir.error.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             const Icon(Icons.error_outline,
-                size: 16, color: NeonPulse.error),
+                size: 16, color: VelvetNoir.error),
             const SizedBox(width: 8),
             Text(message,
                 style: const TextStyle(
-                    fontSize: 12, color: NeonPulse.onSurfaceVariant)),
+                    fontSize: 12, color: VelvetNoir.onSurfaceVariant)),
           ],
         ),
       ),
@@ -801,7 +801,7 @@ class _HorizontalSkeleton extends StatelessWidget {
           width: height < 100 ? 60 : 140,
           height: height,
           decoration: BoxDecoration(
-            color: NeonPulse.surfaceContainer,
+            color: VelvetNoir.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
           ),
         ),

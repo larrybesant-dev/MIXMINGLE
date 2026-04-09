@@ -72,13 +72,13 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
-        backgroundColor: NeonPulse.surface,
+        backgroundColor: VelvetNoir.surface,
         title: const Text(
           'Create Group',
           style: TextStyle(
-            color: NeonPulse.onSurface,
+            color: VelvetNoir.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -91,25 +91,25 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             // Name field
             TextField(
               controller: _nameController,
-              style: const TextStyle(color: NeonPulse.onSurface),
+              style: const TextStyle(color: VelvetNoir.onSurface),
               decoration: InputDecoration(
                 labelText: 'Group Name',
                 labelStyle:
-                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                    const TextStyle(color: VelvetNoir.onSurfaceVariant),
                 hintText: 'Enter a name for your group',
                 hintStyle:
-                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                    const TextStyle(color: VelvetNoir.onSurfaceVariant),
                 filled: true,
-                fillColor: NeonPulse.surfaceContainer,
+                fillColor: VelvetNoir.surfaceContainer,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide:
-                      const BorderSide(color: NeonPulse.outlineVariant),
+                      const BorderSide(color: VelvetNoir.outlineVariant),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                      color: NeonPulse.primary, width: 1.5),
+                      color: VelvetNoir.primary, width: 1.5),
                 ),
               ),
             ),
@@ -117,27 +117,27 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             // Description field
             TextField(
               controller: _descriptionController,
-              style: const TextStyle(color: NeonPulse.onSurface),
+              style: const TextStyle(color: VelvetNoir.onSurface),
               minLines: 3,
               maxLines: 5,
               decoration: InputDecoration(
                 labelText: 'Description',
                 labelStyle:
-                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                    const TextStyle(color: VelvetNoir.onSurfaceVariant),
                 hintText: 'What is this group about?',
                 hintStyle:
-                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                    const TextStyle(color: VelvetNoir.onSurfaceVariant),
                 filled: true,
-                fillColor: NeonPulse.surfaceContainer,
+                fillColor: VelvetNoir.surfaceContainer,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide:
-                      const BorderSide(color: NeonPulse.outlineVariant),
+                      const BorderSide(color: VelvetNoir.outlineVariant),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                      color: NeonPulse.primary, width: 1.5),
+                      color: VelvetNoir.primary, width: 1.5),
                 ),
               ),
             ),
@@ -146,21 +146,21 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             ElevatedButton(
               onPressed: _isLoading ? null : _createGroup,
               style: ElevatedButton.styleFrom(
-                backgroundColor: NeonPulse.primaryDim,
-                foregroundColor: NeonPulse.onSurface,
+                backgroundColor: VelvetNoir.primaryDim,
+                foregroundColor: VelvetNoir.onSurface,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
                 disabledBackgroundColor:
-                    NeonPulse.surfaceBright,
+                    VelvetNoir.surfaceBright,
               ),
               child: _isLoading
                   ? const SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: NeonPulse.primary),
+                          strokeWidth: 2, color: VelvetNoir.primary),
                     )
                   : const Text(
                       'Create Group',

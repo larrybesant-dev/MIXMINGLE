@@ -20,12 +20,12 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: NeonPulse.surface,
+        backgroundColor: VelvetNoir.surface,
         appBar: AppBar(
-          backgroundColor: NeonPulse.surface,
+          backgroundColor: VelvetNoir.surface,
           title: ShaderMask(
             shaderCallback: (rect) =>
-                NeonPulse.primaryGradient.createShader(rect),
+                VelvetNoir.primaryGradient.createShader(rect),
             blendMode: BlendMode.srcIn,
             child: const Text(
               'Trending',
@@ -33,9 +33,9 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
             ),
           ),
           bottom: const TabBar(
-            indicatorColor: NeonPulse.primary,
-            labelColor: NeonPulse.primary,
-            unselectedLabelColor: NeonPulse.onSurfaceVariant,
+            indicatorColor: VelvetNoir.primary,
+            labelColor: VelvetNoir.primary,
+            unselectedLabelColor: VelvetNoir.onSurfaceVariant,
             indicatorWeight: 2,
             tabs: [
               Tab(text: 'Posts'),
@@ -62,7 +62,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
           return const Center(
             child: Text(
               'No trending posts yet',
-              style: TextStyle(color: NeonPulse.onSurfaceVariant),
+              style: TextStyle(color: VelvetNoir.onSurfaceVariant),
             ),
           );
         }
@@ -89,10 +89,10 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
         );
       },
       loading: () => const Center(
-          child: CircularProgressIndicator(color: NeonPulse.primary)),
+          child: CircularProgressIndicator(color: VelvetNoir.primary)),
       error: (e, _) => Center(
         child: Text('Could not load trending posts',
-            style: const TextStyle(color: NeonPulse.onSurfaceVariant)),
+            style: const TextStyle(color: VelvetNoir.onSurfaceVariant)),
       ),
     );
   }
@@ -113,7 +113,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
           return const Center(
             child: Text(
               'No trending hashtags yet',
-              style: TextStyle(color: NeonPulse.onSurfaceVariant),
+              style: TextStyle(color: VelvetNoir.onSurfaceVariant),
             ),
           );
         }
@@ -130,10 +130,10 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: NeonPulse.surfaceContainer,
+                  color: VelvetNoir.surfaceContainer,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: NeonPulse.outlineVariant.withValues(alpha: 0.5)),
+                      color: VelvetNoir.outlineVariant.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [
@@ -141,14 +141,14 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: NeonPulse.primaryDim.withValues(alpha: 0.3),
+                        color: VelvetNoir.primaryDim.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         '#$rank',
                         style: const TextStyle(
-                          color: NeonPulse.primary,
+                          color: VelvetNoir.primary,
                           fontWeight: FontWeight.w800,
                           fontSize: 13,
                         ),
@@ -162,7 +162,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                           Text(
                             '#${tag['hashtag']}',
                             style: const TextStyle(
-                              color: NeonPulse.onSurface,
+                              color: VelvetNoir.onSurface,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -171,7 +171,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                           Text(
                             '${tag['postCount']} posts',
                             style: const TextStyle(
-                              color: NeonPulse.onSurfaceVariant,
+                              color: VelvetNoir.onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),
@@ -179,7 +179,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                       ),
                     ),
                     const Icon(Icons.chevron_right,
-                        color: NeonPulse.onSurfaceVariant, size: 18),
+                        color: VelvetNoir.onSurfaceVariant, size: 18),
                   ],
                 ),
               ),
@@ -188,10 +188,10 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
         );
       },
       loading: () => const Center(
-          child: CircularProgressIndicator(color: NeonPulse.primary)),
+          child: CircularProgressIndicator(color: VelvetNoir.primary)),
       error: (e, _) => const Center(
         child: Text('Could not load hashtags',
-            style: TextStyle(color: NeonPulse.onSurfaceVariant)),
+            style: TextStyle(color: VelvetNoir.onSurfaceVariant)),
       ),
     );
   }
@@ -200,7 +200,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: NeonPulse.surfaceContainer,
+      backgroundColor: VelvetNoir.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -220,7 +220,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                       width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: NeonPulse.outlineVariant,
+                        color: VelvetNoir.outlineVariant,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -228,7 +228,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                   const SizedBox(height: 12),
                   ShaderMask(
                     shaderCallback: (rect) =>
-                        NeonPulse.primaryGradient.createShader(rect),
+                        VelvetNoir.primaryGradient.createShader(rect),
                     blendMode: BlendMode.srcIn,
                     child: Text(
                       '#$hashtag',
@@ -247,7 +247,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                             child: Text(
                               'No posts with this hashtag',
                               style: TextStyle(
-                                  color: NeonPulse.onSurfaceVariant),
+                                  color: VelvetNoir.onSurfaceVariant),
                             ),
                           );
                         }
@@ -276,11 +276,11 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                       },
                       loading: () => const Center(
                           child: CircularProgressIndicator(
-                              color: NeonPulse.primary)),
+                              color: VelvetNoir.primary)),
                       error: (e, _) => const Center(
                         child: Text('Could not load posts',
                             style: TextStyle(
-                                color: NeonPulse.onSurfaceVariant)),
+                                color: VelvetNoir.onSurfaceVariant)),
                       ),
                     ),
                   ),

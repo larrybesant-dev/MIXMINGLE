@@ -81,7 +81,7 @@ class NotificationsScreen extends ConsumerWidget {
       case 'follow':
         return const Color(0xFF4FC3F7);
       case 'friend_request':
-        return NeonPulse.secondary;
+        return VelvetNoir.secondary;
       case 'friend_favorite':
         return const Color(0xFFFFD54F);
       case 'friend_accept':
@@ -93,11 +93,11 @@ class NotificationsScreen extends ConsumerWidget {
       case 'gift':
         return const Color(0xFFFFB74D);
       case 'like':
-        return NeonPulse.error;
+        return VelvetNoir.error;
       case 'comment':
         return const Color(0xFF9FA8DA);
       default:
-        return NeonPulse.primary;
+        return VelvetNoir.primary;
     }
   }
 
@@ -145,15 +145,15 @@ class NotificationsScreen extends ConsumerWidget {
     final service = ref.read(notificationServiceProvider);
 
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       drawer: const MixVyDrawer(),
       appBar: AppBar(
-        backgroundColor: NeonPulse.surfaceHigh,
+        backgroundColor: VelvetNoir.surfaceHigh,
         elevation: 0,
         title: const Text(
           'Notifications',
           style: TextStyle(
-            color: NeonPulse.onSurface,
+            color: VelvetNoir.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 17,
           ),
@@ -162,13 +162,13 @@ class NotificationsScreen extends ConsumerWidget {
           if (userId != null)
             IconButton(
               icon: const Icon(Icons.done_all_rounded,
-                  color: NeonPulse.onSurfaceVariant),
+                  color: VelvetNoir.onSurfaceVariant),
               tooltip: 'Mark all as read',
               onPressed: () => service.markAllRead(userId),
             ),
           IconButton(
             icon: const Icon(Icons.settings_outlined,
-                color: NeonPulse.onSurfaceVariant),
+                color: VelvetNoir.onSurfaceVariant),
             tooltip: 'Notification settings',
             onPressed: () => context.go('/settings'),
           ),
@@ -178,7 +178,7 @@ class NotificationsScreen extends ConsumerWidget {
           ? const Center(
               child: Text(
                 'Please sign in to view notifications.',
-                style: TextStyle(color: NeonPulse.onSurfaceVariant),
+                style: TextStyle(color: VelvetNoir.onSurfaceVariant),
               ),
             )
           : Column(
@@ -186,26 +186,26 @@ class NotificationsScreen extends ConsumerWidget {
                 if (!notificationsEnabled)
                   Container(
                     width: double.infinity,
-                    color: NeonPulse.surfaceBright,
+                    color: VelvetNoir.surfaceBright,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
                     child: Row(
                       children: [
                         const Icon(Icons.notifications_off_outlined,
-                            size: 16, color: NeonPulse.onSurfaceVariant),
+                            size: 16, color: VelvetNoir.onSurfaceVariant),
                         const SizedBox(width: 8),
                         const Expanded(
                           child: Text(
                             'Push notifications are disabled.',
                             style: TextStyle(
-                                color: NeonPulse.onSurfaceVariant,
+                                color: VelvetNoir.onSurfaceVariant,
                                 fontSize: 13),
                           ),
                         ),
                         TextButton(
                           onPressed: () => context.go('/settings'),
                           style: TextButton.styleFrom(
-                              foregroundColor: NeonPulse.primary,
+                              foregroundColor: VelvetNoir.primary,
                               padding: EdgeInsets.zero,
                               tapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap),
@@ -219,13 +219,13 @@ class NotificationsScreen extends ConsumerWidget {
                   child: notificationsAsync.when(
                     loading: () => const Center(
                       child: CircularProgressIndicator(
-                          color: NeonPulse.primary),
+                          color: VelvetNoir.primary),
                     ),
                     error: (error, _) => Center(
                       child: Text(
                         'Could not load notifications: $error',
                         style: const TextStyle(
-                            color: NeonPulse.onSurfaceVariant),
+                            color: VelvetNoir.onSurfaceVariant),
                       ),
                     ),
                     data: (notifications) {
@@ -243,7 +243,7 @@ class NotificationsScreen extends ConsumerWidget {
                         itemCount: notifications.length,
                         separatorBuilder: (_, _) => const Divider(
                           height: 1,
-                          color: NeonPulse.outlineVariant,
+                          color: VelvetNoir.outlineVariant,
                           indent: 72,
                         ),
                         itemBuilder: (context, index) {
@@ -307,7 +307,7 @@ class _NotificationTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: unread
-            ? NeonPulse.primary.withValues(alpha: 0.05)
+            ? VelvetNoir.primary.withValues(alpha: 0.05)
             : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -339,8 +339,8 @@ class _NotificationTile extends StatelessWidget {
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: unread
-                                ? NeonPulse.onSurface
-                                : NeonPulse.onSurfaceVariant,
+                                ? VelvetNoir.onSurface
+                                : VelvetNoir.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -348,7 +348,7 @@ class _NotificationTile extends StatelessWidget {
                         timeAgo,
                         style: const TextStyle(
                           fontSize: 11,
-                          color: NeonPulse.onSurfaceVariant,
+                          color: VelvetNoir.onSurfaceVariant,
                         ),
                       ),
                       if (unread) ...[
@@ -357,7 +357,7 @@ class _NotificationTile extends StatelessWidget {
                           width: 7,
                           height: 7,
                           decoration: const BoxDecoration(
-                            color: NeonPulse.primary,
+                            color: VelvetNoir.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -369,7 +369,7 @@ class _NotificationTile extends StatelessWidget {
                     notification.content,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: NeonPulse.onSurface,
+                      color: VelvetNoir.onSurface,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -381,7 +381,7 @@ class _NotificationTile extends StatelessWidget {
                       children: [
                         _ActionChip(
                           label: 'View Request',
-                          color: NeonPulse.primary,
+                          color: VelvetNoir.primary,
                           onTap: onTap,
                         ),
                       ],

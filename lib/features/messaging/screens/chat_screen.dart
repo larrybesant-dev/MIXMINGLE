@@ -137,7 +137,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: NeonPulse.primaryDim,
+              backgroundColor: VelvetNoir.primaryDim,
               backgroundImage: widget.avatarUrl != null
                   ? CachedNetworkImageProvider(widget.avatarUrl!)
                   : null,
@@ -164,7 +164,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: NeonPulse.onSurface,
+                    color: VelvetNoir.onSurface,
                   ),
                 ),
               ],
@@ -172,7 +172,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
         elevation: 0,
-        backgroundColor: NeonPulse.surfaceLow,
+        backgroundColor: VelvetNoir.surfaceLow,
         actions: [
           if (kIsWeb)
             IconButton(
@@ -280,7 +280,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             if (!isOwn) ...[
                               CircleAvatar(
                                 radius: 14,
-                                backgroundColor: NeonPulse.primaryDim,
+                                backgroundColor: VelvetNoir.primaryDim,
                                 backgroundImage: widget.avatarUrl != null
                                     ? CachedNetworkImageProvider(widget.avatarUrl!)
                                     : null,
@@ -326,14 +326,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
                                                 colors: [
-                                                  NeonPulse.primary,
-                                                  NeonPulse.primaryDim,
+                                                  VelvetNoir.primary,
+                                                  VelvetNoir.primaryDim,
                                                 ],
                                               )
                                             : null,
                                         color: isOwn
                                             ? null
-                                            : NeonPulse.surfaceHigh,
+                                            : VelvetNoir.surfaceHigh,
                                         borderRadius: BorderRadius.only(
                                           topLeft: const Radius.circular(18),
                                           topRight: const Radius.circular(18),
@@ -345,14 +345,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         border: isOwn
                                             ? null
                                             : Border.all(
-                                                color: NeonPulse.outlineVariant
+                                                color: VelvetNoir.outlineVariant
                                                     .withValues(alpha: 0.4),
                                                 width: 1,
                                               ),
                                         boxShadow: [
                                           BoxShadow(
                                             color: isOwn
-                                                ? NeonPulse.primaryDim
+                                                ? VelvetNoir.primaryDim
                                                     .withValues(alpha: 0.25)
                                                 : Colors.black
                                                     .withValues(alpha: 0.15),
@@ -371,7 +371,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.w600,
                                                 fontSize: 12,
-                                                color: NeonPulse.secondary,
+                                                color: VelvetNoir.secondary,
                                               ),
                                             ),
                                             const SizedBox(height: 3),
@@ -381,7 +381,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                             style: TextStyle(
                                               color: isOwn
                                                   ? Colors.white
-                                                  : NeonPulse.onSurface,
+                                                  : VelvetNoir.onSurface,
                                               fontSize: 14,
                                               height: 1.4,
                                             ),
@@ -405,7 +405,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                           _formatTime(message.createdAt),
                                           style: const TextStyle(
                                             fontSize: 11,
-                                            color: NeonPulse.onSurfaceVariant,
+                                            color: VelvetNoir.onSurfaceVariant,
                                           ),
                                         ),
                                         if (isOwn) ...[
@@ -416,8 +416,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                                 : Icons.done,
                                             size: 13,
                                             color: isReadByOther
-                                                ? NeonPulse.secondary
-                                                : NeonPulse.onSurfaceVariant,
+                                                ? VelvetNoir.secondary
+                                                : VelvetNoir.onSurfaceVariant,
                                           ),
                                         ],
                                       ],
@@ -455,10 +455,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
-                color: NeonPulse.surfaceHigh,
+                color: VelvetNoir.surfaceHigh,
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: NeonPulse.outlineVariant.withValues(alpha: 0.5),
+                  color: VelvetNoir.outlineVariant.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),
@@ -466,7 +466,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.emoji_emotions_outlined,
-                        color: NeonPulse.onSurfaceVariant),
+                        color: VelvetNoir.onSurfaceVariant),
                     iconSize: 22,
                     padding: EdgeInsets.zero,
                     onPressed: () => _showReactionPicker(
@@ -481,7 +481,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Message…',
                         hintStyle:
-                            TextStyle(color: NeonPulse.onSurfaceVariant),
+                            TextStyle(color: VelvetNoir.onSurfaceVariant),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -490,7 +490,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             horizontal: 8, vertical: 8),
                       ),
                       style: const TextStyle(
-                          color: NeonPulse.onSurface, fontSize: 14),
+                          color: VelvetNoir.onSurface, fontSize: 14),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
@@ -503,7 +503,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       width: 38,
                       height: 38,
                       decoration: const BoxDecoration(
-                        gradient: NeonPulse.primaryGradient,
+                        gradient: VelvetNoir.primaryGradient,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.send_rounded,

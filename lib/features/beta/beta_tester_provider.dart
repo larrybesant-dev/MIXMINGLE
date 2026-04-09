@@ -1,14 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
+import '../auth/controllers/auth_controller.dart';
 
 /// Streams the `betaTester` boolean field from the current user's Firestore
 /// doc.  Returns `false` when there is no signed-in user or the field is absent.
 final isBetaTesterProvider = StreamProvider<bool>((ref) {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
+  final uid = ref.watch(authControllerProvider).uid;
   if (uid == null) return Stream.value(false);
 
-  return FirebaseFirestore.instance
+  return ref.watch(firestoreProvider)
       .collection('users')
       .doc(uid)
       .snapshots()

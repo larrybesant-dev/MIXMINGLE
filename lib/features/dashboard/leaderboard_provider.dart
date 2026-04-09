@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 import '../../models/user_model.dart';
 
 /// Top 10 users by coinBalance — displayed on the dashboard leaderboard strip.
 final leaderboardProvider =
     StreamProvider.autoDispose<List<UserModel>>((ref) {
-  return FirebaseFirestore.instance
+  return ref.watch(firestoreProvider)
       .collection('users')
       .orderBy('coinBalance', descending: true)
       .limit(10)

@@ -3818,7 +3818,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           ? Icons.volume_up
                           : Icons.volume_up_outlined,
                       color: _showVolumeControls
-                          ? NeonPulse.primary
+                          ? VelvetNoir.primary
                           : Colors.white70,
                     ),
                     onPressed: () => setState(
@@ -4594,7 +4594,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               width: 200,
                               child: SliderTheme(
                                 data: SliderThemeData(
-                                  activeTrackColor: NeonPulse.primary,
+                                  activeTrackColor: VelvetNoir.primary,
                                   trackHeight: 2.5,
                                   thumbShape: const RoundSliderThumbShape(
                                       enabledThumbRadius: 7),
@@ -5854,7 +5854,7 @@ class _RosterRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(3),
                 boxShadow: [
                   BoxShadow(
-                    color: NeonPulse.secondary.withValues(alpha: 0.75),
+                    color: VelvetNoir.secondary.withValues(alpha: 0.75),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),
@@ -5863,7 +5863,7 @@ class _RosterRow extends StatelessWidget {
               child: const Icon(
                 Icons.mail,
                 size: 11,
-                color: NeonPulse.primary,
+                color: VelvetNoir.primary,
               ),
             ),
           ],

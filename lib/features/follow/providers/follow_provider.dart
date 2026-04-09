@@ -1,9 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
+import 'package:mixvy/core/providers/firebase_providers.dart';
 
 String _asString(dynamic value, {String fallback = ''}) {
   if (value is String) {

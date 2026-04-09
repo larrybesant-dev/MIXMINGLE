@@ -63,14 +63,14 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
-        backgroundColor: NeonPulse.surfaceHigh,
+        backgroundColor: VelvetNoir.surfaceHigh,
         elevation: 0,
         title: const Text(
           'Friends',
           style: TextStyle(
-            color: NeonPulse.onSurface,
+            color: VelvetNoir.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 17,
           ),
@@ -273,7 +273,7 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
                             'Suggested — friends of your friends',
-                            style: theme.textTheme.bodySmall?.copyWith(color: NeonPulse.onSurfaceVariant),
+                            style: theme.textTheme.bodySmall?.copyWith(color: VelvetNoir.onSurfaceVariant),
                           ),
                         ),
                         ...suggestions.map((user) => _FriendUserTile(
@@ -355,7 +355,7 @@ class _StatusToggleBar extends ConsumerWidget {
         case UserStatus.online: return const Color(0xFF22C55E);
         case UserStatus.away: return const Color(0xFFF59E0B);
         case UserStatus.dnd: return const Color(0xFFEF4444);
-        case UserStatus.offline: return NeonPulse.onSurfaceVariant;
+        case UserStatus.offline: return VelvetNoir.onSurfaceVariant;
       }
     }
 
@@ -370,9 +370,9 @@ class _StatusToggleBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: NeonPulse.surfaceHigh,
+        color: VelvetNoir.surfaceHigh,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: NeonPulse.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
@@ -406,7 +406,7 @@ class _StatusToggleBar extends ConsumerWidget {
               _statusItem(UserStatus.online, 'Online', const Color(0xFF22C55E)),
               _statusItem(UserStatus.away, 'Away', const Color(0xFFF59E0B)),
               _statusItem(UserStatus.dnd, 'Do not disturb', const Color(0xFFEF4444)),
-              _statusItem(UserStatus.offline, 'Appear offline', NeonPulse.onSurfaceVariant),
+              _statusItem(UserStatus.offline, 'Appear offline', VelvetNoir.onSurfaceVariant),
             ],
           ),
         ],
@@ -448,17 +448,17 @@ class _SectionHeader extends StatelessWidget {
           width: 3,
           height: 16,
           decoration: BoxDecoration(
-            color: NeonPulse.primary,
+            color: VelvetNoir.primary,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         const SizedBox(width: 8),
-        Icon(icon, size: 14, color: NeonPulse.primary),
+        Icon(icon, size: 14, color: VelvetNoir.primary),
         const SizedBox(width: 6),
         Text(
           label.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
-            color: NeonPulse.primary,
+            color: VelvetNoir.primary,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
           ),
@@ -468,13 +468,13 @@ class _SectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
             decoration: BoxDecoration(
-              color: NeonPulse.primary.withValues(alpha: 0.2),
+              color: VelvetNoir.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               '$badge',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: NeonPulse.primary,
+                color: VelvetNoir.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -596,11 +596,11 @@ class _FriendUserTile extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor: NeonPulse.primary.withValues(alpha: 0.15),
+                    backgroundColor: VelvetNoir.primary.withValues(alpha: 0.15),
                     child: Text(
                       initials,
                       style: TextStyle(
-                        color: NeonPulse.primary,
+                        color: VelvetNoir.primary,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
@@ -615,7 +615,7 @@ class _FriendUserTile extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: statusDotColor,
-                        border: Border.all(color: NeonPulse.surfaceHigh, width: 2),
+                        border: Border.all(color: VelvetNoir.surfaceHigh, width: 2),
                         boxShadow: [BoxShadow(color: statusDotColor.withValues(alpha: 0.5), blurRadius: 4)],
                       ),
                     ),
@@ -635,7 +635,7 @@ class _FriendUserTile extends ConsumerWidget {
                             safeName,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: NeonPulse.onSurface,
+                              color: VelvetNoir.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -652,14 +652,14 @@ class _FriendUserTile extends ConsumerWidget {
                     Row(
                       children: [
                         if (inRoom != null && inRoom.isNotEmpty)
-                          _StatusChip(label: 'In Room', color: NeonPulse.secondary)
+                          _StatusChip(label: 'In Room', color: VelvetNoir.secondary)
                         else
                           Text(
                             subtitleText,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: status != UserStatus.offline
                                   ? _statusColor(status)
-                                  : NeonPulse.onSurfaceVariant,
+                                  : VelvetNoir.onSurfaceVariant,
                             ),
                           ),
                       ],
@@ -675,7 +675,7 @@ class _FriendUserTile extends ConsumerWidget {
                   if (onToggleFavorite != null)
                     _TileIconButton(
                       icon: isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-                      color: isFavorite ? Colors.amber : NeonPulse.onSurfaceVariant,
+                      color: isFavorite ? Colors.amber : VelvetNoir.onSurfaceVariant,
                       tooltip: isFavorite ? 'Remove from favorites' : 'Add to favorites',
                       onTap: onToggleFavorite,
                     ),
@@ -692,7 +692,7 @@ class _FriendUserTile extends ConsumerWidget {
                     _TileIconButton(
                       icon: Icons.meeting_room_outlined,
                       tooltip: 'Invite to your room',
-                      color: NeonPulse.primary,
+                      color: VelvetNoir.primary,
                       busy: isInviteBusy,
                       onTap: isInviteBusy ? null : onInvite,
                     ),
@@ -767,10 +767,10 @@ class _TileIconButton extends StatelessWidget {
                   height: 14,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: color ?? NeonPulse.onSurfaceVariant,
+                    color: color ?? VelvetNoir.onSurfaceVariant,
                   ),
                 )
-              : Icon(icon, size: 18, color: color ?? NeonPulse.onSurfaceVariant),
+              : Icon(icon, size: 18, color: color ?? VelvetNoir.onSurfaceVariant),
           onPressed: onTap,
           padding: EdgeInsets.zero,
           splashRadius: 18,
@@ -810,10 +810,10 @@ class _IncomingFriendRequestTile extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 22,
-              backgroundColor: NeonPulse.primary.withValues(alpha: 0.15),
+              backgroundColor: VelvetNoir.primary.withValues(alpha: 0.15),
               child: Text(
                 initials,
-                style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.w700, fontSize: 16),
+                style: TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w700, fontSize: 16),
               ),
             ),
             const SizedBox(width: 12),
@@ -823,11 +823,11 @@ class _IncomingFriendRequestTile extends StatelessWidget {
                 children: [
                   Text(
                     displayName,
-                    style: const TextStyle(fontWeight: FontWeight.w600, color: NeonPulse.onSurface),
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: VelvetNoir.onSurface),
                   ),
                   Text(
                     'Sent you a friend request',
-                    style: TextStyle(fontSize: 12, color: NeonPulse.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -838,7 +838,7 @@ class _IncomingFriendRequestTile extends StatelessWidget {
                 TextButton(
                   onPressed: isBusy ? null : onDecline,
                   style: TextButton.styleFrom(
-                    foregroundColor: NeonPulse.onSurfaceVariant,
+                    foregroundColor: VelvetNoir.onSurfaceVariant,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
                   child: const Text('Decline'),
@@ -847,14 +847,14 @@ class _IncomingFriendRequestTile extends StatelessWidget {
                 FilledButton(
                   onPressed: isBusy ? null : onAccept,
                   style: FilledButton.styleFrom(
-                    backgroundColor: NeonPulse.primary,
-                    foregroundColor: NeonPulse.surface,
+                    backgroundColor: VelvetNoir.primary,
+                    foregroundColor: VelvetNoir.surface,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     minimumSize: const Size(0, 36),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: isBusy
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: NeonPulse.surface))
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: VelvetNoir.surface))
                       : const Text('Accept'),
                 ),
               ],

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 
 DateTime _parseDateTime(dynamic value) {
   if (value is Timestamp) {
@@ -68,9 +69,6 @@ List<String> _asStringList(dynamic value) {
   return const <String>[];
 }
 
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
 class TrendingPost {
   final String id;
   final String authorId;

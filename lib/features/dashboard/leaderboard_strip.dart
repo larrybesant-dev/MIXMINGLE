@@ -30,7 +30,7 @@ class LeaderboardStrip extends ConsumerWidget {
                   Text(
                     'Hall of Fame',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: NeonPulse.onSurface,
+                          color: VelvetNoir.onSurface,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.2,
                         ),
@@ -72,7 +72,7 @@ class _LeaderCard extends StatelessWidget {
             ? const Color(0xFFCFD8DC) // silver
             : rank == 3
                 ? const Color(0xFFBF8970) // bronze
-                : NeonPulse.onSurfaceVariant;
+                : VelvetNoir.onSurfaceVariant;
 
     return GestureDetector(
       onTap: () => context.push('/profile/${user.id}'),
@@ -80,12 +80,12 @@ class _LeaderCard extends StatelessWidget {
         width: 76,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
-          color: NeonPulse.surfaceHigh,
+          color: VelvetNoir.surfaceHigh,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: rank <= 3
                 ? rankColor.withAlpha(80)
-                : NeonPulse.outlineVariant,
+                : VelvetNoir.outlineVariant,
             width: 0.8,
           ),
         ),
@@ -98,7 +98,7 @@ class _LeaderCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: NeonPulse.surfaceHighest,
+                  backgroundColor: VelvetNoir.surfaceHighest,
                   backgroundImage: user.avatarUrl != null
                       ? CachedNetworkImageProvider(user.avatarUrl!)
                       : null,
@@ -108,7 +108,7 @@ class _LeaderCard extends StatelessWidget {
                               ? user.username[0].toUpperCase()
                               : '?',
                           style:
-                              const TextStyle(color: NeonPulse.onSurfaceVariant),
+                              const TextStyle(color: VelvetNoir.onSurfaceVariant),
                         )
                       : null,
                 ),
@@ -142,7 +142,7 @@ class _LeaderCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: NeonPulse.onSurface,
+                color: VelvetNoir.onSurface,
               ),
             ),
             const SizedBox(height: 2),
@@ -150,7 +150,7 @@ class _LeaderCard extends StatelessWidget {
               '🪙 ${_fmt(user.coinBalance)}',
               style: TextStyle(
                 fontSize: 9,
-                color: rank <= 3 ? rankColor : NeonPulse.onSurfaceVariant,
+                color: rank <= 3 ? rankColor : VelvetNoir.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),

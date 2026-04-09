@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 const _kEnabled   = 'after_dark_enabled';
 const _kPinStored = 'after_dark_pin';
@@ -34,9 +35,9 @@ class AfterDarkController {
     await prefs.setBool(_kDobYes, true);
     await prefs.setString(_kPinStored, _obfuscate(pin));
     // Persist consent on Firestore user doc
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _ref.read(authControllerProvider).uid;
     if (uid != null) {
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      await _ref.read(firestoreProvider).collection('users').doc(uid).set({
         'adultModeEnabled': true,
         'adultConsentAccepted': true,
         'adultModeEnabledAt': FieldValue.serverTimestamp(),
@@ -69,9 +70,9 @@ class AfterDarkController {
     await prefs.remove(_kEnabled);
     await prefs.remove(_kPinStored);
     await prefs.remove(_kDobYes);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _ref.read(authControllerProvider).uid;
     if (uid != null) {
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      await _ref.read(firestoreProvider).collection('users').doc(uid).set({
         'adultModeEnabled': false,
       }, SetOptions(merge: true));
     }

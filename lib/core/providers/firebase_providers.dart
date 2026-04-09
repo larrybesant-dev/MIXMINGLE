@@ -1,0 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Canonical Firebase singleton providers.
+///
+/// All feature providers and services should read Firebase instances from here
+/// rather than calling [FirebaseFirestore.instance] / [FirebaseAuth.instance]
+/// directly. This allows tests to inject fakes via [ProviderScope.overrides].
+final firestoreProvider = Provider<FirebaseFirestore>(
+  (ref) => FirebaseFirestore.instance,
+);
+
+final firebaseAuthProvider = Provider<FirebaseAuth>(
+  (ref) => FirebaseAuth.instance,
+);

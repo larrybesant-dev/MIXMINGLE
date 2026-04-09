@@ -247,11 +247,11 @@ class _ReactionButtonRowState extends State<_ReactionButtonRow>
             height: 40,
             decoration: BoxDecoration(
               color: _expanded
-                  ? NeonPulse.secondary.withValues(alpha: 0.9)
-                  : NeonPulse.surfaceHighest.withValues(alpha: 0.85),
+                  ? VelvetNoir.secondary.withValues(alpha: 0.9)
+                  : VelvetNoir.surfaceHighest.withValues(alpha: 0.85),
               shape: BoxShape.circle,
               border: Border.all(
-                color: _expanded ? NeonPulse.secondary : NeonPulse.outlineVariant,
+                color: _expanded ? VelvetNoir.secondary : VelvetNoir.outlineVariant,
               ),
             ),
             alignment: Alignment.center,
@@ -283,9 +283,9 @@ class _EmojiBtn extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: NeonPulse.surfaceHighest.withValues(alpha: 0.85),
+          color: VelvetNoir.surfaceHighest.withValues(alpha: 0.85),
           shape: BoxShape.circle,
-          border: Border.all(color: NeonPulse.outlineVariant),
+          border: Border.all(color: VelvetNoir.outlineVariant),
         ),
         alignment: Alignment.center,
         child: Text(emoji, style: const TextStyle(fontSize: 20)),

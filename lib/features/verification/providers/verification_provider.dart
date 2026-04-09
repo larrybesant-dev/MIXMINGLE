@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 
 bool _asBool(dynamic value, {required bool fallback}) {
   if (value is bool) {
@@ -20,9 +21,6 @@ bool _asBool(dynamic value, {required bool fallback}) {
   return fallback;
 }
 
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
 // Check if user is verified
 final userVerificationProvider =
     StreamProvider.family<bool, String>((ref, userId) {

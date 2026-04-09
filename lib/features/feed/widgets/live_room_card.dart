@@ -28,12 +28,12 @@ class LiveRoomCard extends StatelessWidget {
       child: Container(
         width: 160,
         decoration: BoxDecoration(
-          color: NeonPulse.surfaceHigh,
+          color: VelvetNoir.surfaceHigh,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: NeonPulse.outlineVariant),
+          border: Border.all(color: VelvetNoir.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: NeonPulse.primaryDim.withValues(alpha: 0.12),
+              color: VelvetNoir.primaryDim.withValues(alpha: 0.12),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -67,7 +67,7 @@ class LiveRoomCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
-                      color: NeonPulse.error,
+                      color: VelvetNoir.error,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
@@ -98,14 +98,14 @@ class LiveRoomCard extends StatelessWidget {
                       children: [
                         const Icon(Icons.people,
                             size: 11,
-                            color: NeonPulse.secondary),
+                            color: VelvetNoir.secondary),
                         const SizedBox(width: 3),
                         Text(
                           '$memberCount',
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: NeonPulse.secondary,
+                            color: VelvetNoir.secondary,
                           ),
                         ),
                       ],
@@ -126,7 +126,7 @@ class LiveRoomCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: NeonPulse.onSurface,
+                      color: VelvetNoir.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -137,7 +137,7 @@ class LiveRoomCard extends StatelessWidget {
                       room.description!,
                       style: const TextStyle(
                         fontSize: 11,
-                        color: NeonPulse.onSurfaceVariant,
+                        color: VelvetNoir.onSurfaceVariant,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -151,17 +151,17 @@ class LiveRoomCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: NeonPulse.secondary.withValues(alpha: 0.12),
+                        color: VelvetNoir.secondary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                            color: NeonPulse.secondary.withValues(alpha: 0.3)),
+                            color: VelvetNoir.secondary.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         room.category!,
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: NeonPulse.secondary,
+                          color: VelvetNoir.secondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -176,7 +176,7 @@ class LiveRoomCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: NeonPulse.primary.withValues(alpha: 0.12),
+                        color: VelvetNoir.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -184,7 +184,7 @@ class LiveRoomCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: NeonPulse.primary,
+                          color: VelvetNoir.primary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -236,7 +236,7 @@ class _FallbackThumbnail extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [NeonPulse.primaryDim, NeonPulse.surfaceBright],
+          colors: [VelvetNoir.primaryDim, VelvetNoir.surfaceBright],
         ),
       ),
       child: Center(

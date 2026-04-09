@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 import '../repository/host_controls_repository.dart';
 import '../../../models/room_model.dart';
 import '../../../services/room_service.dart';
 
 final hostControlsRepositoryProvider = Provider<HostControlsRepository>((ref) {
-  return HostControlsRepository(FirebaseFirestore.instance);
+  return HostControlsRepository(ref.watch(firestoreProvider));
 });
 
 final roomStreamProvider = StreamProvider.family<RoomModel, String>((ref, roomId) {

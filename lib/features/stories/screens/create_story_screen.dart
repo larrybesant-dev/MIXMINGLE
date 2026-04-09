@@ -201,18 +201,18 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
             _videoUrl != null);
 
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
-        backgroundColor: NeonPulse.surfaceHigh,
+        backgroundColor: VelvetNoir.surfaceHigh,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: NeonPulse.onSurface),
+          icon: const Icon(Icons.close, color: VelvetNoir.onSurface),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'New Story',
           style: TextStyle(
-            color: NeonPulse.onSurface,
+            color: VelvetNoir.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 17,
           ),
@@ -227,18 +227,18 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: NeonPulse.primary,
+                      color: VelvetNoir.primary,
                     ),
                   )
                 : TextButton(
                     onPressed: canPost ? _publishStory : null,
                     style: TextButton.styleFrom(
                       backgroundColor: canPost
-                          ? NeonPulse.primary
-                          : NeonPulse.surfaceBright,
+                          ? VelvetNoir.primary
+                          : VelvetNoir.surfaceBright,
                       foregroundColor: canPost
-                          ? NeonPulse.surface
-                          : NeonPulse.onSurfaceVariant,
+                          ? VelvetNoir.surface
+                          : VelvetNoir.onSurfaceVariant,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 6),
                       shape: RoundedRectangleBorder(
@@ -259,8 +259,8 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
           if (_isUploadingMedia)
             LinearProgressIndicator(
               value: _uploadProgress > 0 ? _uploadProgress : null,
-              backgroundColor: NeonPulse.surfaceHigh,
-              color: NeonPulse.primary,
+              backgroundColor: VelvetNoir.surfaceHigh,
+              color: VelvetNoir.primary,
               minHeight: 3,
             ),
 
@@ -305,10 +305,10 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? NeonPulse.primary : NeonPulse.surfaceHigh,
+          color: selected ? VelvetNoir.primary : VelvetNoir.surfaceHigh,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? NeonPulse.primary : NeonPulse.outlineVariant,
+            color: selected ? VelvetNoir.primary : VelvetNoir.outlineVariant,
           ),
         ),
         child: Row(
@@ -317,7 +317,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
             Icon(
               icon,
               size: 15,
-              color: selected ? NeonPulse.surface : NeonPulse.onSurfaceVariant,
+              color: selected ? VelvetNoir.surface : VelvetNoir.onSurfaceVariant,
             ),
             const SizedBox(width: 5),
             Text(
@@ -325,7 +325,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? NeonPulse.surface : NeonPulse.onSurfaceVariant,
+                color: selected ? VelvetNoir.surface : VelvetNoir.onSurfaceVariant,
               ),
             ),
           ],
@@ -339,7 +339,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
       width: double.infinity,
       height: 220,
       decoration: const BoxDecoration(
-        color: NeonPulse.surfaceLow,
+        color: VelvetNoir.surfaceLow,
       ),
       child: Stack(
         fit: StackFit.expand,
@@ -350,7 +350,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               imageUrl: _imageUrl!,
               fit: BoxFit.cover,
               placeholder: (_, _) => const ColoredBox(
-                color: NeonPulse.surfaceHigh,
+                color: VelvetNoir.surfaceHigh,
               ),
             )
           else
@@ -359,7 +359,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [NeonPulse.primaryDim, Color(0xFF0D0A0C)],
+                  colors: [VelvetNoir.primaryDim, Color(0xFF0D0A0C)],
                 ),
               ),
             ),
@@ -446,7 +446,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                   children: [
                     CircularProgressIndicator(
                       value: _uploadProgress > 0 ? _uploadProgress : null,
-                      color: NeonPulse.primary,
+                      color: VelvetNoir.primary,
                     ),
                     const SizedBox(height: 10),
                     const Text(
@@ -488,14 +488,14 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         // Text field
         Container(
           decoration: BoxDecoration(
-            color: NeonPulse.surfaceHigh,
+            color: VelvetNoir.surfaceHigh,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: NeonPulse.outlineVariant),
+            border: Border.all(color: VelvetNoir.outlineVariant),
           ),
           child: TextField(
             controller: _textController,
             style: const TextStyle(
-                color: NeonPulse.onSurface, fontSize: 15),
+                color: VelvetNoir.onSurface, fontSize: 15),
             maxLines: _type == _StoryType.text ? 6 : 3,
             maxLength: _maxTextChars,
             decoration: InputDecoration(
@@ -503,7 +503,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                   ? 'Share what\'s on your mind… (24 h only)'
                   : 'Add a caption…',
               hintStyle: const TextStyle(
-                  color: NeonPulse.onSurfaceVariant, fontSize: 14),
+                  color: VelvetNoir.onSurfaceVariant, fontSize: 14),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(14),
               counterText: '',
@@ -523,8 +523,8 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   color: remaining < 20
-                      ? NeonPulse.error
-                      : NeonPulse.onSurfaceVariant,
+                      ? VelvetNoir.error
+                      : VelvetNoir.onSurfaceVariant,
                 ),
               ),
             ],
@@ -536,8 +536,8 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: NeonPulse.onSurfaceVariant,
-              side: const BorderSide(color: NeonPulse.outlineVariant),
+              foregroundColor: VelvetNoir.onSurfaceVariant,
+              side: const BorderSide(color: VelvetNoir.outlineVariant),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -573,22 +573,22 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 40),
         decoration: BoxDecoration(
-          color: NeonPulse.surfaceHigh,
+          color: VelvetNoir.surfaceHigh,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: NeonPulse.outlineVariant,
+            color: VelvetNoir.outlineVariant,
             style: BorderStyle.solid,
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 40, color: NeonPulse.primary),
+            Icon(icon, size: 40, color: VelvetNoir.primary),
             const SizedBox(height: 12),
             Text(
               label,
               style: const TextStyle(
-                color: NeonPulse.onSurfaceVariant,
+                color: VelvetNoir.onSurfaceVariant,
                 fontSize: 14,
               ),
             ),

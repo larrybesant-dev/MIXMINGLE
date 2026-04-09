@@ -232,7 +232,7 @@ class _ConversationTile extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 26,
-                    backgroundColor: NeonPulse.primaryDim,
+                    backgroundColor: VelvetNoir.primaryDim,
                     backgroundImage: avatarUrl != null
                         ? CachedNetworkImageProvider(avatarUrl)
                         : null,
@@ -257,7 +257,7 @@ class _ConversationTile extends StatelessWidget {
                         width: 14,
                         height: 14,
                         decoration: const BoxDecoration(
-                          color: NeonPulse.secondary,
+                          color: VelvetNoir.secondary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -275,7 +275,7 @@ class _ConversationTile extends StatelessWidget {
                         fontWeight:
                             unread ? FontWeight.w700 : FontWeight.w500,
                         fontSize: 15,
-                        color: NeonPulse.onSurface,
+                        color: VelvetNoir.onSurface,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -286,8 +286,8 @@ class _ConversationTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         color: unread
-                            ? NeonPulse.onSurface
-                            : NeonPulse.onSurfaceVariant,
+                            ? VelvetNoir.onSurface
+                            : VelvetNoir.onSurfaceVariant,
                         fontWeight:
                             unread ? FontWeight.w500 : FontWeight.normal,
                       ),
@@ -300,7 +300,7 @@ class _ConversationTile extends StatelessWidget {
                 _formatTime(conversation.lastMessageAt),
                 style: const TextStyle(
                   fontSize: 12,
-                  color: NeonPulse.onSurfaceVariant,
+                  color: VelvetNoir.onSurfaceVariant,
                 ),
               ),
             ],

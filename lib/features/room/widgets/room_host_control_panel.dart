@@ -647,7 +647,7 @@ class _AudioControlsTab extends StatelessWidget {
           min: 0.0,
           max: 1.0,
           divisions: 20,
-          activeColor: NeonPulse.primary,
+          activeColor: VelvetNoir.primary,
           onChanged: onSpeakerChanged,
         ),
         Row(
@@ -794,7 +794,7 @@ class _ParticipantTile extends ConsumerWidget {
     final roleColor = switch (participant.role) {
       'host' => const Color(0xFFFFD700),
       'cohost' => const Color(0xFF7C5FFF),
-      'moderator' => NeonPulse.secondary,
+      'moderator' => VelvetNoir.secondary,
       _ => Colors.grey,
     };
 
@@ -992,7 +992,7 @@ class _ModeratorsTab extends ConsumerWidget {
                         size: 18,
                         color: p.role == 'cohost'
                             ? const Color(0xFF7C5FFF)
-                            : NeonPulse.secondary,
+                            : VelvetNoir.secondary,
                       ),
                     ),
                     title: Text(p.userId),

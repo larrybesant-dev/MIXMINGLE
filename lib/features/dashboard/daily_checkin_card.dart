@@ -75,14 +75,14 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              NeonPulse.surfaceHigh,
-              NeonPulse.surfaceHighest,
+              VelvetNoir.surfaceHigh,
+              VelvetNoir.surfaceHighest,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: NeonPulse.outlineVariant, width: 0.8),
+          border: Border.all(color: VelvetNoir.outlineVariant, width: 0.8),
         ),
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         child: Column(
@@ -96,7 +96,7 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
                 Text(
                   'Daily Check-in',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: NeonPulse.onSurface,
+                        color: VelvetNoir.onSurface,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.1,
                       ),
@@ -108,15 +108,15 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: NeonPulse.primaryDim.withAlpha(80),
+                      color: VelvetNoir.primaryDim.withAlpha(80),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: NeonPulse.primary.withAlpha(100), width: 0.6),
+                          color: VelvetNoir.primary.withAlpha(100), width: 0.6),
                     ),
                     child: Text(
                       '🔥 $streak-day streak',
                       style: const TextStyle(
-                        color: NeonPulse.primary,
+                        color: VelvetNoir.primary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -149,12 +149,12 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
               Row(
                 children: [
                   const Icon(Icons.check_circle_rounded,
-                      size: 16, color: NeonPulse.primary),
+                      size: 16, color: VelvetNoir.primary),
                   const SizedBox(width: 6),
                   Text(
                     'Claimed! Come back tomorrow',
                     style: TextStyle(
-                      color: NeonPulse.onSurfaceVariant,
+                      color: VelvetNoir.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -165,8 +165,8 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
                 width: double.infinity,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: NeonPulse.primary,
-                    foregroundColor: NeonPulse.surface,
+                    backgroundColor: VelvetNoir.primary,
+                    foregroundColor: VelvetNoir.surface,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 11),
@@ -178,7 +178,7 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: NeonPulse.surface,
+                            color: VelvetNoir.surface,
                           ),
                         )
                       : Text(
@@ -224,29 +224,29 @@ class _DayPip extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: done
-                ? NeonPulse.primaryDim.withAlpha(180)
+                ? VelvetNoir.primaryDim.withAlpha(180)
                 : isToday
-                    ? NeonPulse.primaryDim.withAlpha(60)
-                    : NeonPulse.surfaceBright.withAlpha(120),
+                    ? VelvetNoir.primaryDim.withAlpha(60)
+                    : VelvetNoir.surfaceBright.withAlpha(120),
             border: Border.all(
               color: done || isToday
-                  ? NeonPulse.primary
-                  : NeonPulse.outlineVariant,
+                  ? VelvetNoir.primary
+                  : VelvetNoir.outlineVariant,
               width: isToday ? 2 : 1,
             ),
           ),
           child: Center(
             child: done
                 ? const Icon(Icons.check_rounded,
-                    size: 16, color: NeonPulse.primary)
+                    size: 16, color: VelvetNoir.primary)
                 : Text(
                     'D$day',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: isToday
-                          ? NeonPulse.primary
-                          : NeonPulse.onSurfaceVariant,
+                          ? VelvetNoir.primary
+                          : VelvetNoir.onSurfaceVariant,
                     ),
                   ),
           ),
@@ -257,8 +257,8 @@ class _DayPip extends StatelessWidget {
           style: TextStyle(
             fontSize: 9,
             color: done || isToday
-                ? NeonPulse.primary
-                : NeonPulse.onSurfaceVariant,
+                ? VelvetNoir.primary
+                : VelvetNoir.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),

@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 // ── Velvet Noir Design Tokens — MixVy ────────────────────────────────────────
 // Deep warm-black surfaces · champagne gold · rose wine · warm cream
-class NeonPulse {
+class VelvetNoir {
   // Surfaces — warm deep-black with burgundy undertones
   static const Color surface        = Color(0xFF0D0A0C);
   static const Color surfaceLow     = Color(0xFF130C0F);
@@ -37,49 +37,49 @@ class NeonPulse {
 final ThemeData midnightCreativeTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  scaffoldBackgroundColor: NeonPulse.surface,
+  scaffoldBackgroundColor: VelvetNoir.surface,
   colorScheme: const ColorScheme.dark(
-    primary: NeonPulse.primary,
-    secondary: NeonPulse.secondary,
-    surface: NeonPulse.surface,
-    error: NeonPulse.error,
-    onPrimary: NeonPulse.surface,
-    onSecondary: NeonPulse.surface,
-    onSurface: NeonPulse.onSurface,
-    onError: NeonPulse.surface,
-    surfaceContainerLow: NeonPulse.surfaceLow,
-    surfaceContainer: NeonPulse.surfaceContainer,
-    surfaceContainerHigh: NeonPulse.surfaceHigh,
-    surfaceContainerHighest: NeonPulse.surfaceHighest,
-    outline: NeonPulse.outlineVariant,
+    primary: VelvetNoir.primary,
+    secondary: VelvetNoir.secondary,
+    surface: VelvetNoir.surface,
+    error: VelvetNoir.error,
+    onPrimary: VelvetNoir.surface,
+    onSecondary: VelvetNoir.surface,
+    onSurface: VelvetNoir.onSurface,
+    onError: VelvetNoir.surface,
+    surfaceContainerLow: VelvetNoir.surfaceLow,
+    surfaceContainer: VelvetNoir.surfaceContainer,
+    surfaceContainerHigh: VelvetNoir.surfaceHigh,
+    surfaceContainerHighest: VelvetNoir.surfaceHighest,
+    outline: VelvetNoir.outlineVariant,
   ),
   textTheme: TextTheme(
     // Display & Headline — Playfair Display (elegant serif)
-    displayLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: NeonPulse.onSurface),
-    displayMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: NeonPulse.onSurface),
-    headlineLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: NeonPulse.onSurface),
-    headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: NeonPulse.onSurface),
-    headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: NeonPulse.onSurface),
-    titleLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: NeonPulse.onSurface),
+    displayLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: VelvetNoir.onSurface),
+    displayMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: VelvetNoir.onSurface),
+    headlineLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: VelvetNoir.onSurface),
+    headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: VelvetNoir.onSurface),
+    headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: VelvetNoir.onSurface),
+    titleLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: VelvetNoir.onSurface),
     // Body & Labels — Inter (clean, readable)
-    titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: NeonPulse.onSurface),
-    titleSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14, color: NeonPulse.onSurface),
-    bodyLarge:   GoogleFonts.inter(fontSize: 16, color: NeonPulse.onSurface),
-    bodyMedium:  GoogleFonts.inter(fontSize: 14, color: NeonPulse.onSurfaceVariant),
-    bodySmall:   GoogleFonts.inter(fontSize: 12, color: NeonPulse.onSurfaceVariant),
-    labelLarge:  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: NeonPulse.onSurface),
-    labelMedium: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 12, color: NeonPulse.onSurface),
-    labelSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.5, color: NeonPulse.onSurfaceVariant),
+    titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface),
+    titleSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface),
+    bodyLarge:   GoogleFonts.inter(fontSize: 16, color: VelvetNoir.onSurface),
+    bodyMedium:  GoogleFonts.inter(fontSize: 14, color: VelvetNoir.onSurfaceVariant),
+    bodySmall:   GoogleFonts.inter(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
+    labelLarge:  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: VelvetNoir.onSurface),
+    labelMedium: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 12, color: VelvetNoir.onSurface),
+    labelSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.5, color: VelvetNoir.onSurfaceVariant),
   ),
   appBarTheme: const AppBarTheme(
-    backgroundColor: NeonPulse.surface,
+    backgroundColor: VelvetNoir.surface,
     elevation: 0,
     scrolledUnderElevation: 0,
     surfaceTintColor: Colors.transparent,
-    foregroundColor: NeonPulse.onSurface,
+    foregroundColor: VelvetNoir.onSurface,
     centerTitle: true,
     titleTextStyle: TextStyle(
-      color: NeonPulse.onSurface,
+      color: VelvetNoir.onSurface,
       fontSize: 18,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.2,
@@ -87,7 +87,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   cardTheme: CardThemeData(
     elevation: 0,
-    color: NeonPulse.surfaceHigh,
+    color: VelvetNoir.surfaceHigh,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
       side: const BorderSide(color: Color(0x1A73757D)),
@@ -95,7 +95,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: NeonPulse.surfaceHighest,
+    fillColor: VelvetNoir.surfaceHighest,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(999),
       borderSide: BorderSide.none,
@@ -106,16 +106,16 @@ final ThemeData midnightCreativeTheme = ThemeData(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(999),
-      borderSide: const BorderSide(color: NeonPulse.primary, width: 1.5),
+      borderSide: const BorderSide(color: VelvetNoir.primary, width: 1.5),
     ),
-    hintStyle: const TextStyle(color: NeonPulse.onSurfaceVariant, fontSize: 14),
-    labelStyle: const TextStyle(color: NeonPulse.onSurfaceVariant, fontSize: 14),
+    hintStyle: const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
+    labelStyle: const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: NeonPulse.primary,
-      foregroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.primary,
+      foregroundColor: VelvetNoir.surface,
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
@@ -124,7 +124,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
-      foregroundColor: NeonPulse.onSurface,
+      foregroundColor: VelvetNoir.onSurface,
       side: const BorderSide(color: Color(0x1A73757D)),
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
@@ -132,25 +132,25 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: NeonPulse.primary,
+      foregroundColor: VelvetNoir.primary,
     ),
   ),
-  iconTheme: const IconThemeData(color: NeonPulse.onSurfaceVariant),
+  iconTheme: const IconThemeData(color: VelvetNoir.onSurfaceVariant),
   dividerTheme: const DividerThemeData(
     color: Color(0x1A73757D),
     thickness: 1,
     space: 24,
   ),
   snackBarTheme: SnackBarThemeData(
-    backgroundColor: NeonPulse.surfaceHigh,
-    contentTextStyle: GoogleFonts.inter(color: NeonPulse.onSurface, fontSize: 14, height: 1.4),
+    backgroundColor: VelvetNoir.surfaceHigh,
+    contentTextStyle: GoogleFonts.inter(color: VelvetNoir.onSurface, fontSize: 14, height: 1.4),
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
   ),
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-    backgroundColor: NeonPulse.surfaceLow,
-    selectedItemColor: NeonPulse.primary,
-    unselectedItemColor: NeonPulse.onSurfaceVariant,
+    backgroundColor: VelvetNoir.surfaceLow,
+    selectedItemColor: VelvetNoir.primary,
+    unselectedItemColor: VelvetNoir.onSurfaceVariant,
     type: BottomNavigationBarType.fixed,
     elevation: 0,
   ),

@@ -200,7 +200,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
       builder: (sheetCtx) {
         return Container(
           decoration: const BoxDecoration(
-            color: NeonPulse.surfaceHigh,
+            color: VelvetNoir.surfaceHigh,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
@@ -212,7 +212,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: NeonPulse.outlineVariant,
+                  color: VelvetNoir.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -222,7 +222,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
               const SizedBox(height: 12),
               ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Color(0xFFFF6EB4), NeonPulse.primary],
+                  colors: [Color(0xFFFF6EB4), VelvetNoir.primary],
                 ).createShader(bounds),
                 child: const Text(
                   "It's a Match!",
@@ -238,7 +238,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
                 'You and ${candidate.username} liked each other.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: NeonPulse.onSurfaceVariant,
+                  color: VelvetNoir.onSurfaceVariant,
                   fontSize: 15,
                 ),
               ),
@@ -289,8 +289,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
                 width: double.infinity,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: NeonPulse.onSurfaceVariant,
-                    side: const BorderSide(color: NeonPulse.outlineVariant),
+                    foregroundColor: VelvetNoir.onSurfaceVariant,
+                    side: const BorderSide(color: VelvetNoir.outlineVariant),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -452,9 +452,9 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     }
 
     return Scaffold(
-      backgroundColor: NeonPulse.surface,
+      backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
-        backgroundColor: NeonPulse.surfaceHigh,
+        backgroundColor: VelvetNoir.surfaceHigh,
         elevation: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -481,7 +481,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
             const Text(
               'Speed Dating',
               style: TextStyle(
-                color: NeonPulse.onSurface,
+                color: VelvetNoir.onSurface,
                 fontWeight: FontWeight.w700,
                 fontSize: 17,
               ),
@@ -494,8 +494,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
               padding: const EdgeInsets.only(right: 12),
               child: TextButton.icon(
                 style: TextButton.styleFrom(
-                  backgroundColor: NeonPulse.primary,
-                  foregroundColor: NeonPulse.surface,
+                  backgroundColor: VelvetNoir.primary,
+                  foregroundColor: VelvetNoir.surface,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -512,8 +512,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
               padding: const EdgeInsets.only(right: 12),
               child: TextButton.icon(
                 style: TextButton.styleFrom(
-                  backgroundColor: NeonPulse.surfaceBright,
-                  foregroundColor: NeonPulse.error,
+                  backgroundColor: VelvetNoir.surfaceBright,
+                  foregroundColor: VelvetNoir.error,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -789,42 +789,42 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
           children: [
             if (_queueJoining) ...[
               const CircularProgressIndicator(
-                color: NeonPulse.primary),
+                color: VelvetNoir.primary),
               const SizedBox(height: 20),
               Text('Joining match queue…',
                   style: theme.textTheme.titleMedium?.copyWith(
-                      color: NeonPulse.onSurface)),
+                      color: VelvetNoir.onSurface)),
             ] else if (_queueSessionId != null) ...[
               const Text('💘', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
                 'Match found!',
                 style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800, color: NeonPulse.onSurface),
+                    fontWeight: FontWeight.w800, color: VelvetNoir.onSurface),
               ),
               const SizedBox(height: 8),
               const Text('Connecting you to a live date room…',
-                  style: TextStyle(color: NeonPulse.onSurfaceVariant)),
+                  style: TextStyle(color: VelvetNoir.onSurfaceVariant)),
               const SizedBox(height: 20),
-              const CircularProgressIndicator(color: NeonPulse.primary),
+              const CircularProgressIndicator(color: VelvetNoir.primary),
             ] else ...[
               const Text('🔍', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
                 'Searching for a match…',
                 style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800, color: NeonPulse.onSurface),
+                    fontWeight: FontWeight.w800, color: VelvetNoir.onSurface),
               ),
               const SizedBox(height: 12),
               const Text(
                 "You're in the queue. We'll connect you when someone matches with you.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: NeonPulse.onSurfaceVariant),
+                style: TextStyle(color: VelvetNoir.onSurfaceVariant),
               ),
               const SizedBox(height: 20),
               const LinearProgressIndicator(
-                color: NeonPulse.primary,
-                backgroundColor: NeonPulse.surfaceHigh,
+                color: VelvetNoir.primary,
+                backgroundColor: VelvetNoir.surfaceHigh,
               ),
               const SizedBox(height: 28),
               OutlinedButton.icon(
@@ -832,8 +832,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
                 icon: const Icon(Icons.cancel_outlined, size: 16),
                 label: const Text('Leave Queue'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: NeonPulse.error,
-                  side: BorderSide(color: NeonPulse.error.withValues(alpha: 0.5)),
+                  foregroundColor: VelvetNoir.error,
+                  side: BorderSide(color: VelvetNoir.error.withValues(alpha: 0.5)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
                 ),

@@ -1,16 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixvy/services/room_service.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 
 import '../repository/feed_repository.dart';
 import '../models/post_model.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user_model.dart';
 import 'package:mixvy/models/models.dart';
-
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
 
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
   return FeedRepository(ref.read(firestoreProvider));
@@ -44,7 +41,7 @@ final eventsStreamProvider = StreamProvider<List<EventModel>>((ref) {
 /// Real-time count of users whose presence doc has isOnline == true.
 /// Capped at 500 reads to keep costs low; shows "500+" when saturated.
 final onlineUsersCountProvider = StreamProvider.autoDispose<int>((ref) {
-  return FirebaseFirestore.instance
+  return ref.watch(firestoreProvider)
       .collection('presence')
       .where('isOnline', isEqualTo: true)
       .limit(501)
@@ -78,7 +75,7 @@ final newMembersStreamProvider = StreamProvider.autoDispose<List<UserModel>>((re
 /// Real-time top-10 users by coin balance — drives the "Top Creators" section.
 final trendingUsersStreamProvider =
     StreamProvider.autoDispose<List<UserModel>>((ref) {
-  return FirebaseFirestore.instance
+  return ref.watch(firestoreProvider)
       .collection('users')
       .orderBy('balance', descending: true)
       .limit(10)
