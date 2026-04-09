@@ -12,10 +12,10 @@ import '../../feed/widgets/post_card.dart';
 // ── Providers ────────────────────────────────────────────────────────────────
 
 final _postDocProvider =
-    StreamProvider.family<PostModel?, String>((ref, postId) {
-  return FirebaseFirestore.instance
-      .collection('posts')
-      .doc(postId)
+  StreamProvider.family<PostModel?, ({FirebaseFirestore firestore, String postId})>((ref, params) {
+  return params.firestore
+    .collection('posts')
+    .doc(params.postId)
       .snapshots()
       .map((doc) =>
           doc.exists ? PostModel.fromDoc(doc.id, doc.data()!) : null);
@@ -58,10 +58,10 @@ class _Comment {
 }
 
 final _commentsProvider =
-    StreamProvider.family<List<_Comment>, String>((ref, postId) {
-  return FirebaseFirestore.instance
+    StreamProvider.family<List<_Comment>, ({FirebaseFirestore firestore, String postId})>((ref, params) {
+  return params.firestore
       .collection('posts')
-      .doc(postId)
+      .doc(params.postId)
       .collection('comments')
       .orderBy('createdAt')
       .limit(100)
@@ -72,9 +72,17 @@ final _commentsProvider =
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 class PostCommentsScreen extends ConsumerStatefulWidget {
-  const PostCommentsScreen({super.key, required this.postId});
+  const PostCommentsScreen({
+    super.key,
+    required this.postId,
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  })  : firestore = firestore ?? FirebaseFirestore.instance,
+        auth = auth ?? FirebaseAuth.instance;
 
   final String postId;
+  final FirebaseFirestore firestore;
+  final FirebaseAuth auth;
 
   @override
   ConsumerState<PostCommentsScreen> createState() =>
@@ -103,13 +111,13 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
   Future<void> _submitComment() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty || _submitting) return;
-    final user = FirebaseAuth.instance.currentUser;
+    final user = widget.auth.currentUser;
     if (user == null) return;
 
     setState(() => _submitting = true);
     try {
       final now = FieldValue.serverTimestamp();
-      final postRef = FirebaseFirestore.instance
+      final postRef = widget.firestore
           .collection('posts')
           .doc(widget.postId);
 
@@ -139,9 +147,10 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final postAsync = ref.watch(_postDocProvider(widget.postId));
-    final commentsAsync = ref.watch(_commentsProvider(widget.postId));
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final providerArgs = (firestore: widget.firestore, postId: widget.postId);
+    final postAsync = ref.watch(_postDocProvider(providerArgs));
+    final commentsAsync = ref.watch(_commentsProvider(providerArgs));
+    final currentUser = widget.auth.currentUser;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Comments')),
