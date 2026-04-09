@@ -14,7 +14,6 @@ import '../stories/widgets/stories_row.dart';
 import 'daily_checkin_card.dart';
 import 'leaderboard_strip.dart';
 import '../../models/user_model.dart';
-import '../../widgets/mixvy_drawer.dart';
 import '../../widgets/brand_ui_kit.dart';
 
 
@@ -74,7 +73,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: VelvetNoir.surface,
-      drawer: const MixVyDrawer(),
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(

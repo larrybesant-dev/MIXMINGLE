@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../providers/search_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -125,7 +126,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('Error loading trending: $error'),
+            error: (error, _) => Text(
+              friendlyFirestoreMessage(
+                error,
+                fallbackContext: 'trending results',
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),

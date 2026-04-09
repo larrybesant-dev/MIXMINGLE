@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
 import '../../../core/theme.dart';
-import '../../../widgets/mixvy_drawer.dart';
 
 class MessagesScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -87,7 +86,6 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
 
     return Scaffold(
       backgroundColor: VelvetNoir.surface,
-      drawer: const MixVyDrawer(),
       appBar: AppBar(
         backgroundColor: VelvetNoir.surface,
         surfaceTintColor: Colors.transparent,

@@ -754,29 +754,3 @@ class _PrimaryCta extends StatelessWidget {
     );
   }
 }
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: enabled ? () => onPressed() : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.7,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

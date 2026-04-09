@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../providers/trending_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -84,8 +85,14 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
       loading: () => const Center(
           child: CircularProgressIndicator(color: VelvetNoir.primary)),
       error: (e, _) => Center(
-        child: Text('Could not load trending posts',
-            style: const TextStyle(color: VelvetNoir.onSurfaceVariant)),
+        child: Text(
+          friendlyFirestoreMessage(
+            e,
+            fallbackContext: 'trending posts',
+          ),
+          style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -182,9 +189,15 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
       },
       loading: () => const Center(
           child: CircularProgressIndicator(color: VelvetNoir.primary)),
-      error: (e, _) => const Center(
-        child: Text('Could not load hashtags',
-            style: TextStyle(color: VelvetNoir.onSurfaceVariant)),
+      error: (e, _) => Center(
+        child: Text(
+          friendlyFirestoreMessage(
+            e,
+            fallbackContext: 'hashtags',
+          ),
+          style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

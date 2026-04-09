@@ -638,7 +638,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     OutlinedButton.icon(
                       onPressed: () {
                         Clipboard.setData(ClipboardData(
-                          text: 'https://mix-and-mingle-v2.web.app/profile/${widget.userId}',
+                          text: 'https://mixvy.app/profile/${widget.userId}',
                         ));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Profile link copied!')),

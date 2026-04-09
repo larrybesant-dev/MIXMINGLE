@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../../../core/theme.dart';
 import '../../../models/room_model.dart';
 import '../widgets/live_room_card.dart';
-import '../../../widgets/mixvy_drawer.dart';
 import '../../../widgets/brand_ui_kit.dart';
 
 class RoomBrowserScreen extends ConsumerStatefulWidget {
@@ -56,7 +56,6 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: VelvetNoir.surface,
-      drawer: const MixVyDrawer(),
       body: _showGrid
           ? _RoomListView(
               category: _selectedCategory,
@@ -667,7 +666,15 @@ class _RoomListView extends ConsumerWidget {
             child: Center(child: CircularProgressIndicator(color: VelvetNoir.primary)),
           ),
           error: (e, _) => SliverFillRemaining(
-            child: Center(child: Text('Error loading rooms: $e')),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  friendlyFirestoreMessage(e, fallbackContext: 'rooms'),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           ),
         ),
       ],

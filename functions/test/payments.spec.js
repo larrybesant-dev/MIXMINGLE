@@ -55,6 +55,7 @@ function createFirestoreDouble(initialUsers = {}) {
       Object.entries(initialUsers).map(([id, value]) => [id, {...value}]),
   );
   const wallets = new Map();
+    const walletLedger = new Map();
   const transactions = new Map();
   const logs = new Map();
   const stripeConnectAccounts = new Map();
@@ -72,6 +73,8 @@ function createFirestoreDouble(initialUsers = {}) {
         return users;
       case "wallets":
         return wallets;
+        case "wallet_ledger":
+          return walletLedger;
       case "transactions":
         return transactions;
       case "logs":
@@ -342,6 +345,7 @@ function createFirestoreDouble(initialUsers = {}) {
     __state: {
       users,
       wallets,
+      walletLedger,
       transactions,
       logs,
       stripeConnectAccounts,
@@ -944,6 +948,12 @@ describe("payment callable handlers", () => {
     const receiverSnap = await firestore.collection("users").doc("user-2").get();
     // Receiver gets coinCost * 0.85 = 8 (floored).
     assert.equal(receiverSnap.data().balance, 8);
+    const giftEvents = firestore.__state.subcollections.get("rooms/room-1/gift_events");
+    const giftEvent = giftEvents.get(result.giftEventId);
+    assert.equal(giftEvent.receiverAmount, 8);
+    assert.equal(giftEvent.platformFeeAmount, 2);
+    const ledgerEntries = [...firestore.__state.walletLedger.values()];
+    assert.equal(ledgerEntries.some((entry) => entry.type === "gift_platform_fee" && entry.amount === -2), true);
   });
 
   it("sendRoomGiftHandler rejects banned participant", async () => {

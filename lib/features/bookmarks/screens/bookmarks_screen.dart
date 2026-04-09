@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../providers/bookmark_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -74,7 +75,13 @@ class BookmarksScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(
-          child: Text('Error loading bookmarks: $error'),
+          child: Text(
+            friendlyFirestoreMessage(
+              error,
+              fallbackContext: 'bookmarks',
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );

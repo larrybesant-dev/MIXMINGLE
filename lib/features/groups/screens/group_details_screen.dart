@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/groups_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../../../core/theme.dart';
 
 class GroupDetailsScreen extends ConsumerWidget {
@@ -185,10 +186,13 @@ class GroupDetailsScreen extends ConsumerWidget {
                   loading: () => const Center(
                       child: CircularProgressIndicator(
                           color: VelvetNoir.primary)),
-                  error: (e, _) => const Center(
-                    child: Text('Could not load posts',
-                        style:
-                            TextStyle(color: VelvetNoir.onSurfaceVariant)),
+                  error: (e, _) => Center(
+                    child: Text(
+                      friendlyFirestoreMessage(e, fallbackContext: 'posts'),
+                      style: const TextStyle(
+                          color: VelvetNoir.onSurfaceVariant),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),
@@ -197,9 +201,12 @@ class GroupDetailsScreen extends ConsumerWidget {
         },
         loading: () => const Center(
             child: CircularProgressIndicator(color: VelvetNoir.primary)),
-        error: (e, _) => const Center(
-          child: Text('Could not load group',
-              style: TextStyle(color: VelvetNoir.onSurfaceVariant)),
+        error: (e, _) => Center(
+          child: Text(
+            friendlyFirestoreMessage(e, fallbackContext: 'group details'),
+            style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );

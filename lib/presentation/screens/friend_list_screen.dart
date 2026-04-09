@@ -6,7 +6,6 @@ import '../../models/user_model.dart';
 import '../../models/presence_model.dart';
 import '../providers/friend_provider.dart';
 import '../providers/user_provider.dart';
-import '../../widgets/mixvy_drawer.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
 import '../../widgets/user_profile_popup.dart';
 import '../../services/notification_service.dart';
@@ -55,7 +54,6 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
     if (currentUserId == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Friends')),
-        drawer: const MixVyDrawer(),
         body: const Center(child: Text('Please log in to manage friends.')),
       );
     }
@@ -76,7 +74,6 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
           ),
         ),
       ),
-      drawer: const MixVyDrawer(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../../../models/room_model.dart';
 import '../theme/after_dark_theme.dart';
 import '../widgets/after_dark_live_room_card.dart';
@@ -197,9 +198,12 @@ class _AfterDarkLoungesScreenState
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Error loading lounges.',
-                      style: TextStyle(
-                          color: EmberDark.onSurfaceVariant)),
+                  child: Text(
+                    friendlyFirestoreMessage(e, fallbackContext: 'lounges'),
+                    style: TextStyle(
+                        color: EmberDark.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),

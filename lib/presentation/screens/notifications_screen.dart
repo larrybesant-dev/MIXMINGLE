@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/firestore/firestore_error_utils.dart';
 import '../../core/theme.dart';
 import '../../models/notification_model.dart';
 import '../providers/notification_provider.dart';
@@ -175,7 +176,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     return Scaffold(
       backgroundColor: VelvetNoir.surface,
-      drawer: const MixVyDrawer(),
       appBar: AppBar(
         backgroundColor: VelvetNoir.surfaceHigh,
         elevation: 0,
@@ -272,10 +272,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           color: VelvetNoir.primary),
                     ),
                     error: (error, _) => Center(
-                      child: Text(
-                        'Could not load notifications: $error',
-                        style: const TextStyle(
-                            color: VelvetNoir.onSurfaceVariant),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          friendlyFirestoreMessage(
+                            error,
+                            fallbackContext: 'notifications',
+                          ),
+                          style: const TextStyle(
+                              color: VelvetNoir.onSurfaceVariant),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                     data: (notifications) {

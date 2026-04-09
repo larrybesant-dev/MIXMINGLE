@@ -431,6 +431,16 @@ function syncWalletCoinBalance(txn, firestore, uid, coinBalance) {
   }, {merge: true});
 }
 
+function writeWalletLedgerEntry(txn, firestore, payload) {
+  const entryRef = firestore.collection("wallet_ledger").doc();
+  txn.set(entryRef, {
+    id: entryRef.id,
+    ...payload,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  return entryRef;
+}
+
 function requireAuth(request) {
   if (!request.auth || !request.auth.uid) {
     throw new HttpsError("unauthenticated", "Authentication is required.");
@@ -805,6 +815,37 @@ async function requestCoinTransferHandler(request, deps = {}) {
 
   if (targetId === requesterId) {
     throw new HttpsError("invalid-argument", "Cannot request a payment from yourself.");
+  }
+
+  const transactionRef = idempotencyKey
+    ? firestore.collection("transactions").doc(
+      buildIdempotentTransactionDocId("request", requesterId, idempotencyKey),
+    )
+    : firestore.collection("transactions").doc();
+
+  const existingSnap = await transactionRef.get();
+  if (existingSnap.exists) {
+    return {transactionId: transactionRef.id, deduplicated: true};
+  }
+
+  await transactionRef.set({
+    id: transactionRef.id,
+    senderId: requesterId,
+    receiverId: targetId,
+    participants: [requesterId, targetId],
+    amount,
+    timestamp: new Date().toISOString(),
+    status: "requested",
+    source: "request",
+    idempotencyKey,
+  });
+
+  return {transactionId: transactionRef.id, deduplicated: false};
+}
+
+exports.requestCoinTransfer = onCall(async (request) =>
+  requestCoinTransferHandler(request),
+);
 
 async function generateReferralCodeHandler(request, deps = {}) {
   const userId = requireAuth(request);
@@ -892,33 +933,6 @@ async function redeemReferralCodeHandler(request, deps = {}) {
 exports.redeemReferralCode = onCall(async (request) =>
   redeemReferralCodeHandler(request),
 );
-  }
-
-  const transactionRef = idempotencyKey
-    ? firestore.collection("transactions").doc(
-      buildIdempotentTransactionDocId("request", requesterId, idempotencyKey),
-    )
-    : firestore.collection("transactions").doc();
-
-  const existingSnap = await transactionRef.get();
-  if (existingSnap.exists) {
-    return {transactionId: transactionRef.id, deduplicated: true};
-  }
-
-  await transactionRef.set({
-    id: transactionRef.id,
-    senderId: requesterId,
-    receiverId: targetId,
-    participants: [requesterId, targetId],
-    amount,
-    timestamp: new Date().toISOString(),
-    status: "requested",
-    source: "request",
-    idempotencyKey,
-  });
-
-  return {transactionId: transactionRef.id, deduplicated: false};
-}
 
 async function registerFcmTokenHandler(request, deps = {}) {
   const uid = requireAuth(request);
@@ -1179,6 +1193,7 @@ async function sendRoomGiftHandler(request, deps = {}) {
 
   const PLATFORM_FEE = 0.15;
   const receiverAmount = Math.max(1, Math.floor(coinCost * (1 - PLATFORM_FEE)));
+  const platformFeeAmount = Math.max(0, coinCost - receiverAmount);
 
   const giftEventId = await firestore.runTransaction(async (txn) => {
     const senderRef = firestore.collection("users").doc(senderId);
@@ -1230,10 +1245,36 @@ async function sendRoomGiftHandler(request, deps = {}) {
       const nextSenderBalance = senderBalance - coinCost;
       txn.update(senderRef, {balance: nextSenderBalance, coinBalance: nextSenderBalance});
       syncWalletCoinBalance(txn, firestore, senderId, nextSenderBalance);
+      writeWalletLedgerEntry(txn, firestore, {
+        userId: senderId,
+        type: "gift_sent",
+        amount: -coinCost,
+        currency: "coin",
+        status: "completed",
+        metadata: {roomId, giftId, receiverId},
+      });
     }
     const nextReceiverBalance = receiverBalance + receiverAmount;
     txn.update(receiverRef, {balance: nextReceiverBalance, coinBalance: nextReceiverBalance});
     syncWalletCoinBalance(txn, firestore, receiverId, nextReceiverBalance);
+    writeWalletLedgerEntry(txn, firestore, {
+      userId: receiverId,
+      type: "gift_received",
+      amount: receiverAmount,
+      currency: "coin",
+      status: "completed",
+      metadata: {roomId, giftId, senderId},
+    });
+    if (platformFeeAmount > 0) {
+      writeWalletLedgerEntry(txn, firestore, {
+        userId: senderId,
+        type: "gift_platform_fee",
+        amount: -platformFeeAmount,
+        currency: "coin",
+        status: "completed",
+        metadata: {roomId, giftId, receiverId},
+      });
+    }
     txn.set(giftEventRef, {
       id: giftEventRef.id,
       senderId,
@@ -1242,6 +1283,8 @@ async function sendRoomGiftHandler(request, deps = {}) {
       roomId,
       giftId,
       coinCost,
+      receiverAmount,
+      platformFeeAmount,
       sentAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -1280,6 +1323,7 @@ async function sendDirectGiftHandler(request, deps = {}) {
 
   const PLATFORM_FEE = 0.15;
   const receiverAmount = Math.max(1, Math.floor(coinCost * (1 - PLATFORM_FEE)));
+  const platformFeeAmount = Math.max(0, coinCost - receiverAmount);
 
   const giftEventId = await firestore.runTransaction(async (txn) => {
     const senderRef = firestore.collection("users").doc(senderId);
@@ -1307,10 +1351,36 @@ async function sendDirectGiftHandler(request, deps = {}) {
       const nextSenderBalance = senderBalance - coinCost;
       txn.update(senderRef, {balance: nextSenderBalance, coinBalance: nextSenderBalance});
       syncWalletCoinBalance(txn, firestore, senderId, nextSenderBalance);
+      writeWalletLedgerEntry(txn, firestore, {
+        userId: senderId,
+        type: "direct_gift_sent",
+        amount: -coinCost,
+        currency: "coin",
+        status: "completed",
+        metadata: {giftId, receiverId},
+      });
     }
     const nextReceiverBalance = receiverBalance + receiverAmount;
     txn.update(receiverRef, {balance: nextReceiverBalance, coinBalance: nextReceiverBalance});
     syncWalletCoinBalance(txn, firestore, receiverId, nextReceiverBalance);
+    writeWalletLedgerEntry(txn, firestore, {
+      userId: receiverId,
+      type: "direct_gift_received",
+      amount: receiverAmount,
+      currency: "coin",
+      status: "completed",
+      metadata: {giftId, senderId},
+    });
+    if (platformFeeAmount > 0) {
+      writeWalletLedgerEntry(txn, firestore, {
+        userId: senderId,
+        type: "direct_gift_platform_fee",
+        amount: -platformFeeAmount,
+        currency: "coin",
+        status: "completed",
+        metadata: {giftId, receiverId},
+      });
+    }
     txn.set(giftEventRef, {
       id: giftEventRef.id,
       senderId,
@@ -1318,6 +1388,8 @@ async function sendDirectGiftHandler(request, deps = {}) {
       receiverId,
       giftId,
       coinCost,
+      receiverAmount,
+      platformFeeAmount,
       sentAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 

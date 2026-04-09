@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/firestore/firestore_error_utils.dart';
 import '../providers/app_settings_provider.dart';
 import '../../features/beta/beta_tester_provider.dart';
 import '../../features/after_dark/providers/after_dark_provider.dart';
@@ -52,8 +53,14 @@ class SettingsScreen extends ConsumerWidget {
         loading: () =>
             const Center(child: CircularProgressIndicator(color: _svPrimary)),
         error: (e, _) => Center(
-          child: Text('Could not load settings: $e',
-              style: const TextStyle(color: _svCream)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              friendlyFirestoreMessage(e, fallbackContext: 'settings'),
+              style: const TextStyle(color: _svCream),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
         data: (settings) => ListView(
           padding: const EdgeInsets.symmetric(vertical: 20),

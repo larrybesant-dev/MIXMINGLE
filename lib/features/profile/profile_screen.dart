@@ -25,7 +25,6 @@ import 'widgets/device_settings_panel.dart';
 import '../follow/providers/follow_provider.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/widgets/post_card.dart';
-import '../../widgets/mixvy_drawer.dart';
 
 class ProfileScreen extends ConsumerWidget {
   final String? userId;
@@ -68,7 +67,6 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
-      drawer: const MixVyDrawer(),
       body: const SafeArea(child: ProfileFormView()),
     );
   }

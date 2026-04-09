@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../providers/messaging_provider.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../core/theme.dart';
@@ -432,7 +433,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stackTrace) => Center(
-                child: Text('Error loading messages: $error'),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    friendlyFirestoreMessage(
+                      error,
+                      fallbackContext: 'messages',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
           ),

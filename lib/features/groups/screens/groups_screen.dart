@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/groups_provider.dart';
+
+import '../../../core/firestore/firestore_error_utils.dart';
 import '../../../core/theme.dart';
 import '../../../widgets/brand_ui_kit.dart';
+import '../providers/groups_provider.dart';
 
 class GroupsScreen extends ConsumerWidget {
   final String userId;
@@ -37,8 +39,7 @@ class GroupsScreen extends ConsumerWidget {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.add_circle_outline,
-                  color: VelvetNoir.primary),
+              icon: const Icon(Icons.add_circle_outline, color: VelvetNoir.primary),
               tooltip: 'Create group',
               onPressed: () => context.push('/create-group?userId=$userId'),
             ),
@@ -46,44 +47,43 @@ class GroupsScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            // Discover tab
             groupsAsync.when(
               data: (groups) {
                 if (groups.isEmpty) {
                   return const Center(
-                    child: Text('No groups yet',
-                        style:
-                            TextStyle(color: VelvetNoir.onSurfaceVariant)),
+                    child: Text(
+                      'No groups yet',
+                      style: TextStyle(color: VelvetNoir.onSurfaceVariant),
+                    ),
                   );
                 }
+
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];
                     final isMember = group.isMember(userId);
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
                         color: VelvetNoir.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: VelvetNoir.outlineVariant
-                                .withValues(alpha: 0.5)),
+                          color: VelvetNoir.outlineVariant.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(14),
                         onTap: () => context.push('/group/${group.id}'),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           child: Row(
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       group.name,
@@ -111,16 +111,12 @@ class GroupsScreen extends ConsumerWidget {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if (isMember) {
-                                      ref
-                                          .read(groupsControllerProvider)
-                                          .leaveGroup(
+                                      ref.read(groupsControllerProvider).leaveGroup(
                                             groupId: group.id,
                                             userId: userId,
                                           );
                                     } else {
-                                      ref
-                                          .read(groupsControllerProvider)
-                                          .joinGroup(
+                                      ref.read(groupsControllerProvider).joinGroup(
                                             groupId: group.id,
                                             userId: userId,
                                           );
@@ -131,15 +127,12 @@ class GroupsScreen extends ConsumerWidget {
                                         ? VelvetNoir.surfaceBright
                                         : VelvetNoir.primaryDim,
                                     foregroundColor: VelvetNoir.onSurface,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8),
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
                                     minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   ),
                                   child: Text(
                                     isMember ? 'Leave' : 'Join',
@@ -156,44 +149,44 @@ class GroupsScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(
-                  child: CircularProgressIndicator(
-                      color: VelvetNoir.primary)),
-              error: (e, _) => const Center(
-                child: Text('Could not load groups',
-                    style:
-                        TextStyle(color: VelvetNoir.onSurfaceVariant)),
+                child: CircularProgressIndicator(color: VelvetNoir.primary),
+              ),
+              error: (e, _) => Center(
+                child: Text(
+                  friendlyFirestoreMessage(e, fallbackContext: 'groups'),
+                  style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
-            // My Groups tab
             userGroupsAsync.when(
               data: (groups) {
                 if (groups.isEmpty) {
                   return const Center(
                     child: Text(
                       'You haven\'t joined any groups yet',
-                      style:
-                          TextStyle(color: VelvetNoir.onSurfaceVariant),
+                      style: TextStyle(color: VelvetNoir.onSurfaceVariant),
                     ),
                   );
                 }
+
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
                         color: VelvetNoir.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: VelvetNoir.outlineVariant
-                                .withValues(alpha: 0.5)),
+                          color: VelvetNoir.outlineVariant.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 6),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         title: Text(
                           group.name,
                           style: const TextStyle(
@@ -203,25 +196,27 @@ class GroupsScreen extends ConsumerWidget {
                         ),
                         subtitle: Text(
                           '${group.memberCount} members',
-                          style: const TextStyle(
-                              color: VelvetNoir.onSurfaceVariant),
+                          style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
                         ),
-                        trailing: const Icon(Icons.chevron_right,
-                            color: VelvetNoir.onSurfaceVariant),
-                        onTap: () =>
-                            context.push('/group/${group.id}'),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: VelvetNoir.onSurfaceVariant,
+                        ),
+                        onTap: () => context.push('/group/${group.id}'),
                       ),
                     );
                   },
                 );
               },
               loading: () => const Center(
-                  child: CircularProgressIndicator(
-                      color: VelvetNoir.primary)),
-              error: (e, _) => const Center(
-                child: Text('Could not load your groups',
-                    style:
-                        TextStyle(color: VelvetNoir.onSurfaceVariant)),
+                child: CircularProgressIndicator(color: VelvetNoir.primary),
+              ),
+              error: (e, _) => Center(
+                child: Text(
+                  friendlyFirestoreMessage(e, fallbackContext: 'your groups'),
+                  style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ],

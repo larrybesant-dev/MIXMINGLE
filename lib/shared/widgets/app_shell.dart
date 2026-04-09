@@ -16,7 +16,7 @@ const _vnGhost     = Color(0x20D4AF37);
 const _vnError     = Color(0xFF9B2535);
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
-/// bottom nav bar (Home / Rooms / Discover / Messages / Profile).
+/// bottom nav bar (Home / Rooms / Discover / Messages / Profile / Menu).
 class AppShell extends ConsumerWidget {
   final Widget child;
   const AppShell({required this.child, super.key});
@@ -47,10 +47,13 @@ class AppShell extends ConsumerWidget {
       backgroundColor: _vnSurface,
       drawer: const MixVyDrawer(),
       body: child,
-      bottomNavigationBar: _VelvetBottomNav(
-        selectedIndex: selectedIndex,
-        unreadMsgs: unreadMsgs,
-        onTap: (i) => context.go(_roots[i]),
+      bottomNavigationBar: Builder(
+        builder: (context) => _VelvetBottomNav(
+          selectedIndex: selectedIndex,
+          unreadMsgs: unreadMsgs,
+          onTap: (i) => context.go(_roots[i]),
+          onMenuTap: () => Scaffold.of(context).openDrawer(),
+        ),
       ),
     );
   }
@@ -62,11 +65,13 @@ class _VelvetBottomNav extends StatelessWidget {
     required this.selectedIndex,
     required this.unreadMsgs,
     required this.onTap,
+    required this.onMenuTap,
   });
 
   final int selectedIndex;
   final int unreadMsgs;
   final void Function(int) onTap;
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +96,7 @@ class _VelvetBottomNav extends StatelessWidget {
                   _navItem(2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
                   _navItemBadge(3, Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
                   _navItem(4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+                  _navActionItem(Icons.menu_rounded, 'Menu', onMenuTap),
                 ],
               ),
             ),
@@ -206,6 +212,38 @@ class _VelvetBottomNav extends StatelessWidget {
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 color: isSelected ? _vnPrimary : _vnDim,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navActionItem(IconData icon, String label, VoidCallback onPressed) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 40,
+              height: 30,
+              child: Icon(
+                icon,
+                color: _vnDim,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: GoogleFonts.raleway(
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+                color: _vnDim,
               ),
             ),
           ],
