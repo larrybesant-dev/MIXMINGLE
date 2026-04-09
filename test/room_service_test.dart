@@ -46,11 +46,12 @@ void main() {
       );
     });
 
-    test('getLiveRooms returns live rooms ordered by updatedAt desc', () async {
+    test('getLiveRooms returns live rooms ordered by createdAt desc', () async {
       await firestore.collection('rooms').doc('room-1').set({
         'name': 'Room One',
         'hostId': 'host-1',
         'isLive': true,
+        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
       });
       await firestore
@@ -63,6 +64,7 @@ void main() {
         'name': 'Room Two',
         'hostId': 'host-2',
         'isLive': true,
+        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12)),
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12)),
       });
       await firestore
@@ -75,13 +77,14 @@ void main() {
         'name': 'Room Three',
         'hostId': 'host-3',
         'isLive': false,
+        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 13)),
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 13)),
       });
 
       final rooms = await service.getLiveRooms(limit: 10);
 
       expect(rooms, hasLength(2));
-      expect(rooms.first.id, 'room-2');
+      expect(rooms.first.id, 'room-2'); // newer createdAt → first
       expect(rooms.last.id, 'room-1');
     });
 

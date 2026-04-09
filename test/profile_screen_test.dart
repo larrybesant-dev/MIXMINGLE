@@ -104,7 +104,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // The full-screen loading spinner (shown only while loading with no userId)
+      // must not be the ONLY widget — the form body should be rendering.
+      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(AppBar), findsOneWidget);
     });
 
     testWidgets('shows logout button in appbar', (tester) async {

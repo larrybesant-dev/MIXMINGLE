@@ -73,7 +73,7 @@ class RoomService {
 	Stream<List<RoomModel>> watchLiveRooms({int limit = 30}) {
 		return _roomsCollection
 				.where('isLive', isEqualTo: true)
-				.orderBy('updatedAt', descending: true)
+				.orderBy('createdAt', descending: true)
 				.limit(limit)
 				.snapshots()
 				.asyncMap((snapshot) => _filterActiveLiveRooms(snapshot.docs));
@@ -104,7 +104,7 @@ class RoomService {
 
 		final snapshot = await _roomsCollection
 				.where('isLive', isEqualTo: true)
-				.orderBy('updatedAt', descending: true)
+				.orderBy('createdAt', descending: true)
 				.limit(limit)
 				.get();
 

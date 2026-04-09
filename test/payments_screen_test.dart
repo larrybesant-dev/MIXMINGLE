@@ -77,6 +77,13 @@ Widget _buildApp({
   );
 }
 
+// Sets a tall test surface so ListView lays out all children, not just
+// those within the default 800x600 test viewport.
+Future<void> _setTallSurface(WidgetTester tester) async {
+  await tester.binding.setSurfaceSize(const Size(800, 5000));
+  addTearDown(() async => tester.binding.setSurfaceSize(null));
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -95,6 +102,7 @@ void main() {
     });
 
     testWidgets('shows recipient search field and amount field', (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       await tester.pump(); // let StreamProviders resolve
@@ -104,6 +112,7 @@ void main() {
     });
 
     testWidgets('shows Send Coins and Request Coins buttons', (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       await tester.pump();
@@ -113,6 +122,7 @@ void main() {
     });
 
     testWidgets('shows quick-amount chips', (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       await tester.pump();
@@ -123,6 +133,7 @@ void main() {
 
     testWidgets('tapping Send Coins with no recipient shows validation snackbar',
         (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       await tester.pump();
@@ -138,6 +149,7 @@ void main() {
 
     testWidgets('tapping Request Coins with no recipient shows validation snackbar',
         (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       await tester.pump();
@@ -153,6 +165,7 @@ void main() {
 
     testWidgets('shows coin balance from wallet when wallet data loads',
         (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
@@ -160,6 +173,7 @@ void main() {
     });
 
     testWidgets('shows no transactions yet when list is empty', (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
@@ -167,6 +181,7 @@ void main() {
     });
 
     testWidgets('shows no open refund requests initially', (tester) async {
+      await _setTallSurface(tester);
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 

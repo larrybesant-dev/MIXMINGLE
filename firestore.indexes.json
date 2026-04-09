@@ -53,7 +53,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "participantCount",
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ]
@@ -68,20 +68,6 @@
         },
         {
           "fieldPath": "liveSince",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "rooms",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "isLive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "updatedAt",
           "order": "DESCENDING"
         }
       ]
@@ -259,7 +245,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "participantCount",
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ]
