@@ -46,6 +46,7 @@ Future<void> testSetup() async {
     when(() => mockUser.email).thenReturn('user@example.com');
     when(() => mockUser.displayName).thenReturn('username');
     when(() => mockUser.photoURL).thenReturn('');
+    when(() => mockUser.getIdToken(any())).thenAnswer((_) async => 'mock-token');
     when(() => mockUserCredential.user).thenReturn(mockUser);
     when(() => mockAuth.authStateChanges()).thenAnswer((_) => authStateController.stream);
     when(() => mockAuth.currentUser).thenReturn(mockUser);

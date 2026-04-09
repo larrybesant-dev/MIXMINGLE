@@ -28,7 +28,7 @@ void main() {
       controller.createRoom(room);
       final state = container.read(roomControllerProvider);
       expect(state?.id, 'room1');
-    }, skip: skipIntegrationTests);
+    });
 
     test('leaveRoom clears state', () {
       final controller = container.read(roomControllerProvider.notifier);
@@ -42,7 +42,7 @@ void main() {
       controller.leaveRoom();
       final state = container.read(roomControllerProvider);
       expect(state, isNull);
-    }, skip: skipIntegrationTests);
+    });
 
     test('updateRoom updates state', () {
       final controller = container.read(roomControllerProvider.notifier);
@@ -62,6 +62,6 @@ void main() {
       controller.updateRoom(updatedRoom.id, {'name': updatedRoom.name});
       final state = container.read(roomControllerProvider);
       expect(state?.id, 'room1');
-    }, skip: skipIntegrationTests);
+    });
   });
 }

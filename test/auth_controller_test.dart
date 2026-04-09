@@ -1,5 +1,7 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import 'package:mixvy/services/presence_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,7 +46,13 @@ void main() {
 
       container = ProviderContainer(
         overrides: [
-          authControllerProvider.overrideWith(() => AuthController(auth: mockAuth)),
+          authControllerProvider.overrideWith(
+            () => AuthController(
+              auth: mockAuth,
+              presenceService: PresenceService(firestore: FakeFirebaseFirestore()),
+              unregisterToken: () async {},
+            ),
+          ),
         ],
       );
     });
@@ -55,7 +63,7 @@ void main() {
       final state = container.read(authControllerProvider);
       expect(state.uid, isNotNull);
       expect(state.error, isNull);
-    }, skip: skipIntegrationTests);
+    });
 
     test('logout clears user state', () async {
       final controller = container.read(authControllerProvider.notifier);
@@ -71,7 +79,7 @@ void main() {
       }
       final state = container.read(authControllerProvider);
       expect(state.uid, isNull);
-    }, skip: skipIntegrationTests);
+    });
 
     test('signup sets user state', () async {
       final controller = container.read(authControllerProvider.notifier);
@@ -79,6 +87,6 @@ void main() {
       final state = container.read(authControllerProvider);
       expect(state.uid, isNotNull);
       expect(state.error, isNull);
-    }, skip: skipIntegrationTests);
+    });
   });
 }

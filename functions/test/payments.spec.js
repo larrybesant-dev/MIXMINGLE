@@ -17,6 +17,8 @@ const {
   cleanupDeletedUserData,
   createCheckoutSessionHandler,
   getCheckoutBaseUrl,
+  grabMicHandler,
+  inviteToMicHandler,
 } = paymentFunctions.__testing;
 
 function makeRequest(data, authUid = "user-1") {
@@ -24,6 +26,24 @@ function makeRequest(data, authUid = "user-1") {
     data,
     auth: authUid ? {uid: authUid} : null,
   };
+}
+
+// Apply Firestore FieldValue sentinels during a merge-set or update.
+// - FieldValue.delete()  → removes the key
+// - FieldValue.serverTimestamp() → stores a mock {toMillis:()=>now} object
+function applyFieldValues(prev, data) {
+  const result = {...prev};
+  for (const [key, value] of Object.entries(data)) {
+    if (value && typeof value === "object" && value.methodName === "FieldValue.delete") {
+      delete result[key];
+    } else if (value && typeof value === "object" && value.methodName === "FieldValue.serverTimestamp") {
+      const now = Date.now();
+      result[key] = {toMillis: () => now, _isMockTimestamp: true};
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 function createFirestoreDouble(initialUsers = {}) {
@@ -100,9 +120,46 @@ function createFirestoreDouble(initialUsers = {}) {
               },
               async set(data, opts = {}) {
                 const prev = subStore.get(resolvedId) || {};
-                subStore.set(resolvedId, opts.merge ? {...prev, ...data} : {...data});
+                subStore.set(resolvedId, opts.merge ? applyFieldValues(prev, data) : {...data});
+              },
+              async update(data) {
+                const prev = subStore.get(resolvedId) || {};
+                subStore.set(resolvedId, applyFieldValues(prev, data));
               },
               async delete() { subStore.delete(resolvedId); },
+            };
+          },
+          where(field, op, value) {
+            return {
+              async get() {
+                const entries = [...subStore.entries()].filter(([_, d]) => {
+                  switch (op) {
+                    case "==": return d[field] === value;
+                    case "!=": return d[field] !== value;
+                    case ">": return d[field] > value;
+                    case "<": return d[field] < value;
+                    case ">=": return d[field] >= value;
+                    case "<=": return d[field] <= value;
+                    default: return true;
+                  }
+                });
+                const docs = entries.map(([k, v]) => ({
+                  id: k,
+                  ref: {
+                    async set(data, opts = {}) {
+                      const prev = subStore.get(k) || {};
+                      subStore.set(k, opts.merge ? applyFieldValues(prev, data) : {...data});
+                    },
+                    async update(data) {
+                      const prev = subStore.get(k) || {};
+                      subStore.set(k, applyFieldValues(prev, data));
+                    },
+                    async delete() { subStore.delete(k); },
+                  },
+                  data: () => ({...v}),
+                }));
+                return {empty: docs.length === 0, docs, size: docs.length};
+              },
             };
           },
           limit(n) {
@@ -151,7 +208,7 @@ function createFirestoreDouble(initialUsers = {}) {
       const transaction = {
         get: async (ref) => ref.get(),
         update: (ref, data) => operations.push(() => ref.update(data)),
-        set: (ref, data) => operations.push(() => ref.set(data)),
+        set: (ref, data, opts = {}) => operations.push(() => ref.set(data, opts)),
       };
       const result = await handler(transaction);
       for (const operation of operations) {
@@ -760,5 +817,241 @@ describe("payment callable handlers", () => {
     else process.env.AGORA_APP_ID = previousAppId;
     if (previousCert === undefined) delete process.env.AGORA_APP_CERTIFICATE;
     else process.env.AGORA_APP_CERTIFICATE = previousCert;
+  });
+
+  // grabMic -----------------------------------------------------------------
+
+  it("grabMicHandler rejects unauthenticated caller", async () => {
+    await assert.rejects(
+      () => grabMicHandler(makeRequest({roomId: "room-1"}, null)),
+      (err) => err.code === "unauthenticated",
+    );
+  });
+
+  it("grabMicHandler rejects caller who is not a room participant", async () => {
+    const firestore = createFirestoreDouble();
+    await assert.rejects(
+      () => grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore}),
+      (err) => err.code === "permission-denied",
+    );
+  });
+
+  it("grabMicHandler rejects banned participant", async () => {
+    const firestore = createFirestoreDouble();
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: true});
+    await assert.rejects(
+      () => grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore}),
+      (err) => err.code === "permission-denied",
+    );
+  });
+
+  it("grabMicHandler returns early for host without promoting", async () => {
+    const firestore = createFirestoreDouble();
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "host", isBanned: false});
+    const result = await grabMicHandler(
+      makeRequest({roomId: "room-1"}, "user-1"), {firestore},
+    );
+    assert.deepEqual(result, {success: true});
+    // Role should still be host — nothing changed.
+    const snap = await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1").get();
+    assert.equal(snap.data().role, "host");
+  });
+
+  it("grabMicHandler promotes caller to stage with no timer when policy is unlimited", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    await participantsCol.doc("user-1").set({userId: "user-1", role: "audience", isBanned: false});
+    // No micTimerSeconds in policy → unlimited.
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1});
+
+    await grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore});
+
+    const snap = await participantsCol.doc("user-1").get();
+    const data = snap.data();
+    assert.equal(data.role, "stage");
+    // micExpiresAt must be absent (deleted by FieldValue.delete()).
+    assert.ok(data.micExpiresAt === undefined);
+  });
+
+  it("grabMicHandler stamps micExpiresAt when micTimerSeconds=30", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    await participantsCol.doc("user-1").set({userId: "user-1", role: "audience", isBanned: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1, micTimerSeconds: 30});
+
+    const before = Date.now();
+    await grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore});
+    const after = Date.now();
+
+    const snap = await participantsCol.doc("user-1").get();
+    const data = snap.data();
+    assert.equal(data.role, "stage");
+    assert.ok(data.micExpiresAt !== undefined && data.micExpiresAt !== null,
+      "micExpiresAt should be set");
+    const expiresMs = data.micExpiresAt.toMillis();
+    assert.ok(expiresMs >= before + 30000, "micExpiresAt should be at least 30s in the future");
+    assert.ok(expiresMs <= after + 30000 + 500, "micExpiresAt should not be more than ~30s in the future");
+  });
+
+  it("grabMicHandler stamps micExpiresAt when micTimerSeconds=60", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    await participantsCol.doc("user-1").set({userId: "user-1", role: "audience", isBanned: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1, micTimerSeconds: 60});
+
+    const before = Date.now();
+    await grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore});
+    const after = Date.now();
+
+    const snap = await participantsCol.doc("user-1").get();
+    const expiresMs = snap.data().micExpiresAt.toMillis();
+    assert.ok(expiresMs >= before + 60000);
+    assert.ok(expiresMs <= after + 60000 + 500);
+  });
+
+  it("grabMicHandler demotes existing stage holder when at micLimit", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    const activeMs = Date.now();
+    // user-2 is current stage holder with a recent lastActiveAt.
+    await participantsCol.doc("user-2").set({
+      userId: "user-2", role: "stage", isBanned: false,
+      lastActiveAt: {toMillis: () => activeMs},
+    });
+    await participantsCol.doc("user-1").set({userId: "user-1", role: "audience", isBanned: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1});
+
+    await grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore});
+
+    const holderSnap = await participantsCol.doc("user-2").get();
+    assert.equal(holderSnap.data().role, "member", "existing stage holder should be demoted");
+    const callerSnap = await participantsCol.doc("user-1").get();
+    assert.equal(callerSnap.data().role, "stage", "caller should be promoted");
+  });
+
+  it("grabMicHandler treats micExpiresAt-expired stage doc as stale and does not count it against the limit", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    const recentMs = Date.now();
+    // user-2 is on stage but their timer expired.
+    await participantsCol.doc("user-2").set({
+      userId: "user-2", role: "stage", isBanned: false,
+      lastActiveAt: {toMillis: () => recentMs},   // recent — not stale by time
+      micExpiresAt: {toMillis: () => recentMs - 5000}, // expired 5 s ago
+    });
+    await participantsCol.doc("user-1").set({userId: "user-1", role: "audience", isBanned: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1});
+
+    await grabMicHandler(makeRequest({roomId: "room-1"}, "user-1"), {firestore});
+
+    // Both users end up on stage is fine (user-2 is stale but still gets demoted in cleanup).
+    // The important assertion: user-1 was promoted without being blocked.
+    const callerSnap = await participantsCol.doc("user-1").get();
+    assert.equal(callerSnap.data().role, "stage");
+    // And user-2 should have been demoted as stale.
+    const staleSnap = await participantsCol.doc("user-2").get();
+    assert.equal(staleSnap.data().role, "member");
+  });
+
+  // inviteToMic -------------------------------------------------------------
+
+  it("inviteToMicHandler rejects non-host caller", async () => {
+    const firestore = createFirestoreDouble();
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: false});
+    await assert.rejects(
+      () => inviteToMicHandler(
+        makeRequest({roomId: "room-1", targetId: "user-2"}, "user-1"), {firestore},
+      ),
+      (err) => err.code === "permission-denied",
+    );
+  });
+
+  it("inviteToMicHandler stamps micExpiresAt when micTimerSeconds is set", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    await participantsCol.doc("host-1").set({userId: "host-1", role: "host", isBanned: false});
+    await participantsCol.doc("user-2").set({userId: "user-2", role: "audience", isBanned: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1, micTimerSeconds: 30});
+
+    const before = Date.now();
+    await inviteToMicHandler(
+      makeRequest({roomId: "room-1", targetId: "user-2"}, "host-1"), {firestore},
+    );
+    const after = Date.now();
+
+    const snap = await participantsCol.doc("user-2").get();
+    const data = snap.data();
+    assert.equal(data.role, "stage");
+    assert.ok(data.micExpiresAt !== undefined && data.micExpiresAt !== null);
+    const expiresMs = data.micExpiresAt.toMillis();
+    assert.ok(expiresMs >= before + 30000);
+    assert.ok(expiresMs <= after + 30000 + 500);
+  });
+
+  it("inviteToMicHandler removes micExpiresAt when policy is unlimited", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    await participantsCol.doc("host-1").set({userId: "host-1", role: "host", isBanned: false});
+    // user-2 had a previous timer — should be cleared.
+    await participantsCol.doc("user-2").set({
+      userId: "user-2", role: "audience", isBanned: false,
+      micExpiresAt: {toMillis: () => Date.now() + 99999},
+    });
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1}); // no micTimerSeconds
+
+    await inviteToMicHandler(
+      makeRequest({roomId: "room-1", targetId: "user-2"}, "host-1"), {firestore},
+    );
+
+    const snap = await participantsCol.doc("user-2").get();
+    const data = snap.data();
+    assert.equal(data.role, "stage");
+    assert.ok(data.micExpiresAt === undefined, "micExpiresAt should be deleted for unlimited policy");
+  });
+
+  it("inviteToMicHandler treats micExpired stage doc as stale", async () => {
+    const firestore = createFirestoreDouble();
+    const participantsCol = firestore.collection("rooms").doc("room-1")
+      .collection("participants");
+    const recentMs = Date.now();
+    await participantsCol.doc("host-1").set({userId: "host-1", role: "host", isBanned: false});
+    await participantsCol.doc("user-3").set({
+      userId: "user-3", role: "stage", isBanned: false,
+      lastActiveAt: {toMillis: () => recentMs},
+      micExpiresAt: {toMillis: () => recentMs - 1000}, // expired 1 s ago
+    });
+    await participantsCol.doc("user-2").set({userId: "user-2", role: "audience", isBanned: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("policies").doc("settings").set({micLimit: 1});
+
+    await inviteToMicHandler(
+      makeRequest({roomId: "room-1", targetId: "user-2"}, "host-1"), {firestore},
+    );
+
+    const targetSnap = await participantsCol.doc("user-2").get();
+    assert.equal(targetSnap.data().role, "stage");
+    const staleSnap = await participantsCol.doc("user-3").get();
+    assert.equal(staleSnap.data().role, "member", "expired stage holder should be demoted");
   });
 });

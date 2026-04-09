@@ -28,13 +28,14 @@ class PaymentsScreen extends ConsumerStatefulWidget {
 class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   final _recipientController = TextEditingController();
   final _amountController = TextEditingController(text: '10');
-  final CashOutService _cashOutService = CashOutService();
+  late CashOutService _cashOutService;
   UserModel? _selectedRecipient;
   late Future<StripeConnectStatus> _connectStatusFuture;
 
   @override
   void initState() {
     super.initState();
+    _cashOutService = ref.read(cashOutServiceProvider);
     _connectStatusFuture = PaymentApi.getStripeConnectStatus();
   }
 
@@ -289,16 +290,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final currentUserId = ref.watch(currentPaymentUserIdProvider);
     final paymentState = ref.watch(paymentControllerProvider);
     final walletDetailsAsync = ref.watch(walletDetailsProvider);
     final referralCodeAsync = ref.watch(referralCodeProvider);
     final referralEarningsAsync = ref.watch(referralEarningsProvider);
     final cashOutRequestsAsync = _cashOutService.requestsForCurrentUser();
     final transactionsAsync = ref.watch(
-      coinTransactionStreamProvider(user?.uid ?? ''),
+      coinTransactionStreamProvider(currentUserId ?? ''),
     );
-    final refundRequestsAsync = PaymentApi.getMyRefundRequests(user?.uid ?? '');
+    final refundRequestsAsync = PaymentApi.getMyRefundRequests(currentUserId ?? '');
     final recipientsAsync = ref.watch(
       paymentRecipientSearchProvider(
         _selectedRecipient == null ? _recipientController.text : '',
@@ -739,7 +740,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
               return Column(
                 children: transactions.map((tx) {
-                  final isSent = tx.senderId == user?.uid;
+                  final isSent = tx.senderId == currentUserId;
                   return Card(
                     child: ListTile(
                       leading: Icon(

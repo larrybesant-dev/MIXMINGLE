@@ -1,8 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/mixvy_economy_config.dart';
 import '../models/cash_out_request_model.dart';
+
+final cashOutServiceProvider = Provider<CashOutService>(
+  (ref) => CashOutService(),
+);
 
 class CashOutService {
   CashOutService({FirebaseFirestore? firestore, FirebaseAuth? auth})

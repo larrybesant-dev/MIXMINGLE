@@ -59,15 +59,20 @@ class AuthController extends Notifier<AuthState> {
     }
   final FirebaseAuth _auth;
   final FirebaseFirestore? _firestore;
+  final PresenceService? _presenceService;
+  final Future<void> Function()? _unregisterToken;
 
   AuthController({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
+    PresenceService? presenceService,
+    Future<void> Function()? unregisterToken,
     GoogleSignInHelper? googleSignInHelper,
     AppleSignInHelper? appleSignInHelper,
-  })
-      : _auth = auth ?? FirebaseAuth.instance,
+  })  : _auth = auth ?? FirebaseAuth.instance,
         _firestore = firestore,
+        _presenceService = presenceService,
+        _unregisterToken = unregisterToken,
         _googleSignInHelper = googleSignInHelper ?? getGoogleSignInHelper(),
         _appleSignInHelper = appleSignInHelper ?? getAppleSignInHelper();
 
@@ -78,7 +83,7 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(uid: user?.uid, isLoading: false, error: null);
       // Update global presence on auth change.
       if (user != null) {
-        PresenceService().setStatus(user.uid, UserStatus.online).ignore();
+        (_presenceService ?? PresenceService()).setStatus(user.uid, UserStatus.online).ignore();
       }
     });
 
@@ -267,9 +272,9 @@ class AuthController extends Notifier<AuthState> {
   Future<void> logout() async {
     final uid = _auth.currentUser?.uid;
     if (uid != null) {
-      PresenceService().setStatus(uid, UserStatus.offline).ignore();
+      (_presenceService ?? PresenceService()).setStatus(uid, UserStatus.offline).ignore();
     }
-    await PushMessagingService.instance.unregisterCurrentToken();
+    await (_unregisterToken?.call() ?? PushMessagingService.instance.unregisterCurrentToken());
     await _auth.signOut();
     state = state.copyWith(isLoading: false, uid: null, error: null);
   }
