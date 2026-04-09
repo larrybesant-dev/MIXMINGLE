@@ -29,13 +29,13 @@ class AppTheme {
       headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: VelvetNoir.onSurface),
       headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: VelvetNoir.onSurface),
       titleLarge:     GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: VelvetNoir.onSurface),
-      // Body & Labels — Inter (clean, readable)
-      titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface),
-      titleSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface),
-      bodyLarge:   GoogleFonts.inter(fontSize: 16, color: VelvetNoir.onSurface),
-      bodyMedium:  GoogleFonts.inter(fontSize: 14, color: VelvetNoir.onSurfaceVariant),
-      bodySmall:   GoogleFonts.inter(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
-      labelLarge:  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: VelvetNoir.onSurface),
+      // Body & Labels — Raleway (clean modern — brand-spec)
+      titleMedium: GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface),
+      titleSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface),
+      bodyLarge:   GoogleFonts.raleway(fontSize: 16, color: VelvetNoir.onSurface),
+      bodyMedium:  GoogleFonts.raleway(fontSize: 14, color: VelvetNoir.onSurfaceVariant),
+      bodySmall:   GoogleFonts.raleway(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
+      labelLarge:  GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: 0.8, color: VelvetNoir.onSurface),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: VelvetNoir.surface,
@@ -84,8 +84,8 @@ class AppTheme {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: VelvetNoir.onSurface,
-        side: const BorderSide(color: Color(0x1A73757D)),
+        foregroundColor: VelvetNoir.primary,
+        side: const BorderSide(color: VelvetNoir.primary, width: 1.5),
         minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),

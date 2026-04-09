@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../features/auth/controllers/auth_controller.dart';
 import '../../services/daily_checkin_service.dart';
 
 // ─── Providers ────────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ final _checkinServiceProvider = Provider((_) => DailyCheckinService());
 
 final dailyCheckinProvider =
     FutureProvider.autoDispose<DailyCheckinStatus>((ref) async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
+  final uid = ref.watch(authControllerProvider).uid;
   if (uid == null) {
     return const DailyCheckinStatus(claimed: true, streak: 0, reward: 0);
   }
@@ -49,7 +49,7 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
   bool _justClaimed = false;
 
   Future<void> _claim() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = ref.read(authControllerProvider).uid;
     if (uid == null) return;
     setState(() => _claiming = true);
     final ok = await ref.read(_checkinServiceProvider).claim(uid);

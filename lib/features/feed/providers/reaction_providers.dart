@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixvy/core/providers/firebase_providers.dart';
 import '../repository/reaction_repository.dart';
 import '../../../models/reaction_model.dart';

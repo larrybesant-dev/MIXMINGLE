@@ -7,15 +7,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:mixvy/services/analytics_service.dart';
 
-// ── colour aliases for this screen ───────────────────────────────────────────
-const _surface        = Color(0xFF0D0A0C);
-const _surfaceHighest = Color(0xFF2A1C23);
-const _primary        = Color(0xFFD4A853);
-const _primaryDim     = Color(0xFF8C6020);
-const _secondary      = Color(0xFFC45E7A);
-const _onSurface      = Color(0xFFF2EBE0);
-const _onVariant      = Color(0xFFB09080);
-const _ghostBorder    = Color(0x1A73757D);
+// ── MIXVY Brand Colors — locked ───────────────────────────────────────────────
+const _surface         = Color(0xFF0B0B0B); // Jet Black
+const _surfaceHigh     = Color(0xFF1C1617); // elevated surface
+const _surfaceCard     = Color(0xFF161012); // card background
+const _primary         = Color(0xFFD4AF37); // Gold
+const _primaryDim      = Color(0xFF9A7B1A); // deep gold
+const _secondary       = Color(0xFF781E2B); // Deep Wine Red
+const _secondaryBright = Color(0xFF9B2535); // wine highlight
+const _onSurface       = Color(0xFFF7EDE2); // Soft Cream
+const _onVariant       = Color(0xFFAD9585); // muted cream
+const _goldBorder      = Color(0x40D4AF37); // semi-transparent gold border
+// ignore: unused_element
+const _ghostBorder     = Color(0x26FFFFFF); // subtle white ghost border
+// ignore: unused_element
+const _surfaceHighest  = Color(0xFF211619); // highest elevation surface
 
 class MixVyLoginScreen extends ConsumerStatefulWidget {
   const MixVyLoginScreen({super.key});
@@ -217,29 +223,51 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     );
   }
 
-  // ── logo widget ───────────────────────────────────────────────────────────
+  // ── MIXVY logo block — monogram + wordmark ────────────────────────────────
   Widget _logoText({double size = 42}) {
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'MIX',
-          style: GoogleFonts.inter(
-            fontSize: size,
-            fontWeight: FontWeight.w900,
-            color: _onSurface,
-            fontStyle: FontStyle.italic,
-            letterSpacing: -2,
+        // M monogram circle
+        Container(
+          width: size * 1.4,
+          height: size * 1.4,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: _goldBorder, width: 1.5),
+            color: _primary.withAlpha(12),
+          ),
+          child: Center(
+            child: Text(
+              'M',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: size * 0.9,
+                fontWeight: FontWeight.w700,
+                color: _primary,
+                height: 1,
+              ),
+            ),
           ),
         ),
+        const SizedBox(height: 14),
+        // Wordmark
         Text(
-          'Vy',
-          style: GoogleFonts.inter(
+          'MIXVY',
+          style: GoogleFonts.playfairDisplay(
             fontSize: size,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             color: _primary,
-            fontStyle: FontStyle.italic,
-            letterSpacing: -2,
+            letterSpacing: size * 0.12,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'MIX.  CONNECT.  INDULGE.',
+          style: GoogleFonts.raleway(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: _onVariant,
+            letterSpacing: 2.0,
           ),
         ),
       ],
@@ -259,28 +287,37 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _logoText(size: 52),
+                const SizedBox(height: 32),
+                Text(
+                  'Where chemistry\nmeets connection.',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    color: _onSurface,
+                    fontStyle: FontStyle.italic,
+                    height: 1.3,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
-                  'The Midnight Kinetic.\nWhere live culture finds its pulse.',
-                  style: GoogleFonts.inter(
-                    fontSize: 18, fontWeight: FontWeight.w400,
-                    color: _onVariant, height: 1.6,
+                  'Curated connections. Real chemistry.\nVIP lounge energy — wherever you are.',
+                  style: GoogleFonts.raleway(
+                    fontSize: 15,
+                    color: _onVariant,
+                    height: 1.7,
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Staggered image preview cards
+                // Preview cards
                 _brandingCards(),
-                const SizedBox(height: 32),
-                // Avatar stack + streamer count
-                _streamerCount(),
               ],
             ),
           ),
         ),
-        // Right panel – glassmorphic auth card
+        // Right panel – auth card
         Container(
-          width: 420,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 48),
+          width: 440,
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 56),
           child: Center(child: _authCard(authState)),
         ),
       ],
@@ -290,136 +327,81 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   // ── narrow single-column layout ───────────────────────────────────────────
   Widget _narrowLayout(dynamic authState) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _logoText(size: 42),
+          _logoText(size: 36),
           const SizedBox(height: 12),
           Text(
-            'Where live culture finds its pulse.',
+            'Where chemistry meets connection.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 14, color: _onVariant),
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: _onSurface,
+              fontStyle: FontStyle.italic,
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
           _authCard(authState),
-          const SizedBox(height: 80),
+          const SizedBox(height: 60),
         ],
       ),
     );
   }
 
-  // ── branding decorative cards ─────────────────────────────────────────────
+  // ── branding preview cards — Mix + Connect ───────────────────────────────
   Widget _brandingCards() {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        children: [
-          Positioned(
-            left: 0, top: 0,
-            child: _brandingCard(
-              width: 220, height: 140,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF241820), Color(0xFF161A21)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              icon: Icons.headset_mic_rounded,
-              label: 'Live Audio Room',
-            ),
-          ),
-          Positioned(
-            right: 0, top: 40,
-            child: _brandingCard(
-              width: 200, height: 130,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1A1D2A), Color(0xFF161A21)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              icon: Icons.videocam_rounded,
-              label: 'Live Video Room',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _brandingCard({
-    required double width,
-    required double height,
-    required LinearGradient gradient,
-    required IconData icon,
-    required String label,
-  }) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _ghostBorder),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: _primary.withAlpha(30),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: _primary, size: 22),
-          ),
-          const SizedBox(height: 8),
-          Text(label,
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600,
-                  color: _onSurface)),
-        ],
-      ),
-    );
-  }
-
-  Widget _streamerCount() {
     return Row(
       children: [
-        _avatarStack(),
+        _previewCard(
+          label: 'MIX',
+          sub: 'Find your vibe',
+          icon: Icons.people_alt_rounded,
+          accent: _primary,
+        ),
         const SizedBox(width: 12),
-        Text(
-          'Joined by 2.4k streamers tonight',
-          style: GoogleFonts.inter(fontSize: 13, color: _onVariant),
+        _previewCard(
+          label: 'CONNECT',
+          sub: 'Start something real',
+          icon: Icons.videocam_rounded,
+          accent: _secondaryBright,
         ),
       ],
     );
   }
 
-  Widget _avatarStack() {
-    final avatarColors = [
-      const Color(0xFF8C6020),
-      const Color(0xFFC45E7A),
-      const Color(0xFFD4A853),
-    ];
-    return SizedBox(
-      width: 70,
-      height: 30,
-      child: Stack(
-        children: [
-          for (var i = 0; i < 3; i++)
-            Positioned(
-              left: i * 20.0,
-              child: Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: avatarColors[i],
-                  border: Border.all(color: _surface, width: 2),
-                ),
-              ),
-            ),
-        ],
+  Widget _previewCard({
+    required String label,
+    required String sub,
+    required IconData icon,
+    required Color accent,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _surfaceCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: accent.withAlpha(50), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: accent, size: 22),
+            const SizedBox(height: 10),
+            Text(label,
+                style: GoogleFonts.raleway(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                    letterSpacing: 1.5)),
+            const SizedBox(height: 4),
+            Text(sub,
+                style: GoogleFonts.raleway(fontSize: 12, color: _onVariant)),
+          ],
+        ),
       ),
     );
   }
@@ -433,169 +415,199 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
         child: Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: const Color(0xFF161A21).withAlpha(153), // 0.6 opacity
+            color: _surfaceCard.withAlpha(200),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _ghostBorder),
+            border: Border.all(color: _goldBorder),
           ),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Welcome back',
-                  style: GoogleFonts.inter(
-                    fontSize: 26, fontWeight: FontWeight.w700, color: _onSurface,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Welcome back',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: _onSurface,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Enter your details to rejoin the pulse.',
-                  style: GoogleFonts.inter(fontSize: 14, color: _onVariant),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Sign in to continue your experience.',
+                    style: GoogleFonts.raleway(fontSize: 13, color: _onVariant),
+                  ),
+                  const SizedBox(height: 24),
 
-                // Google sign-in button
-                _socialButton(
-                  onPressed: authState.isLoading ? null : _signInWithGoogle,
-                  icon: _googleIcon(),
-                  label: 'Continue with Google',
-                ),
-
-                // Apple sign-in (when supported)
-                if (_supportsAppleSignIn()) ...[
-                  const SizedBox(height: 10),
+                  // Google sign-in
                   _socialButton(
-                    onPressed: authState.isLoading ? null : _signInWithApple,
-                    icon: const Icon(Icons.apple, size: 20, color: _onSurface),
-                    label: 'Continue with Apple',
+                    onPressed: authState.isLoading ? null : _signInWithGoogle,
+                    icon: _googleIcon(),
+                    label: 'Continue with Google',
+                  ),
+
+                  // Apple sign-in
+                  if (_supportsAppleSignIn()) ...[
+                    const SizedBox(height: 10),
+                    _socialButton(
+                      onPressed: authState.isLoading ? null : _signInWithApple,
+                      icon: const Icon(Icons.apple, size: 20, color: _onSurface),
+                      label: 'Continue with Apple',
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+                  _orDivider(),
+                  const SizedBox(height: 20),
+
+                  // Email
+                  _brandInput(
+                    controller: _emailController,
+                    hint: 'Email address',
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.mail_outline_rounded,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Enter your email' : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: GoogleFonts.raleway(color: _onSurface, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      filled: true,
+                      fillColor: _surfaceHigh,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: const BorderSide(color: _primary, width: 1.5),
+                      ),
+                      hintStyle: GoogleFonts.raleway(color: _onVariant, fontSize: 14),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded,
+                          size: 18, color: _onVariant),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          size: 18,
+                          color: _onVariant,
+                        ),
+                        onPressed: _togglePassword,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Enter your password' : null,
+                  ),
+
+                  // Forgot password
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: authState.isLoading ? null : _resetPassword,
+                      style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 0, vertical: 4)),
+                      child: Text(
+                        'Forgot password?',
+                        style: GoogleFonts.raleway(
+                            fontSize: 12,
+                            color: _primary,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // ── SIGN IN — gold solid button ───────────────────
+                  _goldSolidButton(
+                    onPressed: authState.isLoading ? null : _login,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: _surface),
+                          )
+                        : Text(
+                            'SIGN IN',
+                            style: GoogleFonts.raleway(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: _surface,
+                                letterSpacing: 1.5),
+                          ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ── SIGN UP — gold outline button ─────────────────
+                  _goldOutlineButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () => context.go('/register'),
+                    label: 'SIGN UP',
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── ENTER AS GUEST ────────────────────────────────
+                  Center(
+                    child: TextButton(
+                      onPressed: authState.isLoading ? null : () => context.go('/'),
+                      child: Text(
+                        'ENTER AS GUEST',
+                        style: GoogleFonts.raleway(
+                            fontSize: 11,
+                            color: _onVariant,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 1.2),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Footer
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _footerLink('Terms'),
+                      Text(' · ',
+                          style: GoogleFonts.raleway(
+                              fontSize: 11, color: _onVariant)),
+                      _footerLink('Privacy'),
+                      Text(' · ',
+                          style: GoogleFonts.raleway(
+                              fontSize: 11, color: _onVariant)),
+                      _footerLink('Support'),
+                    ],
                   ),
                 ],
-
-                const SizedBox(height: 20),
-                _orDivider(),
-                const SizedBox(height: 20),
-
-                // Email field
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: _onSurface, fontSize: 14),
-                  decoration: const InputDecoration(
-                    hintText: 'Email address',
-                    prefixIcon: Icon(Icons.mail_outline_rounded, size: 18, color: _onVariant),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Please enter your email';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                // Password field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  style: const TextStyle(color: _onSurface, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: _onVariant),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        size: 18, color: _onVariant,
-                      ),
-                      onPressed: _togglePassword,
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Please enter your password';
-                    return null;
-                  },
-                ),
-
-                // Forgot password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: authState.isLoading ? null : _resetPassword,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-                    ),
-                    child: Text('Forgot password?',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, color: _primary, fontWeight: FontWeight.w500)),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Gradient Sign In button
-                _gradientButton(
-                  onPressed: authState.isLoading ? null : _login,
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: _surface),
-                        )
-                      : Text(
-                          'Sign In',
-                          style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                              color: _surface),
-                        ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Create account
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('New to MixVy? ',
-                        style: GoogleFonts.inter(fontSize: 13, color: _onVariant)),
-                    GestureDetector(
-                      onTap: authState.isLoading
-                          ? null
-                          : () => context.go('/register'),
-                      child: Text(
-                        'Create Account',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, color: _secondary,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Footer links
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _footerLink('Terms'),
-                    Text(' · ', style: GoogleFonts.inter(fontSize: 11, color: _onVariant)),
-                    _footerLink('Privacy'),
-                    Text(' · ', style: GoogleFonts.inter(fontSize: 11, color: _onVariant)),
-                    _footerLink('Support'),
-                  ],
-                ),
-              ],
+              ),
             ),
-            ), // SingleChildScrollView
           ),
         ),
       ),
     );
   }
 
+  // ── social button ─────────────────────────────────────────────────────────
   Widget _socialButton({
     required VoidCallback? onPressed,
     required Widget icon,
@@ -606,9 +618,10 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: _surfaceHighest,
-          side: const BorderSide(color: _ghostBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+          backgroundColor: _surfaceHigh,
+          side: const BorderSide(color: _goldBorder),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(999)),
           padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         child: Row(
@@ -617,56 +630,55 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
             icon,
             const SizedBox(width: 10),
             Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 14, fontWeight: FontWeight.w500, color: _onSurface)),
+                style: GoogleFonts.raleway(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _onSurface)),
           ],
         ),
       ),
     );
   }
 
-  Widget _googleIcon() {
-    return SizedBox(
-      width: 20, height: 20,
-      child: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-            padding: const EdgeInsets.all(2),
-            child: const Icon(Icons.g_mobiledata_rounded,
-                size: 16, color: Color(0xFF4285F4)),
-          ),
-        ],
+  // ── brand text input ───────────────────────────────────────────────────────
+  Widget _brandInput({
+    required TextEditingController controller,
+    required String hint,
+    required IconData prefixIcon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: GoogleFonts.raleway(color: _onSurface, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: _surfaceHigh,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: const BorderSide(color: _primary, width: 1.5),
+        ),
+        hintStyle: GoogleFonts.raleway(color: _onVariant, fontSize: 14),
+        prefixIcon: Icon(prefixIcon, size: 18, color: _onVariant),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
+      validator: validator,
     );
   }
 
-  Widget _orDivider() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(height: 1, color: _ghostBorder),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            'OR EMAIL',
-            style: GoogleFonts.inter(
-                fontSize: 11, fontWeight: FontWeight.w500,
-                color: _onVariant, letterSpacing: 1.0),
-          ),
-        ),
-        Expanded(
-          child: Container(height: 1, color: _ghostBorder),
-        ),
-      ],
-    );
-  }
-
-  Widget _gradientButton({
+  // ── gold solid button (SIGN IN) ────────────────────────────────────────────
+  Widget _goldSolidButton({
     required VoidCallback? onPressed,
     required Widget child,
   }) {
@@ -674,7 +686,6 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
       height: 52,
       child: Stack(
         children: [
-          // Gradient background
           Container(
             decoration: BoxDecoration(
               gradient: onPressed == null
@@ -684,20 +695,19 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-              color: onPressed == null ? _surfaceHighest : null,
+              color: onPressed == null ? _surfaceHigh : null,
               borderRadius: BorderRadius.circular(999),
               boxShadow: onPressed == null
                   ? null
                   : [
                       BoxShadow(
-                        color: _primaryDim.withAlpha(76),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
+                        color: _primary.withAlpha(60),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
                     ],
             ),
           ),
-          // Tap ripple + content
           Material(
             color: Colors.transparent,
             child: InkWell(
@@ -711,13 +721,79 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     );
   }
 
+  // ── gold outline button (SIGN UP) ──────────────────────────────────────────
+  Widget _goldOutlineButton({
+    required VoidCallback? onPressed,
+    required String label,
+  }) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _primary,
+          side: const BorderSide(color: _primary, width: 1.5),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(999)),
+          backgroundColor: Colors.transparent,
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.raleway(
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: _primary,
+              letterSpacing: 1.5),
+        ),
+      ),
+    );
+  }
+
+  // ── or divider ────────────────────────────────────────────────────────────
+  Widget _orDivider() {
+    return Row(
+      children: [
+        Expanded(child: Container(height: 1, color: _goldBorder)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'OR EMAIL',
+            style: GoogleFonts.raleway(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: _onVariant,
+                letterSpacing: 1.5),
+          ),
+        ),
+        Expanded(child: Container(height: 1, color: _goldBorder)),
+      ],
+    );
+  }
+
+  // ── google icon ───────────────────────────────────────────────────────────
+  Widget _googleIcon() {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: const BoxDecoration(
+          shape: BoxShape.circle, color: Colors.white),
+      padding: const EdgeInsets.all(2),
+      child: const Icon(Icons.g_mobiledata_rounded,
+          size: 16, color: Color(0xFF4285F4)),
+    );
+  }
+
+  // ── footer link ───────────────────────────────────────────────────────────
   Widget _footerLink(String label) {
     return GestureDetector(
-      child: Text(label,
-          style: GoogleFonts.inter(
-              fontSize: 11, color: _onVariant,
-              decoration: TextDecoration.underline,
-              decorationColor: _onVariant)),
+      child: Text(
+        label,
+        style: GoogleFonts.raleway(
+            fontSize: 11,
+            color: _onVariant,
+            decoration: TextDecoration.underline,
+            decorationColor: _onVariant),
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 import 'package:mixvy/features/follow/providers/follow_provider.dart';
 
 import 'test_helpers.dart';

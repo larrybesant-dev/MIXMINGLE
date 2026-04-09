@@ -2,35 +2,43 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ── Velvet Noir Design Tokens — MixVy ────────────────────────────────────────
-// Deep warm-black surfaces · champagne gold · rose wine · warm cream
+// ── MIXVY Brand Design Tokens — Locked ──────────────────────────────────────
+// Jet Black · Deep Wine Red · Gold · Soft Cream
+// COLOR SYSTEM — DO NOT DEVIATE FROM THESE VALUES
 class VelvetNoir {
-  // Surfaces — warm deep-black with burgundy undertones
-  static const Color surface        = Color(0xFF0D0A0C);
-  static const Color surfaceLow     = Color(0xFF130C0F);
-  static const Color surfaceContainer = Color(0xFF1B1216);
-  static const Color surfaceHigh    = Color(0xFF241820);
-  static const Color surfaceBright  = Color(0xFF302229);
-  static const Color surfaceHighest = Color(0xFF2A1C23);
+  // Surfaces — jet black base (#0B0B0B) with subtle warm-dark elevation layers
+  static const Color surface           = Color(0xFF0B0B0B); // Jet Black
+  static const Color surfaceLow        = Color(0xFF0F0B0D);
+  static const Color surfaceContainer  = Color(0xFF161012);
+  static const Color surfaceHigh       = Color(0xFF1C1617); // from brand board
+  static const Color surfaceBright     = Color(0xFF241A1D);
+  static const Color surfaceHighest    = Color(0xFF2A1E22);
 
-  // Brand — champagne gold · rose wine
-  static const Color primary    = Color(0xFFD4A853); // champagne gold
-  static const Color primaryDim = Color(0xFF8C6020); // deep amber
-  static const Color secondary  = Color(0xFFC45E7A); // rose wine
+  // Brand — Gold · Deep Wine Red
+  static const Color primary    = Color(0xFFD4AF37); // Gold (#D4AF37) — buttons, logo, premium
+  static const Color primaryDim = Color(0xFF9A7B1A); // deep gold shadow
+  static const Color secondary  = Color(0xFF781E2B); // Deep Wine Red (#781E2B) — rooms, passion
+  static const Color secondaryBright = Color(0xFF9B2535); // lighter wine for highlights
 
-  // On-surface — warm cream tones
-  static const Color onSurface        = Color(0xFFF2EBE0);
-  static const Color onSurfaceVariant = Color(0xFFB09080);
-  static const Color outlineVariant   = Color(0xFF5A3845);
+  // On-surface — soft cream tones (#F7EDE2)
+  static const Color onSurface        = Color(0xFFF7EDE2); // Soft Cream
+  static const Color onSurfaceVariant = Color(0xFFAD9585);
+  static const Color outlineVariant   = Color(0xFF4A2E35);
 
-  // Status
-  static const Color error = Color(0xFFFF6E84); // LIVE badge / error
+  // Status — live indicator uses wine red glow
+  static const Color error    = Color(0xFFE03450); // error / destructive
+  static const Color liveGlow = Color(0xFF9B2535); // wine red live glow
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [primary, primaryDim],
+  );
+  static const LinearGradient wineGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [secondaryBright, secondary],
   );
 }
 
@@ -61,15 +69,15 @@ final ThemeData midnightCreativeTheme = ThemeData(
     headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: VelvetNoir.onSurface),
     headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: VelvetNoir.onSurface),
     titleLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: VelvetNoir.onSurface),
-    // Body & Labels — Inter (clean, readable)
-    titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface),
-    titleSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface),
-    bodyLarge:   GoogleFonts.inter(fontSize: 16, color: VelvetNoir.onSurface),
-    bodyMedium:  GoogleFonts.inter(fontSize: 14, color: VelvetNoir.onSurfaceVariant),
-    bodySmall:   GoogleFonts.inter(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
-    labelLarge:  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: VelvetNoir.onSurface),
-    labelMedium: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 12, color: VelvetNoir.onSurface),
-    labelSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.5, color: VelvetNoir.onSurfaceVariant),
+    // Body & Labels — Raleway (clean modern — brand-spec)
+    titleMedium: GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface),
+    titleSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface),
+    bodyLarge:   GoogleFonts.raleway(fontSize: 16, color: VelvetNoir.onSurface),
+    bodyMedium:  GoogleFonts.raleway(fontSize: 14, color: VelvetNoir.onSurfaceVariant),
+    bodySmall:   GoogleFonts.raleway(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
+    labelLarge:  GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: 0.8, color: VelvetNoir.onSurface),
+    labelMedium: GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 12, letterSpacing: 0.6, color: VelvetNoir.onSurface),
+    labelSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 1.0, color: VelvetNoir.onSurfaceVariant),
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: VelvetNoir.surface,
@@ -124,8 +132,8 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
-      foregroundColor: VelvetNoir.onSurface,
-      side: const BorderSide(color: Color(0x1A73757D)),
+      foregroundColor: VelvetNoir.primary,
+      side: const BorderSide(color: VelvetNoir.primary, width: 1.5),
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
     ),
@@ -143,7 +151,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   snackBarTheme: SnackBarThemeData(
     backgroundColor: VelvetNoir.surfaceHigh,
-    contentTextStyle: GoogleFonts.inter(color: VelvetNoir.onSurface, fontSize: 14, height: 1.4),
+    contentTextStyle: GoogleFonts.raleway(color: VelvetNoir.onSurface, fontSize: 14, height: 1.4),
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
   ),

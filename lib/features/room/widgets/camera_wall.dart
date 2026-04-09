@@ -182,7 +182,7 @@ class CameraWall extends ConsumerWidget {
         const double headerH = 24;
         const double maxTileH = 280; // cap so a single cam doesn't dominate
         const double mobileH = 160;
-        const npSurfaceLow   = Color(0xFF10131A);
+        const npSurfaceLow = Color(0xFF0B0B0B); // Jet Black
 
         return ColoredBox(
           color: npSurfaceLow,
@@ -238,10 +238,10 @@ class CameraWall extends ConsumerWidget {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161A21),
+                      color: const Color(0xFF161012),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Color.fromARGB(60, 0, 227, 253), // cyan @ 24%
+                        color: const Color(0x409B2535), // wine red @ 25%
                       ),
                     ),
                     child: Row(
@@ -250,7 +250,7 @@ class CameraWall extends ConsumerWidget {
                           width: 7,
                           height: 7,
                           decoration: const BoxDecoration(
-                            color: Color(0xFFFF4444),
+                            color: Color(0xFF9B2535), // wine red live dot
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -258,7 +258,7 @@ class CameraWall extends ConsumerWidget {
                         const Text(
                           'Talking: ',
                           style: TextStyle(
-                            color: Color(0xFFC45E7A),
+                            color: Color(0xFFD4AF37), // gold label
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -502,16 +502,25 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
 
   @override
   Widget build(BuildContext context) {
-    const npSurfaceContainer = Color(0xFF161A21);
-    const npSurfaceHigh      = Color(0xFF241820);
-    const npSecondary        = Color(0xFFC45E7A); // cyan speaking
-    const npOnVariant        = Color(0xFFB09080);
+    const npSurfaceContainer = Color(0xFF0B0B0B);  // Jet Black
+    const npSurfaceHigh      = Color(0xFF1C1617);   // elevated surface
+    const npGold             = Color(0xFFD4AF37);   // Gold — host/mic holder
+    const npWineRed          = Color(0xFF9B2535);   // Wine Red — speaking glow
+    const npOnVariant        = Color(0xFFAD9585);   // muted cream
 
     final radius = widget.compact ? 8.0 : 10.0;
-    final borderColor = widget.speaking ? npSecondary : const Color(0x1A73757D);
-    final glowShadow = widget.speaking
-        ? [BoxShadow(color: npSecondary.withAlpha(60), blurRadius: 8, spreadRadius: 1)]
-        : const <BoxShadow>[];
+    // Host (hasMic) gets gold frame; speaking gets wine-red glow; else subtle
+    final Color borderColor = widget.hasMic
+        ? npGold
+        : widget.speaking
+            ? npWineRed
+            : const Color(0x20D4AF37);
+    final double borderWidth = (widget.hasMic || widget.speaking) ? 2.0 : 1.0;
+    final glowShadow = widget.hasMic
+        ? [BoxShadow(color: npGold.withAlpha(70), blurRadius: 12, spreadRadius: 1)]
+        : widget.speaking
+            ? [BoxShadow(color: npWineRed.withAlpha(80), blurRadius: 10, spreadRadius: 1)]
+            : const <BoxShadow>[];
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -520,7 +529,7 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
         decoration: BoxDecoration(
           color: npSurfaceContainer,
           borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: borderColor, width: widget.speaking ? 2 : 1),
+          border: Border.all(color: borderColor, width: borderWidth),
           boxShadow: glowShadow,
         ),
         child: ClipRRect(
@@ -537,7 +546,11 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: widget.speaking ? npSecondary : npOnVariant,
+                        color: widget.hasMic
+                            ? npGold
+                            : widget.speaking
+                                ? npWineRed
+                                : npOnVariant,
                         shape: BoxShape.circle,
                       ),
                     ),

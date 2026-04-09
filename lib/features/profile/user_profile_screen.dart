@@ -442,8 +442,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                 Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
                           ]
                         : [
-                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
-                            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.25), // gold dim
+                            const Color(0xFF781E2B).withValues(alpha: 0.6),  // wine red
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

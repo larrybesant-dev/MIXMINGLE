@@ -22,9 +22,9 @@ class OnMicPanel extends ConsumerWidget {
   /// Display-name lookup keyed by userId (same map used by UserListPanel).
   final Map<String, String> displayNameById;
 
-  static const _npSurfaceContainer = Color(0xFF161A21);
-  static const _npSurfaceHigh = Color(0xFF241820);
-  static const _npSecondary = Color(0xFFC45E7A);
+  static const _npSurfaceContainer = Color(0xFF0B0B0B); // Jet Black
+  static const _npSurfaceHigh = Color(0xFF1C1617);
+  static const _npGold = Color(0xFFD4AF37);       // gold — On Mic header
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -60,7 +60,7 @@ class OnMicPanel extends ConsumerWidget {
                     Text(
                       'On Mic  •  ${participants.length}',
                       style: const TextStyle(
-                        color: _npSecondary,
+                        color: _npGold,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
@@ -116,10 +116,10 @@ class _OnMicRowState extends State<_OnMicRow> {
   Timer? _tickTimer;
   int _secondsLeft = 0; // 0 = no timer / expired
 
-  static const _npPrimary = Color(0xFFD4A853);
-  static const _npSecondary = Color(0xFFC45E7A);
-  static const _npOnVariant = Color(0xFFB09080);
-  static const _npStage = Color(0xFFFFA040);
+  static const _npPrimary = Color(0xFFD4AF37);   // Gold — host
+  static const _npSecondary = Color(0xFF9B2535);  // Wine Red — cohost
+  static const _npOnVariant = Color(0xFFAD9585);
+  static const _npStage = Color(0xFFD4AF37);      // Gold — on stage
 
   @override
   void initState() {

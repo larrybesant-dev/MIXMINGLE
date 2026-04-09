@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme.dart';
 import '../feed/providers/feed_providers.dart';
@@ -75,18 +76,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             backgroundColor: VelvetNoir.surface,
             surfaceTintColor: Colors.transparent,
             titleSpacing: 16,
-            title: ShaderMask(
-              shaderCallback: (rect) =>
-                  VelvetNoir.primaryGradient.createShader(rect),
-              blendMode: BlendMode.srcIn,
-              child: const Text(
-                'MixVy',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 24,
+            title: Text(
+                'MIXVY',
+                style: GoogleFonts.playfairDisplay(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  color: VelvetNoir.primary,
+                  letterSpacing: 3,
                 ),
               ),
-            ),
             centerTitle: false,
             actions: [
               _StatsBarWidget(
@@ -116,6 +114,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              // MIX / CONNECT / INDULGE nav cards
+              const SliverToBoxAdapter(child: _BrandNavCards()),
+              const SliverToBoxAdapter(child: SizedBox(height: 4)),
+
               // Stories
               const SliverToBoxAdapter(child: StoriesRow()),
               const SliverToBoxAdapter(child: SizedBox(height: 4)),
@@ -140,7 +142,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: _SectionHeader(
                   title: 'Live Now',
-                  dotColor: VelvetNoir.error,
+                  dotColor: VelvetNoir.liveGlow,
                   topPadding: 20,
                   trailing: TextButton(
                     onPressed: () => context.go('/rooms'),
@@ -320,7 +322,7 @@ class _StatsBarWidget extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         _StatPill(
-          dot: VelvetNoir.error,
+          dot: VelvetNoir.liveGlow,
           label: '$live',
           tooltip: 'live rooms',
         ),
@@ -406,9 +408,9 @@ class _SectionHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
+            style: GoogleFonts.playfairDisplay(
               fontSize: 17,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: VelvetNoir.onSurface,
             ),
           ),
@@ -803,6 +805,105 @@ class _HorizontalSkeleton extends StatelessWidget {
           decoration: BoxDecoration(
             color: VelvetNoir.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MIX · CONNECT · INDULGE — brand navigation cards
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BrandNavCards extends StatelessWidget {
+  const _BrandNavCards();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          _NavCard(
+            label: 'MIX',
+            sub: 'Find your vibe',
+            icon: Icons.people_alt_rounded,
+            accent: VelvetNoir.primary,
+            onTap: () => context.go('/discover'),
+          ),
+          const SizedBox(width: 10),
+          _NavCard(
+            label: 'CONNECT',
+            sub: 'Start something real',
+            icon: Icons.chat_bubble_outline_rounded,
+            accent: VelvetNoir.secondaryBright,
+            onTap: () => context.go('/messages'),
+          ),
+          const SizedBox(width: 10),
+          _NavCard(
+            label: 'INDULGE',
+            sub: 'Live rooms',
+            icon: Icons.mic_external_on_rounded,
+            accent: VelvetNoir.liveGlow,
+            onTap: () => context.go('/rooms'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavCard extends StatelessWidget {
+  final String label;
+  final String sub;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _NavCard({
+    required this.label,
+    required this.sub,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          decoration: BoxDecoration(
+            color: VelvetNoir.surfaceHigh,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: accent.withAlpha(45), width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: accent, size: 22),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.raleway(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                sub,
+                style: GoogleFonts.raleway(
+                  fontSize: 10,
+                  color: VelvetNoir.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ),

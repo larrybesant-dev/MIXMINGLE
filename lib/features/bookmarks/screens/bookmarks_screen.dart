@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import '../providers/bookmark_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -16,7 +16,7 @@ class BookmarksScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookmarksAsync = ref.watch(bookmarkedPostsProvider(userId));
-    final viewerId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final viewerId = ref.watch(authControllerProvider).uid ?? '';
 
     return Scaffold(
       appBar: AppBar(

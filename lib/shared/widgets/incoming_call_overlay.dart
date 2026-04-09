@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
+import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 
 // ── Stream provider ─────────────────────────────────────────────────────────
 
@@ -13,10 +14,10 @@ import 'package:go_router/go_router.dart';
 /// Returns null if there is no pending call.
 final _pendingCallProvider =
     StreamProvider.autoDispose<Map<String, dynamic>?>((ref) {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
+  final uid = ref.watch(authControllerProvider).uid;
   if (uid == null) return Stream.value(null);
 
-  return FirebaseFirestore.instance
+  return ref.watch(firestoreProvider)
       .collection('rooms')
       .where('isDirectCall', isEqualTo: true)
       .where('isLive', isEqualTo: true)
@@ -97,7 +98,7 @@ class _IncomingCallOverlayState extends ConsumerState<IncomingCallOverlay> {
           _activeCallRoomId = null;
           Navigator.of(context, rootNavigator: true).pop();
           try {
-            await FirebaseFirestore.instance
+            await ref.read(firestoreProvider)
                 .collection('rooms')
                 .doc(roomId)
                 .update({

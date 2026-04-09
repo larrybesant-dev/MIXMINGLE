@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 
 class BetaFeedbackOverlay extends StatelessWidget {
   const BetaFeedbackOverlay({super.key, required this.child});
@@ -13,7 +14,7 @@ class BetaFeedbackOverlay extends StatelessWidget {
   Widget build(BuildContext context) => child;
 }
 
-class BetaFeedbackSheet extends StatefulWidget {
+class BetaFeedbackSheet extends ConsumerStatefulWidget {
   const BetaFeedbackSheet({super.key});
 
   /// Convenience method to open the sheet from any context.
@@ -28,10 +29,10 @@ class BetaFeedbackSheet extends StatefulWidget {
   }
 
   @override
-  State<BetaFeedbackSheet> createState() => _BetaFeedbackSheetState();
+  ConsumerState<BetaFeedbackSheet> createState() => _BetaFeedbackSheetState();
 }
 
-class _BetaFeedbackSheetState extends State<BetaFeedbackSheet> {
+class _BetaFeedbackSheetState extends ConsumerState<BetaFeedbackSheet> {
   final TextEditingController _messageController = TextEditingController();
   String _category = 'bug';
   bool _submitting = false;
@@ -54,7 +55,7 @@ class _BetaFeedbackSheetState extends State<BetaFeedbackSheet> {
     setState(() => _submitting = true);
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = ref.read(firebaseAuthProvider).currentUser;
       String route = 'unknown';
       try {
         route = GoRouterState.of(context).uri.toString();
@@ -62,7 +63,7 @@ class _BetaFeedbackSheetState extends State<BetaFeedbackSheet> {
         route = ModalRoute.of(context)?.settings.name ?? 'unknown';
       }
 
-      await FirebaseFirestore.instance.collection('beta_feedback').add({
+      await ref.read(firestoreProvider).collection('beta_feedback').add({
         'category': _category,
         'message': message,
         'route': route,
