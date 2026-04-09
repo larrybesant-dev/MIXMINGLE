@@ -661,6 +661,52 @@ describe("payment callable handlers", () => {
     }
   });
 
+  it("createCheckoutSessionCallableHandler maps coin package ids server-side", async () => {
+    let capturedPayload;
+    const stripeClient = {
+      checkout: {
+        sessions: {
+          create: async (payload) => {
+            capturedPayload = payload;
+            return {url: "https://checkout.stripe.test/coins_3500"};
+          },
+        },
+      },
+    };
+
+    const response = await paymentFunctions.__testing.createCheckoutSessionCallableHandler(
+      makeRequest({packageId: "coins_3500"}),
+      {stripeClient},
+    );
+
+    assert.equal(response.url, "https://checkout.stripe.test/coins_3500");
+    assert.equal(capturedPayload.line_items[0].price_data.unit_amount, 4999);
+    assert.equal(capturedPayload.line_items[0].price_data.product_data.name, "MixVy Coins - 4000");
+    assert.equal(capturedPayload.metadata.packageId, "coins_3500");
+    assert.equal(capturedPayload.metadata.coins, "4000");
+    assert.equal(capturedPayload.metadata.userId, "user-1");
+  });
+
+  it("createCheckoutSessionCallableHandler rejects unknown package ids", async () => {
+    const stripeClient = {
+      checkout: {
+        sessions: {
+          create: async () => {
+            throw new Error("should not create session");
+          },
+        },
+      },
+    };
+
+    await assert.rejects(
+      () => paymentFunctions.__testing.createCheckoutSessionCallableHandler(
+        makeRequest({packageId: "coins_fake"}),
+        {stripeClient},
+      ),
+      (error) => error.code === "invalid-argument",
+    );
+  });
+
   // sendRoomGift ------------------------------------------------------------
 
   it("sendRoomGiftHandler rejects sender who is not a room participant", async () => {

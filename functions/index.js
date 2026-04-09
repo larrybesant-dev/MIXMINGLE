@@ -28,6 +28,57 @@ function getStripe() {
   return _stripe;
 }
 
+const CHECKOUT_PRODUCTS = {
+  premium_access: {
+    unitAmount: 500,
+    currency: "usd",
+    name: "MixVy Premium",
+    metadata: {
+      productType: "premium_access",
+    },
+  },
+  coins_70: {
+    unitAmount: 99,
+    currency: "usd",
+    name: "MixVy Coins - 70",
+    metadata: {
+      productType: "coin_package",
+      packageId: "coins_70",
+      coins: "70",
+    },
+  },
+  coins_350: {
+    unitAmount: 499,
+    currency: "usd",
+    name: "MixVy Coins - 350",
+    metadata: {
+      productType: "coin_package",
+      packageId: "coins_350",
+      coins: "350",
+    },
+  },
+  coins_1400: {
+    unitAmount: 1999,
+    currency: "usd",
+    name: "MixVy Coins - 1500",
+    metadata: {
+      productType: "coin_package",
+      packageId: "coins_1400",
+      coins: "1500",
+    },
+  },
+  coins_3500: {
+    unitAmount: 4999,
+    currency: "usd",
+    name: "MixVy Coins - 4000",
+    metadata: {
+      productType: "coin_package",
+      packageId: "coins_3500",
+      coins: "4000",
+    },
+  },
+};
+
 const db = admin.firestore();
 const CHAT_RETENTION_BATCH_LIMIT = 400;
 
@@ -213,6 +264,50 @@ function getCheckoutBaseUrl() {
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
+function resolveCheckoutProduct(value, fallbackKey = "premium_access") {
+  if (value == null) {
+    return CHECKOUT_PRODUCTS[fallbackKey];
+  }
+
+  const normalized = typeof value === "string" ? value.trim() : "";
+  if (!normalized) {
+    return CHECKOUT_PRODUCTS[fallbackKey];
+  }
+
+  const product = CHECKOUT_PRODUCTS[normalized];
+  if (!product) {
+    throw new HttpsError("invalid-argument", "Unknown checkout package.");
+  }
+
+  return product;
+}
+
+function buildCheckoutSessionPayload({uid, packageId}) {
+  const product = resolveCheckoutProduct(packageId);
+  const checkoutBaseUrl = getCheckoutBaseUrl();
+
+  return {
+    payment_method_types: ["card"],
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: product.currency,
+          product_data: {name: product.name},
+          unit_amount: product.unitAmount,
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {
+      userId: uid,
+      ...product.metadata,
+    },
+    success_url: `${checkoutBaseUrl}/success`,
+    cancel_url: `${checkoutBaseUrl}/cancel`,
+  };
+}
+
 function mapStripeConnectAccount(account) {
   const chargesEnabled = !!account.charges_enabled;
   const payoutsEnabled = !!account.payouts_enabled;
@@ -273,25 +368,13 @@ async function createCheckoutSessionHandler(req, res, deps = {}) {
   const stripeClient = deps.stripeClient || getStripe();
 
   try {
-    const checkoutBaseUrl = getCheckoutBaseUrl();
     const userId = parseIdField(req.body && req.body.userId, "userId");
-    const session = await stripeClient.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {name: "MixVy Coins"},
-            unit_amount: 500,
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {userId},
-      success_url: `${checkoutBaseUrl}/success`,
-      cancel_url: `${checkoutBaseUrl}/cancel`,
-    });
+    const session = await stripeClient.checkout.sessions.create(
+      buildCheckoutSessionPayload({
+        uid: userId,
+        packageId: req.body && req.body.packageId,
+      }),
+    );
     return res.json({url: session.url});
   } catch (error) {
     console.error(error);
@@ -303,24 +386,12 @@ async function createCheckoutSessionCallableHandler(request, deps = {}) {
   const uid = requireAuth(request);
   const stripeClient = deps.stripeClient || getStripe();
 
-  const checkoutBaseUrl = getCheckoutBaseUrl();
-  const session = await stripeClient.checkout.sessions.create({
-    payment_method_types: ["card"],
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {name: "MixVy Coins"},
-          unit_amount: 500,
-        },
-        quantity: 1,
-      },
-    ],
-    metadata: {userId: uid},
-    success_url: `${checkoutBaseUrl}/success`,
-    cancel_url: `${checkoutBaseUrl}/cancel`,
-  });
+  const session = await stripeClient.checkout.sessions.create(
+    buildCheckoutSessionPayload({
+      uid,
+      packageId: request.data && request.data.packageId,
+    }),
+  );
 
   return {url: session.url};
 }
@@ -1481,6 +1552,29 @@ exports.submitBetaFeedback = onCall(async (request) => {
   return submitBetaFeedbackHandler(request);
 });
 
+exports.syncPostCommentCount = onDocumentWritten(
+  "posts/{postId}/comments/{commentId}",
+  async (event) => {
+    const beforeExists = !!(event.data && event.data.before && event.data.before.exists);
+    const afterExists = !!(event.data && event.data.after && event.data.after.exists);
+
+    if (beforeExists === afterExists) {
+      return;
+    }
+
+    const delta = afterExists ? 1 : -1;
+    const postId = event.params && event.params.postId;
+    if (!postId) {
+      return;
+    }
+
+    await db.collection("posts").doc(postId).set({
+      commentCount: admin.firestore.FieldValue.increment(delta),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, {merge: true});
+  },
+);
+
 /**
  * promoteToBetaTester – admin-only callable that stamps betaTester:true on a
  * specific user doc (or all users when uid is omitted).
@@ -2090,4 +2184,6 @@ exports.__testing = {
   sendIncomingCallPushHandler,
   grabMicHandler,
   inviteToMicHandler,
+  buildCheckoutSessionPayload,
+  resolveCheckoutProduct,
 };

@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../models/room_model.dart';
-import '../../../features/feed/widgets/live_room_card.dart';
 import '../theme/after_dark_theme.dart';
+import '../widgets/after_dark_live_room_card.dart';
 
 const List<({String label, String emoji, String? value})> _loungeCategories = [
   (label: 'All',       emoji: '🔥', value: null),
@@ -88,10 +89,10 @@ class _AfterDarkLoungesScreenState
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     child: TextField(
                       controller: _searchController,
-                      style: const TextStyle(color: EmberDark.onSurface),
+                      style: GoogleFonts.raleway(color: EmberDark.onSurface),
                       decoration: InputDecoration(
-                        hintText: 'Search lounges…',
-                        hintStyle: const TextStyle(
+                        hintText: 'Search the mood…',
+                        hintStyle: GoogleFonts.raleway(
                             color: EmberDark.onSurfaceVariant),
                         prefixIcon: const Icon(Icons.search_rounded,
                             color: EmberDark.onSurfaceVariant),
@@ -154,7 +155,7 @@ class _AfterDarkLoungesScreenState
                             ),
                             child: Text(
                               '${cat.emoji} ${cat.label}',
-                              style: TextStyle(
+                              style: GoogleFonts.raleway(
                                 color: isSelected
                                     ? Colors.white
                                     : EmberDark.onSurfaceVariant,
@@ -237,8 +238,8 @@ class _AfterDarkLoungesScreenState
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Be the first to go live.',
-                            style: TextStyle(
+                            'Be the first to open the floor tonight.',
+                            style: GoogleFonts.raleway(
                                 color: EmberDark.onSurfaceVariant),
                           ),
                           const SizedBox(height: 20),
@@ -268,10 +269,12 @@ class _AfterDarkLoungesScreenState
                     const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => LiveRoomCard(
-                      room: rooms[i],
-                      onTap: () =>
-                          context.go('/room/${rooms[i].id}'),
+                    (ctx, i) => _AfterDarkGridReveal(
+                      delay: i * 35,
+                      child: AfterDarkLiveRoomCard(
+                        room: rooms[i],
+                        onTap: () => context.go('/room/${rooms[i].id}'),
+                      ),
                     ),
                     childCount: rooms.length,
                   ),
@@ -292,12 +295,37 @@ class _AfterDarkLoungesScreenState
   }
 }
 
-class _CreateLoungeBanner extends StatelessWidget {
+class _CreateLoungeBanner extends StatefulWidget {
+  @override
+  State<_CreateLoungeBanner> createState() => _CreateLoungeBannerState();
+}
+
+class _CreateLoungeBannerState extends State<_CreateLoungeBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/after-dark/create-lounge'),
-      child: Container(
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) => GestureDetector(
+        onTap: () => context.go('/after-dark/create-lounge'),
+        child: Container(
         height: 70,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -308,8 +336,8 @@ class _CreateLoungeBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: EmberDark.primary.withValues(alpha: 0.3),
-              blurRadius: 16,
+              color: EmberDark.secondary.withValues(alpha: 0.16 + (_controller.value * 0.18)),
+              blurRadius: 14 + (_controller.value * 10),
               offset: const Offset(0, 4),
             ),
           ],
@@ -334,7 +362,7 @@ class _CreateLoungeBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Create an After Dark Lounge',
+                    'Open a Velvet Lounge',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -342,7 +370,7 @@ class _CreateLoungeBanner extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Go live with an 18+ community',
+                    'Go live for adults looking for late-night chemistry',
                     style: TextStyle(
                         color: Color(0xCCFFFFFF), fontSize: 11),
                   ),
@@ -354,6 +382,33 @@ class _CreateLoungeBanner extends StatelessWidget {
           ],
         ),
       ),
+      ),
+    );
+  }
+}
+
+class _AfterDarkGridReveal extends StatelessWidget {
+  final Widget child;
+  final int delay;
+
+  const _AfterDarkGridReveal({required this.child, this.delay = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 380 + delay),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value.clamp(0, 1),
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 14),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

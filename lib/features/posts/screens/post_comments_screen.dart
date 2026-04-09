@@ -120,9 +120,6 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
         'createdAt': now,
       });
 
-      // Increment comment counter
-      await postRef.update({'commentCount': FieldValue.increment(1)});
-
       _ctrl.clear();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {

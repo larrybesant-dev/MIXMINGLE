@@ -79,18 +79,22 @@ final ThemeData midnightCreativeTheme = ThemeData(
     labelMedium: GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 12, letterSpacing: 0.6, color: VelvetNoir.onSurface),
     labelSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 1.0, color: VelvetNoir.onSurfaceVariant),
   ),
-  appBarTheme: const AppBarTheme(
+  appBarTheme: AppBarTheme(
     backgroundColor: VelvetNoir.surface,
     elevation: 0,
     scrolledUnderElevation: 0,
     surfaceTintColor: Colors.transparent,
     foregroundColor: VelvetNoir.onSurface,
     centerTitle: true,
-    titleTextStyle: TextStyle(
+    titleTextStyle: GoogleFonts.playfairDisplay(
       color: VelvetNoir.onSurface,
-      fontSize: 18,
-      fontWeight: FontWeight.w700,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
       letterSpacing: 0.2,
+    ),
+    toolbarTextStyle: GoogleFonts.raleway(
+      color: VelvetNoir.onSurface,
+      fontSize: 14,
     ),
   ),
   cardTheme: CardThemeData(
@@ -116,8 +120,8 @@ final ThemeData midnightCreativeTheme = ThemeData(
       borderRadius: BorderRadius.circular(999),
       borderSide: const BorderSide(color: VelvetNoir.primary, width: 1.5),
     ),
-    hintStyle: const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
-    labelStyle: const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
+    hintStyle: GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
+    labelStyle: GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
@@ -126,7 +130,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
       foregroundColor: VelvetNoir.surface,
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-      textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+      textStyle: GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6),
       elevation: 0,
     ),
   ),
@@ -136,6 +140,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
       side: const BorderSide(color: VelvetNoir.primary, width: 1.5),
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      textStyle: GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6),
     ),
   ),
   textButtonTheme: TextButtonThemeData(

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:mixvy/services/analytics_service.dart';
+import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 // ── MIXVY Brand Colors — locked ───────────────────────────────────────────────
 const _surface         = Color(0xFF0B0B0B); // Jet Black
@@ -216,7 +217,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
         const SizedBox(width: 6),
         Text(
           'SYSTEM LIVE',
-          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500,
+          style: GoogleFonts.raleway(fontSize: 10, fontWeight: FontWeight.w500,
               color: _secondary, letterSpacing: 1.2),
         ),
       ],
@@ -225,53 +226,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
 
   // ── MIXVY logo block — monogram + wordmark ────────────────────────────────
   Widget _logoText({double size = 42}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // M monogram circle
-        Container(
-          width: size * 1.4,
-          height: size * 1.4,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: _goldBorder, width: 1.5),
-            color: _primary.withAlpha(12),
-          ),
-          child: Center(
-            child: Text(
-              'M',
-              style: GoogleFonts.playfairDisplay(
-                fontSize: size * 0.9,
-                fontWeight: FontWeight.w700,
-                color: _primary,
-                height: 1,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        // Wordmark
-        Text(
-          'MIXVY',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: size,
-            fontWeight: FontWeight.w700,
-            color: _primary,
-            letterSpacing: size * 0.12,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'MIX.  CONNECT.  INDULGE.',
-          style: GoogleFonts.raleway(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: _onVariant,
-            letterSpacing: 2.0,
-          ),
-        ),
-      ],
-    );
+    return MixvyLogoFull(size: size);
   }
 
   // ── wide two-column layout ────────────────────────────────────────────────

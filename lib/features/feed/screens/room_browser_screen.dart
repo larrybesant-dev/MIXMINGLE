@@ -8,6 +8,7 @@ import '../../../core/theme.dart';
 import '../../../models/room_model.dart';
 import '../widgets/live_room_card.dart';
 import '../../../widgets/mixvy_drawer.dart';
+import '../../../widgets/brand_ui_kit.dart';
 
 class RoomBrowserScreen extends ConsumerStatefulWidget {
   const RoomBrowserScreen({super.key, this.initialCategory});
@@ -134,6 +135,8 @@ class _CategoryDirectory extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const MixvyAppBarLogo(fontSize: 18),
+                const SizedBox(height: 10),
                 Text(
                   'Find Your Vibe',
                   style: GoogleFonts.playfairDisplay(
@@ -146,7 +149,7 @@ class _CategoryDirectory extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Pick a room, join the moment.',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.raleway(
                     fontSize: 13,
                     color: VelvetNoir.onSurfaceVariant,
                     letterSpacing: 0.2,
@@ -171,7 +174,7 @@ class _CategoryDirectory extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
             child: Text(
               'BROWSE BY VIBE',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.raleway(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: VelvetNoir.primary.withValues(alpha: 0.7),
@@ -306,7 +309,7 @@ class _GoLiveBanner extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           'Host your own live conversation',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.raleway(
                             fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.75),
                           ),
@@ -323,7 +326,7 @@ class _GoLiveBanner extends StatelessWidget {
                     ),
                     child: Text(
                       'GO LIVE',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.raleway(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -418,7 +421,7 @@ class _CategoryCard extends StatelessWidget {
                   // Label
                   Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.raleway(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: VelvetNoir.onSurface,
@@ -541,13 +544,13 @@ class _RoomListView extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: TextField(
               controller: searchController,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.raleway(
                 fontSize: 14,
                 color: VelvetNoir.onSurface,
               ),
               decoration: InputDecoration(
                 hintText: 'Search rooms...',
-                hintStyle: GoogleFonts.inter(
+                hintStyle: GoogleFonts.raleway(
                     fontSize: 14, color: VelvetNoir.onSurfaceVariant),
                 prefixIcon: const Icon(Icons.search_rounded,
                     color: VelvetNoir.onSurfaceVariant, size: 20),
@@ -611,7 +614,7 @@ class _RoomListView extends ConsumerWidget {
                       const SizedBox(height: 6),
                       Text(
                         'Be the first to start one!',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                           fontSize: 13,
                           color: VelvetNoir.onSurfaceVariant,
                         ),
@@ -623,7 +626,7 @@ class _RoomListView extends ConsumerWidget {
                             color: VelvetNoir.primary),
                         label: Text(
                           'Start a Room',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.raleway(
                               color: VelvetNoir.primary,
                               fontWeight: FontWeight.w700),
                         ),

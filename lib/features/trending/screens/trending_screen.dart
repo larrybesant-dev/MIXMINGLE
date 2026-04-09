@@ -5,6 +5,7 @@ import '../providers/trending_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
 import '../../../core/theme.dart';
+import '../../../widgets/brand_ui_kit.dart';
 
 class TrendingScreen extends ConsumerStatefulWidget {
   const TrendingScreen({super.key});
@@ -23,15 +24,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
         backgroundColor: VelvetNoir.surface,
         appBar: AppBar(
           backgroundColor: VelvetNoir.surface,
-          title: ShaderMask(
-            shaderCallback: (rect) =>
-                VelvetNoir.primaryGradient.createShader(rect),
-            blendMode: BlendMode.srcIn,
-            child: const Text(
-              'Trending',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
-            ),
-          ),
+          title: const MixvyAppBarLogo(fontSize: 20),
           bottom: const TabBar(
             indicatorColor: VelvetNoir.primary,
             labelColor: VelvetNoir.primary,

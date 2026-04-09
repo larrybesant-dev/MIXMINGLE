@@ -415,6 +415,120 @@ class MixvySectionHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MixvyMonogram — the M circle mark (inline / compact)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class MixvyMonogram extends StatelessWidget {
+  final double size;
+  final bool glow;
+
+  const MixvyMonogram({super.key, this.size = 56, this.glow = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget circle = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: VelvetNoir.primary, width: size * 0.026),
+        color: VelvetNoir.primary.withAlpha(12),
+        boxShadow: glow
+            ? [
+                BoxShadow(
+                  color: VelvetNoir.primary.withAlpha(70),
+                  blurRadius: size * 0.7,
+                  spreadRadius: size * 0.07,
+                ),
+                BoxShadow(
+                  color: VelvetNoir.secondary.withAlpha(50),
+                  blurRadius: size * 1.2,
+                  spreadRadius: size * 0.14,
+                ),
+              ]
+            : null,
+      ),
+      child: Center(
+        child: Text(
+          'M',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: size * 0.65,
+            fontWeight: FontWeight.w700,
+            color: VelvetNoir.primary,
+            height: 1.0,
+          ),
+        ),
+      ),
+    );
+    return circle;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MixvyLogoFull — stacked monogram + wordmark + tagline (splash / auth pages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class MixvyLogoFull extends StatelessWidget {
+  final double size;
+
+  /// [size] matches the auth-screen wordmark size; monogram scales proportionally.
+  const MixvyLogoFull({super.key, this.size = 88});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MixvyMonogram(size: size * 1.4, glow: false),
+        SizedBox(height: size * 0.18),
+        Text(
+          'MIXVY',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: size,
+            fontWeight: FontWeight.w700,
+            color: VelvetNoir.primary,
+            letterSpacing: size * 0.12,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'MIX.  CONNECT.  INDULGE.',
+          style: GoogleFonts.raleway(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: VelvetNoir.onSurfaceVariant,
+            letterSpacing: 2.0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MixvyAppBarLogo — compact wordmark for AppBar / top nav
+// ─────────────────────────────────────────────────────────────────────────────
+
+class MixvyAppBarLogo extends StatelessWidget {
+  final double fontSize;
+
+  const MixvyAppBarLogo({super.key, this.fontSize = 22});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'MIXVY',
+      style: GoogleFonts.playfairDisplay(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w700,
+        color: VelvetNoir.primary,
+        letterSpacing: fontSize * 0.12,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MixvyRoomCard — dark premium card for live rooms
 // ─────────────────────────────────────────────────────────────────────────────
 

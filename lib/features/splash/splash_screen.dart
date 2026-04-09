@@ -178,7 +178,7 @@ class _SplashScreenState extends State<SplashScreen>
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 38,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF7EDE2),
+                      color: const Color(0xFFD4AF37),
                       letterSpacing: 8,
                     ),
                   ),

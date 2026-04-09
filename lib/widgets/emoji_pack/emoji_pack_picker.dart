@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../presentation/providers/user_provider.dart';
 import 'emoji_pack_catalog.dart';
 import 'emoji_pack_item.dart';
+import 'tenor_gif_provider.dart';
 
 /// Full-featured emoji / GIF picker bottom sheet.
 ///
@@ -333,14 +334,14 @@ class _EmojiPackPickerSheetState
 
 // ── Single grid cell ───────────────────────────────────────────────────────
 
-class _EmojiGridCell extends StatelessWidget {
+class _EmojiGridCell extends ConsumerWidget {
   const _EmojiGridCell({required this.item, required this.onTap});
 
   final EmojiPackItem item;
   final void Function(EmojiPackItem) onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Tooltip(
       message: item.name,
       preferBelow: false,
@@ -358,36 +359,54 @@ class _EmojiGridCell extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(9),
-            child: _buildThumbnail(),
+            child: item.isGif
+                ? _LiveGifCell(query: item.gifQuery!, name: item.name)
+                : _AssetCell(path: item.path!),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildThumbnail() {
-    if (item.isAsset) {
-      return Image.asset(
-        item.path,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _Fallback(name: item.name),
-      );
-    }
-    // Remote URL (GIF or hosted image)
-    return CachedNetworkImage(
-      imageUrl: item.path,
+/// Cell that loads a live GIF from Tenor.
+class _LiveGifCell extends ConsumerWidget {
+  const _LiveGifCell({required this.query, required this.name});
+
+  final String query;
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gifAsync = ref.watch(tenorGifProvider(query));
+    return gifAsync.when(
+      data: (url) {
+        if (url == null) return _Fallback(name: name);
+        return CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => const _LoadingCell(),
+          errorWidget: (_, __, ___) => _Fallback(name: name),
+        );
+      },
+      loading: () => const _LoadingCell(),
+      error: (_, __) => _Fallback(name: name),
+    );
+  }
+}
+
+/// Cell that renders a local asset PNG.
+class _AssetCell extends StatelessWidget {
+  const _AssetCell({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      path,
       fit: BoxFit.cover,
-      placeholder: (_, __) => const Center(
-        child: SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(
-            strokeWidth: 1.5,
-            color: VelvetNoir.primary,
-          ),
-        ),
-      ),
-      errorWidget: (_, __, ___) => _Fallback(name: item.name),
+      errorBuilder: (_, __, ___) => const _Fallback(name: '?'),
     );
   }
 }
@@ -416,6 +435,26 @@ class _Fallback extends StatelessWidget {
   }
 }
 
+class _LoadingCell extends StatelessWidget {
+  const _LoadingCell();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: VelvetNoir.surfaceBright,
+      alignment: Alignment.center,
+      child: const SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(
+          strokeWidth: 1.5,
+          color: VelvetNoir.primary,
+        ),
+      ),
+    );
+  }
+}
+
 // ── Emoji message renderer ─────────────────────────────────────────────────
 
 /// Renders a chat message body that may be an emoji pack item or plain text.
@@ -424,7 +463,7 @@ class _Fallback extends StatelessWidget {
 /// ```dart
 /// EmojiMessageContent(content: message.content, isOwn: isOwn)
 /// ```
-class EmojiMessageContent extends StatelessWidget {
+class EmojiMessageContent extends ConsumerWidget {
   const EmojiMessageContent({
     super.key,
     required this.content,
@@ -435,7 +474,7 @@ class EmojiMessageContent extends StatelessWidget {
   final bool isOwn;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (!EmojiPackItem.isEmojiContent(content)) {
       return Text(
         content,
@@ -447,39 +486,68 @@ class EmojiMessageContent extends StatelessWidget {
       );
     }
 
-    final path = EmojiPackItem.extractPath(content);
-    final isUrl = path.startsWith('http');
+    final (isGif, value) = EmojiPackItem.decodeContent(content);
 
-    final image = isUrl
-        ? CachedNetworkImage(
-            imageUrl: path,
-            width: 100,
-            height: 100,
-            fit: BoxFit.contain,
-            placeholder: (_, __) => const SizedBox(
-              width: 100,
-              height: 100,
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: VelvetNoir.primary,
+    if (isGif) {
+      // value is the Tenor search query — fetch live
+      final gifAsync = ref.watch(tenorGifProvider(value));
+      return gifAsync.when(
+        data: (url) => url != null
+            ? CachedNetworkImage(
+                imageUrl: url,
+                width: 100,
+                height: 100,
+                fit: BoxFit.contain,
+                placeholder: (_, __) => const SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: VelvetNoir.primary,
+                    ),
+                  ),
                 ),
+                errorWidget: (_, __, ___) => const Icon(
+                  Icons.broken_image_outlined,
+                  color: VelvetNoir.onSurfaceVariant,
+                  size: 40,
+                ),
+              )
+            : const Icon(
+                Icons.gif_box_outlined,
+                color: VelvetNoir.onSurfaceVariant,
+                size: 40,
               ),
+        loading: () => const SizedBox(
+          width: 100,
+          height: 100,
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: VelvetNoir.primary,
             ),
-            errorWidget: (_, __, ___) =>
-                const Icon(Icons.broken_image_outlined,
-                    color: VelvetNoir.onSurfaceVariant, size: 40),
-          )
-        : Image.asset(
-            path,
-            width: 100,
-            height: 100,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.image_not_supported_outlined,
-                    color: VelvetNoir.onSurfaceVariant, size: 40),
-          );
+          ),
+        ),
+        error: (_, __) => const Icon(
+          Icons.broken_image_outlined,
+          color: VelvetNoir.onSurfaceVariant,
+          size: 40,
+        ),
+      );
+    }
 
-    return image;
+    // value is a local asset path
+    return Image.asset(
+      value,
+      width: 100,
+      height: 100,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => const Icon(
+        Icons.image_not_supported_outlined,
+        color: VelvetNoir.onSurfaceVariant,
+        size: 40,
+      ),
+    );
   }
 }

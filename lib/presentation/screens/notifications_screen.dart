@@ -9,8 +9,37 @@ import '../../core/logger.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
 import '../../widgets/mixvy_drawer.dart';
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  String _filter = 'all'; // all | mentions | gifts | system
+
+  static const _mentionTypes = {
+    'follow', 'friend_request', 'friend_accept', 'friend_favorite',
+    'like', 'comment', 'speed_dating_match',
+  };
+  static const _giftTypes = {'gift'};
+  static const _systemTypes = {'live_room_invite'};
+
+  bool _matchesFilter(String type) {
+    switch (_filter) {
+      case 'mentions':
+        return _mentionTypes.contains(type);
+      case 'gifts':
+        return _giftTypes.contains(type);
+      case 'system':
+        return _systemTypes.contains(type) ||
+            (!_mentionTypes.contains(type) && !_giftTypes.contains(type));
+      default:
+        return true;
+    }
+  }
 
   // ── Navigation ────────────────────────────────────────────────────────────
 
@@ -138,7 +167,7 @@ class NotificationsScreen extends ConsumerWidget {
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final userId = ref.watch(currentNotificationUserIdProvider);
     final notificationsAsync = ref.watch(notificationsStreamProvider);
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
@@ -216,7 +245,28 @@ class NotificationsScreen extends ConsumerWidget {
                     ),
                   ),
                 Expanded(
-                  child: notificationsAsync.when(
+                  child: Column(
+                    children: [
+                      // ── Filter chips ──────────────────────────────────
+                      SizedBox(
+                        height: 44,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
+                          children: [
+                            _FilterChip(label: 'All', value: 'all', selected: _filter == 'all', onTap: () => setState(() => _filter = 'all')),
+                            const SizedBox(width: 8),
+                            _FilterChip(label: 'Mentions', value: 'mentions', selected: _filter == 'mentions', onTap: () => setState(() => _filter = 'mentions')),
+                            const SizedBox(width: 8),
+                            _FilterChip(label: 'Gifts', value: 'gifts', selected: _filter == 'gifts', onTap: () => setState(() => _filter = 'gifts')),
+                            const SizedBox(width: 8),
+                            _FilterChip(label: 'System', value: 'system', selected: _filter == 'system', onTap: () => setState(() => _filter = 'system')),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: notificationsAsync.when(
                     loading: () => const Center(
                       child: CircularProgressIndicator(
                           color: VelvetNoir.primary),
@@ -229,7 +279,10 @@ class NotificationsScreen extends ConsumerWidget {
                       ),
                     ),
                     data: (notifications) {
-                      if (notifications.isEmpty) {
+                      final filtered = notifications
+                          .where((n) => _matchesFilter(n.type))
+                          .toList();
+                      if (filtered.isEmpty) {
                         return const FeedEmptyState(
                           emoji: '🔔',
                           heading: 'All caught up!',
@@ -240,14 +293,14 @@ class NotificationsScreen extends ConsumerWidget {
 
                       return ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: notifications.length,
+                        itemCount: filtered.length,
                         separatorBuilder: (_, _) => const Divider(
                           height: 1,
                           color: VelvetNoir.outlineVariant,
                           indent: 72,
                         ),
                         itemBuilder: (context, index) {
-                          final n = notifications[index];
+                          final n = filtered[index];
                           return _NotificationTile(
                             notification: n,
                             icon: _iconForType(n.type),
@@ -262,8 +315,7 @@ class NotificationsScreen extends ConsumerWidget {
                                     try {
                                       await service.markRead(userId, n.id);
                                     } catch (e) {
-                                      Logger.log(
-                                          'Mark read failed: $e');
+                                      Logger.log('Mark read failed: $e');
                                     }
                                   },
                           );
@@ -271,6 +323,9 @@ class NotificationsScreen extends ConsumerWidget {
                       );
                     },
                   ),
+                ),
+              ],
+            ),
                 ),
               ],
             ),
@@ -433,6 +488,51 @@ class _ActionChip extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Filter chip ───────────────────────────────────────────────────────────────
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.value,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final String value;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? VelvetNoir.primary
+              : VelvetNoir.surfaceHigh,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? VelvetNoir.primary
+                : VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? VelvetNoir.surface : VelvetNoir.onSurfaceVariant,
           ),
         ),
       ),

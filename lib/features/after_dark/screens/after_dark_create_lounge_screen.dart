@@ -1,9 +1,11 @@
 import 'dart:developer' as developer;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../services/room_service.dart';
@@ -48,6 +50,17 @@ class _AfterDarkCreateLoungeScreenState
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _titleCtrl.addListener(_refreshPreview);
+    _descCtrl.addListener(_refreshPreview);
+  }
+
+  void _refreshPreview() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _create() async {
     if (_formKey.currentState?.validate() != true) return;
     if (_uploadingThumbnail) {
@@ -64,14 +77,31 @@ class _AfterDarkCreateLoungeScreenState
     setState(() => _creating = true);
     try {
       final svc = ref.read(roomServiceProvider);
+      final tags = <String>[
+        if (_category != null) _category!.toLowerCase(),
+        if (_videoEnabled) 'video',
+        switch (_privacy) {
+          _Privacy.public => 'open',
+          _Privacy.friends => 'friends-only',
+          _Privacy.private => 'private',
+        },
+      ];
       final roomId = await svc.createRoom(
         hostId:   uid,
         name:     _titleCtrl.text.trim(),
+        description: _descCtrl.text.trim(),
         category: _category?.toLowerCase(),
         isLive:   true,
         isAdult:  true,
         thumbnailUrl: _thumbnailUrl,
+        tags: tags,
       );
+      if (_privacy == _Privacy.private) {
+        await FirebaseFirestore.instance.collection('rooms').doc(roomId).update({
+          'isLocked': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
       if (mounted) context.go('/room/$roomId');
     } catch (e) {
       if (mounted) {
@@ -155,6 +185,23 @@ class _AfterDarkCreateLoungeScreenState
               ),
             ),
           ),
+          Positioned(
+            bottom: -120,
+            left: -100,
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    EmberDark.secondary.withValues(alpha: 0.10),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
@@ -177,6 +224,10 @@ class _AfterDarkCreateLoungeScreenState
                           _sectionLabel('Description (optional)'),
                           const SizedBox(height: 10),
                           _buildDescInput(),
+                          const SizedBox(height: 24),
+                          _sectionLabel('Preview'),
+                          const SizedBox(height: 10),
+                          _buildPreviewCard(),
                           const SizedBox(height: 24),
                           _sectionLabel('Lounge Logo (optional)'),
                           const SizedBox(height: 10),
@@ -226,7 +277,7 @@ class _AfterDarkCreateLoungeScreenState
           ),
           const Expanded(
             child: Text(
-              'Create Lounge',
+              'Open a Lounge',
               style: TextStyle(
                 color: EmberDark.onSurface,
                 fontWeight: FontWeight.w700,
@@ -255,19 +306,33 @@ class _AfterDarkCreateLoungeScreenState
         border: Border.all(
             color: EmberDark.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.local_fire_department_rounded,
+          const Icon(Icons.local_fire_department_rounded,
               color: EmberDark.primary, size: 22),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'This lounge is for 18+ audiences only. '
-              'It will appear exclusively in After Dark.',
-              style: TextStyle(
-                color: EmberDark.onSurfaceVariant,
-                fontSize: 13,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Set the tone before you go live',
+                  style: GoogleFonts.playfairDisplay(
+                    color: EmberDark.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'This room is reserved for 18+ audiences and will appear only inside After Dark.',
+                  style: GoogleFonts.raleway(
+                    color: EmberDark.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -278,11 +343,11 @@ class _AfterDarkCreateLoungeScreenState
   Widget _buildTitleInput() {
     return TextFormField(
       controller: _titleCtrl,
-      style: const TextStyle(color: EmberDark.onSurface),
+      style: GoogleFonts.raleway(color: EmberDark.onSurface),
       validator: (v) =>
           (v == null || v.trim().isEmpty) ? 'Enter a lounge title' : null,
       decoration: _inputDeco(
-        hint: 'e.g. Late Night Vibes…',
+        hint: 'e.g. Velvet Confessions…',
         icon: Icons.mic_rounded,
       ),
     );
@@ -292,12 +357,118 @@ class _AfterDarkCreateLoungeScreenState
     return TextFormField(
       controller: _descCtrl,
       maxLines: 3,
-      style: const TextStyle(color: EmberDark.onSurface),
+      style: GoogleFonts.raleway(color: EmberDark.onSurface),
       decoration: _inputDeco(
-        hint: 'Tell guests what to expect…',
+        hint: 'Describe the mood, energy, and who this lounge is for…',
         icon: Icons.notes_rounded,
         isRound: false,
         radius: 14,
+      ),
+    );
+  }
+
+  Widget _buildPreviewCard() {
+    final privacyLabel = switch (_privacy) {
+      _Privacy.public => 'OPEN',
+      _Privacy.friends => 'FRIENDS',
+      _Privacy.private => 'PRIVATE',
+    };
+    final categoryLabel = _category ?? 'Late Night';
+    final title = _titleCtrl.text.trim().isEmpty ? 'Your velvet lounge' : _titleCtrl.text.trim();
+    final description = _descCtrl.text.trim().isEmpty
+        ? 'Soft lighting, grown energy, and a room built for chemistry.'
+        : _descCtrl.text.trim();
+
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF411322), Color(0xFF17070D), EmberDark.surfaceHigh],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: EmberDark.outlineVariant.withValues(alpha: 0.65)),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -16,
+            right: -10,
+            child: Container(
+              width: 108,
+              height: 108,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: EmberDark.secondary.withValues(alpha: 0.10),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.35),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _previewPill('LIVE'),
+                    const SizedBox(width: 8),
+                    _previewPill(privacyLabel),
+                    const Spacer(),
+                    if (_videoEnabled) _previewPill('VIDEO'),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: EmberDark.onSurface,
+                    height: 1.02,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.raleway(
+                    color: EmberDark.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  categoryLabel.toUpperCase(),
+                  style: GoogleFonts.raleway(
+                    color: EmberDark.secondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -348,9 +519,9 @@ class _AfterDarkCreateLoungeScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Upload a group photo or logo for the lounge card.',
-                style: TextStyle(color: EmberDark.onSurface, fontSize: 13),
+              Text(
+                'Upload a photo or mark that sells the mood at a glance.',
+                style: GoogleFonts.raleway(color: EmberDark.onSurface, fontSize: 13),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -418,7 +589,7 @@ class _AfterDarkCreateLoungeScreenState
             ),
             child: Text(
               '${c.emoji} ${c.label}',
-              style: TextStyle(
+              style: GoogleFonts.raleway(
                 color: selected
                     ? Colors.white
                     : EmberDark.onSurfaceVariant,
@@ -458,10 +629,10 @@ class _AfterDarkCreateLoungeScreenState
             groupValue: _privacy, // ignore: deprecated_member_use
             onChanged: (v) => setState(() => _privacy = v!), // ignore: deprecated_member_use
             title: Text(label,
-                style: const TextStyle(color: EmberDark.onSurface)),
+              style: GoogleFonts.raleway(color: EmberDark.onSurface, fontWeight: FontWeight.w600)),
             subtitle: Text(subtitle,
-                style: const TextStyle(
-                    color: EmberDark.onSurfaceVariant, fontSize: 12)),
+              style: GoogleFonts.raleway(
+                color: EmberDark.onSurfaceVariant, fontSize: 12)),
             secondary:
                 Icon(icon, color: EmberDark.onSurfaceVariant, size: 20),
             activeColor: EmberDark.primary,
@@ -482,11 +653,11 @@ class _AfterDarkCreateLoungeScreenState
       child: SwitchListTile(
         value: _videoEnabled,
         onChanged: (v) => setState(() => _videoEnabled = v),
-        title: const Text('Video Lounge',
-            style: TextStyle(color: EmberDark.onSurface)),
-        subtitle: const Text('Enable cameras for all participants',
-            style: TextStyle(
-                color: EmberDark.onSurfaceVariant, fontSize: 12)),
+        title: Text('Video Lounge',
+          style: GoogleFonts.raleway(color: EmberDark.onSurface, fontWeight: FontWeight.w600)),
+        subtitle: Text('Enable camera-first chemistry for guests who want to be seen',
+          style: GoogleFonts.raleway(
+            color: EmberDark.onSurfaceVariant, fontSize: 12)),
         secondary: const Icon(Icons.videocam_outlined,
             color: EmberDark.onSurfaceVariant),
         activeThumbColor: EmberDark.primary,
@@ -503,14 +674,14 @@ class _AfterDarkCreateLoungeScreenState
         border: Border.all(
             color: EmberDark.primary.withValues(alpha: 0.4)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_user_outlined,
+          const Icon(Icons.verified_user_outlined,
               color: EmberDark.primary, size: 16),
-          SizedBox(width: 8),
-          Text('Flagged as 18+ Adult Content',
-              style: TextStyle(
+          const SizedBox(width: 8),
+          Text('Restricted to After Dark 18+ placement',
+              style: GoogleFonts.raleway(
                 color: EmberDark.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -555,8 +726,8 @@ class _AfterDarkCreateLoungeScreenState
                   onPressed: _create,
                   icon: const Icon(Icons.local_fire_department_rounded,
                       size: 20, color: Colors.white),
-                  label: const Text('Start Lounge',
-                      style: TextStyle(
+                    label: Text(_privacy == _Privacy.private ? 'Open Private Lounge' : 'Open Lounge',
+                      style: GoogleFonts.raleway(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -577,7 +748,7 @@ class _AfterDarkCreateLoungeScreenState
 
   Widget _sectionLabel(String text) => Text(
         text,
-        style: const TextStyle(
+      style: GoogleFonts.raleway(
           color: EmberDark.onSurface,
           fontWeight: FontWeight.w700,
           fontSize: 13,
@@ -593,7 +764,7 @@ class _AfterDarkCreateLoungeScreenState
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: EmberDark.onSurfaceVariant),
+      hintStyle: GoogleFonts.raleway(color: EmberDark.onSurfaceVariant),
       filled: true,
       fillColor: EmberDark.surfaceHigh,
       prefixIcon: Icon(icon, color: EmberDark.onSurfaceVariant, size: 18),
@@ -615,6 +786,26 @@ class _AfterDarkCreateLoungeScreenState
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+    );
+  }
+
+  Widget _previewPill(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: EmberDark.secondary.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.raleway(
+          color: EmberDark.onSurface,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+        ),
+      ),
     );
   }
 }

@@ -10,5 +10,5 @@ import '../../services/tenor_service.dart';
 /// ```
 final tenorGifProvider =
     FutureProvider.family<String?, String>((ref, query) async {
-  return TenorService.fetchGifUrl(query);
+  return GifService.fetchGifUrl(query);
 });

@@ -15,6 +15,7 @@ import 'daily_checkin_card.dart';
 import 'leaderboard_strip.dart';
 import '../../models/user_model.dart';
 import '../../widgets/mixvy_drawer.dart';
+import '../../widgets/brand_ui_kit.dart';
 
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -137,14 +138,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        'MIX · CONNECT · INDULGE',
-                        style: GoogleFonts.raleway(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
-                          color: VelvetNoir.primary.withValues(alpha: 0.7),
-                          letterSpacing: 1.5,
-                        ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: MixvyAppBarLogo(fontSize: 14),
                       ),
                     ],
                   ),

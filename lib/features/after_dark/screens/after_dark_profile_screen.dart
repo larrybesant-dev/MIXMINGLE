@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/after_dark_provider.dart';
 import '../theme/after_dark_theme.dart';
@@ -176,7 +177,7 @@ class _AfterDarkProfileScreenState
                             fontSize: 18,
                           )),
                       SizedBox(height: 4),
-                      Text('Visible to 18+ verified users only',
+                      Text('Visible to adults inside your late-night circle',
                           style: TextStyle(
                             color: EmberDark.onSurfaceVariant,
                             fontSize: 12,
@@ -192,7 +193,7 @@ class _AfterDarkProfileScreenState
             const SizedBox(height: 8),
             _darkField(
               controller: _stageNameCtrl,
-              hint: 'Your After Dark alias…',
+              hint: 'Your midnight alias…',
               icon: Icons.theater_comedy_outlined,
             ),
 
@@ -201,7 +202,7 @@ class _AfterDarkProfileScreenState
             const SizedBox(height: 8),
             _darkField(
               controller: _adultBioCtrl,
-              hint: 'Tell people what you\'re about…',
+              hint: 'Describe your vibe, energy, and boundaries…',
               icon: Icons.edit_note_outlined,
               maxLines: 4,
               isRound: false,
@@ -212,7 +213,7 @@ class _AfterDarkProfileScreenState
             const SizedBox(height: 8),
             _darkField(
               controller: _lookingForCtrl,
-              hint: 'e.g. casual chat, romance, roleplay…',
+              hint: 'e.g. flirtation, romance, private conversation…',
               icon: Icons.favorite_outline_rounded,
             ),
 
@@ -233,8 +234,8 @@ class _AfterDarkProfileScreenState
                     style: TextStyle(color: EmberDark.onSurface)),
                 subtitle: Text(
                   _profilePrivate
-                      ? 'Only your friends can see your After Dark profile.'
-                      : 'Your After Dark profile is visible to all 18+ users.',
+                    ? 'Only people you trust can see your After Dark profile.'
+                    : 'Your After Dark profile is visible to all eligible 18+ users.',
                   style: const TextStyle(
                       color: EmberDark.onSurfaceVariant, fontSize: 12),
                 ),
@@ -274,7 +275,7 @@ class _AfterDarkProfileScreenState
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999)),
                         ),
-                        child: const Text('Save Profile',
+                        child: const Text('Save Midnight Profile',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -316,7 +317,7 @@ class _AfterDarkProfileScreenState
   Widget _sectionLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: GoogleFonts.raleway(
         color: EmberDark.onSurface,
         fontWeight: FontWeight.w700,
         fontSize: 13,
@@ -335,10 +336,10 @@ class _AfterDarkProfileScreenState
     return TextField(
       controller: controller,
       maxLines: maxLines,
-      style: const TextStyle(color: EmberDark.onSurface),
+      style: GoogleFonts.raleway(color: EmberDark.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: EmberDark.onSurfaceVariant),
+        hintStyle: GoogleFonts.raleway(color: EmberDark.onSurfaceVariant),
         filled: true,
         fillColor: EmberDark.surfaceHigh,
         prefixIcon: Icon(icon, color: EmberDark.onSurfaceVariant, size: 18),

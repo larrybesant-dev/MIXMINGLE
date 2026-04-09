@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/services/analytics_service.dart';
+import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 // ── Brand tokens (mirrors mixvy_login_screen.dart) ────────────────────────────
 const _rSurface         = Color(0xFF0B0B0B);
@@ -177,7 +178,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         const SizedBox(width: 6),
         Text(
           'SYSTEM LIVE',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.raleway(
             fontSize: 10, fontWeight: FontWeight.w500,
             color: _rSecondary, letterSpacing: 1.2,
           ),
@@ -188,44 +189,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   // ── MIXVY logo block ──────────────────────────────────────────────────────
   Widget _logoText({double size = 42}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: size * 1.4, height: size * 1.4,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: _rGoldBorder, width: 1.5),
-            color: _rPrimary.withAlpha(12),
-          ),
-          child: Center(
-            child: Text(
-              'M',
-              style: GoogleFonts.playfairDisplay(
-                fontSize: size * 0.9, fontWeight: FontWeight.w700,
-                color: _rPrimary, height: 1,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'MIXVY',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: size, fontWeight: FontWeight.w700,
-            color: _rPrimary, letterSpacing: size * 0.12,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'MIX.  CONNECT.  INDULGE.',
-          style: GoogleFonts.raleway(
-            fontSize: 10, fontWeight: FontWeight.w500,
-            color: _rOnVariant, letterSpacing: 2.0,
-          ),
-        ),
-      ],
-    );
+    return MixvyLogoFull(size: size);
   }
 
   // ── wide two-column layout ────────────────────────────────────────────────

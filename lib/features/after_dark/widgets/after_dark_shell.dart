@@ -88,24 +88,17 @@ class _AfterDarkTopBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       title: ShaderMask(
         shaderCallback: (bounds) => const LinearGradient(
-          colors: [EmberDark.primary, EmberDark.secondary],
+          colors: [EmberDark.secondary, EmberDark.primary],
         ).createShader(bounds),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.local_fire_department_rounded,
-                color: Colors.white, size: 20),
-            SizedBox(width: 6),
-            Text(
-              'After Dark',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
+        child: Text(
+          'After Dark',
+          style: GoogleFonts.playfairDisplay(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 24,
+            letterSpacing: 0.4,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       ),
       actions: [
@@ -117,7 +110,7 @@ class _AfterDarkTopBar extends StatelessWidget implements PreferredSizeWidget {
                 size: 16, color: EmberDark.onSurfaceVariant),
             label: Text(
               'Exit',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.raleway(
                   fontSize: 12,
                   color: EmberDark.onSurfaceVariant,
                   fontWeight: FontWeight.w600),
@@ -210,7 +203,7 @@ class _AfterDarkBottomNav extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.raleway(
                 fontSize: 10,
                 fontWeight:
                     isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -254,8 +247,8 @@ class _AfterDarkBottomNav extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              'Create',
-              style: GoogleFonts.inter(
+              'Host',
+              style: GoogleFonts.raleway(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: _edPrimary),

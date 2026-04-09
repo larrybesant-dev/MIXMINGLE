@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../services/room_service.dart';
+import '../../../widgets/brand_ui_kit.dart';
 
 // ── colour aliases ────────────────────────────────────────────────────────────
 const _surface        = Color(0xFF0D0A0C);
@@ -234,7 +235,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                           const SizedBox(height: 6),
                           Text(
                             'Pick a few extra vibes so people know the mood.',
-                            style: GoogleFonts.inter(fontSize: 12, color: _onVariant),
+                            style: GoogleFonts.raleway(fontSize: 12, color: _onVariant),
                           ),
                           const SizedBox(height: 10),
                           _buildVibeTags(),
@@ -282,18 +283,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Row(
-            children: [
-              Text('MIX', style: GoogleFonts.inter(
-                  fontSize: 20, fontWeight: FontWeight.w900,
-                  color: _onSurface, fontStyle: FontStyle.italic,
-                  letterSpacing: -1)),
-              Text('Vy', style: GoogleFonts.inter(
-                  fontSize: 20, fontWeight: FontWeight.w900,
-                  color: _primary, fontStyle: FontStyle.italic,
-                  letterSpacing: -1)),
-            ],
-          ),
+          const MixvyAppBarLogo(fontSize: 20),
         ],
       ),
     );
@@ -303,20 +293,20 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Start a Room', style: GoogleFonts.inter(
-            fontSize: 30, fontWeight: FontWeight.w800,
-            color: _onSurface, letterSpacing: -1)),
+        Text('Start a Room', style: GoogleFonts.playfairDisplay(
+            fontSize: 30, fontWeight: FontWeight.w700,
+            color: _onSurface, letterSpacing: -0.5)),
         const SizedBox(height: 6),
         Text(
           'Broadcast your pulse to the world or keep it intimate.',
-          style: GoogleFonts.inter(fontSize: 14, color: _onVariant),
+          style: GoogleFonts.raleway(fontSize: 14, color: _onVariant),
         ),
       ],
     );
   }
 
   Widget _sectionLabel(String label) {
-    return Text(label, style: GoogleFonts.inter(
+    return Text(label, style: GoogleFonts.raleway(
         fontSize: 13, fontWeight: FontWeight.w600,
         color: _onVariant, letterSpacing: 0.5));
   }
@@ -331,10 +321,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextFormField(
         controller: _titleController,
-        style: GoogleFonts.inter(fontSize: 16, color: _onSurface),
+        style: GoogleFonts.raleway(fontSize: 16, color: _onSurface),
         decoration: InputDecoration(
           hintText: 'e.g. Late Night Music Session',
-          hintStyle: GoogleFonts.inter(fontSize: 16, color: _onVariant),
+          hintStyle: GoogleFonts.raleway(fontSize: 16, color: _onVariant),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -404,7 +394,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
             children: [
               Text(
                 'Upload a group photo or logo for this room.',
-                style: GoogleFonts.inter(fontSize: 13, color: _onSurface),
+                style: GoogleFonts.raleway(fontSize: 13, color: _onSurface),
               ),
               const SizedBox(height: 8),
               Row(
@@ -462,11 +452,11 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
           children: [
             Icon(icon, color: selected ? _surface : _primary, size: 28),
             const SizedBox(height: 10),
-            Text(label, style: GoogleFonts.inter(
+            Text(label, style: GoogleFonts.raleway(
                 fontSize: 15, fontWeight: FontWeight.w700,
                 color: selected ? _surface : _onSurface)),
             const SizedBox(height: 2),
-            Text(sub, style: GoogleFonts.inter(
+            Text(sub, style: GoogleFonts.raleway(
                 fontSize: 12, color: selected ? _surface.withAlpha(180) : _onVariant)),
           ],
         ),
@@ -511,10 +501,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GoogleFonts.inter(
+                  Text(label, style: GoogleFonts.raleway(
                       fontSize: 14, fontWeight: FontWeight.w600,
                       color: _onSurface)),
-                  Text(sub, style: GoogleFonts.inter(
+                  Text(sub, style: GoogleFonts.raleway(
                       fontSize: 12, color: _onVariant)),
                 ],
               ),
@@ -578,7 +568,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
               ),
             ),
             child: Text(cat,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.raleway(
                     fontSize: 13,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     color: selected ? _surface : _onVariant)),
@@ -889,13 +879,13 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                         _titleController.text.isEmpty
                             ? 'Previewing your room'
                             : _titleController.text,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.playfairDisplay(
                             fontSize: 14, fontWeight: FontWeight.w600,
                             color: _onSurface),
                       ),
                       Text(
                         'YOUR PULSE IS READY',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 10, fontWeight: FontWeight.w700,
                             color: _secondary, letterSpacing: 1.0),
                       ),
@@ -961,7 +951,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                                     _scheduleMode
                                         ? 'SCHEDULE ROOM'
                                         : 'START ROOM NOW',
-                                    style: GoogleFonts.inter(
+                                    style: GoogleFonts.raleway(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w800,
                                         color: _surface,
@@ -984,7 +974,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
           Text(
             'By starting a room you agree to our Community Guidelines.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 11, color: _onVariant),
+            style: GoogleFonts.raleway(fontSize: 11, color: _onVariant),
           ),
         ],
       ),

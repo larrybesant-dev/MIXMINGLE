@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/groups_provider.dart';
 import '../../../core/theme.dart';
+import '../../../widgets/brand_ui_kit.dart';
 
 class GroupsScreen extends ConsumerWidget {
   final String userId;
@@ -23,14 +24,7 @@ class GroupsScreen extends ConsumerWidget {
         backgroundColor: VelvetNoir.surface,
         appBar: AppBar(
           backgroundColor: VelvetNoir.surface,
-          title: const Text(
-            'Groups',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 22,
-              color: VelvetNoir.onSurface,
-            ),
-          ),
+          title: const MixvyAppBarLogo(fontSize: 20),
           bottom: const TabBar(
             indicatorColor: VelvetNoir.primary,
             labelColor: VelvetNoir.primary,

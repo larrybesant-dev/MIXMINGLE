@@ -2,12 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
 import '../../../core/theme.dart';
 import '../../../widgets/mixvy_drawer.dart';
 
-class MessagesScreen extends ConsumerWidget {
+class MessagesScreen extends ConsumerStatefulWidget {
   final String userId;
   final String username;
 
@@ -18,190 +19,302 @@ class MessagesScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final conversationsAsync = ref.watch(conversationsStreamProvider(userId));
-    final requestsAsync = ref.watch(requestsStreamProvider(userId));
+  ConsumerState<MessagesScreen> createState() => _MessagesScreenState();
+}
+
+class _MessagesScreenState extends ConsumerState<MessagesScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _searchController.addListener(() {
+      setState(() => _query = _searchController.text.toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Conversation> _filterAll(List<Conversation> convs) =>
+      convs.where((c) => c.status == 'active').toList();
+
+  List<Conversation> _filterUnread(List<Conversation> convs) => convs
+      .where((c) => c.status == 'active' && c.hasUnreadMessages(widget.userId))
+      .toList();
+
+  List<Conversation> _filterGroups(List<Conversation> convs) =>
+      convs.where((c) => c.type == 'group').toList();
+
+  List<Conversation> _applySearch(List<Conversation> convs) {
+    if (_query.isEmpty) return convs;
+    return convs.where((c) {
+      final name = c.getDisplayName(widget.userId).toLowerCase();
+      final preview = (c.lastMessagePreview ?? '').toLowerCase();
+      return name.contains(_query) || preview.contains(_query);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final conversationsAsync =
+        ref.watch(conversationsStreamProvider(widget.userId));
+    final requestsAsync = ref.watch(requestsStreamProvider(widget.userId));
     final requestCount = requestsAsync.valueOrNull?.length ?? 0;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Messages'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              tooltip: 'New message',
-              onPressed: () => context.push('/messages/new'),
-            ),
-          ],
-          bottom: TabBar(
-            tabs: [
-              const Tab(text: 'Chats'),
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Requests'),
-                    if (requestCount > 0) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.error,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '$requestCount',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.onError,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+    return Scaffold(
+      backgroundColor: VelvetNoir.surface,
+      drawer: const MixVyDrawer(),
+      appBar: AppBar(
+        backgroundColor: VelvetNoir.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Messages',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: VelvetNoir.onSurface,
           ),
         ),
-        drawer: const MixVyDrawer(),
-        body: TabBarView(
-          children: [
-            _ConversationsList(
-              conversationsAsync: conversationsAsync,
-              userId: userId,
-              emptyMessage: 'No conversations yet',
-            ),
-            _RequestsList(
-              requestsAsync: requestsAsync,
-              userId: userId,
-            ),
-          ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline,
+                color: VelvetNoir.onSurface),
+            tooltip: 'New message',
+            onPressed: () => GoRouter.of(context).push('/messages/new'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_horiz_rounded,
+                color: VelvetNoir.onSurface),
+            onPressed: () {},
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+              height: 1,
+              color: VelvetNoir.primary.withValues(alpha: 0.12)),
         ),
+      ),
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: VelvetNoir.surfaceHigh,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                style: const TextStyle(
+                    color: VelvetNoir.onSurface, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Search messages…',
+                  hintStyle: const TextStyle(
+                      color: VelvetNoir.onSurfaceVariant, fontSize: 13),
+                  prefixIcon: const Icon(Icons.search,
+                      color: VelvetNoir.onSurfaceVariant, size: 18),
+                  suffixIcon: _query.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close,
+                              size: 16,
+                              color: VelvetNoir.onSurfaceVariant),
+                          onPressed: _searchController.clear,
+                          padding: EdgeInsets.zero,
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            ),
+          ),
+
+          // Incoming requests banner
+          if (requestCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: VelvetNoir.secondary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: VelvetNoir.secondary.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.mark_email_unread_outlined,
+                          color: VelvetNoir.secondaryBright, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$requestCount message request${requestCount > 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          color: VelvetNoir.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.chevron_right_rounded,
+                          color: VelvetNoir.onSurfaceVariant, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // Tabs: All | Unread | Groups
+          TabBar(
+            controller: _tabController,
+            indicatorColor: VelvetNoir.primary,
+            indicatorWeight: 2,
+            labelColor: VelvetNoir.primary,
+            unselectedLabelColor: VelvetNoir.onSurfaceVariant,
+            labelStyle:
+                GoogleFonts.raleway(fontSize: 13, fontWeight: FontWeight.w600),
+            unselectedLabelStyle:
+                GoogleFonts.raleway(fontSize: 13, fontWeight: FontWeight.w500),
+            dividerColor: VelvetNoir.outlineVariant.withValues(alpha: 0.3),
+            tabs: const [
+              Tab(text: 'All'),
+              Tab(text: 'Unread'),
+              Tab(text: 'Groups'),
+            ],
+          ),
+
+          // Tab views
+          Expanded(
+            child: conversationsAsync.when(
+              data: (conversations) => TabBarView(
+                controller: _tabController,
+                children: [
+                  _ConversationsList(
+                    conversations: _applySearch(_filterAll(conversations)),
+                    userId: widget.userId,
+                    emptyMessage: _query.isNotEmpty
+                        ? 'No results for "$_query"'
+                        : 'No conversations yet',
+                  ),
+                  _ConversationsList(
+                    conversations:
+                        _applySearch(_filterUnread(conversations)),
+                    userId: widget.userId,
+                    emptyMessage: 'No unread messages',
+                  ),
+                  _ConversationsList(
+                    conversations:
+                        _applySearch(_filterGroups(conversations)),
+                    userId: widget.userId,
+                    emptyMessage: 'No group chats yet',
+                  ),
+                ],
+              ),
+              loading: () => TabBarView(
+                controller: _tabController,
+                children: List.generate(
+                  3,
+                  (_) => const Center(
+                    child:
+                        CircularProgressIndicator(color: VelvetNoir.primary),
+                  ),
+                ),
+              ),
+              error: (err, _) => TabBarView(
+                controller: _tabController,
+                children: List.generate(
+                  3,
+                  (_) => Center(
+                    child: Text('Error: $err',
+                        style: const TextStyle(
+                            color: VelvetNoir.onSurfaceVariant)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
+// ── Conversations list ─────────────────────────────────────────────────────
+
 class _ConversationsList extends StatelessWidget {
   const _ConversationsList({
-    required this.conversationsAsync,
+    required this.conversations,
     required this.userId,
     required this.emptyMessage,
   });
 
-  final AsyncValue<List<Conversation>> conversationsAsync;
+  final List<Conversation> conversations;
   final String userId;
   final String emptyMessage;
 
   @override
   Widget build(BuildContext context) {
-    return conversationsAsync.when(
-      data: (conversations) {
-        if (conversations.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.chat_bubble_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(emptyMessage),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => GoRouter.of(context).push('/messages/new'),
-                  child: const Text('Start a conversation'),
-                ),
-              ],
+    if (conversations.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat_bubble_outline,
+                size: 56,
+                color: VelvetNoir.primary.withValues(alpha: 0.35)),
+            const SizedBox(height: 14),
+            Text(emptyMessage,
+                style: const TextStyle(
+                    color: VelvetNoir.onSurfaceVariant, fontSize: 14)),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => GoRouter.of(context).push('/messages/new'),
+              child: const Text('Start a conversation',
+                  style: TextStyle(color: VelvetNoir.primary)),
             ),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: conversations.length,
-          itemBuilder: (context, index) {
-            final conversation = conversations[index];
-            return _ConversationTile(conversation: conversation, userId: userId);
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Error: $err')),
+          ],
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.only(top: 8, bottom: 24),
+      itemCount: conversations.length,
+      separatorBuilder: (_, _) => Divider(
+        height: 1,
+        indent: 72,
+        color: VelvetNoir.outlineVariant.withValues(alpha: 0.2),
+      ),
+      itemBuilder: (context, index) => _ConversationTile(
+        conversation: conversations[index],
+        userId: userId,
+      ),
     );
   }
 }
 
-class _RequestsList extends ConsumerWidget {
-  const _RequestsList({
-    required this.requestsAsync,
-    required this.userId,
-  });
-
-  final AsyncValue<List<Conversation>> requestsAsync;
-  final String userId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return requestsAsync.when(
-      data: (requests) {
-        if (requests.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.mark_email_unread_outlined,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                const Text('No message requests'),
-              ],
-            ),
-          );
-        }
-        return ListView.separated(
-          itemCount: requests.length,
-          separatorBuilder: (_, _) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final conversation = requests[index];
-            final displayName = conversation.getDisplayName(userId);
-            return ListTile(
-              onTap: () => GoRouter.of(context).push(
-                '/messages/${conversation.id}',
-              ),
-              leading: CircleAvatar(
-                child: Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?'),
-              ),
-              title: Text(displayName),
-              subtitle: Text(
-                conversation.lastMessagePreview ?? 'New message request',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: TextButton(
-                onPressed: () async {
-                  await ref
-                      .read(messagingControllerProvider)
-                      .acceptMessageRequest(conversationId: conversation.id);
-                },
-                child: const Text('Accept'),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Error: $err')),
-    );
-  }
-}
+// ── Conversation tile ──────────────────────────────────────────────────────
 
 class _ConversationTile extends StatelessWidget {
   const _ConversationTile({
@@ -221,7 +334,8 @@ class _ConversationTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => GoRouter.of(context).push('/messages/${conversation.id}'),
+        onTap: () =>
+            GoRouter.of(context).push('/messages/${conversation.id}'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -314,17 +428,10 @@ class _ConversationTile extends StatelessWidget {
     if (dateTime == null) return '';
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 1) {
-      return 'now';
-    } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${dateTime.month}/${dateTime.day}';
-    }
+    if (difference.inMinutes < 1) return 'now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m ago';
+    if (difference.inDays < 1) return '${difference.inHours}h ago';
+    if (difference.inDays < 7) return '${difference.inDays}d ago';
+    return '${dateTime.month}/${dateTime.day}';
   }
 }

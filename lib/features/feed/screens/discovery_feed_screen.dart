@@ -18,6 +18,7 @@ import '../../stories/widgets/stories_row.dart';
 import '../../ads/ad_manager.dart';
 import '../../../features/profile/profile_controller.dart';
 import '../../../models/room_model.dart';
+import '../../../widgets/brand_ui_kit.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
 const _npSurface        = Color(0xFF0D0A0C);
@@ -79,8 +80,8 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                     unselectedLabelColor: _npOnVariant,
                     indicatorColor: _npPrimary,
                     indicatorWeight: 2,
-                    labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-                    unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w400, fontSize: 14),
+                    labelStyle: GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14),
+                    unselectedLabelStyle: GoogleFonts.raleway(fontWeight: FontWeight.w400, fontSize: 14),
                     tabs: const [
                       Tab(text: 'Discover'),
                       Tab(text: 'Following'),
@@ -105,22 +106,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
 }
 
 // ── Logo wordmark ─────────────────────────────────────────────────────────────
-class _MixVyLogo extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('MIX', style: GoogleFonts.inter(
-          fontSize: 22, fontWeight: FontWeight.w900,
-          color: _npOnSurface, fontStyle: FontStyle.italic, letterSpacing: -1)),
-        Text('Vy', style: GoogleFonts.inter(
-          fontSize: 22, fontWeight: FontWeight.w900,
-          color: _npPrimary, fontStyle: FontStyle.italic, letterSpacing: -1)),
-      ],
-    );
-  }
-}
+typedef _MixVyLogo = MixvyAppBarLogo;
 
 // ── Discovery feed content ────────────────────────────────────────────────────
 class DiscoveryFeedContent extends ConsumerStatefulWidget {
@@ -211,7 +197,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                     ),
                     const SizedBox(width: 8),
                     Text('Trending Now',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 18, fontWeight: FontWeight.w700,
                             color: _npOnSurface)),
                   ],
@@ -249,7 +235,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                           ),
                           const SizedBox(width: 8),
                           Text('Explore Live Rooms',
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.raleway(
                                   fontSize: 18, fontWeight: FontWeight.w700,
                                   color: _npOnSurface)),
                         ],
@@ -268,7 +254,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                                 decoration: const BoxDecoration(
                                     shape: BoxShape.circle, color: _npError)),
                             const SizedBox(width: 4),
-                            Text('LIVE', style: GoogleFonts.inter(
+                            Text('LIVE', style: GoogleFonts.raleway(
                                 fontSize: 10, fontWeight: FontWeight.w700,
                                 color: _npError, letterSpacing: 0.8)),
                           ],
@@ -356,7 +342,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                     ),
                     const SizedBox(width: 8),
                     Text('Trending Creators',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 18, fontWeight: FontWeight.w700,
                             color: _npOnSurface)),
                   ],
@@ -399,7 +385,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                     ),
                     const SizedBox(width: 8),
                     Text('Upcoming Rooms',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 18, fontWeight: FontWeight.w700,
                             color: _npOnSurface)),
                   ],
@@ -456,7 +442,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
               ),
               child: Text(
                 cat.label,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.raleway(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   color: selected ? _npSurface : _npOnVariant,
@@ -528,7 +514,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             const SizedBox(height: 12),
             Text(error,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: _npOnVariant, fontSize: 14)),
+                style: GoogleFonts.raleway(color: _npOnVariant, fontSize: 14)),
             const SizedBox(height: 20),
             _gradientButton(
               label: 'Retry',
@@ -567,11 +553,11 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Upgrade to Premium',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.raleway(
                           fontWeight: FontWeight.w700,
                           fontSize: 14, color: _npOnSurface)),
                   Text('Remove ads & unlock exclusive rooms.',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.raleway(
                           fontSize: 12, color: _npOnVariant)),
                 ],
               ),
@@ -587,7 +573,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text('Upgrade',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.raleway(
                         fontSize: 12, fontWeight: FontWeight.w700,
                         color: _npSurface)),
               ),
@@ -614,7 +600,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           ],
         ),
         child: Text(label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.raleway(
                 fontSize: 14, fontWeight: FontWeight.w700,
                 color: _npSurface)),
       ),
@@ -685,7 +671,7 @@ class _BentoHeroCard extends StatelessWidget {
                     room.name ?? 'Live Room',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.raleway(
                         fontSize: 16, fontWeight: FontWeight.w700,
                         color: _npOnSurface),
                   ),
@@ -696,7 +682,7 @@ class _BentoHeroCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         room.hostName ?? 'Host',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 12, color: _npOnVariant),
                       ),
                     ],
@@ -755,7 +741,7 @@ class _BentoSmallCard extends StatelessWidget {
                 room.name ?? 'Live Room',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.raleway(
                     fontSize: 12, fontWeight: FontWeight.w600,
                     color: _npOnSurface),
               ),
@@ -802,7 +788,7 @@ class _RoomGridCard extends StatelessWidget {
                 room.name ?? 'Live Room',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.raleway(
                     fontSize: 13, fontWeight: FontWeight.w600,
                     color: _npOnSurface),
               ),
@@ -851,13 +837,13 @@ class _UpcomingRoomTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(room.name ?? 'Upcoming Room',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.raleway(
                         fontWeight: FontWeight.w700, fontSize: 14,
                         color: _npOnSurface)),
                 const SizedBox(height: 2),
                 scheduledAt == null
                     ? Text('Scheduled',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 12, color: _npOnVariant))
                     : _RoomCountdown(scheduledAt: scheduledAt!),
               ],
@@ -871,7 +857,7 @@ class _UpcomingRoomTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text('Remind',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.raleway(
                     fontSize: 12, color: _npOnVariant)),
           ),
         ],
@@ -902,7 +888,7 @@ class _LiveBadge extends StatelessWidget {
       ),
       child: Text(
         '● LIVE',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.raleway(
             fontSize: small ? 9 : 10,
             fontWeight: FontWeight.w700,
             color: Colors.white,
@@ -931,7 +917,7 @@ Widget _viewerPill(int count) {
             const SizedBox(width: 4),
             Text(
               count > 999 ? '${(count / 1000).toStringAsFixed(1)}k' : '$count',
-              style: GoogleFonts.inter(fontSize: 11, color: _npOnSurface),
+              style: GoogleFonts.raleway(fontSize: 11, color: _npOnSurface),
             ),
           ],
         ),
@@ -950,7 +936,7 @@ class _FollowingFeedTab extends ConsumerWidget {
     if (uid == null) {
       return Center(
           child: Text('Sign in to see your following feed.',
-              style: GoogleFonts.inter(color: _npOnVariant)));
+              style: GoogleFonts.raleway(color: _npOnVariant)));
     }
 
     final feedAsync = ref.watch(followingFeedProvider(uid));
@@ -959,7 +945,7 @@ class _FollowingFeedTab extends ConsumerWidget {
       loading: () => const FeedLoadingShimmer(),
       error: (e, _) => Center(
           child: Text('Error: $e',
-              style: GoogleFonts.inter(color: _npError))),
+              style: GoogleFonts.raleway(color: _npError))),
       data: (maps) {
         if (maps.isEmpty) {
           return ListView(
@@ -986,7 +972,7 @@ class _FollowingFeedTab extends ConsumerWidget {
                             size: 16, color: _npSurface),
                         const SizedBox(width: 8),
                         Text('Find people to follow',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.raleway(
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: _npSurface)),
                       ],
@@ -1050,7 +1036,7 @@ class _RoomCountdownState extends State<_RoomCountdown> {
     if (_remaining.isNegative) {
       return Text(
         'Going live now!',
-        style: GoogleFonts.inter(color: _npSecondary, fontWeight: FontWeight.w600),
+        style: GoogleFonts.raleway(color: _npSecondary, fontWeight: FontWeight.w600),
       );
     }
     final String label;
@@ -1064,7 +1050,7 @@ class _RoomCountdownState extends State<_RoomCountdown> {
       label = 'In ${_remaining.inDays}d';
     }
     return Text(label,
-        style: GoogleFonts.inter(fontSize: 12, color: _npOnVariant));
+        style: GoogleFonts.raleway(fontSize: 12, color: _npOnVariant));
   }
 }
 
@@ -1096,7 +1082,7 @@ class _LiveNowStrip extends ConsumerWidget {
               const SizedBox(width: 6),
               Text(
                 'Live Now',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.raleway(
                   fontSize: 13, fontWeight: FontWeight.w700,
                   color: _npError, letterSpacing: 0.3,
                 ),
@@ -1110,7 +1096,7 @@ class _LiveNowStrip extends ConsumerWidget {
                 ),
                 child: Text(
                   '${rooms.length}',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.raleway(
                       fontSize: 11, fontWeight: FontWeight.w600,
                       color: _npError),
                 ),
@@ -1209,7 +1195,7 @@ class _LiveNowBubble extends ConsumerWidget {
                         memberCount >= 1000
                             ? '${(memberCount / 1000).toStringAsFixed(1)}k'
                             : '$memberCount',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.raleway(
                             fontSize: 9, fontWeight: FontWeight.w700,
                             color: _npOnVariant),
                       ),
@@ -1223,7 +1209,7 @@ class _LiveNowBubble extends ConsumerWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.raleway(
                   fontSize: 10, fontWeight: FontWeight.w500,
                   color: _npOnVariant),
             ),
