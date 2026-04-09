@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -307,7 +308,28 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Payments')),
+      backgroundColor: const Color(0xFF0D0A0C),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF110D0F),
+        foregroundColor: const Color(0xFFF7EDE2),
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.20),
+          ),
+        ),
+        title: Text(
+          'Payments',
+          style: GoogleFonts.playfairDisplay(
+            color: const Color(0xFFD4AF37),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -427,7 +449,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           const SizedBox(height: 12),
           Text(
             'Wallet',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: GoogleFonts.playfairDisplay(
+              color: const Color(0xFFD4AF37),
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
           ),
           const SizedBox(height: 8),
           walletDetailsAsync.when(
@@ -692,10 +718,30 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              ActionChip(label: const Text('10'), onPressed: () => _setQuickAmount(10)),
-              ActionChip(label: const Text('25'), onPressed: () => _setQuickAmount(25)),
-              ActionChip(label: const Text('50'), onPressed: () => _setQuickAmount(50)),
-              ActionChip(label: const Text('100'), onPressed: () => _setQuickAmount(100)),
+              ActionChip(
+                label: const Text('10', style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.w600)),
+                backgroundColor: const Color(0xFF1A1416),
+                side: const BorderSide(color: Color(0xFFD4AF37), width: 1.0),
+                onPressed: () => _setQuickAmount(10),
+              ),
+              ActionChip(
+                label: const Text('25', style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.w600)),
+                backgroundColor: const Color(0xFF1A1416),
+                side: const BorderSide(color: Color(0xFFD4AF37), width: 1.0),
+                onPressed: () => _setQuickAmount(25),
+              ),
+              ActionChip(
+                label: const Text('50', style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.w600)),
+                backgroundColor: const Color(0xFF1A1416),
+                side: const BorderSide(color: Color(0xFFD4AF37), width: 1.0),
+                onPressed: () => _setQuickAmount(50),
+              ),
+              ActionChip(
+                label: const Text('100', style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.w600)),
+                backgroundColor: const Color(0xFF1A1416),
+                side: const BorderSide(color: Color(0xFFD4AF37), width: 1.0),
+                onPressed: () => _setQuickAmount(100),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -704,20 +750,32 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: paymentState.isLoading ? null : () => _submit(requestOnly: false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD4AF37),
+                    foregroundColor: const Color(0xFF0D0A0C),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                   child: paymentState.isLoading
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0D0A0C)),
                         )
-                      : const Text('Send Coins'),
+                      : const Text('Send Coins', style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.8)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton(
                   onPressed: paymentState.isLoading ? null : () => _submit(requestOnly: true),
-                  child: const Text('Request Coins'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFD4AF37),
+                    side: const BorderSide(color: Color(0xFFD4AF37), width: 1.2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Request Coins', style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.8)),
                 ),
               ),
             ],
@@ -729,7 +787,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           const SizedBox(height: 32),
           Text(
             'Recent Transactions',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: GoogleFonts.playfairDisplay(
+              color: const Color(0xFFD4AF37),
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
           ),
           const SizedBox(height: 12),
           transactionsAsync.when(
@@ -745,7 +807,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     child: ListTile(
                       leading: Icon(
                         isSent ? Icons.call_made : Icons.call_received,
-                        color: isSent ? Colors.red : Colors.green,
+                        color: isSent ? const Color(0xFF9B2535) : const Color(0xFFD4AF37),
                       ),
                       title: Text('${isSent ? '-' : '+'}${tx.amount.toStringAsFixed(2)}'),
                       subtitle: Text('To: ${tx.receiverId}\nStatus: ${tx.status}'),
@@ -798,7 +860,23 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
 Widget _statusChip(String label, bool enabled) {
   return Chip(
-    avatar: Icon(enabled ? Icons.check_circle_outline : Icons.radio_button_unchecked, size: 18),
-    label: Text(label),
+    avatar: Icon(
+      enabled ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+      size: 18,
+      color: enabled ? const Color(0xFFD4AF37) : const Color(0xFFAD9585),
+    ),
+    label: Text(
+      label,
+      style: TextStyle(
+        color: enabled ? const Color(0xFFD4AF37) : const Color(0xFFAD9585),
+        fontWeight: enabled ? FontWeight.w600 : FontWeight.normal,
+      ),
+    ),
+    backgroundColor: const Color(0xFF1A1416),
+    side: BorderSide(
+      color: enabled
+          ? const Color(0xFFD4AF37).withValues(alpha: 0.40)
+          : const Color(0xFFAD9585).withValues(alpha: 0.25),
+    ),
   );
 }

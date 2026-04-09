@@ -569,7 +569,11 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                   // ── ENTER AS GUEST ────────────────────────────────
                   Center(
                     child: TextButton(
-                      onPressed: authState.isLoading ? null : () => context.go('/'),
+                      onPressed: authState.isLoading
+                          ? null
+                          : () => ref
+                              .read(authControllerProvider.notifier)
+                              .signInAsGuest(),
                       child: Text(
                         'ENTER AS GUEST',
                         style: GoogleFonts.raleway(

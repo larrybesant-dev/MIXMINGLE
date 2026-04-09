@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/messaging_provider.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../core/theme.dart';
+import '../../../widgets/emoji_pack/emoji_pack_item.dart';
+import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -376,15 +378,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                             ),
                                             const SizedBox(height: 3),
                                           ],
-                                          Text(
-                                            message.content,
-                                            style: TextStyle(
-                                              color: isOwn
-                                                  ? Colors.white
-                                                  : VelvetNoir.onSurface,
-                                              fontSize: 14,
-                                              height: 1.4,
-                                            ),
+                                          EmojiMessageContent(
+                                            content: message.content,
+                                            isOwn: isOwn,
                                           ),
                                         ],
                                       ),
@@ -469,10 +465,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: VelvetNoir.onSurfaceVariant),
                     iconSize: 22,
                     padding: EdgeInsets.zero,
-                    onPressed: () => _showReactionPicker(
+                    onPressed: () => EmojiPackPicker.show(
                       context,
                       ref,
-                      '__input__',
+                      onSelected: (item) => ref
+                          .read(messagingControllerProvider)
+                          .sendMessage(
+                            conversationId: widget.conversationId,
+                            senderId: widget.userId,
+                            senderName: widget.username,
+                            senderAvatarUrl: widget.avatarUrl,
+                            content: item.messageContent,
+                          ),
                     ),
                   ),
                   Expanded(

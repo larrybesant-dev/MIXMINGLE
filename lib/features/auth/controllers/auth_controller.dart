@@ -269,6 +269,23 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  Future<void> signInAsGuest() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final result = await _auth.signInAnonymously();
+      final user = result.user;
+      if (user != null) {
+        await _ensureUserDocument(user);
+      }
+      state = state.copyWith(isLoading: false, uid: user?.uid);
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'guest-sign-in');
+      state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<void> logout() async {
     final uid = _auth.currentUser?.uid;
     if (uid != null) {

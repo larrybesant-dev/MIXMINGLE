@@ -59,6 +59,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
 import '../features/payments/payments_screen.dart';
+import '../features/payments/vip_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 
 class _CacheEntry<T> {
@@ -319,6 +320,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/payments',
             builder: (context, state) => const PaymentsScreen(),
+          ),
+          GoRoute(
+            path: '/vip',
+            builder: (context, state) => const VipScreen(),
           ),
           GoRoute(
             path: '/speed-dating',

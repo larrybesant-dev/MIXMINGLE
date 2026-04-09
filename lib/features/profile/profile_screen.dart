@@ -15,6 +15,7 @@ import 'package:image/image.dart' as img;
 import 'package:mixvy/models/adult_profile_model.dart';
 import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/controllers/auth_controller.dart';
@@ -34,13 +35,31 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0D0A0C),
       appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: const Color(0xFF0B0B0B),
+        backgroundColor: const Color(0xFF110D0F),
+        foregroundColor: const Color(0xFFF7EDE2),
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.20),
+          ),
+        ),
+        title: Text(
+          'Profile',
+          style: GoogleFonts.playfairDisplay(
+            color: const Color(0xFFD4AF37),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout, color: Color(0xFFFF6E84)),
+            icon: const Icon(Icons.logout, color: Color(0xFFAD9585)),
             onPressed: () async {
               await ref.read(authControllerProvider.notifier).logout();
               if (!context.mounted) return;
@@ -1397,20 +1416,25 @@ class _HeroCard extends StatelessWidget {
       }
     }
 
+    final _vnUploadBtn = OutlinedButton.styleFrom(
+      foregroundColor: const Color(0xFFD4AF37),
+      side: const BorderSide(color: Color(0xFFD4AF37), width: 1.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.12),
-          ],
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A1416), Color(0xFF120E10)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25)),
+        border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.28)),
       ),
       child: Column(
         children: [
@@ -1613,23 +1637,27 @@ class _HeroCard extends StatelessWidget {
             children: [
               OutlinedButton.icon(
                 onPressed: isUploadingPhoto ? null : () => safeRunUpload(onUploadAvatar),
-                icon: const Icon(Icons.photo_camera_back_outlined),
-                label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Picture'),
+                icon: const Icon(Icons.photo_camera_back_outlined, size: 16),
+                label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Pic'),
+                style: _vnUploadBtn,
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingCover ? null : () => safeRunUpload(onUploadCover),
-                icon: const Icon(Icons.image_outlined),
+                icon: const Icon(Icons.image_outlined, size: 16),
                 label: Text(isUploadingCover ? 'Uploading...' : 'Cover'),
+                style: _vnUploadBtn,
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingGallery ? null : () => safeRunUpload(onUploadGallery),
-                icon: const Icon(Icons.collections_outlined),
+                icon: const Icon(Icons.collections_outlined, size: 16),
                 label: Text(isUploadingGallery ? 'Uploading...' : 'Gallery'),
+                style: _vnUploadBtn,
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingVideo ? null : () => safeRunUpload(onUploadVideo),
-                icon: const Icon(Icons.videocam_outlined),
+                icon: const Icon(Icons.videocam_outlined, size: 16),
                 label: Text(isUploadingVideo ? 'Uploading...' : 'Intro video'),
+                style: _vnUploadBtn,
               ),
             ],
           ),
@@ -1710,12 +1738,30 @@ class _ProfileActionBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          FilledButton.icon(
+          ElevatedButton.icon(
             onPressed: isLoading ? null : onSave,
             icon: isLoading
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.publish_outlined),
-            label: Text(isLoading ? 'Saving...' : 'Publish'),
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0D0A0C)),
+                  )
+                : const Icon(Icons.publish_outlined, color: Color(0xFF0D0A0C), size: 18),
+            label: Text(
+              isLoading ? 'Saving...' : 'Publish',
+              style: const TextStyle(
+                color: Color(0xFF0D0A0C),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD4AF37),
+              foregroundColor: const Color(0xFF0D0A0C),
+              disabledBackgroundColor: Color(0xFFD4AF37),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
           ),
         ],
       ),
@@ -1734,15 +1780,16 @@ class _FactChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
+        color: const Color(0xFF1A1416),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14),
+          Icon(icon, size: 14, color: const Color(0xFFD4AF37)),
           const SizedBox(width: 6),
-          Text(text, style: Theme.of(context).textTheme.bodySmall),
+          Text(text, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: const Color(0xFFF7EDE2))),
         ],
       ),
     );
@@ -1762,13 +1809,14 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: const Color(0xFF1A1416),
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: const Color(0xFFD4AF37))),
           const SizedBox(height: 4),
           Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 12),
@@ -1790,14 +1838,15 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.65),
+        color: const Color(0xFF1A1416),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.20)),
       ),
       child: Column(
         children: [
-          Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: const Color(0xFFD4AF37))),
           const SizedBox(height: 4),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: const Color(0xFFAD9585))),
         ],
       ),
     );

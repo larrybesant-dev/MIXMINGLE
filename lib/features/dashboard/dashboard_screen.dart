@@ -7,7 +7,6 @@ import '../../core/theme.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/controllers/feed_controller.dart';
 import '../feed/widgets/post_card.dart';
-import '../feed/widgets/live_room_card.dart';
 import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
 import '../../presentation/providers/user_provider.dart';
@@ -55,6 +54,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     context.go('/profile/${Uri.encodeComponent(normalizedUserId)}');
   }
 
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     final postsAsync = ref.watch(postsStreamProvider);
@@ -76,15 +82,75 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             backgroundColor: VelvetNoir.surface,
             surfaceTintColor: Colors.transparent,
             titleSpacing: 16,
-            title: Text(
-                'MIXVY',
-                style: GoogleFonts.playfairDisplay(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 22,
-                  color: VelvetNoir.primary,
-                  letterSpacing: 3,
+            title: Row(
+              children: [
+                // Current user avatar
+                GestureDetector(
+                  onTap: () => context.go('/profile'),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: VelvetNoir.primary.withValues(alpha: 0.6),
+                          width: 1.5),
+                      gradient: const RadialGradient(
+                        colors: [Color(0xFF2A1A0A), Color(0xFF0B0B0B)],
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: (currentUser?.avatarUrl ?? '').isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: currentUser!.avatarUrl!,
+                              fit: BoxFit.cover,
+                            )
+                          : Center(
+                              child: Text(
+                                (currentUser?.username ?? 'U').isNotEmpty
+                                    ? (currentUser?.username ?? 'U')[0]
+                                        .toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  color: VelvetNoir.primary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${_greeting()}, ${currentUser?.username ?? 'there'} 👑',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: VelvetNoir.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'MIX · CONNECT · INDULGE',
+                        style: GoogleFonts.raleway(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                          color: VelvetNoir.primary.withValues(alpha: 0.7),
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             centerTitle: false,
             actions: [
               _StatsBarWidget(
@@ -153,70 +219,111 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
 
-              // Live rooms horizontal strip
+              // Live rooms — circular avatar tiles
               SliverToBoxAdapter(
                 child: roomsAsync.when(
                   data: (rooms) => rooms.isEmpty
                       ? const _EmptyPill(label: 'No live rooms right now')
+                      : SizedBox(
+                          height: 110,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            itemCount: rooms.length.clamp(0, 12),
+                            separatorBuilder: (ctx, idx) =>
+                                const SizedBox(width: 14),
+                            itemBuilder: (context, i) => _LiveNowTile(
+                              room: rooms[i],
+                              onTap: () => _openRoom(rooms[i].id),
+                            ),
+                          ),
+                        ),
+                  loading: () => const _HorizontalSkeleton(height: 110),
+                  error: (e, _) =>
+                      const _ErrorCard(message: 'Could not load live rooms'),
+                ),
+              ),
+
+              // DISCOVER PEOPLE section
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Discover People',
+                  dotColor: VelvetNoir.secondary,
+                  topPadding: 24,
+                  trailing: TextButton(
+                    onPressed: () => context.go('/discover'),
+                    child: const Text('See all',
+                        style: TextStyle(
+                            color: VelvetNoir.primary, fontSize: 13)),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: trendingUsersAsync.when(
+                  data: (users) => users.isEmpty
+                      ? const _EmptyPill(label: 'No people to discover yet')
                       : SizedBox(
                           height: 200,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 4),
-                            itemCount: rooms.length.clamp(0, 12),
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(width: 12),
-                            itemBuilder: (context, i) => LiveRoomCard(
-                              room: rooms[i],
-                              onTap: () => _openRoom(rooms[i].id),
-                            ),
-                          ),
-                        ),
-                  loading: () =>
-                      const _HorizontalSkeleton(height: 200),
-                  error: (e, _) => const _ErrorCard(message: 'Could not load live rooms'),
-                ),
-              ),
-
-              // Top Creators
-              if (trendingUsersAsync.value?.isNotEmpty == true ||
-                  trendingUsersAsync.isLoading) ...[
-                SliverToBoxAdapter(
-                  child: _SectionHeader(
-                    title: 'Top Creators',
-                    dotColor: VelvetNoir.secondary,
-                    topPadding: 24,
-                    trailing: TextButton(
-                      onPressed: () => context.go('/discover'),
-                      child: const Text('Discover',
-                          style: TextStyle(
-                              color: VelvetNoir.primary, fontSize: 13)),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: trendingUsersAsync.when(
-                    data: (users) => SizedBox(
-                          height: 88,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            itemCount: users.length.clamp(0, 12),
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(width: 16),
-                            itemBuilder: (context, i) => _CreatorChip(
+                            itemCount: users.length.clamp(0, 10),
+                            separatorBuilder: (ctx, idx) =>
+                                const SizedBox(width: 10),
+                            itemBuilder: (context, i) =>
+                                _DiscoverPersonCard(
                               user: users[i],
                               onTap: () => _openProfile(users[i].id),
                             ),
                           ),
                         ),
-                    loading: () => const _HorizontalSkeleton(height: 88),
-                    error: (_, _) => const SizedBox.shrink(),
+                  loading: () => const _HorizontalSkeleton(height: 200),
+                  error: (_, _) => const SizedBox.shrink(),
+                ),
+              ),
+
+              // POPULAR ROOMS section
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Popular Rooms',
+                  dotColor: VelvetNoir.liveGlow,
+                  topPadding: 24,
+                  trailing: TextButton(
+                    onPressed: () => context.go('/rooms'),
+                    child: const Text('Browse',
+                        style: TextStyle(
+                            color: VelvetNoir.primary, fontSize: 13)),
                   ),
                 ),
-              ],
+              ),
+              SliverToBoxAdapter(
+                child: roomsAsync.when(
+                  data: (rooms) => rooms.isEmpty
+                      ? const _EmptyPill(label: 'No popular rooms right now')
+                      : SizedBox(
+                          height: 170,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            itemCount: rooms.length.clamp(0, 8),
+                            separatorBuilder: (ctx, idx) =>
+                                const SizedBox(width: 12),
+                            itemBuilder: (context, i) => _PopularRoomCard(
+                              room: rooms[i],
+                              onTap: () => _openRoom(rooms[i].id),
+                            ),
+                          ),
+                        ),
+                  loading: () => const _HorizontalSkeleton(height: 170),
+                  error: (_, _) => const SizedBox.shrink(),
+                ),
+              ),
+
+              // VIP LOUNGE banner
+              const SliverToBoxAdapter(child: _VipLoungeBanner()),
 
               // New Members
               SliverToBoxAdapter(
@@ -423,66 +530,6 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Creator chip: avatar + username + gradient ring
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _CreatorChip extends StatelessWidget {
-  final UserModel user;
-  final VoidCallback onTap;
-  const _CreatorChip({required this.user, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: VelvetNoir.primaryGradient,
-            ),
-            child: CircleAvatar(
-              radius: 26,
-              backgroundColor: VelvetNoir.surfaceHigh,
-              backgroundImage: (user.avatarUrl ?? '').isNotEmpty
-                  ? CachedNetworkImageProvider(user.avatarUrl!)
-                  : null,
-              child: (user.avatarUrl ?? '').isEmpty
-                  ? Text(
-                      user.username.isNotEmpty
-                          ? user.username[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                          color: VelvetNoir.primary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18),
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            width: 60,
-            child: Text(
-              user.username,
-              style: const TextStyle(
-                  fontSize: 10,
-                  color: VelvetNoir.onSurfaceVariant),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // New Member chip: avatar + username + "NEW" badge
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -563,6 +610,483 @@ class _NewMemberChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live Now circular tile
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LiveNowTile extends StatelessWidget {
+  final dynamic room;
+  final VoidCallback onTap;
+  const _LiveNowTile({required this.room, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasThumb = (room.thumbnailUrl ?? '').isNotEmpty;
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 72,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: VelvetNoir.liveGlow, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: VelvetNoir.liveGlow.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: hasThumb
+                        ? CachedNetworkImage(
+                            imageUrl: room.thumbnailUrl!,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            color: VelvetNoir.surfaceHigh,
+                            child: Center(
+                              child: Text(
+                                room.name.isNotEmpty
+                                    ? room.name[0].toUpperCase()
+                                    : 'R',
+                                style: const TextStyle(
+                                  color: VelvetNoir.primary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                // LIVE badge
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: VelvetNoir.liveGlow,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+                // Participant count
+                if (room.memberCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: VelvetNoir.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border:
+                            Border.all(color: VelvetNoir.liveGlow, width: 1),
+                      ),
+                      child: Text(
+                        room.memberCount > 999
+                            ? '${(room.memberCount / 1000).toStringAsFixed(1)}k'
+                            : '${room.memberCount}',
+                        style: const TextStyle(
+                          color: VelvetNoir.onSurface,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              room.name,
+              style: GoogleFonts.raleway(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: VelvetNoir.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Discover Person card — portrait photo card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DiscoverPersonCard extends StatelessWidget {
+  final UserModel user;
+  final VoidCallback onTap;
+  const _DiscoverPersonCard({required this.user, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = user.avatarUrl ?? '';
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 120,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border:
+              Border.all(color: VelvetNoir.primary.withValues(alpha: 0.18)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Photo / gradient bg
+              avatarUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: avatarUrl,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            VelvetNoir.secondary.withValues(alpha: 0.4),
+                            VelvetNoir.surface,
+                          ],
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          user.username.isNotEmpty
+                              ? user.username[0].toUpperCase()
+                              : '?',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w700,
+                            color: VelvetNoir.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+              // Gradient overlay
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.72),
+                      ],
+                      stops: const [0.45, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              // Name + online indicator
+              Positioned(
+                bottom: 10,
+                left: 10,
+                right: 10,
+                child: Text(
+                  user.username,
+                  style: GoogleFonts.raleway(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Connect button
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: VelvetNoir.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, color: Colors.black, size: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Popular Room card — wide cover card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PopularRoomCard extends StatelessWidget {
+  final dynamic room;
+  final VoidCallback onTap;
+  const _PopularRoomCard({required this.room, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasThumb = (room.thumbnailUrl ?? '').isNotEmpty;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 230,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: VelvetNoir.liveGlow.withValues(alpha: 0.25), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              hasThumb
+                  ? CachedNetworkImage(
+                      imageUrl: room.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF1A0810), Color(0xFF0B0B0B)],
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(Icons.mic_external_on_rounded,
+                            color: VelvetNoir.primary.withValues(alpha: 0.3),
+                            size: 48),
+                      ),
+                    ),
+              // Gradient overlay
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.82),
+                      ],
+                      stops: const [0.35, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              // LIVE tag + participant count (top)
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: VelvetNoir.liveGlow,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        room.isLive ? 'LIVE' : 'ROOM',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.people, color: Colors.white, size: 10),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${room.memberCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Room name (bottom)
+              Positioned(
+                bottom: 10,
+                left: 12,
+                right: 12,
+                child: Text(
+                  room.name,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VIP Lounge banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _VipLoungeBanner extends StatelessWidget {
+  const _VipLoungeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 28, 16, 8),
+      child: GestureDetector(
+        onTap: () => context.go('/vip'),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2A1E05), Color(0xFF1A1200), Color(0xFF0B0B0B)],
+            ),
+            border: Border.all(
+              color: VelvetNoir.primary.withValues(alpha: 0.4),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: VelvetNoir.primary.withValues(alpha: 0.12),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const RadialGradient(
+                    colors: [Color(0xFFD4AF37), Color(0xFF8C6020)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: VelvetNoir.primary.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.workspace_premium_rounded,
+                    color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'VIP LOUNGE',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: VelvetNoir.primary,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      'Unlock exclusive features & rooms',
+                      style: GoogleFonts.raleway(
+                        fontSize: 12,
+                        color: VelvetNoir.onSurface.withValues(alpha: 0.65),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFD4AF37), Color(0xFF8C6020)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'GO VIP',
+                  style: GoogleFonts.raleway(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -74,6 +74,11 @@
       - assets/fonts/
       - assets/env/app_env
       - assets/.env
+      - assets/emojis/flirty/
+      - assets/emojis/party/
+      - assets/emojis/meme/
+      - assets/emojis/romantic/
+      - assets/emojis/gesture/
     fonts:
       - family: NotoColorEmoji
         fonts:
