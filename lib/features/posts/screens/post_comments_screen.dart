@@ -72,7 +72,7 @@ final _commentsProvider =
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 class PostCommentsScreen extends ConsumerStatefulWidget {
-  const PostCommentsScreen({
+  PostCommentsScreen({
     super.key,
     required this.postId,
     FirebaseFirestore? firestore,

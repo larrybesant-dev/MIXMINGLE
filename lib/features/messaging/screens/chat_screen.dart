@@ -8,7 +8,6 @@ import '../../../core/firestore/firestore_error_utils.dart';
 import '../providers/messaging_provider.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../core/theme.dart';
-import '../../../widgets/emoji_pack/emoji_pack_item.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {

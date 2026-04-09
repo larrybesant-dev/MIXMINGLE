@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -12,7 +10,6 @@ class ReferralService {
 
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
-  static const _alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
@@ -51,7 +48,7 @@ class ReferralService {
     final result = await _functions
         .httpsCallable('generateReferralCode')
         .call<Map<String, dynamic>>(<String, dynamic>{'userId': userId});
-    final data = Map<String, dynamic>.from(result.data ?? const <String, dynamic>{});
+    final data = Map<String, dynamic>.from(result.data);
     final code = _asString(data['code']);
     if (code.isEmpty) {
       throw Exception('Could not generate referral code. Please retry.');
@@ -68,7 +65,7 @@ class ReferralService {
     final result = await _functions
         .httpsCallable('redeemReferralCode')
         .call<Map<String, dynamic>>(<String, dynamic>{'code': normalizedCode, 'userId': userId});
-    final data = Map<String, dynamic>.from(result.data ?? const <String, dynamic>{});
+    final data = Map<String, dynamic>.from(result.data);
     return _asBool(data['redeemed'], fallback: false);
   }
 

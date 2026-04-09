@@ -8,7 +8,6 @@ import '../../models/notification_model.dart';
 import '../providers/notification_provider.dart';
 import '../../core/logger.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
-import '../../widgets/mixvy_drawer.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
