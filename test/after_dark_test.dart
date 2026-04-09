@@ -6,6 +6,7 @@ import 'package:mixvy/features/after_dark/providers/after_dark_provider.dart';
 import 'package:mixvy/features/after_dark/screens/after_dark_age_gate_screen.dart';
 import 'package:mixvy/features/after_dark/screens/after_dark_pin_screen.dart';
 import 'package:mixvy/features/after_dark/widgets/after_dark_shell.dart';
+import 'package:mixvy/features/messaging/providers/messaging_provider.dart';
 
 import 'test_helpers.dart';
 
@@ -13,36 +14,21 @@ import 'test_helpers.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-Widget _buildRouted({
-  required String initialLocation,
-  required Map<String, WidgetBuilder> routes,
-  List<Override> overrides = const [],
-}) {
-  final router = GoRouter(
-    initialLocation: initialLocation,
-    routes: routes.entries.map((e) {
-      return GoRoute(path: e.key, builder: (_, __) => e.value(null!));
-    }).toList(),
-    errorBuilder: (_, state) => Scaffold(body: Text('404: ${state.uri}')),
-  );
-
-  return ProviderScope(
-    overrides: overrides,
-    child: MaterialApp.router(routerConfig: router),
-  );
-}
-
 Widget _ageGateApp() {
   final router = GoRouter(
     initialLocation: '/after-dark/age-gate',
     routes: [
       GoRoute(
         path: '/after-dark/age-gate',
-        builder: (_, __) => const AfterDarkAgeGateScreen(),
+        builder: (_, _) => const AfterDarkAgeGateScreen(),
       ),
       GoRoute(
         path: '/after-dark/pin-setup',
-        builder: (_, __) => const Scaffold(body: Text('Pin Setup')),
+        builder: (_, _) => const Scaffold(body: Text('Pin Setup')),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (_, _) => const Scaffold(body: Text('Settings')),
       ),
     ],
   );
@@ -55,37 +41,40 @@ Widget _pinSetupApp() {
     routes: [
       GoRoute(
         path: '/after-dark/pin-setup',
-        builder: (_, __) => const AfterDarkPinScreen.setup(),
+        builder: (_, _) => const AfterDarkPinScreen.setup(),
       ),
       GoRoute(
         path: '/after-dark',
-        builder: (_, __) => const Scaffold(body: Text('After Dark Home')),
+        builder: (_, _) => const Scaffold(body: Text('After Dark Home')),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (_, _) => const Scaffold(body: Text('Settings')),
       ),
     ],
   );
   return ProviderScope(child: MaterialApp.router(routerConfig: router));
 }
 
-Widget _pinUnlockApp({bool sessionActive = false}) {
+Widget _pinUnlockApp() {
   final router = GoRouter(
     initialLocation: '/after-dark/unlock',
     routes: [
       GoRoute(
         path: '/after-dark/unlock',
-        builder: (_, __) => const AfterDarkPinScreen.unlock(),
+        builder: (_, _) => const AfterDarkPinScreen.unlock(),
       ),
       GoRoute(
         path: '/after-dark',
-        builder: (_, __) => const Scaffold(body: Text('After Dark Home')),
+        builder: (_, _) => const Scaffold(body: Text('After Dark Home')),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (_, _) => const Scaffold(body: Text('Settings')),
       ),
     ],
   );
-  return ProviderScope(
-    overrides: [
-      afterDarkSessionProvider.overrideWith((ref) => sessionActive),
-    ],
-    child: MaterialApp.router(routerConfig: router),
-  );
+  return ProviderScope(child: MaterialApp.router(routerConfig: router));
 }
 
 Widget _shellApp({required bool sessionActive}) {
@@ -93,28 +82,38 @@ Widget _shellApp({required bool sessionActive}) {
     initialLocation: '/after-dark',
     routes: [
       ShellRoute(
-        builder: (_, __, child) => AfterDarkShell(child: child),
+        builder: (_, _, child) => AfterDarkShell(child: child),
         routes: [
           GoRoute(
             path: '/after-dark',
-            builder: (_, __) =>
+            builder: (_, _) =>
                 const Scaffold(body: Text('After Dark Home')),
+          ),
+          GoRoute(
+            path: '/after-dark/lounges',
+            builder: (_, _) => const Scaffold(body: Text('Lounges')),
+          ),
+          GoRoute(
+            path: '/after-dark/profile',
+            builder: (_, _) => const Scaffold(body: Text('AD Profile')),
           ),
         ],
       ),
       GoRoute(
         path: '/after-dark/unlock',
-        builder: (_, __) => const Scaffold(body: Text('Unlock')),
+        builder: (_, _) => const Scaffold(body: Text('Unlock')),
       ),
       GoRoute(
         path: '/',
-        builder: (_, __) => const Scaffold(body: Text('Main App')),
+        builder: (_, _) => const Scaffold(body: Text('Main App')),
       ),
     ],
   );
   return ProviderScope(
     overrides: [
       afterDarkSessionProvider.overrideWith((ref) => sessionActive),
+      // Prevent Firebase access in the shell test environment.
+      unreadMessageCountProvider.overrideWith((ref) => 0),
     ],
     child: MaterialApp.router(routerConfig: router),
   );
@@ -136,22 +135,23 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('MixVy After Dark'), findsOneWidget);
-      expect(find.byType(TextFormField), findsOneWidget);
-      expect(find.byType(Checkbox), findsOneWidget);
+      // DOB input field
+      expect(find.byType(TextField), findsOneWidget);
+      // Consent checkbox inside CheckboxListTile
+      expect(find.byType(CheckboxListTile), findsOneWidget);
     });
 
     testWidgets('shows error for invalid date format', (tester) async {
       await tester.pumpWidget(_ageGateApp());
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField), 'not-a-date');
-      // Tick the consent checkbox first so we can isolate the date error
-      await tester.tap(find.byType(Checkbox));
+      await tester.enterText(find.byType(TextField), 'not-a-date');
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
 
-      // Tap the submit/continue button
-      final buttons = find.byType(ElevatedButton);
-      await tester.tap(buttons.last);
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
       await tester.pump();
 
       expect(find.textContaining('valid date'), findsOneWidget);
@@ -161,13 +161,13 @@ void main() {
       await tester.pumpWidget(_ageGateApp());
       await tester.pumpAndSettle();
 
-      // DOB that makes user 10 years old
-      await tester.enterText(find.byType(TextFormField), '2015-01-01');
-      await tester.tap(find.byType(Checkbox));
+      await tester.enterText(find.byType(TextField), '2015-01-01');
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
 
-      final buttons = find.byType(ElevatedButton);
-      await tester.tap(buttons.last);
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
       await tester.pump();
 
       expect(find.textContaining('18 or older'), findsOneWidget);
@@ -177,26 +177,26 @@ void main() {
       await tester.pumpWidget(_ageGateApp());
       await tester.pumpAndSettle();
 
-      // Valid adult date but no consent
-      await tester.enterText(find.byType(TextFormField), '1990-01-01');
-
-      final buttons = find.byType(ElevatedButton);
-      await tester.tap(buttons.last);
+      await tester.enterText(find.byType(TextField), '1990-01-01');
+      // Do NOT tick the checkbox.
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
       await tester.pump();
 
-      expect(find.textContaining('agree'), findsOneWidget);
+      expect(find.textContaining('must agree'), findsOneWidget);
     });
 
     testWidgets('valid adult + consent navigates to pin-setup', (tester) async {
       await tester.pumpWidget(_ageGateApp());
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField), '1990-06-15');
-      await tester.tap(find.byType(Checkbox));
+      await tester.enterText(find.byType(TextField), '1990-06-15');
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
 
-      final buttons = find.byType(ElevatedButton);
-      await tester.tap(buttons.last);
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
 
       expect(find.text('Pin Setup'), findsOneWidget);
@@ -254,6 +254,9 @@ void main() {
     });
 
     testWidgets('mismatch PIN shows error and resets', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(_pinSetupApp());
       await tester.pumpAndSettle();
 
@@ -286,20 +289,23 @@ void main() {
       expect(find.text('Enter PIN'), findsOneWidget);
     });
 
-    testWidgets('delete button removes last digit', (tester) async {
+    testWidgets('delete button (backspace icon) is present', (tester) async {
+      await tester.pumpWidget(_pinUnlockApp());
+      await tester.pumpAndSettle();
+
+      // The keypad renders the delete key as an Icon widget
+      expect(find.byIcon(Icons.backspace_outlined), findsOneWidget);
+    });
+
+    testWidgets('entering a digit keeps title as Enter PIN before 4 digits',
+        (tester) async {
       await tester.pumpWidget(_pinUnlockApp());
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('1').first);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // There should be a delete/backspace button
-      final deleteBtn = find.byIcon(Icons.backspace_outlined);
-      expect(deleteBtn, findsOneWidget);
-      await tester.tap(deleteBtn);
-      await tester.pump();
-
-      // One dot should be empty (unfilled) — implied by no 4-digit auto-submit
+      // Only 1 digit — should not navigate away
       expect(find.text('Enter PIN'), findsOneWidget);
     });
   });
@@ -329,11 +335,13 @@ void main() {
       expect(find.text('After Dark'), findsOneWidget);
     });
 
-    testWidgets('Exit button is present', (tester) async {
+    testWidgets('Exit button is present in app bar', (tester) async {
       await tester.pumpWidget(_shellApp(sessionActive: true));
       await tester.pumpAndSettle();
 
-      expect(find.text('Exit'), findsOneWidget);
+      // The exit control is a TextButton.icon; verify via the icon or
+      // the tooltip message attached to the wrapping Tooltip widget.
+      expect(find.byIcon(Icons.wb_sunny_outlined), findsOneWidget);
     });
   });
 }

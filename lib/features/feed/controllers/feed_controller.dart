@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/room_model.dart';
-import '../../../models/user.dart' as feed_user;
+import '../../../models/user_model.dart';
 import '../../../services/moderation_service.dart';
 import '../../../services/room_service.dart';
 import '../../../core/firestore/firestore_error_utils.dart';
@@ -15,7 +15,7 @@ class FeedState {
   final List<RoomModel> upcomingRooms;
   final Map<String, String> roomReasons;
   final Map<String, String> roomTiers;
-  final List<feed_user.User> trendingUsers;
+  final List<UserModel> trendingUsers;
 
   const FeedState({
     this.isLoading = false,
@@ -34,7 +34,7 @@ class FeedState {
     List<RoomModel>? upcomingRooms,
     Map<String, String>? roomReasons,
     Map<String, String>? roomTiers,
-    List<feed_user.User>? trendingUsers,
+    List<UserModel>? trendingUsers,
   }) {
     return FeedState(
       isLoading: isLoading ?? this.isLoading,
@@ -110,7 +110,7 @@ class FeedController extends Notifier<FeedState> {
           .limit(10)
           .get();
       final trendingUsers = usersSnap.docs
-          .map((doc) => feed_user.User.fromJson({'id': doc.id, ...doc.data()}))
+          .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
           .where((user) => !blockedIds.contains(user.id))
           .toList();
       // Upcoming scheduled rooms (next 48 h)

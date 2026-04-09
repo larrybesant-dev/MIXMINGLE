@@ -1,16 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../../models/user.dart';
+import '../../../models/user_model.dart';
 
 class TrendingUserCard extends StatelessWidget {
-  final User user;
+  final UserModel user;
   final VoidCallback onTap;
 
   const TrendingUserCard({required this.user, required this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final profilePictureUrl = user.avatarUrl.trim();
+    final profilePictureUrl = (user.avatarUrl ?? '').trim();
     return GestureDetector(
       onTap: onTap,
       child: Column(

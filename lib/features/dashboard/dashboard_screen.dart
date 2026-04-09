@@ -13,7 +13,6 @@ import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
 import 'daily_checkin_card.dart';
 import 'leaderboard_strip.dart';
-import '../../models/user.dart' as feed_user;
 import '../../models/user_model.dart';
 import '../../widgets/mixvy_drawer.dart';
 
@@ -426,7 +425,7 @@ class _SectionHeader extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CreatorChip extends StatelessWidget {
-  final feed_user.User user;
+  final UserModel user;
   final VoidCallback onTap;
   const _CreatorChip({required this.user, required this.onTap});
 
@@ -446,10 +445,10 @@ class _CreatorChip extends StatelessWidget {
             child: CircleAvatar(
               radius: 26,
               backgroundColor: NeonPulse.surfaceHigh,
-              backgroundImage: user.avatarUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(user.avatarUrl)
+              backgroundImage: (user.avatarUrl ?? '').isNotEmpty
+                  ? CachedNetworkImageProvider(user.avatarUrl!)
                   : null,
-              child: user.avatarUrl.isEmpty
+              child: (user.avatarUrl ?? '').isEmpty
                   ? Text(
                       user.username.isNotEmpty
                           ? user.username[0].toUpperCase()

@@ -50,3 +50,5 @@ functions/.env.*
 .env
 .env.*
 !.env.example
+assets/env/app_env
+!assets/env/app_env.example

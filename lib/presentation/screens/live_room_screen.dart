@@ -3009,6 +3009,37 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
+  /// Shows a confirmation dialog and ends the room if confirmed.
+  Future<void> _confirmAndEndRoom(HostControls hostControls) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('End Room?'),
+        content:
+            const Text('This will close the room for all participants. Continue?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6E84),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('End Room'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await hostControls.endRoom(widget.roomId);
+      await _disconnectCall();
+      await _leaveRoom();
+      if (mounted) context.pop();
+    }
+  }
+
   Future<void> _leaveRoom() async {
     final userId = _joinedUserId;
     final firestore = _firestore;
@@ -4366,10 +4397,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       error: (_, _) => const SizedBox.shrink(),
                     ),
                   ),
-                  // ── TOP GIFTERS STRIP (bottom-left, above bottom bar) ─────
+                  // ── TOP GIFTERS STRIP (bottom-left, above admin bar) ──────
                   if (topGifters.isNotEmpty)
                     Positioned(
-                      bottom: 92,
+                      bottom: 140,
                       left: 8,
                       width: 344,
                       child: SizedBox(
@@ -4428,8 +4459,27 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
-                  // ── HOST CONTROLS BUTTON (hosts, cohosts, moderators) ────
-                  if (isHost || isRoomHostByDoc || isCohost || isModerator)
+                  // ── OWNER ADMIN BAR (room owner/host only) ─────────────────
+                  if (isHost || isRoomHostByDoc)
+                    Positioned(
+                      bottom: 92,
+                      left: colLeft('cams') + 8,
+                      child: _RoomOwnerAdminBar(
+                        roomId: widget.roomId,
+                        currentUserId: user.id,
+                        isLocked: isLocked,
+                        micVolume: _micVolume,
+                        speakerVolume: _speakerVolume,
+                        onMicVolumeChanged: _setMicVolume,
+                        onSpeakerVolumeChanged: _setSpeakerVolume,
+                        onToggleLock: () =>
+                            hostControls.toggleLockRoom(widget.roomId),
+                        onEndRoom: () =>
+                            _confirmAndEndRoom(hostControls),
+                      ),
+                    )
+                  // ── CO-HOST / MODERATOR CONTROLS BUTTON ────────────────────
+                  else if (isCohost || isModerator)
                     Positioned(
                       bottom: 92,
                       left: 12,
@@ -4438,7 +4488,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           context,
                           roomId: widget.roomId,
                           currentUserId: user.id,
-                          isOwner: isHost || isRoomHostByDoc,
+                          isOwner: false,
                           micVolume: _micVolume,
                           speakerVolume: _speakerVolume,
                           onMicVolumeChanged: _setMicVolume,
@@ -4459,9 +4509,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   color: Colors.white, size: 16),
                               const SizedBox(width: 4),
                               Text(
-                                isHost || isRoomHostByDoc
-                                    ? 'Controls'
-                                    : (isCohost ? 'Co-host' : 'Mod Tools'),
+                                isCohost ? 'Co-host' : 'Mod Tools',
                                 style: const TextStyle(
                                     color: Colors.white, fontSize: 12),
                               ),
@@ -6358,6 +6406,152 @@ class _TickerBannerState extends State<_TickerBanner>
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Owner Admin Menu Bar
+// A compact horizontal toolbar shown exclusively to the room owner/host.
+// Provides quick-access buttons that open the control panel on a specific tab
+// or trigger owner-only actions (lock toggle, end room).
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RoomOwnerAdminBar extends StatelessWidget {
+  const _RoomOwnerAdminBar({
+    required this.roomId,
+    required this.currentUserId,
+    required this.isLocked,
+    required this.micVolume,
+    required this.speakerVolume,
+    required this.onToggleLock,
+    required this.onEndRoom,
+    this.onMicVolumeChanged,
+    this.onSpeakerVolumeChanged,
+  });
+
+  final String roomId;
+  final String currentUserId;
+  final bool isLocked;
+  final double micVolume;
+  final double speakerVolume;
+  final VoidCallback onToggleLock;
+  final VoidCallback onEndRoom;
+  final ValueChanged<double>? onMicVolumeChanged;
+  final ValueChanged<double>? onSpeakerVolumeChanged;
+
+  void _openPanel(BuildContext context, int tab) {
+    RoomHostControlPanel.show(
+      context,
+      roomId: roomId,
+      currentUserId: currentUserId,
+      isOwner: true,
+      initialTabIndex: tab,
+      micVolume: micVolume,
+      speakerVolume: speakerVolume,
+      onMicVolumeChanged: onMicVolumeChanged,
+      onSpeakerVolumeChanged: onSpeakerVolumeChanged,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xCC10131A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x50D4A853)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _AdminBtn(
+            icon: Icons.settings_rounded,
+            label: 'Settings',
+            onTap: () => _openPanel(context, 0),
+          ),
+          _AdminBtn(
+            icon: isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
+            label: isLocked ? 'Locked' : 'Lock',
+            color: isLocked ? const Color(0xFFD4A853) : null,
+            onTap: onToggleLock,
+          ),
+          _AdminBtn(
+            icon: Icons.mic_rounded,
+            label: 'Stage',
+            onTap: () => _openPanel(context, 1),
+          ),
+          _AdminBtn(
+            icon: Icons.headset_rounded,
+            label: 'Audio',
+            onTap: () => _openPanel(context, 2),
+          ),
+          _AdminBtn(
+            icon: Icons.people_alt_rounded,
+            label: 'People',
+            onTap: () => _openPanel(context, 3),
+          ),
+          _AdminBtn(
+            icon: Icons.admin_panel_settings_rounded,
+            label: 'Mods',
+            onTap: () => _openPanel(context, 4),
+          ),
+          Container(
+            width: 1,
+            height: 28,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: const Color(0x40D4A853),
+          ),
+          _AdminBtn(
+            icon: Icons.stop_circle_rounded,
+            label: 'End',
+            color: const Color(0xFFFF6E84),
+            onTap: onEndRoom,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminBtn extends StatelessWidget {
+  const _AdminBtn({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? Colors.white;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: c),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: c,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

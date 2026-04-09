@@ -450,21 +450,38 @@ class _CategoryCard extends StatelessWidget {
 
 final _roomsByCategoryProvider = StreamProvider.autoDispose
     .family<List<RoomModel>, String?>((ref, category) {
+  // ORDER BY createdAt — stable; never changes after room creation.
+  // Using participantCount/memberCount as the Firestore sort key would cause
+  // rooms to re-shuffle on every join/leave event. Instead we do a
+  // member-count sort on the client side with createdAt as a stable tiebreaker
+  // so rooms only move when their member counts actually differ.
   Query<Map<String, dynamic>> query = FirebaseFirestore.instance
       .collection('rooms')
       .where('isLive', isEqualTo: true)
-      .orderBy('participantCount', descending: true)
+      .orderBy('createdAt', descending: true)
       .limit(50);
 
   if (category != null) {
     query = query.where('category', isEqualTo: category);
   }
 
-  return query.snapshots().map(
-        (snap) => snap.docs
-            .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-            .toList(),
-      );
+  return query.snapshots().map((snap) {
+    final rooms = snap.docs
+        .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+        .toList();
+    // Stable sort: most members first; within the same count keep the
+    // Firestore createdAt order (newer rooms first) so no position changes
+    // unless a room's memberCount actually passes another room's.
+    rooms.sort((a, b) {
+      final byCount = b.memberCount.compareTo(a.memberCount);
+      if (byCount != 0) return byCount;
+      // Tiebreaker: newer room first (matches server orderBy)
+      final aTs = a.createdAt?.seconds ?? 0;
+      final bTs = b.createdAt?.seconds ?? 0;
+      return bTs.compareTo(aTs);
+    });
+    return rooms;
+  });
 });
 
 class _RoomListView extends ConsumerWidget {
