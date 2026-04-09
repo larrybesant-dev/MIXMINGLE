@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/mixvy_economy_config.dart';
@@ -115,6 +116,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Referral code ready: $code')),
       );
+      await _shareReferralCode(code);
     } catch (e) {
       if (!mounted) {
         return;
@@ -123,6 +125,25 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         SnackBar(content: Text('Could not generate referral code: $e')),
       );
     }
+  }
+
+  Future<void> _copyReferralCode(String code) async {
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Referral code copied.')),
+    );
+  }
+
+  Future<void> _shareReferralCode(String code) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'Join me on MixVy and use my referral code: $code\nhttps://mixvy.app',
+        subject: 'Join me on MixVy',
+      ),
+    );
   }
 
   Future<void> _requestCashOut(WalletModel wallet, double pendingCashOut) async {
@@ -538,8 +559,32 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   ),
                   const SizedBox(height: 8),
                   referralCodeAsync.when(
-                    data: (code) => Text(
-                      code == null ? 'No active referral code yet.' : 'Code: $code',
+                    data: (code) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          code == null ? 'No active referral code yet.' : 'Code: $code',
+                        ),
+                        if (code != null) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () => _copyReferralCode(code),
+                                icon: const Icon(Icons.copy_rounded),
+                                label: const Text('Copy Code'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () => _shareReferralCode(code),
+                                icon: const Icon(Icons.share_outlined),
+                                label: const Text('Share Code'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
                     loading: () => const LinearProgressIndicator(),
                     error: (e, _) => Text('Referral code unavailable: $e'),

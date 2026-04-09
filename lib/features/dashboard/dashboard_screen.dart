@@ -230,6 +230,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             separatorBuilder: (ctx, idx) =>
                                 const SizedBox(width: 14),
                             itemBuilder: (context, i) => _LiveNowTile(
+                              key: ValueKey(rooms[i].id),
                               room: rooms[i],
                               onTap: () => _openRoom(rooms[i].id),
                             ),
@@ -308,6 +309,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             separatorBuilder: (ctx, idx) =>
                                 const SizedBox(width: 12),
                             itemBuilder: (context, i) => _PopularRoomCard(
+                              key: ValueKey(rooms[i].id),
                               room: rooms[i],
                               onTap: () => _openRoom(rooms[i].id),
                             ),
@@ -618,7 +620,7 @@ class _NewMemberChip extends StatelessWidget {
 class _LiveNowTile extends StatelessWidget {
   final dynamic room;
   final VoidCallback onTap;
-  const _LiveNowTile({required this.room, required this.onTap});
+  const _LiveNowTile({super.key, required this.room, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -856,7 +858,7 @@ class _DiscoverPersonCard extends StatelessWidget {
 class _PopularRoomCard extends StatelessWidget {
   final dynamic room;
   final VoidCallback onTap;
-  const _PopularRoomCard({required this.room, required this.onTap});
+  const _PopularRoomCard({super.key, required this.room, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1227,11 +1229,21 @@ void _showCreateMenu(BuildContext context) {
         ListTile(
           leading: const Icon(Icons.meeting_room_outlined,
               color: VelvetNoir.primaryDim),
-          title: const Text('Browse Rooms',
+          title: const Text('Host Room',
               style: TextStyle(color: VelvetNoir.onSurface)),
           onTap: () {
             Navigator.pop(context);
-            context.go('/rooms');
+            context.go('/create-room');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.group_add_outlined,
+              color: VelvetNoir.secondaryBright),
+          title: const Text('New Group',
+              style: TextStyle(color: VelvetNoir.onSurface)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/create-group');
           },
         ),
         const SizedBox(height: 16),

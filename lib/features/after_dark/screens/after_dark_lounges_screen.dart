@@ -270,6 +270,7 @@ class _AfterDarkLoungesScreenState
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                     (ctx, i) => _AfterDarkGridReveal(
+                      key: ValueKey(rooms[i].id),
                       delay: i * 35,
                       child: AfterDarkLiveRoomCard(
                         room: rooms[i],
@@ -391,7 +392,7 @@ class _AfterDarkGridReveal extends StatelessWidget {
   final Widget child;
   final int delay;
 
-  const _AfterDarkGridReveal({required this.child, this.delay = 0});
+  const _AfterDarkGridReveal({super.key, required this.child, this.delay = 0});
 
   @override
   Widget build(BuildContext context) {

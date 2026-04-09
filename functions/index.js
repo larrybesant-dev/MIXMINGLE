@@ -140,6 +140,8 @@ async function rebuildConversationSummary(conversationId) {
 const RATE_LIMITS = {
   createPaymentIntent: {windowMs: 60 * 1000, maxRequests: 12},
   recordStripePaymentSuccess: {windowMs: 60 * 1000, maxRequests: 20},
+  generateReferralCode: {windowMs: 60 * 1000, maxRequests: 12},
+  redeemReferralCode: {windowMs: 60 * 1000, maxRequests: 12},
   sendCoinTransfer: {windowMs: 60 * 1000, maxRequests: 18},
   requestCoinTransfer: {windowMs: 60 * 1000, maxRequests: 18},
   sendRoomGift: {windowMs: 60 * 1000, maxRequests: 30},
@@ -182,6 +184,8 @@ const MEDIUM_RISK_TERMS = [
   "offensive",
   "slur",
 ];
+
+const REFERRAL_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function enforceRateLimit(functionName, uid) {
   const config = RATE_LIMITS[functionName];
@@ -406,7 +410,25 @@ async function ensureUserExists(uid, firestore = db, defaultBalance = 100) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     }, {merge: true});
   }
+  await firestore.collection("wallets").doc(uid).set({
+    userId: uid,
+    coinBalance: defaultBalance,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, {merge: true});
   return userRef;
+}
+
+function getCoinBalance(data) {
+  return Number((data && (data.balance ?? data.coinBalance)) || 0);
+}
+
+function syncWalletCoinBalance(txn, firestore, uid, coinBalance) {
+  const walletRef = firestore.collection("wallets").doc(uid);
+  txn.set(walletRef, {
+    userId: uid,
+    coinBalance,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, {merge: true});
 }
 
 function requireAuth(request) {
@@ -429,6 +451,15 @@ function parsePositiveAmount(value) {
     throw new HttpsError("invalid-argument", "Amount exceeds the maximum allowed value.");
   }
   return amount;
+}
+
+function buildReferralCode() {
+  let suffix = "";
+  for (let index = 0; index < 6; index += 1) {
+    const randomIndex = Math.floor(Math.random() * REFERRAL_ALPHABET.length);
+    suffix += REFERRAL_ALPHABET[randomIndex];
+  }
+  return `MXVY-${suffix}`;
 }
 
 function parseOptionalIdempotencyKey(value) {
@@ -627,6 +658,58 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
   return {transactionId: transactionRef.id, deduplicated: false};
 }
 
+async function handleCheckoutSessionCompleted(session, deps = {}) {
+  const firestore = deps.firestore || db;
+  const userId = session.metadata && session.metadata.userId;
+  if (!userId) {
+    return {creditedCoins: 0, premiumApplied: false, deduplicated: false};
+  }
+
+  const productType = session.metadata && session.metadata.productType;
+  const coins = Number((session.metadata && session.metadata.coins) || 0);
+  const webhookEventRef = firestore.collection("stripe_webhook_events").doc(session.id);
+
+  return firestore.runTransaction(async (txn) => {
+    const eventSnap = await txn.get(webhookEventRef);
+    if (eventSnap.exists) {
+      return {creditedCoins: 0, premiumApplied: false, deduplicated: true};
+    }
+
+    const userRef = firestore.collection("users").doc(userId);
+    const userSnap = await txn.get(userRef);
+    const currentBalance = getCoinBalance(userSnap.data());
+    let creditedCoins = 0;
+    let premiumApplied = false;
+
+    if (productType === "coin_package" && coins > 0) {
+      const nextBalance = currentBalance + coins;
+      creditedCoins = coins;
+      txn.set(userRef, {
+        uid: userId,
+        balance: nextBalance,
+        coinBalance: nextBalance,
+      }, {merge: true});
+      syncWalletCoinBalance(txn, firestore, userId, nextBalance);
+    } else if (productType === "premium_access") {
+      premiumApplied = true;
+      txn.set(userRef, {
+        isPremium: true,
+        premiumSince: admin.firestore.FieldValue.serverTimestamp(),
+      }, {merge: true});
+    }
+
+    txn.set(webhookEventRef, {
+      sessionId: session.id,
+      userId,
+      productType: productType || null,
+      creditedCoins,
+      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return {creditedCoins, premiumApplied, deduplicated: false};
+  });
+}
+
 exports.recordStripePaymentSuccess = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   recordStripePaymentSuccessHandler(request),
 );
@@ -672,17 +755,21 @@ async function sendCoinTransferHandler(request, deps = {}) {
     ]);
 
     const isAdminSender = senderSnap.data()?.admin === true;
-    const senderBalance = Number((senderSnap.data() && senderSnap.data().balance) || 0);
-    const receiverBalance = Number((receiverSnap.data() && receiverSnap.data().balance) || 0);
+    const senderBalance = getCoinBalance(senderSnap.data());
+    const receiverBalance = getCoinBalance(receiverSnap.data());
 
     if (!isAdminSender && senderBalance < amount) {
       throw new HttpsError("failed-precondition", "Insufficient balance.");
     }
 
     if (!isAdminSender) {
-      txn.update(senderRef, {balance: senderBalance - amount});
+      const nextSenderBalance = senderBalance - amount;
+      txn.update(senderRef, {balance: nextSenderBalance, coinBalance: nextSenderBalance});
+      syncWalletCoinBalance(txn, firestore, senderId, nextSenderBalance);
     }
-    txn.update(receiverRef, {balance: receiverBalance + amount});
+    const nextReceiverBalance = receiverBalance + amount;
+    txn.update(receiverRef, {balance: nextReceiverBalance, coinBalance: nextReceiverBalance});
+    syncWalletCoinBalance(txn, firestore, receiverId, nextReceiverBalance);
     txn.set(transactionRef, {
       id: transactionRef.id,
       senderId,
@@ -718,6 +805,93 @@ async function requestCoinTransferHandler(request, deps = {}) {
 
   if (targetId === requesterId) {
     throw new HttpsError("invalid-argument", "Cannot request a payment from yourself.");
+
+async function generateReferralCodeHandler(request, deps = {}) {
+  const userId = requireAuth(request);
+  enforceRateLimit("generateReferralCode", userId);
+  const firestore = deps.firestore || db;
+
+  const existing = await firestore
+    .collection("referral_codes")
+    .where("ownerUserId", "==", userId)
+    .where("isActive", "==", true)
+    .limit(1)
+    .get();
+
+  if (!existing.empty) {
+    return {code: existing.docs[0].id};
+  }
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const candidate = buildReferralCode();
+    const codeRef = firestore.collection("referral_codes").doc(candidate);
+    const snapshot = await codeRef.get();
+    if (snapshot.exists) {
+      continue;
+    }
+
+    await codeRef.set({
+      code: candidate,
+      ownerUserId: userId,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    }, {merge: true});
+    return {code: candidate};
+  }
+
+  throw new HttpsError("aborted", "Could not generate referral code. Please retry.");
+}
+
+exports.generateReferralCode = onCall(async (request) =>
+  generateReferralCodeHandler(request),
+);
+
+async function redeemReferralCodeHandler(request, deps = {}) {
+  const userId = requireAuth(request);
+  enforceRateLimit("redeemReferralCode", userId);
+  const firestore = deps.firestore || db;
+  const code = parseIdField(request.data && request.data.code, "code").toUpperCase();
+
+  const codeRef = firestore.collection("referral_codes").doc(code);
+  const codeSnapshot = await codeRef.get();
+  if (!codeSnapshot.exists) {
+    return {redeemed: false, reason: "not-found"};
+  }
+
+  const codeData = codeSnapshot.data() || {};
+  const ownerUserId = typeof codeData.ownerUserId === "string" ? codeData.ownerUserId.trim() : "";
+  const isActive = codeData.isActive !== false;
+  if (!isActive || !ownerUserId || ownerUserId === userId) {
+    return {redeemed: false, reason: "invalid"};
+  }
+
+  const existing = await firestore
+    .collection("referrals")
+    .where("referredUserId", "==", userId)
+    .limit(1)
+    .get();
+  if (!existing.empty) {
+    return {redeemed: false, reason: "already-redeemed"};
+  }
+
+  const referralRef = firestore.collection("referrals").doc();
+  await referralRef.set({
+    id: referralRef.id,
+    referrerUserId: ownerUserId,
+    referredUserId: userId,
+    referralCode: code,
+    subscriptionStatus: "pending",
+    rewardStatus: "pending",
+    createdAt: new Date().toISOString(),
+    participantIds: [ownerUserId, userId],
+  });
+
+  return {redeemed: true, referralId: referralRef.id};
+}
+
+exports.redeemReferralCode = onCall(async (request) =>
+  redeemReferralCodeHandler(request),
+);
   }
 
   const transactionRef = idempotencyKey
@@ -1041,9 +1215,7 @@ async function sendRoomGiftHandler(request, deps = {}) {
       );
     }
 
-    const senderBalance = Number(
-      (senderSnap.data() && senderSnap.data().balance) || 0,
-    );
+    const senderBalance = getCoinBalance(senderSnap.data());
     const isAdminSender = senderSnap.data()?.admin === true;
     if (!isAdminSender && senderBalance < coinCost) {
       throw new HttpsError(
@@ -1052,14 +1224,16 @@ async function sendRoomGiftHandler(request, deps = {}) {
       );
     }
 
-    const receiverBalance = Number(
-      (receiverSnap.data() && receiverSnap.data().balance) || 0,
-    );
+    const receiverBalance = getCoinBalance(receiverSnap.data());
 
     if (!isAdminSender) {
-      txn.update(senderRef, {balance: senderBalance - coinCost});
+      const nextSenderBalance = senderBalance - coinCost;
+      txn.update(senderRef, {balance: nextSenderBalance, coinBalance: nextSenderBalance});
+      syncWalletCoinBalance(txn, firestore, senderId, nextSenderBalance);
     }
-    txn.update(receiverRef, {balance: receiverBalance + receiverAmount});
+    const nextReceiverBalance = receiverBalance + receiverAmount;
+    txn.update(receiverRef, {balance: nextReceiverBalance, coinBalance: nextReceiverBalance});
+    syncWalletCoinBalance(txn, firestore, receiverId, nextReceiverBalance);
     txn.set(giftEventRef, {
       id: giftEventRef.id,
       senderId,
@@ -1121,22 +1295,22 @@ async function sendDirectGiftHandler(request, deps = {}) {
       throw new HttpsError("not-found", "Recipient user not found.");
     }
 
-    const senderBalance = Number(
-      (senderSnap.data() && senderSnap.data().balance) || 0,
-    );
+    const senderBalance = getCoinBalance(senderSnap.data());
     const isAdminSender = senderSnap.data()?.admin === true;
     if (!isAdminSender && senderBalance < coinCost) {
       throw new HttpsError("failed-precondition", "Insufficient coin balance.");
     }
 
-    const receiverBalance = Number(
-      (receiverSnap.data() && receiverSnap.data().balance) || 0,
-    );
+    const receiverBalance = getCoinBalance(receiverSnap.data());
 
     if (!isAdminSender) {
-      txn.update(senderRef, {balance: senderBalance - coinCost});
+      const nextSenderBalance = senderBalance - coinCost;
+      txn.update(senderRef, {balance: nextSenderBalance, coinBalance: nextSenderBalance});
+      syncWalletCoinBalance(txn, firestore, senderId, nextSenderBalance);
     }
-    txn.update(receiverRef, {balance: receiverBalance + receiverAmount});
+    const nextReceiverBalance = receiverBalance + receiverAmount;
+    txn.update(receiverRef, {balance: nextReceiverBalance, coinBalance: nextReceiverBalance});
+    syncWalletCoinBalance(txn, firestore, receiverId, nextReceiverBalance);
     txn.set(giftEventRef, {
       id: giftEventRef.id,
       senderId,
@@ -1490,13 +1664,7 @@ exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const userId = session.metadata && session.metadata.userId;
-    if (userId) {
-      await db.collection("users").doc(userId).set({
-        isPremium: true,
-        premiumSince: admin.firestore.FieldValue.serverTimestamp(),
-      }, {merge: true});
-    }
+    await handleCheckoutSessionCompleted(session);
   }
   res.json({received: true});
 });
@@ -2156,6 +2324,8 @@ exports.__testing = {
   recordStripePaymentSuccessHandler,
   sendCoinTransferHandler,
   requestCoinTransferHandler,
+  generateReferralCodeHandler,
+  redeemReferralCodeHandler,
   getStripeConnectStatusHandler,
   createStripeConnectOnboardingLinkHandler,
   createStripeConnectDashboardLinkHandler,
@@ -2173,6 +2343,9 @@ exports.__testing = {
   requireAuth,
   parsePositiveAmount,
   ensureUserExists,
+  getCoinBalance,
+  syncWalletCoinBalance,
+  handleCheckoutSessionCompleted,
   enforceRateLimit,
   parseIdField,
   parseOptionalIdempotencyKey,

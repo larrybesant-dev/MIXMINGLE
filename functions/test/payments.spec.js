@@ -8,6 +8,8 @@ const {
   recordStripePaymentSuccessHandler,
   sendCoinTransferHandler,
   requestCoinTransferHandler,
+  generateReferralCodeHandler,
+  redeemReferralCodeHandler,
   getStripeConnectStatusHandler,
   createStripeConnectOnboardingLinkHandler,
   createStripeConnectDashboardLinkHandler,
@@ -16,6 +18,7 @@ const {
   requestRefundHandler,
   cleanupDeletedUserData,
   createCheckoutSessionHandler,
+  handleCheckoutSessionCompleted,
   getCheckoutBaseUrl,
   grabMicHandler,
   inviteToMicHandler,
@@ -51,10 +54,14 @@ function createFirestoreDouble(initialUsers = {}) {
   const users = new Map(
       Object.entries(initialUsers).map(([id, value]) => [id, {...value}]),
   );
+  const wallets = new Map();
   const transactions = new Map();
   const logs = new Map();
   const stripeConnectAccounts = new Map();
+  const stripeWebhookEvents = new Map();
   const refundRequests = new Map();
+  const referralCodes = new Map();
+  const referrals = new Map();
   const rooms = new Map();
   // Shared subcollection storage: "col/id/sub" → Map<subId, data>
   const subcollections = new Map();
@@ -63,14 +70,22 @@ function createFirestoreDouble(initialUsers = {}) {
     switch (name) {
       case "users":
         return users;
+      case "wallets":
+        return wallets;
       case "transactions":
         return transactions;
       case "logs":
         return logs;
       case "stripe_connect_accounts":
         return stripeConnectAccounts;
+      case "stripe_webhook_events":
+        return stripeWebhookEvents;
       case "refund_requests":
         return refundRequests;
+      case "referral_codes":
+        return referralCodes;
+      case "referrals":
+        return referrals;
       case "rooms":
         return rooms;
       default:
@@ -201,6 +216,105 @@ function createFirestoreDouble(initialUsers = {}) {
           await ref.set(data);
           return ref;
         },
+        where(field, op, value) {
+          const store = storeFor(name);
+          const buildSnapshot = (entries) => {
+            const docs = entries.map(([k, v]) => ({
+              id: k,
+              ref: createDocRef(name, k),
+              data: () => ({...v}),
+            }));
+            return {empty: docs.length === 0, docs, size: docs.length};
+          };
+          const filterEntries = () => [...store.entries()].filter(([_, data]) => {
+            switch (op) {
+              case "==": return data[field] === value;
+              case "!=": return data[field] !== value;
+              case ">": return data[field] > value;
+              case "<": return data[field] < value;
+              case ">=": return data[field] >= value;
+              case "<=": return data[field] <= value;
+              default: return true;
+            }
+          });
+          return {
+            where(nextField, nextOp, nextValue) {
+              return firestore.collection(name).where(field, op, value).getChained().where(nextField, nextOp, nextValue);
+            },
+            limit(n) {
+              return {
+                async get() {
+                  return buildSnapshot(filterEntries().slice(0, n));
+                },
+              };
+            },
+            async get() {
+              return buildSnapshot(filterEntries());
+            },
+            getChained() {
+              const currentEntries = filterEntries();
+              return {
+                where(nextField, nextOp, nextValue) {
+                  const chainedEntries = currentEntries.filter(([_, data]) => {
+                    switch (nextOp) {
+                      case "==": return data[nextField] === nextValue;
+                      case "!=": return data[nextField] !== nextValue;
+                      case ">": return data[nextField] > nextValue;
+                      case "<": return data[nextField] < nextValue;
+                      case ">=": return data[nextField] >= nextValue;
+                      case "<=": return data[nextField] <= nextValue;
+                      default: return true;
+                    }
+                  });
+                  return {
+                    limit(n) {
+                      return {
+                        async get() {
+                          return buildSnapshot(chainedEntries.slice(0, n));
+                        },
+                      };
+                    },
+                    async get() {
+                      return buildSnapshot(chainedEntries);
+                    },
+                  };
+                },
+                limit(n) {
+                  return {
+                    async get() {
+                      return buildSnapshot(currentEntries.slice(0, n));
+                    },
+                  };
+                },
+                async get() {
+                  return buildSnapshot(currentEntries);
+                },
+              };
+            },
+          };
+        },
+        limit(n) {
+          const store = storeFor(name);
+          return {
+            async get() {
+              const docs = [...store.entries()].slice(0, n).map(([k, v]) => ({
+                id: k,
+                ref: createDocRef(name, k),
+                data: () => ({...v}),
+              }));
+              return {empty: docs.length === 0, docs, size: docs.length};
+            },
+          };
+        },
+        async get() {
+          const store = storeFor(name);
+          const docs = [...store.entries()].map(([k, v]) => ({
+            id: k,
+            ref: createDocRef(name, k),
+            data: () => ({...v}),
+          }));
+          return {empty: docs.length === 0, docs, size: docs.length};
+        },
       };
     },
     async runTransaction(handler) {
@@ -227,10 +341,14 @@ function createFirestoreDouble(initialUsers = {}) {
     },
     __state: {
       users,
+      wallets,
       transactions,
       logs,
       stripeConnectAccounts,
+      stripeWebhookEvents,
       refundRequests,
+      referralCodes,
+      referrals,
       rooms,
       subcollections,
     },
@@ -395,6 +513,8 @@ describe("payment callable handlers", () => {
 
     assert.equal(firestore.__state.users.get("user-1").balance, 15);
     assert.equal(firestore.__state.users.get("user-2").balance, 8);
+  assert.equal(firestore.__state.wallets.get("user-1").coinBalance, 15);
+  assert.equal(firestore.__state.wallets.get("user-2").coinBalance, 8);
     assert.equal(
         firestore.__state.transactions.get(response.transactionId).status,
         "sent",
@@ -403,6 +523,63 @@ describe("payment callable handlers", () => {
       firestore.__state.transactions.get(response.transactionId).participants,
       ["user-1", "user-2"],
     );
+  });
+
+  it("handleCheckoutSessionCompleted credits coin purchases once", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 10},
+    });
+
+    const session = {
+      id: "cs_test_123",
+      metadata: {
+        userId: "user-1",
+        productType: "coin_package",
+        coins: "70",
+      },
+    };
+
+    const first = await handleCheckoutSessionCompleted(session, {firestore});
+    const second = await handleCheckoutSessionCompleted(session, {firestore});
+
+    assert.equal(first.creditedCoins, 70);
+    assert.equal(second.deduplicated, true);
+    assert.equal(firestore.__state.users.get("user-1").balance, 80);
+    assert.equal(firestore.__state.users.get("user-1").coinBalance, 80);
+    assert.equal(firestore.__state.wallets.get("user-1").coinBalance, 80);
+  });
+
+  it("generateReferralCodeHandler reuses an active code for the same user", async () => {
+    const firestore = createFirestoreDouble();
+    firestore.__state.referralCodes.set("MXVY-ABC123", {
+      code: "MXVY-ABC123",
+      ownerUserId: "user-1",
+      isActive: true,
+    });
+
+    const response = await generateReferralCodeHandler(makeRequest({}), {firestore});
+
+    assert.equal(response.code, "MXVY-ABC123");
+  });
+
+  it("redeemReferralCodeHandler creates a referral record", async () => {
+    const firestore = createFirestoreDouble();
+    firestore.__state.referralCodes.set("MXVY-ABCD23", {
+      code: "MXVY-ABCD23",
+      ownerUserId: "user-9",
+      isActive: true,
+    });
+
+    const response = await redeemReferralCodeHandler(
+        makeRequest({code: "mxvy-abcd23"}, "user-2"),
+        {firestore},
+    );
+
+    assert.equal(response.redeemed, true);
+    const storedReferral = firestore.__state.referrals.get(response.referralId);
+    assert.equal(storedReferral.referrerUserId, "user-9");
+    assert.equal(storedReferral.referredUserId, "user-2");
+    assert.equal(storedReferral.referralCode, "MXVY-ABCD23");
   });
 
   it("requestCoinTransferHandler rejects self-targeted requests", async () => {

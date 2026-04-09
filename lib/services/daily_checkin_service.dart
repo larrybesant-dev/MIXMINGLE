@@ -80,6 +80,7 @@ class DailyCheckinService {
     await _db.collection('users').doc(uid).update({
       'lastCheckinDate': FieldValue.serverTimestamp(),
       'checkinStreak': status.streak,
+      'balance': FieldValue.increment(status.reward),
       'coinBalance': FieldValue.increment(status.reward),
     });
     return true;

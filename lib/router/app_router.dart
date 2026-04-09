@@ -130,6 +130,21 @@ String? _pathParamOrNull(GoRouterState state, String key) {
   return value;
 }
 
+String? _currentUid(Ref ref) {
+  return ref.read(userProvider)?.id ??
+      FirebaseAuth.instance.currentUser?.uid ??
+      ref.read(authControllerProvider).uid;
+}
+
+String _currentUsername(Ref ref) {
+  return ref.read(userProvider)?.username ?? 'MixVy User';
+}
+
+String? _currentAvatarUrl(Ref ref) {
+  return ref.read(userProvider)?.avatarUrl ??
+      FirebaseAuth.instance.currentUser?.photoURL;
+}
+
 final firstRunCheckProvider = Provider<FirstRunCheck>((ref) {
   final gateCache = ref.read(_routerGateCacheProvider);
   return () => gateCache.isFirstRun();
@@ -372,28 +387,31 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/bookmarks',
             builder: (context, state) {
-              final user = ref.read(userProvider);
-              return BookmarksScreen(userId: user?.id ?? 'unknown');
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
+              return BookmarksScreen(userId: uid);
             },
           ),
           GoRoute(
             path: '/messages',
             builder: (context, state) {
-              final user = ref.read(userProvider);
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
               return MessagesScreen(
-                userId: user?.id ?? 'unknown',
-                username: user?.username ?? 'User',
+                userId: uid,
+                username: _currentUsername(ref),
               );
             },
           ),
           GoRoute(
             path: '/messages/new',
             builder: (context, state) {
-              final user = ref.read(userProvider);
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
               return NewMessageScreen(
-                userId: user?.id ?? 'unknown',
-                username: user?.username ?? 'User',
-                avatarUrl: user?.avatarUrl,
+                userId: uid,
+                username: _currentUsername(ref),
+                avatarUrl: _currentAvatarUrl(ref),
               );
             },
           ),
@@ -405,12 +423,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               if (conversationId == null) {
                 return NotFoundScreen(path: state.uri.toString());
               }
-              final user = ref.read(userProvider);
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
               return ChatScreen(
                 conversationId: conversationId,
-                userId: user?.id ?? 'unknown',
-                username: user?.username ?? 'User',
-                avatarUrl: user?.avatarUrl,
+                userId: uid,
+                username: _currentUsername(ref),
+                avatarUrl: _currentAvatarUrl(ref),
               );
             },
           ),
@@ -437,22 +456,24 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/create-post',
             builder: (context, state) {
-              final user = ref.read(userProvider);
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
               return CreatePostScreen(
-                userId: user?.id ?? 'unknown',
-                username: user?.username ?? 'User',
-                avatarUrl: user?.avatarUrl,
+                userId: uid,
+                username: _currentUsername(ref),
+                avatarUrl: _currentAvatarUrl(ref),
               );
             },
           ),
           GoRoute(
             path: '/create-story',
             builder: (context, state) {
-              final user = ref.read(userProvider);
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
               return CreateStoryScreen(
-                userId: user?.id ?? 'unknown',
-                username: user?.username ?? 'User',
-                avatarUrl: user?.avatarUrl,
+                userId: uid,
+                username: _currentUsername(ref),
+                avatarUrl: _currentAvatarUrl(ref),
               );
             },
           ),
@@ -466,15 +487,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/groups',
             builder: (context, state) {
-              final user = ref.read(userProvider);
-              return GroupsScreen(userId: user?.id ?? 'unknown');
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
+              return GroupsScreen(userId: uid);
             },
           ),
           GoRoute(
             path: '/create-group',
             builder: (context, state) {
-              final user = ref.read(userProvider);
-              return CreateGroupScreen(userId: user?.id ?? 'unknown');
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
+              return CreateGroupScreen(userId: uid);
             },
           ),
           GoRoute(
@@ -484,10 +507,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               if (groupId == null) {
                 return NotFoundScreen(path: state.uri.toString());
               }
-              final user = ref.read(userProvider);
+              final uid = _currentUid(ref);
+              if (uid == null) return const LoginScreen();
               return GroupDetailsScreen(
                 groupId: groupId,
-                userId: user?.id ?? 'unknown',
+                userId: uid,
               );
             },
           ),

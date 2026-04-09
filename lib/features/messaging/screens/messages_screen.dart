@@ -63,6 +63,21 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
     }).toList();
   }
 
+  void _showRequestsSheet(AsyncValue<List<Conversation>> requestsAsync) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: VelvetNoir.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _MessageRequestsSheet(
+        requestsAsync: requestsAsync,
+        userId: widget.userId,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final conversationsAsync =
@@ -95,7 +110,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
           IconButton(
             icon: const Icon(Icons.more_horiz_rounded,
                 color: VelvetNoir.onSurface),
-            onPressed: () {},
+            onPressed: () => _showRequestsSheet(requestsAsync),
           ),
         ],
         bottom: PreferredSize(
@@ -152,7 +167,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: InkWell(
-                onTap: () {},
+                onTap: () => _showRequestsSheet(requestsAsync),
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
                   padding:
@@ -256,6 +271,145 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MessageRequestsSheet extends ConsumerWidget {
+  const _MessageRequestsSheet({
+    required this.requestsAsync,
+    required this.userId,
+  });
+
+  final AsyncValue<List<Conversation>> requestsAsync;
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SafeArea(
+      top: false,
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.62,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              child: Row(
+                children: [
+                  Text(
+                    'Message Requests',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: VelvetNoir.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close,
+                        color: VelvetNoir.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            Divider(
+              height: 1,
+              color: VelvetNoir.outlineVariant.withValues(alpha: 0.3),
+            ),
+            Expanded(
+              child: requestsAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: VelvetNoir.primary),
+                ),
+                error: (_, __) => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'Could not load message requests.',
+                      style: TextStyle(color: VelvetNoir.onSurfaceVariant),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                data: (requests) {
+                  if (requests.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No pending message requests.',
+                          style: TextStyle(color: VelvetNoir.onSurfaceVariant),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    itemCount: requests.length,
+                    separatorBuilder: (_, _) => Divider(
+                      height: 1,
+                      indent: 72,
+                      color: VelvetNoir.outlineVariant.withValues(alpha: 0.2),
+                    ),
+                    itemBuilder: (context, index) {
+                      final conversation = requests[index];
+                      final displayName = conversation.getDisplayName(userId);
+                      return ListTile(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          GoRouter.of(context)
+                              .push('/messages/${conversation.id}');
+                        },
+                        leading: CircleAvatar(
+                          backgroundColor: VelvetNoir.surfaceHigh,
+                          child: Text(
+                            displayName.isNotEmpty
+                                ? displayName[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(color: VelvetNoir.primary),
+                          ),
+                        ),
+                        title: Text(
+                          displayName,
+                          style: const TextStyle(color: VelvetNoir.onSurface),
+                        ),
+                        subtitle: Text(
+                          conversation.lastMessagePreview ??
+                              'New message request',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: VelvetNoir.onSurfaceVariant,
+                          ),
+                        ),
+                        trailing: TextButton(
+                          onPressed: () async {
+                            await ref
+                                .read(messagingControllerProvider)
+                                .acceptMessageRequest(
+                                  conversationId: conversation.id,
+                                );
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                              GoRouter.of(context)
+                                  .push('/messages/${conversation.id}');
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: VelvetNoir.primary,
+                          ),
+                          child: const Text('Accept'),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

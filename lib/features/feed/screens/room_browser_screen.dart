@@ -647,6 +647,7 @@ class _RoomListView extends ConsumerWidget {
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                     (ctx, i) => LiveRoomCard(
+                      key: ValueKey(rooms[i].id),
                       room: rooms[i],
                       onTap: () => context.go('/room/${rooms[i].id}'),
                     ),

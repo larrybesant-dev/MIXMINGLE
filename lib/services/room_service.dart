@@ -67,7 +67,20 @@ class RoomService {
 
 			await _markRoomInactive(doc.id);
 		}
+		activeRooms.sort(_compareStableLiveRooms);
 		return activeRooms;
+	}
+
+	int _compareStableLiveRooms(RoomModel a, RoomModel b) {
+		final createdA = a.createdAt?.toDate();
+		final createdB = b.createdAt?.toDate();
+		final createdCompare = (createdB ?? DateTime.fromMillisecondsSinceEpoch(0))
+				.compareTo(createdA ?? DateTime.fromMillisecondsSinceEpoch(0));
+		if (createdCompare != 0) {
+			return createdCompare;
+		}
+
+		return a.id.compareTo(b.id);
 	}
 
 	Stream<List<RoomModel>> watchLiveRooms({int limit = 30}) {

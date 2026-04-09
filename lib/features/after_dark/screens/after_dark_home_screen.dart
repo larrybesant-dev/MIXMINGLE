@@ -97,6 +97,7 @@ class AfterDarkHomeScreen extends ConsumerWidget {
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                     (ctx, i) => _AfterDarkReveal(
+                      key: ValueKey(rooms[i].id),
                       delay: i * 45,
                       child: AfterDarkLiveRoomCard(
                         room: rooms[i],
@@ -398,7 +399,7 @@ class _AfterDarkReveal extends StatelessWidget {
   final Widget child;
   final int delay;
 
-  const _AfterDarkReveal({required this.child, this.delay = 0});
+  const _AfterDarkReveal({super.key, required this.child, this.delay = 0});
 
   @override
   Widget build(BuildContext context) {

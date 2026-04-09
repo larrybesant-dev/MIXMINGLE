@@ -164,6 +164,7 @@ class UserModel {
         'musicTastePrompt': musicTastePrompt,
         'interests': interests,
         'createdAt': createdAt.toIso8601String(),
+        'balance': coinBalance,
         'coinBalance': coinBalance,
         'membershipLevel': membershipLevel,
         'followers': followers,

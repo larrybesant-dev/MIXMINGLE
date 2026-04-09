@@ -664,8 +664,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   // ── footer link ───────────────────────────────────────────────────────────
   Widget _footerLink(String label) {
+    final route = switch (label) {
+      'Terms' => '/legal/terms',
+      'Privacy' => '/legal/privacy',
+      _ => null,
+    };
+
     return TextButton(
-      onPressed: () {},
+      onPressed: route == null ? null : () => context.go(route),
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
         minimumSize: Size.zero,

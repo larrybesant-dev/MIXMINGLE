@@ -744,7 +744,15 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
 
   // ── footer link ───────────────────────────────────────────────────────────
   Widget _footerLink(String label) {
+    final route = switch (label) {
+      'Terms' => '/legal/terms',
+      'Privacy' => '/legal/privacy',
+      'Support' => '/about',
+      _ => null,
+    };
+
     return GestureDetector(
+      onTap: route == null ? null : () => context.go(route),
       child: Text(
         label,
         style: GoogleFonts.raleway(

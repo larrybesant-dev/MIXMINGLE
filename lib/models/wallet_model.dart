@@ -55,7 +55,7 @@ class WalletModel {
   factory WalletModel.fromJson(Map<String, dynamic> json) {
     return WalletModel(
       userId: _asString(json['userId']),
-      coinBalance: (json['coinBalance'] as num?)?.toInt() ?? 0,
+      coinBalance: ((json['balance'] ?? json['coinBalance'] ?? json['userCoinBalance']) as num?)?.toInt() ?? 0,
       cashBalance: (json['cashBalance'] as num?)?.toDouble() ?? 0,
       referralEarnings: (json['referralEarnings'] as num?)?.toDouble() ?? 0,
       roomEarnings: (json['roomEarnings'] as num?)?.toDouble() ?? 0,
