@@ -1860,11 +1860,15 @@ async function grabMicHandler(request, deps = {}) {
       return;
     }
 
-    // ── Fetch policy (micLimit) ──────────────────────────────────────────
+    // ── Fetch policy (micLimit + micTimerSeconds) ──────────────────────────
     const policySnap = await tx.get(policyRef);
-    const micLimit = (policySnap.exists && typeof policySnap.data().micLimit === "number")
-      ? Math.max(1, policySnap.data().micLimit)
+    const policyData = policySnap.exists ? policySnap.data() : {};
+    const micLimit = (typeof policyData.micLimit === "number")
+      ? Math.max(1, policyData.micLimit)
       : 1;                           // default: one exclusive stage speaker
+    const micTimerSeconds = (typeof policyData.micTimerSeconds === "number" && policyData.micTimerSeconds > 0)
+      ? policyData.micTimerSeconds
+      : null;
 
     // ── Fetch current stage holders ──────────────────────────────────────
     const stageQuery = participantsCol.where("role", "==", "stage");
@@ -1875,10 +1879,18 @@ async function grabMicHandler(request, deps = {}) {
     const now = Date.now();
     const activeStageDocs = stageSnap.docs.filter((d) => {
       if (d.id === userId) return false;
-      const lat = d.data().lastActiveAt;
+      const data = d.data();
+      // Treat doc as stale if lastActiveAt is old OR micExpiresAt has passed.
+      const lat = data.lastActiveAt;
       if (!lat) return false;       // no timestamp → treat as stale
       const ms = lat.toMillis ? lat.toMillis() : Number(lat);
-      return (now - ms) < STALE_MS;
+      if ((now - ms) >= STALE_MS) return false;
+      const exp = data.micExpiresAt;
+      if (exp) {
+        const expMs = exp.toMillis ? exp.toMillis() : Number(exp);
+        if (now >= expMs) return false; // timer expired → treat as stale
+      }
+      return true;
     });
 
     // ── Demote if we are at or above micLimit ────────────────────────────
@@ -1887,9 +1899,12 @@ async function grabMicHandler(request, deps = {}) {
     let demoted = 0;
     for (const doc of stageSnap.docs) {
       if (doc.id === userId) continue;
-      const lat = doc.data().lastActiveAt;
+      const data = doc.data();
+      const lat = data.lastActiveAt;
       const ms = lat ? (lat.toMillis ? lat.toMillis() : Number(lat)) : 0;
-      const isStale = (now - ms) >= STALE_MS;
+      const exp = data.micExpiresAt;
+      const expMs = exp ? (exp.toMillis ? exp.toMillis() : Number(exp)) : Infinity;
+      const isStale = (now - ms) >= STALE_MS || now >= expMs;
       if (isStale || demoted < toLimitDemoteCount) {
         tx.set(
           doc.ref,
@@ -1901,13 +1916,22 @@ async function grabMicHandler(request, deps = {}) {
     }
 
     // ── Promote caller to stage ──────────────────────────────────────────
+    const promotionPayload = {
+      userId,
+      role: "stage",
+      lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (micTimerSeconds !== null) {
+      // Set expiry as a Firestore Timestamp
+      const expiresAtMs = Date.now() + micTimerSeconds * 1000;
+      promotionPayload.micExpiresAt = admin.firestore.Timestamp.fromMillis(expiresAtMs);
+    } else {
+      // Remove any stale timer from a previous turn
+      promotionPayload.micExpiresAt = admin.firestore.FieldValue.delete();
+    }
     tx.set(
       participantsCol.doc(userId),
-      {
-        userId,
-        role: "stage",
-        lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
+      promotionPayload,
       {merge: true},
     );
   });
@@ -1964,28 +1988,42 @@ async function inviteToMicHandler(request, deps = {}) {
 
     // ── Fetch policy + current stage holders (same as grabMic) ──────────
     const policySnap = await tx.get(policyRef);
-    const micLimit = (policySnap.exists && typeof policySnap.data().micLimit === "number")
-      ? Math.max(1, policySnap.data().micLimit)
+    const policyData2 = policySnap.exists ? policySnap.data() : {};
+    const micLimit = (typeof policyData2.micLimit === "number")
+      ? Math.max(1, policyData2.micLimit)
       : 1;
+    const micTimerSeconds2 = (typeof policyData2.micTimerSeconds === "number" && policyData2.micTimerSeconds > 0)
+      ? policyData2.micTimerSeconds
+      : null;
 
     const stageSnap = await tx.get(participantsCol.where("role", "==", "stage"));
     const STALE_MS = 90 * 1000;
     const now = Date.now();
     const activeStageDocs = stageSnap.docs.filter((d) => {
       if (d.id === targetId) return false;
-      const lat = d.data().lastActiveAt;
+      const data = d.data();
+      const lat = data.lastActiveAt;
       if (!lat) return false;
       const ms = lat.toMillis ? lat.toMillis() : Number(lat);
-      return (now - ms) < STALE_MS;
+      if ((now - ms) >= STALE_MS) return false;
+      const exp = data.micExpiresAt;
+      if (exp) {
+        const expMs = exp.toMillis ? exp.toMillis() : Number(exp);
+        if (now >= expMs) return false;
+      }
+      return true;
     });
 
     const toLimitDemoteCount = Math.max(0, activeStageDocs.length - (micLimit - 1));
     let demoted = 0;
     for (const doc of stageSnap.docs) {
       if (doc.id === targetId) continue;
-      const lat = doc.data().lastActiveAt;
+      const data = doc.data();
+      const lat = data.lastActiveAt;
       const ms = lat ? (lat.toMillis ? lat.toMillis() : Number(lat)) : 0;
-      const isStale = (now - ms) >= STALE_MS;
+      const exp = data.micExpiresAt;
+      const expMs = exp ? (exp.toMillis ? exp.toMillis() : Number(exp)) : Infinity;
+      const isStale = (now - ms) >= STALE_MS || now >= expMs;
       if (isStale || demoted < toLimitDemoteCount) {
         tx.set(
           doc.ref,
@@ -1997,13 +2035,19 @@ async function inviteToMicHandler(request, deps = {}) {
     }
 
     // ── Promote target ───────────────────────────────────────────────────
+    const invitePayload = {
+      userId: targetId,
+      role: "stage",
+      lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (micTimerSeconds2 !== null) {
+      invitePayload.micExpiresAt = admin.firestore.Timestamp.fromMillis(Date.now() + micTimerSeconds2 * 1000);
+    } else {
+      invitePayload.micExpiresAt = admin.firestore.FieldValue.delete();
+    }
     tx.set(
       participantsCol.doc(targetId),
-      {
-        userId: targetId,
-        role: "stage",
-        lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
+      invitePayload,
       {merge: true},
     );
   });

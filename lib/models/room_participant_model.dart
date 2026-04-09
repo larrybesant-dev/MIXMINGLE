@@ -1,5 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+DateTime? _parseDateTimeField(dynamic value) {
+  if (value == null) return null;
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  if (value is String) return DateTime.tryParse(value);
+  return null;
+}
+
 class RoomParticipantModel {
   final String userId;
   final String role; // e.g. 'host', 'cohost', 'audience', 'stage'
@@ -9,6 +17,10 @@ class RoomParticipantModel {
   final bool micOn;
   final DateTime joinedAt;
   final DateTime lastActiveAt;
+  /// Set when the room owner has enabled a mic play-time limit.
+  /// When DateTime.now() >= micExpiresAt the client demotes the user and
+  /// the next grabMic call treats the doc as stale.
+  final DateTime? micExpiresAt;
 
   RoomParticipantModel({
     required this.userId,
@@ -19,6 +31,7 @@ class RoomParticipantModel {
     this.micOn = false,
     required this.joinedAt,
     required this.lastActiveAt,
+    this.micExpiresAt,
   });
 
   factory RoomParticipantModel.fromMap(Map<String, dynamic> map) {
@@ -35,6 +48,7 @@ class RoomParticipantModel {
       lastActiveAt: (map['lastActiveAt'] is Timestamp)
           ? (map['lastActiveAt'] as Timestamp).toDate()
           : DateTime.tryParse(map['lastActiveAt']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+      micExpiresAt: _parseDateTimeField(map['micExpiresAt']),
     );
   }
 
@@ -48,6 +62,7 @@ class RoomParticipantModel {
       'micOn': micOn,
       'joinedAt': Timestamp.fromDate(joinedAt),
       'lastActiveAt': Timestamp.fromDate(lastActiveAt),
+      if (micExpiresAt != null) 'micExpiresAt': Timestamp.fromDate(micExpiresAt!),
     };
   }
 
@@ -60,6 +75,7 @@ class RoomParticipantModel {
     bool? micOn,
     DateTime? joinedAt,
     DateTime? lastActiveAt,
+    DateTime? micExpiresAt,
   }) {
     return RoomParticipantModel(
       userId: userId ?? this.userId,
@@ -70,6 +86,7 @@ class RoomParticipantModel {
       micOn: micOn ?? this.micOn,
       joinedAt: joinedAt ?? this.joinedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
+      micExpiresAt: micExpiresAt ?? this.micExpiresAt,
     );
   }
 }

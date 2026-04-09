@@ -28,6 +28,10 @@ class RoomPolicyController {
     return updatePolicy(roomId, {'micLimit': limit});
   }
 
+  Future<void> setMicTimer(String roomId, int? seconds) {
+    return updatePolicy(roomId, {'micTimerSeconds': seconds});
+  }
+
   Future<void> setCamLimit(String roomId, int limit) {
     return updatePolicy(roomId, {'camLimit': limit});
   }

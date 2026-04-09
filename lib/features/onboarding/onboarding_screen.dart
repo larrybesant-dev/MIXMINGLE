@@ -232,9 +232,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 foregroundColor: Colors.white,
                 side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
               ),
-              onPressed: isLastPage
-                  ? null
-                  : () async {
+              onPressed: () async {
                       final router = GoRouter.of(context);
                       await FirstRunService.markOnboardingSeen();
                       if (!mounted) return;
@@ -335,13 +333,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   final router = GoRouter.of(context);
                   await FirstRunService.markOnboardingSeen();
                   await ref.read(appSettingsControllerProvider.notifier).acceptCurrentLegal();
-                  // Save selected interests
-                  final uid = FirebaseAuth.instance.currentUser?.uid;
-                  if (uid != null && _selectedInterests.isNotEmpty) {
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(uid)
-                        .update({'interests': _selectedInterests.toList()});
+                  // Save selected interests — only write if at least one
+                  // was picked; never overwrite with an empty list.
+                  if (_selectedInterests.isNotEmpty) {
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    if (uid != null) {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(uid)
+                          .update({'interests': _selectedInterests.toList()});
+                    }
                   }
                   await AnalyticsService().logEvent('onboarding_complete');
                   if (!mounted) return;

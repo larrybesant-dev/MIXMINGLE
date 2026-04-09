@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/mic_access_request_model.dart';
 import '../../../models/room_participant_model.dart';
+import '../../../core/theme.dart';
 import '../providers/host_controls_provider.dart';
 import '../providers/mic_access_provider.dart';
 import '../providers/room_policy_provider.dart';
@@ -24,6 +25,7 @@ class RoomHostControlPanel {
     double speakerVolume = 1.0,
     ValueChanged<double>? onMicVolumeChanged,
     ValueChanged<double>? onSpeakerVolumeChanged,
+    int initialTabIndex = 0,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -37,6 +39,7 @@ class RoomHostControlPanel {
         speakerVolume: speakerVolume,
         onMicVolumeChanged: onMicVolumeChanged,
         onSpeakerVolumeChanged: onSpeakerVolumeChanged,
+        initialTabIndex: initialTabIndex,
       ),
     );
   }
@@ -55,6 +58,7 @@ class _RoomHostControlPanelSheet extends ConsumerStatefulWidget {
     required this.speakerVolume,
     this.onMicVolumeChanged,
     this.onSpeakerVolumeChanged,
+    this.initialTabIndex = 0,
   });
 
   final String roomId;
@@ -64,6 +68,7 @@ class _RoomHostControlPanelSheet extends ConsumerStatefulWidget {
   final double speakerVolume;
   final ValueChanged<double>? onMicVolumeChanged;
   final ValueChanged<double>? onSpeakerVolumeChanged;
+  final int initialTabIndex;
 
   @override
   ConsumerState<_RoomHostControlPanelSheet> createState() =>
@@ -82,9 +87,11 @@ class _RoomHostControlPanelSheetState
     _micVolume = widget.micVolume;
     _speakerVolume = widget.speakerVolume;
     // Owners get all 5 tabs; mods/cohosts skip the Moderators tab.
+    final tabCount = widget.isOwner ? 5 : 4;
     _tabs = TabController(
-      length: widget.isOwner ? 5 : 4,
+      length: tabCount,
       vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, tabCount - 1),
     );
   }
 
@@ -163,6 +170,7 @@ class _RoomHostControlPanelSheetState
                   children: [
                     _RoomSettingsTab(
                         roomId: widget.roomId,
+                        isOwner: widget.isOwner,
                         scrollController: scrollController),
                     _StageControlsTab(
                         roomId: widget.roomId,
@@ -210,30 +218,76 @@ class _RoomSettingsTab extends ConsumerWidget {
   const _RoomSettingsTab({
     required this.roomId,
     required this.scrollController,
+    this.isOwner = false,
   });
 
   final String roomId;
   final ScrollController scrollController;
+  final bool isOwner;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hostControls = ref.read(hostControlsProvider);
     final roomPolicyAsync = ref.watch(roomPolicyProvider(roomId));
-    final isLocked =
-        ref.watch(roomStreamProvider(roomId)).valueOrNull?.isLocked ?? false;
+    final roomAsync = ref.watch(roomStreamProvider(roomId));
+    final isLocked = roomAsync.valueOrNull?.isLocked ?? false;
+    final currentName = roomAsync.valueOrNull?.name ?? '';
+    final currentDescription = roomAsync.valueOrNull?.description ?? '';
+    final currentCategory = roomAsync.valueOrNull?.category ?? '';
     final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
     final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
     final allowMicRequests = roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
     final allowCamRequests = roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
 
     // Slow mode comes from the room doc.
-    final roomDataAsync = ref.watch(roomStreamProvider(roomId));
-    final slowMode = roomDataAsync.valueOrNull?.slowModeSeconds ?? 0;
+    final slowMode = roomAsync.valueOrNull?.slowModeSeconds ?? 0;
 
     return ListView(
       controller: scrollController,
       padding: const EdgeInsets.all(16),
       children: [
+        // ── Owner-only: Edit room info ────────────────────────────────────
+        if (isOwner) ...[
+          _SectionHeader('Room Info'),
+          _ControlTile(
+            title: 'Edit name, description & category',
+            subtitle: currentName.isNotEmpty ? currentName : 'Tap to edit',
+            icon: Icons.edit_rounded,
+            trailing: const Icon(Icons.chevron_right, size: 20),
+          ),
+          // Inline tappable area on the tile triggers the edit dialog.
+          Builder(builder: (ctx) {
+            return InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _showEditRoomInfoDialog(
+                ctx,
+                hostControls: ref.read(hostControlsProvider),
+                roomId: roomId,
+                currentName: currentName,
+                currentDescription: currentDescription,
+                currentCategory: currentCategory,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 4),
+                    const Icon(Icons.open_in_new, size: 14, color: Color(0xFFD4A853)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Open room info editor',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(ctx).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+        ],
         _SectionHeader('Chat & Interaction'),
         _ControlTile(
           title: 'Lock room',
@@ -342,6 +396,7 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
 
     final micLimit = roomPolicyAsync.valueOrNull?.micLimit ?? 6;
     final camLimit = roomPolicyAsync.valueOrNull?.camLimit ?? 6;
+    final micTimerSeconds = roomPolicyAsync.valueOrNull?.micTimerSeconds;
 
     return ListView(
       controller: widget.scrollController,
@@ -372,6 +427,43 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
                 onChanged: (v) {
                   final val = v.round();
                   hostControls.setMaxBroadcasters(widget.roomId, val);
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        _SectionHeader('Mic Play Time'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.timer_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    micTimerSeconds == null
+                        ? 'Unlimited mic time'
+                        : '${micTimerSeconds}s per turn',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SegmentedButton<int?>(
+                segments: const [
+                  ButtonSegment(value: 30, label: Text('30s')),
+                  ButtonSegment(value: 60, label: Text('60s')),
+                  ButtonSegment(value: null, label: Text('Unlimited')),
+                ],
+                selected: {micTimerSeconds},
+                onSelectionChanged: (selection) {
+                  roomPolicyController.setMicTimer(
+                    widget.roomId,
+                    selection.first,
+                  );
                 },
               ),
             ],
@@ -555,7 +647,7 @@ class _AudioControlsTab extends StatelessWidget {
           min: 0.0,
           max: 1.0,
           divisions: 20,
-          activeColor: const Color(0xFF00D4AA),
+          activeColor: NeonPulse.primary,
           onChanged: onSpeakerChanged,
         ),
         Row(
@@ -702,7 +794,7 @@ class _ParticipantTile extends ConsumerWidget {
     final roleColor = switch (participant.role) {
       'host' => const Color(0xFFFFD700),
       'cohost' => const Color(0xFF7C5FFF),
-      'moderator' => const Color(0xFF00D4AA),
+      'moderator' => NeonPulse.secondary,
       _ => Colors.grey,
     };
 
@@ -900,7 +992,7 @@ class _ModeratorsTab extends ConsumerWidget {
                         size: 18,
                         color: p.role == 'cohost'
                             ? const Color(0xFF7C5FFF)
-                            : const Color(0xFF00D4AA),
+                            : NeonPulse.secondary,
                       ),
                     ),
                     title: Text(p.userId),
@@ -996,6 +1088,81 @@ class _ModeratorsTab extends ConsumerWidget {
                 ),
               ),
             const SizedBox(height: 32),
+            // ── Danger Zone: End Room ──────────────────────────────────────
+            _SectionHeader('Danger Zone'),
+            Card(
+              color: const Color(0xFF2A0F0F),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0x60FF6E84)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.stop_circle_outlined,
+                        color: Color(0xFFFF6E84), size: 28),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'End Room',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFFF6E84),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Closes the room for all participants. This cannot be undone.',
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.white54),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFFF6E84),
+                        side: const BorderSide(color: Color(0xFFFF6E84)),
+                      ),
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('End Room?'),
+                            content: const Text(
+                                'This will close the room for everyone. Are you sure?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                    backgroundColor:
+                                        const Color(0xFFFF6E84)),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('End Room'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await hostControls.endRoom(roomId);
+                          if (context.mounted) Navigator.pop(context);
+                        }
+                      },
+                      child: const Text('End'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
           ],
         );
       },
@@ -1054,4 +1221,109 @@ class _ControlTile extends StatelessWidget {
 // Dart 3 extension for let-style chaining used in sort.
 extension _LetExt<T> on T {
   R let<R>(R Function(T it) block) => block(this);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Owner-only: Edit room info dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
+Future<void> _showEditRoomInfoDialog(
+  BuildContext context, {
+  required HostControls hostControls,
+  required String roomId,
+  required String currentName,
+  required String currentDescription,
+  required String currentCategory,
+}) async {
+  final nameCtrl = TextEditingController(text: currentName);
+  final descCtrl = TextEditingController(text: currentDescription);
+  final catCtrl = TextEditingController(text: currentCategory);
+  final formKey = GlobalKey<FormState>();
+
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.edit_rounded, size: 20),
+          SizedBox(width: 8),
+          Text('Edit Room Info'),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Room name *',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.room_preferences_outlined),
+                ),
+                maxLength: 60,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: descCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Description (ticker)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.notes_rounded),
+                  helperText: 'Shown as a scrolling banner at the top',
+                ),
+                maxLength: 120,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: catCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Category / topic',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.label_outline_rounded),
+                ),
+                maxLength: 40,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Cancel'),
+        ),
+        FilledButton.icon(
+          icon: const Icon(Icons.save_rounded, size: 16),
+          label: const Text('Save'),
+          onPressed: () async {
+            if (!(formKey.currentState?.validate() ?? false)) return;
+            Navigator.pop(ctx);
+            try {
+              await hostControls.setRoomInfo(
+                roomId,
+                name: nameCtrl.text,
+                description: descCtrl.text,
+                category: catCtrl.text,
+              );
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to save: $e')),
+                );
+              }
+            }
+          },
+        ),
+      ],
+    ),
+  );
+  nameCtrl.dispose();
+  descCtrl.dispose();
+  catCtrl.dispose();
 }

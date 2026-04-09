@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -96,7 +97,7 @@ class OnMicPanel extends ConsumerWidget {
   }
 }
 
-class _OnMicRow extends StatelessWidget {
+class _OnMicRow extends StatefulWidget {
   const _OnMicRow({
     required this.participant,
     required this.name,
@@ -107,13 +108,63 @@ class _OnMicRow extends StatelessWidget {
   final String name;
   final bool isMe;
 
+  @override
+  State<_OnMicRow> createState() => _OnMicRowState();
+}
+
+class _OnMicRowState extends State<_OnMicRow> {
+  Timer? _tickTimer;
+  int _secondsLeft = 0; // 0 = no timer / expired
+
   static const _npPrimary = Color(0xFFD4A853);
   static const _npSecondary = Color(0xFFC45E7A);
   static const _npOnVariant = Color(0xFFB09080);
   static const _npStage = Color(0xFFFFA040);
 
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(_OnMicRow old) {
+    super.didUpdateWidget(old);
+    if (old.participant.micExpiresAt != widget.participant.micExpiresAt) {
+      _tickTimer?.cancel();
+      _startTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _tickTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    final exp = widget.participant.micExpiresAt;
+    if (exp == null || widget.participant.role != 'stage') {
+      _secondsLeft = 0;
+      return;
+    }
+    _updateSecondsLeft(exp);
+    if (_secondsLeft > 0) {
+      _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        _updateSecondsLeft(exp);
+        if (_secondsLeft <= 0) _tickTimer?.cancel();
+      });
+    }
+  }
+
+  void _updateSecondsLeft(DateTime exp) {
+    final remaining = exp.difference(DateTime.now()).inSeconds;
+    setState(() => _secondsLeft = remaining < 0 ? 0 : remaining);
+  }
+
   Color get _roleColor {
-    switch (participant.role) {
+    switch (widget.participant.role) {
       case 'host':
       case 'owner':
         return _npPrimary;
@@ -127,7 +178,7 @@ class _OnMicRow extends StatelessWidget {
   }
 
   String get _roleLabel {
-    switch (participant.role) {
+    switch (widget.participant.role) {
       case 'host':
       case 'owner':
         return 'HOST';
@@ -141,7 +192,7 @@ class _OnMicRow extends StatelessWidget {
   }
 
   IconData get _roleIcon {
-    switch (participant.role) {
+    switch (widget.participant.role) {
       case 'host':
       case 'owner':
         return Icons.workspace_premium_outlined;
@@ -156,13 +207,23 @@ class _OnMicRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMuted = participant.isMuted || !participant.micOn;
+    final isMuted = widget.participant.isMuted || !widget.participant.micOn;
+    final showTimer = widget.participant.role == 'stage' &&
+        widget.participant.micExpiresAt != null;
+
+    // Timer badge color: green → orange → red as time runs low
+    Color timerColor = const Color(0xFF4CAF50);
+    if (_secondsLeft <= 10) {
+      timerColor = const Color(0xFFFF5252);
+    } else if (_secondsLeft <= 20) {
+      timerColor = const Color(0xFFFF9800);
+    }
 
     return Container(
       height: 32,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: isMe ? _npPrimary.withValues(alpha: 0.07) : Colors.transparent,
+        color: widget.isMe ? _npPrimary.withValues(alpha: 0.07) : Colors.transparent,
         border: const Border(
           bottom: BorderSide(color: Color(0x0DFFFFFF)),
         ),
@@ -175,16 +236,44 @@ class _OnMicRow extends StatelessWidget {
           // Name
           Expanded(
             child: Text(
-              name,
+              widget.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: isMe ? _npPrimary : Colors.white,
+                color: widget.isMe ? _npPrimary : Colors.white,
                 fontSize: 12,
-                fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: widget.isMe ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),
+          // Countdown badge (stage users with a timer)
+          if (showTimer) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: timerColor.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.timer_outlined, size: 9, color: timerColor),
+                  const SizedBox(width: 2),
+                  Text(
+                    _secondsLeft > 0
+                        ? '${_secondsLeft ~/ 60}:${(_secondsLeft % 60).toString().padLeft(2, '0')}'
+                        : '0:00',
+                    style: TextStyle(
+                      color: timerColor,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
           // Role badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),

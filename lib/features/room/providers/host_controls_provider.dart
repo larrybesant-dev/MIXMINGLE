@@ -261,6 +261,44 @@ class HostControls {
         .snapshots()
         .map((s) => s.docs.map((d) => {'id': d.id, ...d.data()}).toList());
   }
+
+  /// Marks the room as ended (isLive: false). Only the room owner should call
+  /// this; access control is enforced by Firestore rules.
+  Future<void> endRoom(String roomId) async {
+    await _roomRef(roomId).update({
+      'isLive': false,
+      'endedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Updates editable room metadata (name, description, category). Null fields
+  /// are left unchanged. Empty strings clear the field.
+  Future<void> setRoomInfo(
+    String roomId, {
+    String? name,
+    String? description,
+    String? category,
+  }) async {
+    final trimmedName = name?.trim();
+    if (trimmedName != null && trimmedName.isEmpty) {
+      throw ArgumentError('Room name cannot be blank.');
+    }
+    final updates = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (trimmedName != null) updates['name'] = trimmedName;
+    if (description != null) updates['description'] = description.trim();
+    if (category != null) {
+      final c = category.trim().toLowerCase();
+      if (c.isEmpty) {
+        updates['category'] = FieldValue.delete();
+      } else {
+        updates['category'] = c;
+      }
+    }
+    await _roomRef(roomId).update(updates);
+  }
 }
 
 final hostControlsProvider = Provider<HostControls>(

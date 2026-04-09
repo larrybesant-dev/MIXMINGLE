@@ -59,6 +59,7 @@ import '../../services/presence_service.dart';
 import '../../services/room_audio_cues.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
 import '../../widgets/friends_panel_button.dart';
+import '../../core/theme.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -160,6 +161,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   // Reconnect back-off state
   int _reconnectAttempts = 0;
   Timer? _reconnectTimer;
+  /// Fires when the stage user's mic-play-time limit expires; auto-releases mic.
+  Timer? _micExpiryTimer;
+  DateTime? _scheduledMicExpiresAt;
   static const int _kMaxBackoffSeconds = 30;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Map<String, int> _senderVipLevelById = <String, int>{};
@@ -3348,6 +3352,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
     _micLevelTimer?.cancel();
+    _micExpiryTimer?.cancel();
     for (final t in _recentChatterTimers.values) {
       t.cancel();
     }
@@ -3458,6 +3463,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             _roleMediaStatePending = false;
             _applyRoleMediaState(role);
           });
+        }
+        // ── Mic play-time auto-release ──────────────────────────────────────
+        // When a room owner sets a 30s/60s mic timer, the stage participant doc
+        // carries micExpiresAt. Schedule a one-shot Timer to call releaseMic
+        // on the client side; the CF also treats expired docs as stale on the
+        // next grabMic call so the server stays consistent even if the client
+        // misses the expiry.
+        final expiresAt = role == 'stage' ? participant?.micExpiresAt : null;
+        if (expiresAt != _scheduledMicExpiresAt) {
+          _scheduledMicExpiresAt = expiresAt;
+          _micExpiryTimer?.cancel();
+          _micExpiryTimer = null;
+          if (expiresAt != null) {
+            final delay = expiresAt.difference(DateTime.now());
+            if (delay > Duration.zero) {
+              _micExpiryTimer = Timer(delay, () {
+                if (!mounted) return;
+                ref
+                    .read(micAccessControllerProvider)
+                    .releaseMic(roomId: widget.roomId, userId: user.id)
+                    .then((_) {
+                  if (mounted) _showSnackBar('Your mic time is up.');
+                }).catchError((_) {});
+              });
+            }
+          }
         }
         return StreamBuilder<DocumentSnapshot>(
           stream: firestore.collection('rooms').doc(widget.roomId).snapshots(),
@@ -3756,7 +3787,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           ? Icons.volume_up
                           : Icons.volume_up_outlined,
                       color: _showVolumeControls
-                          ? const Color(0xFF00D4AA)
+                          ? NeonPulse.primary
                           : Colors.white70,
                     ),
                     onPressed: () => setState(
@@ -4515,7 +4546,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               width: 200,
                               child: SliderTheme(
                                 data: SliderThemeData(
-                                  activeTrackColor: const Color(0xFF00D4AA),
+                                  activeTrackColor: NeonPulse.primary,
                                   trackHeight: 2.5,
                                   thumbShape: const RoundSliderThumbShape(
                                       enabledThumbRadius: 7),
@@ -5775,7 +5806,7 @@ class _RosterRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(3),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFF00C853).withValues(alpha: 0.75),
+                    color: NeonPulse.secondary.withValues(alpha: 0.75),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),
@@ -5784,7 +5815,7 @@ class _RosterRow extends StatelessWidget {
               child: const Icon(
                 Icons.mail,
                 size: 11,
-                color: Color(0xFF00E676),
+                color: NeonPulse.primary,
               ),
             ),
           ],

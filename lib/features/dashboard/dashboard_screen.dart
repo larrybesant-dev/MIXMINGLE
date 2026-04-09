@@ -221,7 +221,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: _SectionHeader(
                   title: 'New Members',
-                  dotColor: const Color(0xFF00E676),
+                    dotColor: NeonPulse.primary,
                   topPadding: 24,
                 ),
               ),
@@ -315,7 +315,7 @@ class _StatsBarWidget extends StatelessWidget {
     return Row(
       children: [
         _StatPill(
-          dot: const Color(0xFF00E676),
+          dot: NeonPulse.primary,
           label: online >= 500 ? '500+' : '$online',
           tooltip: 'online now',
         ),
@@ -505,9 +505,9 @@ class _NewMemberChip extends StatelessWidget {
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF00E676).withValues(alpha: 0.25),
+                  color: NeonPulse.primary.withValues(alpha: 0.25),
                   border: Border.all(
-                      color: const Color(0xFF00E676), width: 2),
+                      color: NeonPulse.primary, width: 2),
                 ),
                 child: CircleAvatar(
                   radius: 26,
@@ -521,7 +521,7 @@ class _NewMemberChip extends StatelessWidget {
                               ? user.username[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              color: Color(0xFF00E676),
+                              color: NeonPulse.primary,
                               fontWeight: FontWeight.w800,
                               fontSize: 18),
                         )
@@ -535,15 +535,15 @@ class _NewMemberChip extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00E676),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'NEW',
-                    style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black),
+                      color: NeonPulse.primary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'NEW',
+                      style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: NeonPulse.surface),
                   ),
                 ),
               ),
@@ -593,7 +593,7 @@ class _ProfileNudge extends StatelessWidget {
       (ProfileCompletion.homeNudgeCompleteness(profileState) * 100).round();
     final isAlmostDone = pct >= 70;
     final Color accent =
-        isAlmostDone ? const Color(0xFF00E676) : NeonPulse.primary;
+        isAlmostDone ? NeonPulse.secondary : NeonPulse.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -74,6 +74,7 @@ class RoomPolicyModel {
     this.minimumAge = 18,
     this.camLimit = 6,
     this.micLimit = 6,
+    this.micTimerSeconds,
     this.allowChat = true,
     this.allowGifts = true,
     this.allowMicRequests = true,
@@ -87,6 +88,9 @@ class RoomPolicyModel {
   final int minimumAge;
   final int camLimit;
   final int micLimit;
+  /// Seconds a stage user may hold the mic before being auto-demoted.
+  /// null = unlimited.
+  final int? micTimerSeconds;
   final bool allowChat;
   final bool allowGifts;
   final bool allowMicRequests;
@@ -101,6 +105,7 @@ class RoomPolicyModel {
       'minimumAge': minimumAge,
       'camLimit': camLimit,
       'micLimit': micLimit,
+      'micTimerSeconds': micTimerSeconds,
       'allowChat': allowChat,
       'allowGifts': allowGifts,
       'allowMicRequests': allowMicRequests,
@@ -122,6 +127,7 @@ class RoomPolicyModel {
       minimumAge: (json['minimumAge'] as num?)?.toInt() ?? 18,
       camLimit: (json['camLimit'] as num?)?.toInt() ?? 6,
       micLimit: (json['micLimit'] as num?)?.toInt() ?? 6,
+      micTimerSeconds: (json['micTimerSeconds'] as num?)?.toInt(),
       allowChat: _asBool(json['allowChat'], fallback: true),
       allowGifts: _asBool(json['allowGifts'], fallback: true),
       allowMicRequests: _asBool(json['allowMicRequests'], fallback: true),
