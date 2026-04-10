@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../models/user_model.dart';
+import '../core/utils/network_image_url.dart';
 import '../presentation/providers/friend_provider.dart';
 import '../presentation/providers/user_provider.dart';
 
@@ -232,6 +233,7 @@ class _FriendTile extends ConsumerWidget {
     final isOnline = presenceAsync.valueOrNull?.isOnline == true;
     final inRoom = presenceAsync.valueOrNull?.inRoom;
     final cs = Theme.of(context).colorScheme;
+    final safeAvatarUrl = sanitizeNetworkImageUrl(friend.avatarUrl);
 
     return ListTile(
       contentPadding:
@@ -242,10 +244,10 @@ class _FriendTile extends ConsumerWidget {
           CircleAvatar(
             radius: 22,
             backgroundColor: cs.primaryContainer,
-            backgroundImage: friend.avatarUrl != null
-                ? NetworkImage(friend.avatarUrl!)
+            backgroundImage: safeAvatarUrl != null
+              ? NetworkImage(safeAvatarUrl)
                 : null,
-            child: friend.avatarUrl == null
+            child: safeAvatarUrl == null
                 ? Text(
                     friend.username.isNotEmpty
                         ? friend.username[0].toUpperCase()

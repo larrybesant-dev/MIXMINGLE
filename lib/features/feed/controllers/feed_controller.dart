@@ -150,12 +150,10 @@ class FeedController extends Notifier<FeedState> {
       // Upcoming scheduled rooms (next 48 h)
       List<RoomModel> upcomingRooms = const [];
       try {
-        upcomingRooms = await _roomService
-            .watchUpcomingRooms(
-              limit: 8,
-              includeAdultRooms: viewerProfile.canAccessAdultRooms,
-            )
-            .first;
+        upcomingRooms = await _roomService.getUpcomingRooms(
+          limit: 8,
+          includeAdultRooms: viewerProfile.canAccessAdultRooms,
+        );
       } catch (_) {
         // non-critical; index may not exist yet in some environments
       }

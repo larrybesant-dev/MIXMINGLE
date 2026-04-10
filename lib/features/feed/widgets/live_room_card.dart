@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mixvy/models/room_model.dart';
+import 'package:mixvy/core/utils/network_image_url.dart';
 import '../../../core/theme.dart';
 
 class LiveRoomCard extends StatelessWidget {
@@ -19,6 +20,7 @@ class LiveRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final thumbnailUrl = sanitizeNetworkImageUrl(room.thumbnailUrl);
     final memberCount = room.memberCount > 0
         ? room.memberCount
         : room.stageUserIds.length + room.audienceUserIds.length;
@@ -46,10 +48,9 @@ class LiveRoomCard extends StatelessWidget {
             // Thumbnail / hero area
             Stack(
               children: [
-                if (room.thumbnailUrl != null &&
-                    room.thumbnailUrl!.isNotEmpty)
+                if (thumbnailUrl != null)
                   CachedNetworkImage(
-                    imageUrl: room.thumbnailUrl!,
+                    imageUrl: thumbnailUrl,
                     height: 68,
                     width: double.infinity,
                     fit: BoxFit.cover,

@@ -29,7 +29,12 @@ class MixVyApp extends ConsumerWidget {
       builder: (context, child) {
         return DefaultTextStyle.merge(
           style: const TextStyle(
-            fontFamilyFallback: ['NotoColorEmoji'],
+            fontFamilyFallback: [
+              'NotoColorEmoji',
+              'NotoSans',
+              'NotoSansSymbols',
+              'NotoSansSymbols2',
+            ],
           ),
           child: IncomingCallOverlay(
             child: BetaFeedbackOverlay(

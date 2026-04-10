@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/story_provider.dart';
+import '../../../core/utils/network_image_url.dart';
 
 // Fetches the list of userIds the current user follows
 final _followingIdsProvider = StreamProvider.family<List<String>, String>((ref, uid) {
@@ -100,6 +101,7 @@ class _StoryBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final safeAvatarUrl = sanitizeNetworkImageUrl(avatarUrl);
     return GestureDetector(
       onTap: () {
         if (isOwn && !hasStory) {
@@ -133,10 +135,10 @@ class _StoryBubble extends StatelessWidget {
                 padding: const EdgeInsets.all(2.5),
                 child: CircleAvatar(
                   backgroundColor: theme.colorScheme.surface,
-                  child: avatarUrl != null
+                  child: safeAvatarUrl != null
                       ? ClipOval(
                           child: CachedNetworkImage(
-                            imageUrl: avatarUrl!,
+                            imageUrl: safeAvatarUrl,
                             width: 52,
                             height: 52,
                             fit: BoxFit.cover,

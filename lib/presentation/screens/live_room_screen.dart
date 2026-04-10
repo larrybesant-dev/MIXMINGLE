@@ -38,6 +38,7 @@ import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/room/providers/mic_access_provider.dart';
+import '../../core/utils/network_image_url.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/feed/providers/host_controls_providers.dart';
 import '../../features/room/providers/room_policy_provider.dart';
@@ -1152,6 +1153,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Widget _buildLocalCamContent({String? avatarUrl}) {
     final service = _agoraService;
+    final safeAvatarUrl = sanitizeNetworkImageUrl(avatarUrl);
     // Also gate on _isVideoEnabled: on web canRenderLocalView stays true when
     // the user keeps mic-only broadcaster mode after turning the camera off,
     // which would render a black AgoraVideoView instead of the "Camera is off"
@@ -1173,10 +1175,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (avatarUrl != null && avatarUrl.isNotEmpty)
+              if (safeAvatarUrl != null)
                 CircleAvatar(
                   radius: 32,
-                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundImage: NetworkImage(safeAvatarUrl),
                   backgroundColor: const Color(0xFF2A2D35),
                 )
               else
@@ -1203,6 +1205,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     VoidCallback? onRequestAccess,
   }) {
     final service = _agoraService;
+    final safeAvatarUrl = sanitizeNetworkImageUrl(avatarUrl);
     if (canViewRemote && service != null) {
       return service.getRemoteView(remoteUid, widget.roomId);
     }
@@ -1214,10 +1217,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (avatarUrl != null && avatarUrl.isNotEmpty)
+              if (safeAvatarUrl != null)
                 CircleAvatar(
                   radius: 26,
-                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundImage: NetworkImage(safeAvatarUrl),
                   backgroundColor: const Color(0xFF2A2D35),
                 )
               else
@@ -1633,12 +1636,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     final inThisRoom = f.currentRoomId == roomId;
                     final inOtherRoom = f.currentRoomId != null &&
                         f.currentRoomId != roomId;
+                    final safeAvatarUrl = sanitizeNetworkImageUrl(f.avatarUrl);
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundImage: f.avatarUrl != null
-                            ? NetworkImage(f.avatarUrl!)
+                      backgroundImage: safeAvatarUrl != null
+                        ? NetworkImage(safeAvatarUrl)
                             : null,
-                        child: f.avatarUrl == null
+                      child: safeAvatarUrl == null
                             ? Text(
                                 f.username.isNotEmpty
                                     ? f.username[0].toUpperCase()

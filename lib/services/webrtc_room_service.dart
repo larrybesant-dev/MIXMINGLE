@@ -137,6 +137,7 @@ class WebRtcRoomService implements RtcRoomService {
   // GC does not collect the RTCPeerConnection while ICE is still gathering.
   final Map<String, RTCPeerConnection> _answerPcs = {};
   final Map<String, StreamSubscription> _answerIceSubs = {};
+  final Map<String, Set<String>> _sentIceCandidateKeys = {};
 
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService callbacks
@@ -891,6 +892,7 @@ class WebRtcRoomService implements RtcRoomService {
     _uidToUserId.clear();
     _userIdToUid.clear();
     _answeredCalls.clear();
+    _sentIceCandidateKeys.clear();
 
     _localRenderer.srcObject = null;
     if (_localRendererReady) {
@@ -1141,12 +1143,17 @@ class WebRtcRoomService implements RtcRoomService {
 
     final callId = '${_localUserId}_$broadcasterId';
     final callRef = _callsCol.doc(callId);
+    final viewerIceScope = 'viewer:$callId';
 
     // Gather ICE candidates and write them to Firestore
     pc.onIceCandidate = (RTCIceCandidate candidate) {
-      if (candidate.candidate?.isNotEmpty == true) {
-        callRef.collection('viewer_ice').add(candidate.toMap());
-      }
+      unawaited(_writeIceCandidate(
+        callRef: callRef,
+        subcollection: 'viewer_ice',
+        candidate: candidate,
+        scopeKey: viewerIceScope,
+        logLabel: 'viewer',
+      ));
     };
 
     // Write offer to Firestore to trigger the broadcaster
@@ -1273,6 +1280,7 @@ class WebRtcRoomService implements RtcRoomService {
 
     final callRef = _callsCol.doc(callId);
     final pc = await createPeerConnection(_iceConfig);
+  final broadcasterIceScope = 'broadcaster:$callId';
     // Store immediately — prevents GC from collecting this PC while ICE gathers.
     _answerPcs[callId] = pc;
 
@@ -1283,9 +1291,13 @@ class WebRtcRoomService implements RtcRoomService {
 
     // Gather broadcaster ICE candidates
     pc.onIceCandidate = (RTCIceCandidate candidate) {
-      if (candidate.candidate?.isNotEmpty == true) {
-        callRef.collection('broadcaster_ice').add(candidate.toMap());
-      }
+      unawaited(_writeIceCandidate(
+        callRef: callRef,
+        subcollection: 'broadcaster_ice',
+        candidate: candidate,
+        scopeKey: broadcasterIceScope,
+        logLabel: 'broadcaster',
+      ));
     };
 
     final offerMap = callData['offer'] as Map<String, dynamic>;
@@ -1353,6 +1365,41 @@ class WebRtcRoomService implements RtcRoomService {
   Map<String, dynamic> get _iceConfig =>
       {'iceServers': _iceServers ?? _defaultIceServers};
 
+  String _iceCandidateFingerprint(RTCIceCandidate candidate) {
+    final raw = '${candidate.sdpMid}|${candidate.sdpMLineIndex}|${candidate.candidate}';
+    return raw.hashCode.toUnsigned(32).toRadixString(16);
+  }
+
+  void _clearIceCandidateScope(String scopeKey) {
+    _sentIceCandidateKeys.remove(scopeKey);
+  }
+
+  Future<void> _writeIceCandidate({
+    required DocumentReference<Map<String, dynamic>> callRef,
+    required String subcollection,
+    required RTCIceCandidate candidate,
+    required String scopeKey,
+    required String logLabel,
+  }) async {
+    final rawCandidate = candidate.candidate;
+    if (rawCandidate == null || rawCandidate.isEmpty) {
+      return;
+    }
+
+    final fingerprint = _iceCandidateFingerprint(candidate);
+    final seen = _sentIceCandidateKeys.putIfAbsent(scopeKey, () => <String>{});
+    if (!seen.add(fingerprint)) {
+      return;
+    }
+
+    try {
+      await callRef.collection(subcollection).doc(fingerprint).set(candidate.toMap());
+    } catch (error) {
+      seen.remove(fingerprint);
+      _log('failed to write $logLabel ICE candidate: $error');
+    }
+  }
+
   /// Closes all broadcaster-side answer PCs and clears their call IDs from
   /// [_answeredCalls] so that when viewers auto-reconnect their new offers are
   /// re-answered with the current [_localStream].
@@ -1362,6 +1409,7 @@ class WebRtcRoomService implements RtcRoomService {
       _answerIceSubs.remove(callId)?.cancel();
       final pc = _answerPcs.remove(callId);
       _answeredCalls.remove(callId); // allow re-answer on viewer reconnect
+      _clearIceCandidateScope('broadcaster:$callId');
       try { pc?.close(); } catch (_) {}
     }
     _log('closed ${staleCallIds.length} stale answer PC(s) for stream handoff');
@@ -1370,6 +1418,7 @@ class WebRtcRoomService implements RtcRoomService {
   void _closePeer(String broadcasterId) {
     final peer = _peers.remove(broadcasterId);
     if (peer == null) return;
+    _clearIceCandidateScope('viewer:${_localUserId}_$broadcasterId');
     _stopRemoteVad(broadcasterId, peer.broadcasterUid);
     _uidToUserId.remove(peer.broadcasterUid);
     _userIdToUid.remove(broadcasterId);

@@ -80,9 +80,9 @@ void main() async {
             FirebaseFirestore.instance.settings = const Settings(
               sslEnabled: true,
               persistenceEnabled: true,
-              webExperimentalForceLongPolling: true,
+              webExperimentalAutoDetectLongPolling: true,
             );
-            _bootstrapLog('Firestore web transport fallback enabled');
+            _bootstrapLog('Firestore web transport auto-detect enabled');
           }
 
           if (!kIsWeb) {

@@ -19,6 +19,7 @@ import '../../ads/ad_manager.dart';
 import '../../../features/profile/profile_controller.dart';
 import '../../../models/room_model.dart';
 import '../../../widgets/brand_ui_kit.dart';
+import '../../../core/utils/network_image_url.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
 const _npSurface        = Color(0xFF0D0A0C);
@@ -40,7 +41,7 @@ final _hostAvatarProvider =
       .doc(hostId)
       .get();
   if (!doc.exists) return null;
-  return doc.data()?['avatarUrl'] as String?;
+  return sanitizeNetworkImageUrl(doc.data()?['avatarUrl'] as String?);
 });
 
 class DiscoveryFeedScreen extends ConsumerWidget {
@@ -132,19 +133,17 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
   String? _selectedCategory;
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(feedControllerProvider.notifier).loadFeed());
+  }
+
+  @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(feedControllerProvider);
 
     if (feedState.isLoading) {
       return const FeedLoadingShimmer();
-    }
-
-    if (!feedState.isLoading &&
-        feedState.error == null &&
-        feedState.liveRooms.isEmpty &&
-        feedState.trendingUsers.isEmpty) {
-      Future.microtask(
-          () => ref.read(feedControllerProvider.notifier).loadFeed());
     }
 
     if (feedState.error != null) {
@@ -1167,7 +1166,7 @@ class _LiveNowBubble extends ConsumerWidget {
                   padding: const EdgeInsets.all(2.5),
                   child: ClipOval(
                     child: avatarAsync.when(
-                      data: (url) => url != null && url.isNotEmpty
+                        data: (url) => url != null
                           ? CachedNetworkImage(
                               imageUrl: url,
                               fit: BoxFit.cover,

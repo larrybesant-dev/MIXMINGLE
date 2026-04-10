@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../models/user_model.dart';
+import '../../../core/utils/network_image_url.dart';
 
 class TrendingUserCard extends StatelessWidget {
   final UserModel user;
@@ -10,7 +11,7 @@ class TrendingUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profilePictureUrl = (user.avatarUrl ?? '').trim();
+    final profilePictureUrl = sanitizeNetworkImageUrl(user.avatarUrl);
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -18,7 +19,7 @@ class TrendingUserCard extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            child: profilePictureUrl.isEmpty
+            child: profilePictureUrl == null
                 ? const Icon(Icons.person)
                 : ClipOval(
                     child: CachedNetworkImage(

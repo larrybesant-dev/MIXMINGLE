@@ -150,6 +150,38 @@ class RoomService {
 				});
 	}
 
+	Future<List<RoomModel>> getUpcomingRooms({
+		int limit = 10,
+		bool includeAdultRooms = true,
+	}) async {
+		if (limit <= 0) {
+			return const <RoomModel>[];
+		}
+
+		final now = Timestamp.now();
+		final cutoff = Timestamp.fromDate(
+			DateTime.now().add(const Duration(hours: 48)),
+		);
+		final snapshot = await _upcomingRoomsQuery(
+			limit: limit,
+			includeAdultRooms: includeAdultRooms,
+			now: now,
+			cutoff: cutoff,
+		).get();
+
+		final rooms = snapshot.docs
+				.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+				.toList(growable: false)
+			..sort((a, b) {
+				final scheduledA = a.scheduledAt?.toDate()
+						?? DateTime.fromMillisecondsSinceEpoch(0);
+				final scheduledB = b.scheduledAt?.toDate()
+						?? DateTime.fromMillisecondsSinceEpoch(0);
+				return scheduledA.compareTo(scheduledB);
+			});
+		return rooms;
+	}
+
 	Future<List<RoomModel>> getLiveRooms({
 		int limit = 20,
 		bool includeAdultRooms = true,

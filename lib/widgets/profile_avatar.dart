@@ -1,15 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../core/utils/network_image_url.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String? profilePictureUrl;
   const ProfileAvatar({super.key, this.profilePictureUrl});
 
-  bool get _hasImage => profilePictureUrl != null && profilePictureUrl!.trim().isNotEmpty;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final safeImageUrl = sanitizeNetworkImageUrl(profilePictureUrl);
     return CircleAvatar(
       backgroundColor: theme.colorScheme.surface,
       radius: 28,
@@ -18,10 +18,10 @@ class ProfileAvatar extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: theme.colorScheme.primary, width: 2),
         ),
-        child: _hasImage
+        child: safeImageUrl != null
             ? ClipOval(
                 child: CachedNetworkImage(
-                  imageUrl: profilePictureUrl!.trim(),
+                  imageUrl: safeImageUrl,
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,

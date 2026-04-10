@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme.dart';
+import '../core/utils/network_image_url.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MixvyGoldButton — primary gold solid button (Sign In, CTA)
@@ -308,6 +309,7 @@ class MixvyGoldAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final safeImageUrl = sanitizeNetworkImageUrl(imageUrl);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -331,10 +333,10 @@ class MixvyGoldAvatar extends StatelessWidget {
           child: CircleAvatar(
             radius: radius,
             backgroundColor: VelvetNoir.surfaceHigh,
-            backgroundImage: (imageUrl ?? '').isNotEmpty
-                ? NetworkImage(imageUrl!)
+            backgroundImage: safeImageUrl != null
+              ? NetworkImage(safeImageUrl)
                 : null,
-            child: (imageUrl ?? '').isEmpty
+            child: safeImageUrl == null
                 ? Text(
                     fallbackInitial.isNotEmpty
                         ? fallbackInitial[0].toUpperCase()
