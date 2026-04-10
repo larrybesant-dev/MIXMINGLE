@@ -51,6 +51,7 @@ void main() {
         'name': 'Room One',
         'hostId': 'host-1',
         'isLive': true,
+        'isAdult': false,
         'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
       });
@@ -64,6 +65,7 @@ void main() {
         'name': 'Room Two',
         'hostId': 'host-2',
         'isLive': true,
+        'isAdult': false,
         'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12)),
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12)),
       });
@@ -77,6 +79,7 @@ void main() {
         'name': 'Room Three',
         'hostId': 'host-3',
         'isLive': false,
+        'isAdult': false,
         'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 13)),
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 13)),
       });
@@ -93,6 +96,7 @@ void main() {
         'name': 'Friend Room',
         'hostId': 'friend-1',
         'isLive': true,
+        'isAdult': false,
         'memberCount': 1,
         'stageUserIds': <String>[],
         'audienceUserIds': <String>['friend-1'],
@@ -109,6 +113,7 @@ void main() {
         'name': 'Busy Room',
         'hostId': 'host-2',
         'isLive': true,
+        'isAdult': false,
         'memberCount': 18,
         'stageUserIds': <String>[],
         'audienceUserIds': <String>['host-2'],
@@ -136,6 +141,7 @@ void main() {
         'name': 'Room A',
         'hostId': 'blocked-host',
         'isLive': true,
+        'isAdult': false,
         'memberCount': 10,
         'stageUserIds': <String>[],
         'audienceUserIds': <String>['blocked-host'],
@@ -152,6 +158,7 @@ void main() {
         'name': 'Room B',
         'hostId': 'safe-host',
         'isLive': true,
+        'isAdult': false,
         'memberCount': 3,
         'stageUserIds': <String>[],
         'audienceUserIds': <String>['safe-host'],
@@ -172,6 +179,46 @@ void main() {
 
       expect(rooms.map((room) => room.id), isNot(contains('room-a')));
       expect(rooms.map((room) => room.id), contains('room-b'));
+    });
+
+    test('getLiveRooms can exclude adult rooms for public discovery queries', () async {
+      await firestore.collection('rooms').doc('public-room').set({
+        'name': 'Public Room',
+        'hostId': 'host-1',
+        'isLive': true,
+        'isAdult': false,
+        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+      });
+      await firestore
+          .collection('rooms')
+          .doc('public-room')
+          .collection('participants')
+          .doc('host-1')
+          .set({'lastActiveAt': Timestamp.now()});
+
+      await firestore.collection('rooms').doc('adult-room').set({
+        'name': 'Adult Room',
+        'hostId': 'host-2',
+        'isLive': true,
+        'isAdult': true,
+        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+      });
+      await firestore
+          .collection('rooms')
+          .doc('adult-room')
+          .collection('participants')
+          .doc('host-2')
+          .set({'lastActiveAt': Timestamp.now()});
+
+      final rooms = await service.getLiveRooms(
+        limit: 10,
+        includeAdultRooms: false,
+      );
+
+      expect(rooms.map((room) => room.id), contains('public-room'));
+      expect(rooms.map((room) => room.id), isNot(contains('adult-room')));
     });
 
     test('getRecommendationReason returns social and popularity labels', () {

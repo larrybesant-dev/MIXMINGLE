@@ -19,6 +19,33 @@ class RoomService {
 	CollectionReference<Map<String, dynamic>> get _roomsCollection =>
 			_firestore.collection('rooms');
 
+	Query<Map<String, dynamic>> _liveRoomsQuery({
+		required int limit,
+		required bool includeAdultRooms,
+	}) {
+		var query = _roomsCollection.where('isLive', isEqualTo: true);
+		if (!includeAdultRooms) {
+			query = query.where('isAdult', isEqualTo: false);
+		}
+		return query.limit(limit);
+	}
+
+	Query<Map<String, dynamic>> _upcomingRoomsQuery({
+		required int limit,
+		required bool includeAdultRooms,
+		required Timestamp now,
+		required Timestamp cutoff,
+	}) {
+		var query = _roomsCollection
+				.where('isLive', isEqualTo: false)
+				.where('scheduledAt', isGreaterThanOrEqualTo: now)
+				.where('scheduledAt', isLessThanOrEqualTo: cutoff);
+		if (!includeAdultRooms) {
+			query = query.where('isAdult', isEqualTo: false);
+		}
+		return query.limit(limit);
+	}
+
 	CollectionReference<Map<String, dynamic>> _participantsCollection(String roomId) =>
 			_roomsCollection.doc(roomId).collection('participants');
 
@@ -83,43 +110,58 @@ class RoomService {
 		return a.id.compareTo(b.id);
 	}
 
-	Stream<List<RoomModel>> watchLiveRooms({int limit = 30}) {
-		return _roomsCollection
-				.where('isLive', isEqualTo: true)
-				.orderBy('createdAt', descending: true)
-				.limit(limit)
+	Stream<List<RoomModel>> watchLiveRooms({
+		int limit = 30,
+		bool includeAdultRooms = true,
+	}) {
+		return _liveRoomsQuery(limit: limit, includeAdultRooms: includeAdultRooms)
 				.snapshots()
 				.asyncMap((snapshot) => _filterActiveLiveRooms(snapshot.docs));
 	}
 
 	/// Rooms scheduled to start in the next 48 hours, ordered soonest first.
-	Stream<List<RoomModel>> watchUpcomingRooms({int limit = 10}) {
+	Stream<List<RoomModel>> watchUpcomingRooms({
+		int limit = 10,
+		bool includeAdultRooms = true,
+	}) {
 		final now = Timestamp.now();
 		final cutoff = Timestamp.fromDate(
 			DateTime.now().add(const Duration(hours: 48)),
 		);
-		return _roomsCollection
-				.where('isLive', isEqualTo: false)
-				.where('scheduledAt', isGreaterThanOrEqualTo: now)
-				.where('scheduledAt', isLessThanOrEqualTo: cutoff)
-				.orderBy('scheduledAt')
-				.limit(limit)
+		return _upcomingRoomsQuery(
+					limit: limit,
+					includeAdultRooms: includeAdultRooms,
+					now: now,
+					cutoff: cutoff,
+				)
 				.snapshots()
-				.map((snap) => snap.docs
-						.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-						.toList(growable: false));
+				.map((snap) {
+					final rooms = snap.docs
+							.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+							.toList(growable: false)
+						..sort((a, b) {
+								final scheduledA = a.scheduledAt?.toDate()
+										?? DateTime.fromMillisecondsSinceEpoch(0);
+								final scheduledB = b.scheduledAt?.toDate()
+										?? DateTime.fromMillisecondsSinceEpoch(0);
+								return scheduledA.compareTo(scheduledB);
+							});
+					return rooms;
+				});
 	}
 
-	Future<List<RoomModel>> getLiveRooms({int limit = 20}) async {
+	Future<List<RoomModel>> getLiveRooms({
+		int limit = 20,
+		bool includeAdultRooms = true,
+	}) async {
 		if (limit <= 0) {
 			return const <RoomModel>[];
 		}
 
-		final snapshot = await _roomsCollection
-				.where('isLive', isEqualTo: true)
-				.orderBy('createdAt', descending: true)
-				.limit(limit)
-				.get();
+		final snapshot = await _liveRoomsQuery(
+			limit: limit,
+			includeAdultRooms: includeAdultRooms,
+		).get();
 
 		return _filterActiveLiveRooms(snapshot.docs);
 	}
@@ -128,12 +170,16 @@ class RoomService {
 		required int limit,
 		Set<String> friendIds = const <String>{},
 		Set<String> excludedHostIds = const <String>{},
+		bool includeAdultRooms = true,
 	}) async {
 		if (limit <= 0) {
 			return const <RoomModel>[];
 		}
 
-		final rooms = await getLiveRooms(limit: math.max(limit * 2, limit));
+		final rooms = await getLiveRooms(
+			limit: math.max(limit * 2, limit),
+			includeAdultRooms: includeAdultRooms,
+		);
 		final filtered = rooms
 				.where((room) => !excludedHostIds.contains(room.hostId))
 				.toList(growable: false);

@@ -1897,10 +1897,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         return;
       }
 
-      if (Navigator.of(context).canPop()) {
-        context.pop();
+      final router = GoRouter.of(context);
+      if (router.canPop()) {
+        router.pop();
       } else {
-        context.go('/');
+        router.go('/');
       }
     });
   }
@@ -2624,9 +2625,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               onTap: () => runAction(() async {
                 await _disconnectCall();
                 await _leaveRoom();
-                if (mounted) {
-                  context.pop();
-                }
+                _exitRoom();
               }),
             ),
         ];
@@ -3036,7 +3035,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       await hostControls.endRoom(widget.roomId);
       await _disconnectCall();
       await _leaveRoom();
-      if (mounted) context.pop();
+      _exitRoom();
     }
   }
 
@@ -3907,9 +3906,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     onPressed: () async {
                       await _disconnectCall();
                       await _leaveRoom();
-                      if (context.mounted) {
-                        context.pop();
-                      }
+                      _exitRoom();
                     },
                     icon: const Icon(Icons.logout),
                   ),

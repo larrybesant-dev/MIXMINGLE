@@ -48,6 +48,16 @@ class FeedState {
   }
 }
 
+class _FeedViewerProfile {
+  const _FeedViewerProfile({
+    this.friendIds = const <String>{},
+    this.canAccessAdultRooms = false,
+  });
+
+  final Set<String> friendIds;
+  final bool canAccessAdultRooms;
+}
+
 class FeedController extends Notifier<FeedState> {
   late final FirebaseFirestore _firestore;
   late final FirebaseAuth _auth;
@@ -63,61 +73,88 @@ class FeedController extends Notifier<FeedState> {
     return const FeedState();
   }
 
-  Future<Set<String>> _loadFriendIds(String? userId) async {
+  Future<_FeedViewerProfile> _loadViewerProfile(String? userId) async {
     if (userId == null || userId.trim().isEmpty) {
-      return const <String>{};
+      return const _FeedViewerProfile();
     }
 
     final userDoc = await _firestore.collection('users').doc(userId).get();
     final data = userDoc.data();
     if (data == null) {
-      return const <String>{};
+      return const _FeedViewerProfile();
     }
 
-    return List<String>.from(data['friends'] ?? const <String>[]).toSet();
+    return _FeedViewerProfile(
+      friendIds: List<String>.from(data['friends'] ?? const <String>[]).toSet(),
+      canAccessAdultRooms:
+          data['adultModeEnabled'] == true && data['adultConsentAccepted'] == true,
+    );
   }
 
   Future<void> loadFeed() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId == null || currentUserId.trim().isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Please sign in to load the discovery feed.',
+        );
+        return;
+      }
+
       final blockedIds = currentUserId == null
           ? const <String>{}
           : await _moderationService.getExcludedUserIds(currentUserId);
-      final friendIds = await _loadFriendIds(currentUserId);
+      final viewerProfile = await _loadViewerProfile(currentUserId);
       final liveRooms = await _roomService.getRecommendedLiveRooms(
         limit: 20,
-        friendIds: friendIds,
+        friendIds: viewerProfile.friendIds,
         excludedHostIds: blockedIds,
+        includeAdultRooms: viewerProfile.canAccessAdultRooms,
       );
       final roomReasons = <String, String>{
         for (final room in liveRooms)
           room.id: _roomService.getRecommendationReason(
             room,
-            friendIds: friendIds,
+            friendIds: viewerProfile.friendIds,
           ),
       };
       final roomTiers = <String, String>{
         for (final room in liveRooms)
           room.id: _roomService.getRecommendationTier(
             room,
-            friendIds: friendIds,
+            friendIds: viewerProfile.friendIds,
           ),
       };
-      final usersSnap = await _firestore
-          .collection('users')
-          .orderBy('balance', descending: true)
-          .limit(10)
-          .get();
-      final trendingUsers = usersSnap.docs
-          .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
-          .where((user) => !blockedIds.contains(user.id))
-          .toList();
+      var trendingUsers = const <UserModel>[];
+      try {
+        final usersSnap = await _firestore
+            .collection('users')
+            .where('isPrivate', isEqualTo: false)
+            .limit(40)
+            .get();
+        final visibleUsers = usersSnap.docs
+            .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
+            .where((user) => !blockedIds.contains(user.id))
+            .toList()
+          ..sort((a, b) => b.coinBalance.compareTo(a.coinBalance));
+        trendingUsers = visibleUsers.take(10).toList(growable: false);
+      } on FirebaseException catch (e, stackTrace) {
+        logFirestoreError(
+          context: 'discovery feed trending users query',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
       // Upcoming scheduled rooms (next 48 h)
       List<RoomModel> upcomingRooms = const [];
       try {
         upcomingRooms = await _roomService
-            .watchUpcomingRooms(limit: 8)
+            .watchUpcomingRooms(
+              limit: 8,
+              includeAdultRooms: viewerProfile.canAccessAdultRooms,
+            )
             .first;
       } catch (_) {
         // non-critical; index may not exist yet in some environments

@@ -18,6 +18,18 @@ const {
 
 admin.initializeApp();
 
+const DEFAULT_ICE_SERVERS = [
+  {
+    urls: [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302",
+    ],
+  },
+];
+const TURN_CACHE_TTL_MS = 60 * 1000;
+let cachedTurnIceServers = null;
+let cachedTurnIceServersFetchedAt = 0;
+
 let _stripe;
 function getStripe() {
   if (!_stripe) {
@@ -1556,27 +1568,46 @@ async function generateTurnCredentialsHandler(request) {
 
   const apiKey = process.env.METERED_API_KEY;
   if (!apiKey) {
-    throw new HttpsError("failed-precondition", "TURN credentials are not configured.");
+    logger.warn("generateTurnCredentials missing METERED_API_KEY; returning STUN fallback", {
+      authUid,
+    });
+    return {iceServers: DEFAULT_ICE_SERVERS, fallback: true};
   }
 
   const url = `https://mixvy.metered.live/api/v1/turn/credentials?apiKey=${encodeURIComponent(apiKey)}`;
-  let response;
   try {
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), 5000);
-    response = await fetch(url, {signal: ac.signal});
+    const response = await nodeFetch(url, {signal: ac.signal});
     clearTimeout(timer);
+    if (!response.ok) {
+      throw new Error(`TURN service returned ${response.status}.`);
+    }
+
+    const iceServers = await response.json();
+    if (!Array.isArray(iceServers) || iceServers.length === 0) {
+      throw new Error("TURN service returned empty credentials.");
+    }
+
+    cachedTurnIceServers = iceServers;
+    cachedTurnIceServersFetchedAt = Date.now();
+    return {iceServers};
   } catch (err) {
-    throw new HttpsError("unavailable", "Failed to reach TURN credential service.");
+    logger.warn("generateTurnCredentials upstream unavailable; serving fallback", {
+      authUid,
+      error: err instanceof Error ? err.message : String(err),
+      hasCachedIceServers: cachedTurnIceServers != null,
+    });
+
+    if (
+      cachedTurnIceServers != null &&
+      Date.now() - cachedTurnIceServersFetchedAt <= TURN_CACHE_TTL_MS
+    ) {
+      return {iceServers: cachedTurnIceServers, fallback: true, cached: true};
+    }
+
+    return {iceServers: DEFAULT_ICE_SERVERS, fallback: true};
   }
-  if (!response.ok) {
-    throw new HttpsError("unavailable", `TURN service returned ${response.status}.`);
-  }
-  const iceServers = await response.json();
-  if (!Array.isArray(iceServers) || iceServers.length === 0) {
-    throw new HttpsError("unavailable", "TURN service returned empty credentials.");
-  }
-  return {iceServers};
 }
 
 exports.generateTurnCredentials = onCall({secrets: [METERED_API_KEY]}, async (request) => generateTurnCredentialsHandler(request));
