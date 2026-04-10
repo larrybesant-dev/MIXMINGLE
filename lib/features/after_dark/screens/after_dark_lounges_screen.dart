@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../models/room_model.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../theme/after_dark_theme.dart';
 import '../widgets/after_dark_live_room_card.dart';
 
@@ -71,8 +74,9 @@ class _AfterDarkLoungesScreenState
   Widget build(BuildContext context) {
     final roomsAsync = ref.watch(_adultRoomsProvider(_selectedCategory));
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: EmberDark.surface,
+      safeArea: false,
       body: CustomScrollView(
         slivers: [
           // Sticky search + category bar
@@ -87,7 +91,12 @@ class _AfterDarkLoungesScreenState
                 children: [
                   // Search bar
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: EdgeInsets.fromLTRB(
+                      context.pageHorizontalPadding,
+                      8,
+                      context.pageHorizontalPadding,
+                      0,
+                    ),
                     child: TextField(
                       controller: _searchController,
                       style: GoogleFonts.raleway(color: EmberDark.onSurface),
@@ -123,8 +132,9 @@ class _AfterDarkLoungesScreenState
                     height: 40,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.pageHorizontalPadding,
+                      ),
                       itemCount: _loungeCategories.length,
                       separatorBuilder: (_, _) =>
                           const SizedBox(width: 8),
@@ -178,7 +188,12 @@ class _AfterDarkLoungesScreenState
           // Create lounge banner
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                12,
+                context.pageHorizontalPadding,
+                4,
+              ),
               child: _CreateLoungeBanner(),
             ),
           ),
@@ -186,24 +201,22 @@ class _AfterDarkLoungesScreenState
           // Rooms grid
           roomsAsync.when(
             loading: () => const SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(
-                      color: EmberDark.primary),
-                ),
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: AppLoadingView(label: 'Loading lounges'),
               ),
             ),
             error: (e, _) => SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    friendlyFirestoreMessage(e, fallbackContext: 'lounges'),
-                    style: TextStyle(
-                        color: EmberDark.onSurfaceVariant),
-                    textAlign: TextAlign.center,
-                  ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding,
+                  24,
+                  context.pageHorizontalPadding,
+                  24,
+                ),
+                child: AppErrorView(
+                  error: friendlyFirestoreMessage(e, fallbackContext: 'lounges'),
+                  fallbackContext: 'Unable to load lounges.',
                 ),
               ),
             ),
@@ -223,45 +236,28 @@ class _AfterDarkLoungesScreenState
 
               if (rooms.isEmpty) {
                 return SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.nightlife_outlined,
-                              color: EmberDark.onSurfaceVariant,
-                              size: 52),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'No live lounges right now',
-                            style: TextStyle(
-                                color: EmberDark.onSurface,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      context.pageHorizontalPadding,
+                      40,
+                      context.pageHorizontalPadding,
+                      0,
+                    ),
+                    child: AppEmptyView(
+                      title: 'No live lounges right now',
+                      message: 'Be the first to open the floor tonight.',
+                      icon: Icons.nightlife_outlined,
+                      action: FilledButton.icon(
+                        onPressed: () => context.go('/after-dark/create-lounge'),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Start a Lounge'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: EmberDark.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Be the first to open the floor tonight.',
-                            style: GoogleFonts.raleway(
-                                color: EmberDark.onSurfaceVariant),
-                          ),
-                          const SizedBox(height: 20),
-                          FilledButton.icon(
-                            onPressed: () => context
-                                .go('/after-dark/create-lounge'),
-                            icon: const Icon(Icons.add_rounded,
-                                size: 18),
-                            label: const Text('Start a Lounge'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: EmberDark.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(999)),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -269,27 +265,46 @@ class _AfterDarkLoungesScreenState
               }
 
               return SliverPadding(
-                padding:
-                    const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => _AfterDarkGridReveal(
-                      key: ValueKey(rooms[i].id),
-                      delay: i * 35,
-                      child: AfterDarkLiveRoomCard(
-                        room: rooms[i],
-                        onTap: () => context.go('/room/${rooms[i].id}'),
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding,
+                  12,
+                  context.pageHorizontalPadding,
+                  32,
+                ),
+                sliver: SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.crossAxisExtent;
+                    final crossAxisCount = width >= 980
+                        ? 4
+                        : width >= 720
+                            ? 3
+                            : 2;
+                    final aspectRatio = width >= 980
+                        ? 0.88
+                        : width >= 720
+                            ? 0.86
+                            : 0.85;
+
+                    return SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                        (ctx, i) => _AfterDarkGridReveal(
+                          key: ValueKey(rooms[i].id),
+                          delay: i * 35,
+                          child: AfterDarkLiveRoomCard(
+                            room: rooms[i],
+                            onTap: () => context.go('/room/${rooms[i].id}'),
+                          ),
+                        ),
+                        childCount: rooms.length,
                       ),
-                    ),
-                    childCount: rooms.length,
-                  ),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio: aspectRatio,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                    );
+                  },
                 ),
               );
             },

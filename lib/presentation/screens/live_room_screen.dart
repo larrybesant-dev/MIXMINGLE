@@ -566,6 +566,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return 'unknown';
   }
 
+  void _syncMediaUiFromService() {
+    final service = _agoraService;
+    if (!mounted || service == null) return;
+    final nextVideoEnabled = service.isLocalVideoCapturing;
+    final nextMicMuted = service.isLocalAudioMuted;
+    final nextSystemAudio = service.isSharingSystemAudio;
+    if (_isVideoEnabled == nextVideoEnabled &&
+        _isMicMuted == nextMicMuted &&
+        _isSharingSystemAudio == nextSystemAudio) {
+      return;
+    }
+    setState(() {
+      _isVideoEnabled = nextVideoEnabled;
+      _isMicMuted = nextMicMuted;
+      _isSharingSystemAudio = nextSystemAudio;
+    });
+  }
+
   /// Wires up the common callbacks on any [RtcRoomService] implementation.
   void _attachServiceCallbacks(RtcRoomService service) {
     service.onRemoteUserJoined = () {
@@ -594,9 +612,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted) setState(() {});
     };
     service.onSpeakerActivityChanged = () {
+      _syncMediaUiFromService();
       if (mounted) setState(() {});
     };
     service.onLocalVideoCaptureChanged = () {
+      _syncMediaUiFromService();
       if (mounted) setState(() {});
     };
     service.onTokenWillExpire = () {
@@ -780,6 +800,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _connectPhase = 'ready';
         _cameraStatus = 'Live media ready. Tap camera to publish.';
       });
+      _syncMediaUiFromService();
     } catch (e, stackTrace) {
       _logLiveRoom(
         'connect:failed',
@@ -834,6 +855,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           _isMicMuted = next;
         });
       }
+      _syncMediaUiFromService();
       // Start or stop the timer that refreshes the mic level bar.
       if (!next) {
         _startMicLevelPolling();
@@ -1106,6 +1128,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           if (!next) _claimedSlotId = null;
           _cameraStatus = next ? 'Camera active.' : 'Camera off.';
         });
+        _syncMediaUiFromService();
         if (next) {
           Future<void>.delayed(const Duration(milliseconds: 450), () {
             if (mounted) setState(() {});

@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/layout/app_layout.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/verification_provider.dart';
 
 // Provider that streams the verification request doc for the current user
@@ -81,10 +84,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     final requestAsync = ref.watch(_verificationRequestProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Verification')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -140,9 +143,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
             const SizedBox(height: 20),
 
             // Request form / existing request status
-            requestAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+            AppAsyncValueView<Map<String, dynamic>?>(
+              value: requestAsync,
+              fallbackContext: 'verification requests',
               data: (request) {
                 if (request != null) {
                   final status = request['status'] as String? ?? 'pending';

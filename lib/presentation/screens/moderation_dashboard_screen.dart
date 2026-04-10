@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/layout/app_layout.dart';
 import '../../models/moderation_model.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 import '../../services/moderation_service.dart';
 
 class ModerationDashboardScreen extends StatefulWidget {
@@ -34,7 +37,7 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Moderation Dashboard'),
         actions: [
@@ -62,11 +65,14 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen> {
         stream: _moderationService.watchRecentReports(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppLoadingView(label: 'Loading moderation reports');
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Could not load reports: ${snapshot.error}'));
+            return AppErrorView(
+              error: snapshot.error ?? 'Unknown error',
+              fallbackContext: 'Could not load moderation reports.',
+            );
           }
 
           final allReports = snapshot.data ?? const <ReportRecordModel>[];
@@ -75,13 +81,15 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen> {
               : allReports.where((report) => report.status == _statusFilter).toList(growable: false);
 
           if (reports.isEmpty) {
-            return const Center(
-              child: Text('No reports found for the selected filter.'),
+            return const AppEmptyView(
+              title: 'No reports found',
+              message: 'No reports match the selected filter.',
+              icon: Icons.shield_outlined,
             );
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(context.pageHorizontalPadding),
             itemCount: reports.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {

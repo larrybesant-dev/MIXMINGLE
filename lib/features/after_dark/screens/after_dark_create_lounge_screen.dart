@@ -8,7 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/layout/app_layout.dart';
 import '../../../services/room_service.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 import '../theme/after_dark_theme.dart';
 
 enum _Privacy { public, friends, private }
@@ -163,8 +165,9 @@ class _AfterDarkCreateLoungeScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: EmberDark.surface,
+      safeArea: false,
       body: Stack(
         children: [
           // Ambient glow
@@ -208,7 +211,12 @@ class _AfterDarkCreateLoungeScreenState
                 _buildHeader(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                    padding: EdgeInsets.fromLTRB(
+                      context.pageHorizontalPadding,
+                      0,
+                      context.pageHorizontalPadding,
+                      120,
+                    ),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -267,7 +275,12 @@ class _AfterDarkCreateLoungeScreenState
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding - 8,
+        12,
+        context.pageHorizontalPadding,
+        0,
+      ),
       child: Row(
         children: [
           IconButton(
@@ -693,7 +706,12 @@ class _AfterDarkCreateLoungeScreenState
 
   Widget _buildStartButton() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        12,
+        context.pageHorizontalPadding,
+        28,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,

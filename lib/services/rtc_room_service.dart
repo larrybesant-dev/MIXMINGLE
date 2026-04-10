@@ -27,6 +27,7 @@ abstract class RtcRoomService {
   bool get isBroadcaster;
   bool get isJoinedChannel;
   bool get isLocalVideoCapturing;
+  bool get isLocalAudioMuted;
 
   /// True when the broadcaster is sharing PC/system audio via getDisplayMedia.
   bool get isSharingSystemAudio => false;

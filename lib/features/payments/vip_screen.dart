@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/layout/app_layout.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+
 // ── Velvet Noir brand tokens ──────────────────────────────────────────────────
 const _vSurface   = Color(0xFF0B0B0B);
 const _vCard      = Color(0xFF141414);
@@ -21,7 +24,7 @@ class _VipScreenState extends State<VipScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: _vSurface,
       appBar: AppBar(
         backgroundColor: _vSurface,
@@ -133,7 +136,7 @@ class _VipScreenState extends State<VipScreen> {
 
           // FAQ / legal note
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: EdgeInsets.symmetric(horizontal: context.pageHorizontalPadding),
             child: Text(
               'Subscriptions renew automatically. Cancel anytime in settings. '
               'Prices shown in USD.',
@@ -154,7 +157,12 @@ class _VipScreenState extends State<VipScreen> {
   Widget _buildHeroHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        32,
+        context.pageHorizontalPadding,
+        28,
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -210,7 +218,12 @@ class _VipScreenState extends State<VipScreen> {
 
   Widget _buildBillingToggle() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        24,
+        context.pageHorizontalPadding,
+        0,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

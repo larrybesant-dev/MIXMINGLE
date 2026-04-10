@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:mixvy/core/layout/app_layout.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 import 'package:mixvy/services/analytics_service.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -20,10 +22,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text("Create Account")),
       body: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         child: Form(
           key: _formKey,
           child: Column(

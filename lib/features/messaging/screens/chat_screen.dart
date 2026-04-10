@@ -4,7 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/layout/app_layout.dart';
 import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/messaging_provider.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../core/theme.dart';
@@ -133,7 +137,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = ref.watch(messagesStreamProvider(widget.conversationId));
     final paginatedState = ref.watch(paginatedMessagesProvider(widget.conversationId));
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: Row(
           children: [
@@ -207,8 +211,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 });
 
                 if (allMessages.isEmpty) {
-                  return const Center(
-                    child: Text('No messages yet. Start the conversation!'),
+                    return const AppEmptyView(
+                      title: 'No messages yet',
+                      message: 'Start the conversation.',
+                      icon: Icons.chat_bubble_outline_rounded,
                   );
                 }
 
@@ -430,18 +436,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    friendlyFirestoreMessage(
-                      error,
-                      fallbackContext: 'messages',
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+              loading: () => const AppLoadingView(label: 'Loading messages'),
+              error: (error, stackTrace) => AppErrorView(
+                error: friendlyFirestoreMessage(
+                  error,
+                  fallbackContext: 'messages',
                 ),
+                fallbackContext: 'Unable to load messages.',
               ),
             ),
           ),
@@ -453,8 +454,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
-              left: 12,
-              right: 12,
+              left: context.pageHorizontalPadding,
+              right: context.pageHorizontalPadding,
               top: 8,
             ),
             child: Container(

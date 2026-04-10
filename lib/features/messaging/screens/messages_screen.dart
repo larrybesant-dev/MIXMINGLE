@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 
 class MessagesScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -84,10 +87,8 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
     final requestsAsync = ref.watch(requestsStreamProvider(widget.userId));
     final requestCount = requestsAsync.valueOrNull?.length ?? 0;
 
-    return Scaffold(
-      backgroundColor: VelvetNoir.surface,
+    return AppPageScaffold(
       appBar: AppBar(
-        backgroundColor: VelvetNoir.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
@@ -120,9 +121,13 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
       ),
       body: Column(
         children: [
-          // Search bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              12,
+              context.pageHorizontalPadding,
+              8,
+            ),
             child: Container(
               height: 40,
               decoration: BoxDecoration(
@@ -163,7 +168,12 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
           // Incoming requests banner
           if (requestCount > 0)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                0,
+                context.pageHorizontalPadding,
+                8,
+              ),
               child: InkWell(
                 onTap: () => _showRequestsSheet(requestsAsync),
                 borderRadius: BorderRadius.circular(10),
@@ -218,9 +228,10 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
             ],
           ),
 
-          // Tab views
           Expanded(
-            child: conversationsAsync.when(
+            child: AppAsyncValueView<List<Conversation>>(
+              value: conversationsAsync,
+              fallbackContext: 'conversations',
               data: (conversations) => TabBarView(
                 controller: _tabController,
                 children: [
@@ -232,39 +243,16 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
                         : 'No conversations yet',
                   ),
                   _ConversationsList(
-                    conversations:
-                        _applySearch(_filterUnread(conversations)),
+                    conversations: _applySearch(_filterUnread(conversations)),
                     userId: widget.userId,
                     emptyMessage: 'No unread messages',
                   ),
                   _ConversationsList(
-                    conversations:
-                        _applySearch(_filterGroups(conversations)),
+                    conversations: _applySearch(_filterGroups(conversations)),
                     userId: widget.userId,
                     emptyMessage: 'No group chats yet',
                   ),
                 ],
-              ),
-              loading: () => TabBarView(
-                controller: _tabController,
-                children: List.generate(
-                  3,
-                  (_) => const Center(
-                    child:
-                        CircularProgressIndicator(color: VelvetNoir.primary),
-                  ),
-                ),
-              ),
-              error: (err, _) => TabBarView(
-                controller: _tabController,
-                children: List.generate(
-                  3,
-                  (_) => Center(
-                    child: Text('Error: $err',
-                        style: const TextStyle(
-                            color: VelvetNoir.onSurfaceVariant)),
-                  ),
-                ),
               ),
             ),
           ),
@@ -317,33 +305,15 @@ class _MessageRequestsSheet extends ConsumerWidget {
               color: VelvetNoir.outlineVariant.withValues(alpha: 0.3),
             ),
             Expanded(
-              child: requestsAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: VelvetNoir.primary),
-                ),
-                error: (error, stackTrace) => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      'Could not load message requests.',
-                      style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+              child: AppAsyncValueView<List<Conversation>>(
+                value: requestsAsync,
+                fallbackContext: 'message requests',
+                isEmpty: (requests) => requests.isEmpty,
+                empty: const AppEmptyView(
+                  icon: Icons.mark_email_read_outlined,
+                  title: 'No pending message requests.',
                 ),
                 data: (requests) {
-                  if (requests.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text(
-                          'No pending message requests.',
-                          style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-                        ),
-                      ),
-                    );
-                  }
-
                   return ListView.separated(
                     itemCount: requests.length,
                     separatorBuilder: (_, _) => Divider(

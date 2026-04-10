@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/firestore/firestore_error_utils.dart';
+import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
 import '../../models/notification_model.dart';
 import '../providers/notification_provider.dart';
 import '../../core/logger.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -173,8 +175,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final service = ref.read(notificationServiceProvider);
 
-    return Scaffold(
-      backgroundColor: VelvetNoir.surface,
+    return AppPageScaffold(
       appBar: AppBar(
         backgroundColor: VelvetNoir.surfaceHigh,
         elevation: 0,
@@ -203,11 +204,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ],
       ),
       body: userId == null
-          ? const Center(
-              child: Text(
-                'Please sign in to view notifications.',
-                style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-              ),
+          ? const AppEmptyView(
+              icon: Icons.notifications_off_outlined,
+              title: 'Please sign in to view notifications.',
             )
           : Column(
               children: [
@@ -215,8 +214,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   Container(
                     width: double.infinity,
                     color: VelvetNoir.surfaceBright,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.pageHorizontalPadding,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         const Icon(Icons.notifications_off_outlined,
@@ -233,10 +234,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         TextButton(
                           onPressed: () => context.go('/settings'),
                           style: TextButton.styleFrom(
-                              foregroundColor: VelvetNoir.primary,
-                              padding: EdgeInsets.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap),
+                            foregroundColor: VelvetNoir.primary,
+                            padding: EdgeInsets.zero,
+                            tapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: const Text('Enable',
                               style: TextStyle(fontSize: 13)),
                         ),
@@ -246,13 +248,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 Expanded(
                   child: Column(
                     children: [
-                      // ── Filter chips ──────────────────────────────────
                       SizedBox(
                         height: 44,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.pageHorizontalPadding,
+                            vertical: 6,
+                          ),
                           children: [
                             _FilterChip(label: 'All', value: 'all', selected: _filter == 'all', onTap: () => setState(() => _filter = 'all')),
                             const SizedBox(width: 8),
@@ -265,73 +268,56 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ),
                       ),
                       Expanded(
-                        child: notificationsAsync.when(
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(
-                          color: VelvetNoir.primary),
-                    ),
-                    error: (error, _) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          friendlyFirestoreMessage(
-                            error,
-                            fallbackContext: 'notifications',
+                        child: AppAsyncValueView<List<NotificationModel>>(
+                          value: notificationsAsync,
+                          fallbackContext: 'notifications',
+                          isEmpty: (notifications) =>
+                              notifications.where((n) => _matchesFilter(n.type)).isEmpty,
+                          empty: const FeedEmptyState(
+                            emoji: '🔔',
+                            heading: 'All caught up!',
+                            message:
+                                'You have no notifications yet.\nRoom invites, friend requests and gift alerts will appear here.',
                           ),
-                          style: const TextStyle(
-                              color: VelvetNoir.onSurfaceVariant),
-                          textAlign: TextAlign.center,
+                          data: (notifications) {
+                            final filtered = notifications
+                                .where((n) => _matchesFilter(n.type))
+                                .toList();
+                            return ListView.separated(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, _) => const Divider(
+                                height: 1,
+                                color: VelvetNoir.outlineVariant,
+                                indent: 72,
+                              ),
+                              itemBuilder: (context, index) {
+                                final n = filtered[index];
+                                return _NotificationTile(
+                                  notification: n,
+                                  icon: _iconForType(n.type),
+                                  color: _colorForType(n.type),
+                                  label: _labelForType(n.type),
+                                  timeAgo: _relativeTime(n.createdAt),
+                                  onTap: () => _handleNotificationTap(
+                                      context, userId, n, service),
+                                  onMarkRead: n.isRead
+                                      ? null
+                                      : () async {
+                                          try {
+                                            await service.markRead(userId, n.id);
+                                          } catch (e) {
+                                            Logger.log('Mark read failed: $e');
+                                          }
+                                        },
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
-                    ),
-                    data: (notifications) {
-                      final filtered = notifications
-                          .where((n) => _matchesFilter(n.type))
-                          .toList();
-                      if (filtered.isEmpty) {
-                        return const FeedEmptyState(
-                          emoji: '🔔',
-                          heading: 'All caught up!',
-                          message:
-                              'You have no notifications yet.\nRoom invites, friend requests and gift alerts will appear here.',
-                        );
-                      }
-
-                      return ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const Divider(
-                          height: 1,
-                          color: VelvetNoir.outlineVariant,
-                          indent: 72,
-                        ),
-                        itemBuilder: (context, index) {
-                          final n = filtered[index];
-                          return _NotificationTile(
-                            notification: n,
-                            icon: _iconForType(n.type),
-                            color: _colorForType(n.type),
-                            label: _labelForType(n.type),
-                            timeAgo: _relativeTime(n.createdAt),
-                            onTap: () => _handleNotificationTap(
-                                context, userId, n, service),
-                            onMarkRead: n.isRead
-                                ? null
-                                : () async {
-                                    try {
-                                      await service.markRead(userId, n.id);
-                                    } catch (e) {
-                                      Logger.log('Mark read failed: $e');
-                                    }
-                                  },
-                          );
-                        },
-                      );
-                    },
+                    ],
                   ),
-                ),
-              ],
-            ),
                 ),
               ],
             ),

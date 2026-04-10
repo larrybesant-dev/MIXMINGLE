@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 // Unused import removed: 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/layout/app_layout.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+
 class SendPaymentPage extends ConsumerStatefulWidget {
   final String recipientId;
   final String recipientName;
@@ -81,10 +84,10 @@ class _SendPaymentPageState extends ConsumerState<SendPaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: Text('Send to ${widget.recipientName}')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         child: Column(
           children: [
             Semantics(

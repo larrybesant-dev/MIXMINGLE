@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/brand_ui_kit.dart';
 import '../providers/groups_provider.dart';
 
@@ -22,10 +24,8 @@ class GroupsScreen extends ConsumerWidget {
 
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        backgroundColor: VelvetNoir.surface,
+      child: AppPageScaffold(
         appBar: AppBar(
-          backgroundColor: VelvetNoir.surface,
           title: const MixvyAppBarLogo(fontSize: 20),
           bottom: const TabBar(
             indicatorColor: VelvetNoir.primary,
@@ -47,19 +47,19 @@ class GroupsScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            groupsAsync.when(
-              data: (groups) {
-                if (groups.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No groups yet',
-                      style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            AppAsyncValueView<List<dynamic>>(
+              value: groupsAsync,
+              fallbackContext: 'groups',
+              isEmpty: (groups) => groups.isEmpty,
+              empty: const AppEmptyView(
+                icon: Icons.groups_outlined,
+                title: 'No groups yet',
+              ),
+              data: (groups) => ListView.builder(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.pageHorizontalPadding,
+                    vertical: 12,
+                  ),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];
@@ -146,32 +146,21 @@ class GroupsScreen extends ConsumerWidget {
                       ),
                     );
                   },
-                );
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: VelvetNoir.primary),
-              ),
-              error: (e, _) => Center(
-                child: Text(
-                  friendlyFirestoreMessage(e, fallbackContext: 'groups'),
-                  style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
-                  textAlign: TextAlign.center,
-                ),
               ),
             ),
-            userGroupsAsync.when(
-              data: (groups) {
-                if (groups.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'You haven\'t joined any groups yet',
-                      style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            AppAsyncValueView<List<dynamic>>(
+              value: userGroupsAsync,
+              fallbackContext: 'your groups',
+              isEmpty: (groups) => groups.isEmpty,
+              empty: const AppEmptyView(
+                icon: Icons.group_work_outlined,
+                title: 'You haven\'t joined any groups yet',
+              ),
+              data: (groups) => ListView.builder(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.pageHorizontalPadding,
+                    vertical: 12,
+                  ),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];
@@ -206,17 +195,6 @@ class GroupsScreen extends ConsumerWidget {
                       ),
                     );
                   },
-                );
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: VelvetNoir.primary),
-              ),
-              error: (e, _) => Center(
-                child: Text(
-                  friendlyFirestoreMessage(e, fallbackContext: 'your groups'),
-                  style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
-                  textAlign: TextAlign.center,
-                ),
               ),
             ),
           ],

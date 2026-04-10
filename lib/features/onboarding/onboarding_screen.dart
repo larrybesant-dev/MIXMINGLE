@@ -8,6 +8,7 @@ import 'package:mixvy/core/services/first_run_service.dart';
 import 'package:mixvy/core/theme.dart';
 import 'package:mixvy/presentation/providers/app_settings_provider.dart';
 import 'package:mixvy/services/analytics_service.dart';
+import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 class _OnboardScene {
@@ -160,8 +161,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final accent = _isInterestPage ? VelvetNoir.primary : _pages[_index].accent;
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
+      safeArea: false,
       body: Stack(
         children: <Widget>[
           const _VelvetBackdrop(),

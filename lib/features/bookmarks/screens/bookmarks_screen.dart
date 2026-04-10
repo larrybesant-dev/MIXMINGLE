@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
-import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../core/layout/app_layout.dart';
 import '../providers/bookmark_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 
 class BookmarksScreen extends ConsumerWidget {
   final String userId;
@@ -19,69 +21,42 @@ class BookmarksScreen extends ConsumerWidget {
     final bookmarksAsync = ref.watch(bookmarkedPostsProvider(userId));
     final viewerId = ref.watch(authControllerProvider).uid ?? '';
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Bookmarks'),
       ),
-      body: bookmarksAsync.when(
-        data: (posts) {
-          if (posts.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bookmark_outline,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+      body: AppAsyncValueView<List<Map<String, dynamic>>>(
+        value: bookmarksAsync,
+        fallbackContext: 'bookmarks',
+        isEmpty: (posts) => posts.isEmpty,
+        empty: const AppEmptyView(
+          icon: Icons.bookmark_outline,
+          title: 'No bookmarks yet',
+          message: 'Save posts to view them later.',
+        ),
+        data: (posts) => ListView.separated(
+          padding: EdgeInsets.fromLTRB(0, 8, 0, context.sectionSpacing * 3),
+          itemCount: posts.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final raw = posts[index];
+            final id = raw['id'] as String? ?? '';
+            final post = PostModel.fromDoc(id, raw);
+            return Stack(
+              children: [
+                PostCard(post: post, currentUserId: viewerId),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: _BookmarkRemoveButton(
+                    userId: userId,
+                    bookmarkId: raw['bookmarkId'] as String? ?? '',
+                    bookmarkController: ref.read(bookmarkControllerProvider),
                   ),
-                  const SizedBox(height: 16),
-                  const Text('No bookmarks yet'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Save posts to view them later',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
+                ),
+              ],
             );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: posts.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final raw = posts[index];
-              final id = raw['id'] as String? ?? '';
-              final post = PostModel.fromDoc(id, raw);
-              return Stack(
-                children: [
-                  PostCard(post: post, currentUserId: viewerId),
-                  // Bookmark remove button overlay (top-right)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: _BookmarkRemoveButton(
-                      userId: userId,
-                      bookmarkId: raw['bookmarkId'] as String? ?? '',
-                      bookmarkController: ref.read(bookmarkControllerProvider),
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Text(
-            friendlyFirestoreMessage(
-              error,
-              fallbackContext: 'bookmarks',
-            ),
-            textAlign: TextAlign.center,
-          ),
+          },
         ),
       ),
     );

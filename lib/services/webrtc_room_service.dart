@@ -175,6 +175,15 @@ class WebRtcRoomService implements RtcRoomService {
   bool get isLocalVideoCapturing => _localVideoCapturing;
 
   @override
+  bool get isLocalAudioMuted {
+    final stream = _localStream;
+    if (stream == null) return true;
+    final audioTracks = stream.getAudioTracks();
+    if (audioTracks.isEmpty) return true;
+    return !audioTracks.any((track) => track.enabled);
+  }
+
+  @override
   bool get isSharingSystemAudio => _isSharingSystemAudio;
 
   @override

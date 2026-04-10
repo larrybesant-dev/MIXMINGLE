@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/layout/app_layout.dart';
 import '../../../models/room_model.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 import '../theme/after_dark_theme.dart';
 import '../widgets/after_dark_live_room_card.dart';
 
@@ -30,7 +32,8 @@ class AfterDarkHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final roomsAsync = ref.watch(_liveAdultRoomsProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
+      safeArea: false,
       backgroundColor: EmberDark.surface,
       body: CustomScrollView(
         slivers: [
@@ -42,15 +45,28 @@ class AfterDarkHomeScreen extends ConsumerWidget {
           // ── Quick actions ─────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                20,
+                context.pageHorizontalPadding,
+                4,
+              ),
               child: _QuickActions(),
             ),
           ),
 
           // ── Live Lounges section header ───────────────────────────────────
           const SliverToBoxAdapter(
+            child: SizedBox.shrink(),
+          ),
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, 10),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                24,
+                context.pageHorizontalPadding,
+                10,
+              ),
               child: Row(
                 children: [
                   Icon(Icons.circle, color: EmberDark.primary, size: 10),
@@ -92,28 +108,39 @@ class AfterDarkHomeScreen extends ConsumerWidget {
               if (rooms.isEmpty) {
                 return SliverToBoxAdapter(child: _EmptyLounge());
               }
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => _AfterDarkReveal(
-                      key: ValueKey(rooms[i].id),
-                      delay: i * 45,
-                      child: AfterDarkLiveRoomCard(
-                        room: rooms[i],
-                        onTap: () => context.go('/room/${rooms[i].id}'),
+              return SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.crossAxisExtent;
+                  final crossAxisCount = width >= 1100
+                      ? 4
+                      : width >= 760
+                          ? 3
+                          : 2;
+                  return SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.pageHorizontalPadding,
+                    ),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                        (ctx, i) => _AfterDarkReveal(
+                          key: ValueKey(rooms[i].id),
+                          delay: i * 45,
+                          child: AfterDarkLiveRoomCard(
+                            room: rooms[i],
+                            onTap: () => context.go('/room/${rooms[i].id}'),
+                          ),
+                        ),
+                        childCount: rooms.length,
+                      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio: width >= 760 ? 0.92 : 0.85,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
                       ),
                     ),
-                    childCount: rooms.length,
-                  ),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),
@@ -122,7 +149,12 @@ class AfterDarkHomeScreen extends ConsumerWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                0,
+                context.pageHorizontalPadding,
+                32,
+              ),
               child: _ComingSoonCard(),
             ),
           ),

@@ -2,6 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/app_layout.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+
 class AccountCenterScreen extends StatefulWidget {
   const AccountCenterScreen({super.key});
 
@@ -195,10 +198,10 @@ class _AccountCenterScreenState extends State<AccountCenterScreen> {
         .toList(growable: false) ??
       const <UserInfo>[];
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Account Center')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         children: [
           Card(
             child: ListTile(

@@ -3,12 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../core/layout/app_layout.dart';
 import '../providers/search_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
 import '../../follow/providers/follow_provider.dart';
 import '../../../presentation/providers/friend_provider.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -36,14 +38,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Search'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.pageHorizontalPadding),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -97,7 +99,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final trendingAsync = ref.watch(trendingHashtagsProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(context.pageHorizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -106,11 +108,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          trendingAsync.when(
+          AppAsyncValueView<List<dynamic>>(
+            value: trendingAsync,
+            fallbackContext: 'trending results',
+            isEmpty: (hashtags) => hashtags.isEmpty,
+            empty: const AppEmptyView(
+              icon: Icons.tag_outlined,
+              title: 'No trending hashtags yet',
+            ),
             data: (hashtags) {
-              if (hashtags.isEmpty) {
-                return const Text('No trending hashtags yet');
-              }
               return Column(
                 children: hashtags.map((tag) {
                   return ListTile(
@@ -125,14 +131,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 }).toList(),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text(
-              friendlyFirestoreMessage(
-                error,
-                fallbackContext: 'trending results',
-              ),
-              textAlign: TextAlign.center,
-            ),
           ),
         ],
       ),
@@ -144,12 +142,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       final usersAsync = _searchQuery.isEmpty
           ? ref.watch(browseAllUsersProvider)
           : ref.watch(searchUsersProvider(_searchQuery));
-      return usersAsync.when(
-        data: (users) {
-          if (users.isEmpty) {
-            return const Center(child: Text('No users found'));
-          }
-          return ListView.separated(
+      return AppAsyncValueView<List<dynamic>>(
+        value: usersAsync,
+        fallbackContext: 'users',
+        isEmpty: (users) => users.isEmpty,
+        empty: const AppEmptyView(title: 'No users found'),
+        data: (users) => ListView.separated(
             itemCount: users.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
@@ -184,19 +182,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 onTap: () => context.push('/profile/${user.id}'),
               );
             },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+          ),
       );
     } else if (_selectedTab == 1) {
       final postsAsync = ref.watch(searchPostsProvider(_searchQuery));
-      return postsAsync.when(
-        data: (posts) {
-          if (posts.isEmpty) {
-            return const Center(child: Text('No posts found'));
-          }
-          return ListView.separated(
+      return AppAsyncValueView<List<dynamic>>(
+        value: postsAsync,
+        fallbackContext: 'posts',
+        isEmpty: (posts) => posts.isEmpty,
+        empty: const AppEmptyView(title: 'No posts found'),
+        data: (posts) => ListView.separated(
             itemCount: posts.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
@@ -215,19 +210,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 currentUserId: uid,
               );
             },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+          ),
       );
     } else {
       final hashtagsAsync = ref.watch(searchHashtagsProvider(_searchQuery));
-      return hashtagsAsync.when(
-        data: (hashtags) {
-          if (hashtags.isEmpty) {
-            return const Center(child: Text('No hashtags found'));
-          }
-          return ListView.separated(
+      return AppAsyncValueView<List<dynamic>>(
+        value: hashtagsAsync,
+        fallbackContext: 'hashtags',
+        isEmpty: (hashtags) => hashtags.isEmpty,
+        empty: const AppEmptyView(title: 'No hashtags found'),
+        data: (hashtags) => ListView.separated(
             itemCount: hashtags.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
@@ -242,10 +234,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 },
               );
             },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+          ),
       );
     }
   }

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../presentation/providers/user_provider.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../../../services/room_service.dart';
 import '../../../services/notification_service.dart';
 
@@ -69,11 +71,9 @@ class _CamPopoutScreenState extends ConsumerState<CamPopoutScreen> {
         'maxBroadcasters': 2,
         'isDirectCall': true,
         'calleeId': widget.targetUserId,
-        'callDeclined': false,
         'ownerName': callerName,
       });
 
-      // Notify the target user.
       await NotificationService(
         firestore: FirebaseFirestore.instance,
       ).inAppNotification(
@@ -82,7 +82,6 @@ class _CamPopoutScreenState extends ConsumerState<CamPopoutScreen> {
       );
 
       if (!mounted) return;
-      // Navigate the caller directly into the room.
       context.go('/room/$roomId');
     } catch (e) {
       if (mounted) {
@@ -97,54 +96,44 @@ class _CamPopoutScreenState extends ConsumerState<CamPopoutScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_error != null) ...[
-                const Icon(Icons.error_outline, size: 56, color: Colors.redAccent),
-                const SizedBox(height: 16),
-                Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.white70),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _startCall,
-                  child: const Text('Retry'),
-                ),
-              ] else ...[
-                const SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 3,
+      body: _error != null
+          ? AppErrorView(
+              error: _error!,
+              fallbackContext: 'Unable to start call.',
+              onRetry: _startCall,
+            )
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  _calling ? 'Starting call…' : 'Connecting…',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(color: Colors.white70),
-                ),
-                const SizedBox(height: 32),
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.white54),
+                  const SizedBox(height: 24),
+                  Text(
+                    _calling ? 'Starting call…' : 'Connecting…',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white70,
+                    ),
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+                  const SizedBox(height: 32),
+                  TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

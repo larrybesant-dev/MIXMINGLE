@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+
+import '../../core/layout/app_layout.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
 import '../../widgets/friends_panel_button.dart';
 
 import '../providers/app_settings_provider.dart';
@@ -41,7 +44,7 @@ class _LegalTermsScreenState extends ConsumerState<LegalTermsScreen> {
     final settings = ref.watch(appSettingsControllerProvider).valueOrNull;
     final accepted = settings?.hasAcceptedCurrentLegal ?? false;
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Terms of Service'),
         actions: [
@@ -53,12 +56,11 @@ class _LegalTermsScreenState extends ConsumerState<LegalTermsScreen> {
           const FriendsPanelButton(),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(context.pageHorizontalPadding),
                 children: const [
                   _SectionTitle('MixVy Terms of Service'),
                   SizedBox(height: 8),
@@ -97,7 +99,7 @@ class _LegalTermsScreenState extends ConsumerState<LegalTermsScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(context.pageHorizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -116,7 +118,6 @@ class _LegalTermsScreenState extends ConsumerState<LegalTermsScreen> {
               ),
             ),
           ],
-        ),
       ),
     );
   }

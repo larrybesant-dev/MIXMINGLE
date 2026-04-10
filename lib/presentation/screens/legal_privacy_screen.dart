@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../core/layout/app_layout.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
 import '../../widgets/friends_panel_button.dart';
 
 class LegalPrivacyScreen extends StatelessWidget {
@@ -7,7 +10,7 @@ class LegalPrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Privacy Policy'),
         actions: [
@@ -19,9 +22,8 @@ class LegalPrivacyScreen extends StatelessWidget {
           const FriendsPanelButton(),
         ],
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: ListView(
+          padding: EdgeInsets.all(context.pageHorizontalPadding),
           children: [
             Text(
               'MixVy Privacy Policy',
@@ -52,7 +54,6 @@ class LegalPrivacyScreen extends StatelessWidget {
               label: const Text('Back to Terms of Service'),
             ),
           ],
-        ),
       ),
     );
   }

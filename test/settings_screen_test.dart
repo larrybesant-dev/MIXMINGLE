@@ -26,13 +26,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Appearance'), findsOneWidget);
-  expect(find.text('Notifications'), findsOneWidget);
-    expect(find.text('Anonymous analytics'), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Anonymous analytics'), findsNothing);
 
     final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-    expect(switches, hasLength(2));
+    expect(switches, hasLength(1));
     expect(switches[0].value, isFalse);
-    expect(switches[1].value, isTrue);
     expect(find.text('Dark'), findsOneWidget);
   });
 }

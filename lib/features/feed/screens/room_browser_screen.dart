@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
 import '../../../models/room_model.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 import '../widgets/live_room_card.dart';
 import '../../../widgets/brand_ui_kit.dart';
 
@@ -54,8 +56,8 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: VelvetNoir.surface,
+    return AppPageScaffold(
+      safeArea: false,
       body: _showGrid
           ? _RoomListView(
               category: _selectedCategory,
@@ -162,7 +164,12 @@ class _CategoryDirectory extends StatelessWidget {
         // ── Go Live CTA ──
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              0,
+              context.pageHorizontalPadding,
+              8,
+            ),
             child: _GoLiveBanner(),
           ),
         ),
@@ -170,7 +177,12 @@ class _CategoryDirectory extends StatelessWidget {
         // ── Section label ──
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding + 4,
+              24,
+              context.pageHorizontalPadding + 4,
+              12,
+            ),
             child: Text(
               'BROWSE BY VIBE',
               style: GoogleFonts.raleway(
@@ -185,7 +197,12 @@ class _CategoryDirectory extends StatelessWidget {
 
         // ── Category grid ──
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          padding: EdgeInsets.fromLTRB(
+            context.pageHorizontalPadding,
+            0,
+            context.pageHorizontalPadding,
+            32,
+          ),
           sliver: SliverLayoutBuilder(builder: (ctx, constraints) {
             final w = constraints.crossAxisExtent;
             final cols = w > 900 ? 4 : w > 600 ? 3 : 2;
@@ -540,7 +557,12 @@ class _RoomListView extends ConsumerWidget {
         // ── Search bar ──
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              0,
+              context.pageHorizontalPadding,
+              16,
+            ),
             child: TextField(
               controller: searchController,
               style: GoogleFonts.raleway(
@@ -642,7 +664,12 @@ class _RoomListView extends ConsumerWidget {
                       ? 3
                       : 2;
               return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding,
+                  0,
+                  context.pageHorizontalPadding,
+                  24,
+                ),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                     (ctx, i) => LiveRoomCard(

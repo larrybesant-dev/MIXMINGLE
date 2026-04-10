@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/story_provider.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 
 enum _StoryType { text, photo, video }
 
@@ -200,7 +202,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
             _imageUrl != null ||
             _videoUrl != null);
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
         backgroundColor: VelvetNoir.surfaceHigh,
@@ -269,7 +271,12 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
           // Type selector
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              12,
+              context.pageHorizontalPadding,
+              4,
+            ),
             child: Row(
               children: [
                 _typeChip(_StoryType.text, Icons.text_fields, 'Text'),
@@ -284,7 +291,12 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
           // Content area
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                8,
+                context.pageHorizontalPadding,
+                24,
+              ),
               child: _buildContentArea(),
             ),
           ),

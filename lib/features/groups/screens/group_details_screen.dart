@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/app_layout.dart';
 import '../providers/groups_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
-import '../../../core/firestore/firestore_error_utils.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 
 class GroupDetailsScreen extends ConsumerWidget {
   final String groupId;
@@ -21,10 +23,8 @@ class GroupDetailsScreen extends ConsumerWidget {
     final groupAsync = ref.watch(groupDetailsProvider(groupId));
     final postsAsync = ref.watch(groupPostsProvider(groupId));
 
-    return Scaffold(
-      backgroundColor: VelvetNoir.surface,
+    return AppPageScaffold(
       appBar: AppBar(
-        backgroundColor: VelvetNoir.surface,
         title: groupAsync.whenOrNull(
               data: (g) => g == null
                   ? null
@@ -44,40 +44,44 @@ class GroupDetailsScreen extends ConsumerWidget {
                   color: VelvetNoir.onSurface, fontWeight: FontWeight.w700),
             ),
       ),
-      body: groupAsync.when(
+      body: AppAsyncValueView(
+        value: groupAsync,
+        fallbackContext: 'group details',
+        isEmpty: (group) => group == null,
+        empty: const AppEmptyView(title: 'Group not found'),
         data: (group) {
-          if (group == null) {
-            return const Center(
-              child: Text('Group not found',
-                  style: TextStyle(color: VelvetNoir.onSurfaceVariant)),
-            );
-          }
+          final resolvedGroup = group!;
 
-          final isMember = group.isMember(userId);
+          final isMember = resolvedGroup.isMember(userId);
 
           return Column(
             children: [
               // Group header banner
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding + 4,
+                  16,
+                  context.pageHorizontalPadding + 4,
+                  20,
+                ),
                 color: VelvetNoir.surfaceContainer,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      group.name,
+                      resolvedGroup.name,
                       style: const TextStyle(
                         color: VelvetNoir.onSurface,
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    if (group.description.isNotEmpty) ...
+                    if (resolvedGroup.description.isNotEmpty) ...
                       [
                         const SizedBox(height: 6),
                         Text(
-                          group.description,
+                          resolvedGroup.description,
                           style: const TextStyle(
                             color: VelvetNoir.onSurfaceVariant,
                             fontSize: 14,
@@ -91,7 +95,7 @@ class GroupDetailsScreen extends ConsumerWidget {
                             color: VelvetNoir.onSurfaceVariant, size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          '${group.memberCount} members',
+                          '${resolvedGroup.memberCount} members',
                           style: const TextStyle(
                             color: VelvetNoir.onSurfaceVariant,
                             fontSize: 13,
@@ -104,14 +108,14 @@ class GroupDetailsScreen extends ConsumerWidget {
                               ref
                                   .read(groupsControllerProvider)
                                   .leaveGroup(
-                                    groupId: group.id,
+                                    groupId: resolvedGroup.id,
                                     userId: userId,
                                   );
                             } else {
                               ref
                                   .read(groupsControllerProvider)
                                   .joinGroup(
-                                    groupId: group.id,
+                                    groupId: resolvedGroup.id,
                                     userId: userId,
                                   );
                             }
@@ -138,9 +142,14 @@ class GroupDetailsScreen extends ConsumerWidget {
                   height: 1,
                   color: VelvetNoir.outlineVariant.withValues(alpha: 0.5)),
               // Posts section label
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Align(
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding + 4,
+                  16,
+                  context.pageHorizontalPadding + 4,
+                  8,
+                ),
+                child: const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Posts',
@@ -152,18 +161,13 @@ class GroupDetailsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              // Posts list
               Expanded(
-                child: postsAsync.when(
-                  data: (posts) {
-                    if (posts.isEmpty) {
-                      return const Center(
-                        child: Text('No posts in this group yet',
-                            style: TextStyle(
-                                color: VelvetNoir.onSurfaceVariant)),
-                      );
-                    }
-                    return ListView.builder(
+                child: AppAsyncValueView<List<dynamic>>(
+                  value: postsAsync,
+                  fallbackContext: 'posts',
+                  isEmpty: (posts) => posts.isEmpty,
+                  empty: const AppEmptyView(title: 'No posts in this group yet'),
+                  data: (posts) => ListView.builder(
                       itemCount: posts.length,
                       itemBuilder: (context, index) {
                         final post = posts[index];
@@ -181,33 +185,12 @@ class GroupDetailsScreen extends ConsumerWidget {
                           currentUserId: userId,
                         );
                       },
-                    );
-                  },
-                  loading: () => const Center(
-                      child: CircularProgressIndicator(
-                          color: VelvetNoir.primary)),
-                  error: (e, _) => Center(
-                    child: Text(
-                      friendlyFirestoreMessage(e, fallbackContext: 'posts'),
-                      style: const TextStyle(
-                          color: VelvetNoir.onSurfaceVariant),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
                 ),
               ),
             ],
           );
         },
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: VelvetNoir.primary)),
-        error: (e, _) => Center(
-          child: Text(
-            friendlyFirestoreMessage(e, fallbackContext: 'group details'),
-            style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-        ),
       ),
     );
   }

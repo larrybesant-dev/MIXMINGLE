@@ -6,20 +6,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/layout/app_layout.dart';
+import '../../../core/utils/network_image_url.dart';
+import '../../../models/room_model.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
+import '../../../widgets/brand_ui_kit.dart';
+
+import '../../ads/ad_manager.dart';
+import '../../stories/widgets/stories_row.dart';
+import '../../../features/profile/profile_controller.dart';
 import '../controllers/feed_controller.dart';
 import '../models/post_model.dart';
 import '../providers/following_feed_provider.dart';
 import '../widgets/post_card.dart';
-import 'package:go_router/go_router.dart';
 import '../widgets/trending_user_card.dart';
-import '../widgets/feed_empty_state.dart';
-import '../widgets/feed_loading_shimmer.dart';
-import '../../stories/widgets/stories_row.dart';
-import '../../ads/ad_manager.dart';
-import '../../../features/profile/profile_controller.dart';
-import '../../../models/room_model.dart';
-import '../../../widgets/brand_ui_kit.dart';
-import '../../../core/utils/network_image_url.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
 const _npSurface        = Color(0xFF0D0A0C);
@@ -51,8 +54,9 @@ class DiscoveryFeedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
+      child: AppPageScaffold(
         backgroundColor: _npSurface,
+        safeArea: false,
         body: NestedScrollView(
           headerSliverBuilder: (context, _) => [
             SliverAppBar(
@@ -141,9 +145,10 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(feedControllerProvider);
+    final horizontalPadding = context.pageHorizontalPadding;
 
     if (feedState.isLoading) {
-      return const FeedLoadingShimmer();
+      return const AppLoadingView(label: 'Loading discovery feed');
     }
 
     if (feedState.error != null) {
@@ -166,7 +171,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           // Stories row
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: EdgeInsets.only(top: context.sectionSpacing),
               child: const StoriesRow(),
             ),
           ),
@@ -180,7 +185,12 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             // "Trending Now" header
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  context.sectionSpacing,
+                  horizontalPadding,
+                  12,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -206,7 +216,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             // Bento trending grid (hero + stacked)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: _buildBentoGrid(filteredRooms),
               ),
             ),
@@ -215,7 +225,12 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             if (filteredRooms.length > 3)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    context.sectionSpacing + 4,
+                    horizontalPadding,
+                    12,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -267,42 +282,61 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             // Grid of room cards
             if (filteredRooms.length > 3)
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1.0,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (ctx, i) {
-                      final room = filteredRooms[i + 3];
-                      return _RoomGridCard(
-                        room: room,
-                        onTap: () => context.go('/room/${room.id}'),
-                      );
-                    },
-                    childCount: filteredRooms.length > 3
-                        ? filteredRooms.length - 3
-                        : 0,
-                  ),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                sliver: SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.crossAxisExtent;
+                    final crossAxisCount = width >= 980
+                        ? 4
+                        : width >= 720
+                            ? 3
+                            : 2;
+                    final aspectRatio = width >= 980
+                        ? 1.0
+                        : width >= 720
+                            ? 0.95
+                            : 1.0;
+
+                    return SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: aspectRatio,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (ctx, i) {
+                          final room = filteredRooms[i + 3];
+                          return _RoomGridCard(
+                            room: room,
+                            onTap: () => context.go('/room/${room.id}'),
+                          );
+                        },
+                        childCount: filteredRooms.length > 3
+                            ? filteredRooms.length - 3
+                            : 0,
+                      ),
+                    );
+                  },
                 ),
               ),
           ] else ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const FeedEmptyState(
-                        message: 'No live rooms in this category right now.'),
-                    const SizedBox(height: 12),
-                    _gradientButton(
-                      label: 'Try Speed Dating',
-                      onTap: () => context.go('/speed-dating'),
-                    ),
-                  ],
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  context.sectionSpacing,
+                  horizontalPadding,
+                  0,
+                ),
+                child: AppEmptyView(
+                  title: 'No live rooms right now',
+                  message: 'Try another category or jump into Speed Dating.',
+                  icon: Icons.sensors_off_rounded,
+                  action: _gradientButton(
+                    label: 'Try Speed Dating',
+                    onTap: () => context.go('/speed-dating'),
+                  ),
                 ),
               ),
             ),
@@ -325,7 +359,12 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           if (feedState.trendingUsers.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  context.sectionSpacing,
+                  horizontalPadding,
+                  12,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -352,7 +391,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
               child: SizedBox(
                 height: 120,
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   scrollDirection: Axis.horizontal,
                   itemCount: feedState.trendingUsers.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 12),
@@ -372,7 +411,12 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           if (feedState.upcomingRooms.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  context.sectionSpacing,
+                  horizontalPadding,
+                  12,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -413,7 +457,10 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     return SizedBox(
       height: 52,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.pageHorizontalPadding,
+          vertical: 8,
+        ),
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -503,31 +550,21 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
   }
 
   Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.wifi_off_rounded, size: 48, color: _npError),
-            const SizedBox(height: 12),
-            Text(error,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.raleway(color: _npOnVariant, fontSize: 14)),
-            const SizedBox(height: 20),
-            _gradientButton(
-              label: 'Retry',
-              onTap: () => ref.read(feedControllerProvider.notifier).loadFeed(),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorView(
+      error: error,
+      fallbackContext: 'Unable to load the discovery feed.',
+      onRetry: () => ref.read(feedControllerProvider.notifier).loadFeed(),
     );
   }
 
   Widget _buildPromoBanner(BuildContext ctx) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        ctx.pageHorizontalPadding,
+        16,
+        ctx.pageHorizontalPadding,
+        0,
+      ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -813,7 +850,12 @@ class _UpcomingRoomTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      margin: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        0,
+        context.pageHorizontalPadding,
+        10,
+      ),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _npSurfaceHigh,
@@ -933,53 +975,28 @@ class _FollowingFeedTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      return Center(
-          child: Text('Sign in to see your following feed.',
-              style: GoogleFonts.raleway(color: _npOnVariant)));
+      return const AppEmptyView(
+        title: 'Sign in to see your following feed',
+        message: 'Your followed creators and posts will appear here.',
+        icon: Icons.login_rounded,
+      );
     }
 
     final feedAsync = ref.watch(followingFeedProvider(uid));
 
-    return feedAsync.when(
-      loading: () => const FeedLoadingShimmer(),
-      error: (e, _) => Center(
-          child: Text('Error: $e',
-              style: GoogleFonts.raleway(color: _npError))),
+    return AppAsyncValueView<List<Map<String, dynamic>>>(
+      value: feedAsync,
+      fallbackContext: 'Unable to load the following feed.',
+      loadingLabel: 'Loading following feed',
       data: (maps) {
         if (maps.isEmpty) {
-          return ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const FeedEmptyState(
-                  message: 'No posts yet from people you follow.'),
-              const SizedBox(height: 12),
-              Center(
-                child: GestureDetector(
-                  onTap: () => context.go('/search'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                          colors: [_npPrimary, _npPrimaryDim]),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.person_search,
-                            size: 16, color: _npSurface),
-                        const SizedBox(width: 8),
-                        Text('Find people to follow',
-                            style: GoogleFonts.raleway(
-                                fontSize: 14, fontWeight: FontWeight.w600,
-                                color: _npSurface)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          return AppEmptyView(
+            title: 'No posts from people you follow yet',
+            message: 'Find more creators and your following feed will update live.',
+            icon: Icons.people_outline_rounded,
+            action: _FollowFeedActionButton(
+              onTap: () => context.go('/search'),
+            ),
           );
         }
         final posts = maps.map((m) {
@@ -1068,7 +1085,12 @@ class _LiveNowStrip extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: EdgeInsets.fromLTRB(
+            context.pageHorizontalPadding,
+            12,
+            context.pageHorizontalPadding,
+            8,
+          ),
           child: Row(
             children: [
               Container(
@@ -1106,7 +1128,7 @@ class _LiveNowStrip extends ConsumerWidget {
         SizedBox(
           height: 92,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: context.pageHorizontalPadding),
             scrollDirection: Axis.horizontal,
             itemCount: rooms.length,
             separatorBuilder: (_, _) => const SizedBox(width: 14),
@@ -1119,6 +1141,41 @@ class _LiveNowStrip extends ConsumerWidget {
         const SizedBox(height: 4),
         Container(height: 1, color: _npGhost),
       ],
+    );
+  }
+}
+
+class _FollowFeedActionButton extends StatelessWidget {
+  const _FollowFeedActionButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [_npPrimary, _npPrimaryDim]),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.person_search, size: 16, color: _npSurface),
+            const SizedBox(width: 8),
+            Text(
+              'Find people to follow',
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _npSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

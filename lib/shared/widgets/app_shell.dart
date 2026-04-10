@@ -4,16 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
+import '../../core/layout/app_layout.dart';
+import '../../core/theme.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
-
-// ── Velvet Noir colour aliases ─────────────────────────────────────────────
-const _vnSurface   = Color(0xFF0B0B0B);
-const _vnPrimary   = Color(0xFFD4AF37);
-const _vnDim       = Color(0xFF7A6830);
-const _vnGhost     = Color(0x20D4AF37);
-const _vnError     = Color(0xFF9B2535);
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
 /// bottom nav bar (Home / Rooms / Discover / Messages / Profile / Menu).
@@ -42,15 +36,17 @@ class AppShell extends ConsumerWidget {
     final location = GoRouterState.of(context).uri.toString();
     final selectedIndex = _indexForLocation(location);
     final unreadMsgs = ref.watch(unreadMessageCountProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: _vnSurface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       drawer: const MixVyDrawer(),
       body: child,
       bottomNavigationBar: Builder(
         builder: (context) => _VelvetBottomNav(
           selectedIndex: selectedIndex,
           unreadMsgs: unreadMsgs,
+          compact: context.isCompactLayout,
           onTap: (i) => context.go(_roots[i]),
           onMenuTap: () => Scaffold.of(context).openDrawer(),
         ),
@@ -64,39 +60,47 @@ class _VelvetBottomNav extends StatelessWidget {
   const _VelvetBottomNav({
     required this.selectedIndex,
     required this.unreadMsgs,
+    required this.compact,
     required this.onTap,
     required this.onMenuTap,
   });
 
   final int selectedIndex;
   final int unreadMsgs;
+  final bool compact;
   final void Function(int) onTap;
   final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xF0110E0E),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border(top: BorderSide(color: _vnGhost, width: 1)),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.94),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.20),
+                width: 1,
+              ),
+            ),
           ),
           child: SafeArea(
             top: false,
             child: SizedBox(
-              height: 64,
+              height: compact ? 64 : 72,
               child: Row(
                 children: [
-                  _navItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
-                  _navItem(1, Icons.meeting_room_outlined, Icons.meeting_room_rounded, 'Rooms'),
-                  _navItem(2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
-                  _navItemBadge(3, Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
-                  _navItem(4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
-                  _navActionItem(Icons.menu_rounded, 'Menu', onMenuTap),
+                  _navItem(context, 0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+                  _navItem(context, 1, Icons.meeting_room_outlined, Icons.meeting_room_rounded, 'Rooms'),
+                  _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
+                  _navItemBadge(context, 3, Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
+                  _navItem(context, 4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+                  _navActionItem(context, Icons.menu_rounded, 'Menu', onMenuTap),
                 ],
               ),
             ),
@@ -106,8 +110,17 @@ class _VelvetBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _navItem(int idx, IconData icon, IconData selectedIcon, String label) {
+  Widget _navItem(
+    BuildContext context,
+    int idx,
+    IconData icon,
+    IconData selectedIcon,
+    String label,
+  ) {
     final isSelected = selectedIndex == idx;
+    final theme = Theme.of(context);
+    final selectedColor = theme.colorScheme.primary;
+    final idleColor = theme.colorScheme.onSurfaceVariant;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -121,15 +134,18 @@ class _VelvetBottomNav extends StatelessWidget {
               height: 30,
               decoration: isSelected
                   ? BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0x30D4AF37), Color(0x18D4AF37)],
+                      gradient: LinearGradient(
+                        colors: [
+                          VelvetNoir.primary.withValues(alpha: 0.18),
+                          VelvetNoir.primary.withValues(alpha: 0.08),
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(10),
                     )
                   : null,
               child: Icon(
                 isSelected ? selectedIcon : icon,
-                color: isSelected ? _vnPrimary : _vnDim,
+                color: isSelected ? selectedColor : idleColor,
                 size: 22,
               ),
             ),
@@ -137,9 +153,9 @@ class _VelvetBottomNav extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.raleway(
-                fontSize: 10,
+                fontSize: compact ? 10 : 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                color: isSelected ? _vnPrimary : _vnDim,
+                color: isSelected ? selectedColor : idleColor,
               ),
             ),
           ],
@@ -149,8 +165,17 @@ class _VelvetBottomNav extends StatelessWidget {
   }
 
   Widget _navItemBadge(
-      int idx, IconData icon, IconData selectedIcon, String label, int count) {
+      BuildContext context,
+      int idx,
+      IconData icon,
+      IconData selectedIcon,
+      String label,
+      int count) {
     final isSelected = selectedIndex == idx;
+    final theme = Theme.of(context);
+    final selectedColor = theme.colorScheme.primary;
+    final idleColor = theme.colorScheme.onSurfaceVariant;
+    final badgeColor = theme.colorScheme.error;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -164,8 +189,11 @@ class _VelvetBottomNav extends StatelessWidget {
               height: 30,
               decoration: isSelected
                   ? BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0x30D4AF37), Color(0x18D4AF37)],
+                      gradient: LinearGradient(
+                        colors: [
+                          VelvetNoir.primary.withValues(alpha: 0.18),
+                          VelvetNoir.primary.withValues(alpha: 0.08),
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(10),
                     )
@@ -176,7 +204,7 @@ class _VelvetBottomNav extends StatelessWidget {
                 children: [
                   Icon(
                     isSelected ? selectedIcon : icon,
-                    color: isSelected ? _vnPrimary : _vnDim,
+                    color: isSelected ? selectedColor : idleColor,
                     size: 22,
                   ),
                   if (count > 0)
@@ -186,7 +214,7 @@ class _VelvetBottomNav extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          color: _vnError,
+                          color: badgeColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         constraints:
@@ -209,9 +237,9 @@ class _VelvetBottomNav extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.raleway(
-                fontSize: 10,
+                fontSize: compact ? 10 : 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                color: isSelected ? _vnPrimary : _vnDim,
+                color: isSelected ? selectedColor : idleColor,
               ),
             ),
           ],
@@ -220,7 +248,12 @@ class _VelvetBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _navActionItem(IconData icon, String label, VoidCallback onPressed) {
+  Widget _navActionItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback onPressed,
+  ) {
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -233,7 +266,7 @@ class _VelvetBottomNav extends StatelessWidget {
               height: 30,
               child: Icon(
                 icon,
-                color: _vnDim,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 size: 22,
               ),
             ),
@@ -241,9 +274,9 @@ class _VelvetBottomNav extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.raleway(
-                fontSize: 10,
+                fontSize: compact ? 10 : 11,
                 fontWeight: FontWeight.w400,
-                color: _vnDim,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

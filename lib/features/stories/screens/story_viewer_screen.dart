@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/story_provider.dart';
 
 /// Full-screen story viewer for a single user's stories.
@@ -89,21 +91,21 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   Widget build(BuildContext context) {
     final storiesAsync = ref.watch(myStoriesProvider(widget.userId));
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: Colors.black,
+      safeArea: false,
       body: storiesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text('Error: $e', style: const TextStyle(color: Colors.white)),
+        loading: () => const AppLoadingView(label: 'Loading stories'),
+        error: (e, _) => AppErrorView(
+          error: e,
+          fallbackContext: 'Unable to load stories.',
         ),
         data: (stories) {
           final active = stories.where((s) => !s.isDeleted && !s.isExpired).toList();
           if (active.isEmpty) {
-            return const Center(
-              child: Text(
-                'No stories to show.',
-                style: TextStyle(color: Colors.white70),
-              ),
+            return const AppEmptyView(
+              title: 'No stories to show',
+              icon: Icons.auto_stories_outlined,
             );
           }
 

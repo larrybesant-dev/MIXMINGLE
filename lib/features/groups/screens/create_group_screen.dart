@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/layout/app_layout.dart';
 import '../providers/groups_provider.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -71,7 +73,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
         backgroundColor: VelvetNoir.surface,
@@ -84,7 +86,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -116,22 +116,25 @@ void main() {
       await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
-      final elevatedButton = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'ENTER MIXVY'),
-      );
+      InkWell ctaInkWell() => tester.widget<InkWell>(
+            find
+                .ancestor(
+                  of: find.text('ENTER MIXVY'),
+                  matching: find.byType(InkWell),
+                )
+                .first,
+          );
 
-      expect(elevatedButton.onPressed, isNull,
+      expect(ctaInkWell().onTap, isNull,
           reason: 'CTA should be disabled before legal accepted');
 
       // Tick the legal checkbox
-      await tester.tap(find.byType(Checkbox));
-      await tester.pump();
+        await tester.ensureVisible(find.byType(Checkbox));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(Checkbox), warnIfMissed: false);
+        await tester.pumpAndSettle();
 
-      final enabledButton = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'ENTER MIXVY'),
-      );
-
-      expect(enabledButton.onPressed, isNotNull,
+      expect(ctaInkWell().onTap, isNotNull,
           reason: 'CTA should be enabled after legal accepted');
     });
 
@@ -146,7 +149,9 @@ void main() {
       await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Terms'));
+      await tester.ensureVisible(find.text('Terms'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Terms'), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('Terms'), findsWidgets);

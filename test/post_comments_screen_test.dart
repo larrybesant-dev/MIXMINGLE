@@ -54,7 +54,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('No comments yet.\nBe the first to comment!'), findsOneWidget);
+      expect(find.text('No comments yet'), findsOneWidget);
+      expect(find.text('Be the first to comment.'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'First comment');
       await tester.tap(find.byIcon(Icons.send));

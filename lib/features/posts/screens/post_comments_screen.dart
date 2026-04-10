@@ -4,7 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/layout/app_layout.dart';
 import '../../../core/firestore/firestore_error_utils.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -152,7 +156,7 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
     final commentsAsync = ref.watch(_commentsProvider(providerArgs));
     final currentUser = widget.auth.currentUser;
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Comments')),
       body: Column(
         children: [
@@ -173,11 +177,10 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
             child: commentsAsync.when(
               data: (comments) {
                 if (comments.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No comments yet.\nBe the first to comment!',
-                      textAlign: TextAlign.center,
-                    ),
+                  return const AppEmptyView(
+                    title: 'No comments yet',
+                    message: 'Be the first to comment.',
+                    icon: Icons.comment_bank_outlined,
                   );
                 }
                 return ListView.builder(
@@ -188,21 +191,14 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
                   itemBuilder: (ctx, i) => _CommentTile(comment: comments[i]),
                 );
               },
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (e, _) =>
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        friendlyFirestoreMessage(
-                          e,
-                          fallbackContext: 'comments',
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+              loading: () => const AppLoadingView(label: 'Loading comments'),
+              error: (e, _) => AppErrorView(
+                error: friendlyFirestoreMessage(
+                  e,
+                  fallbackContext: 'comments',
+                ),
+                fallbackContext: 'Unable to load comments.',
+              ),
             ),
           ),
           // Input bar
@@ -211,8 +207,8 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
             child: Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 12,
-                right: 12,
+                left: context.pageHorizontalPadding,
+                right: context.pageHorizontalPadding,
                 top: 8,
               ),
               child: Row(

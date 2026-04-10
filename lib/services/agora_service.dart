@@ -42,6 +42,7 @@ class AgoraService implements RtcRoomService {
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
+  bool _localAudioMuted = true;
   bool _previewRunning = false;
   // Stored join credentials used to rejoin as broadcaster on web.
   String? _lastToken;
@@ -92,6 +93,8 @@ class AgoraService implements RtcRoomService {
   bool get isJoinedChannel => _joinedChannel;
   @override
   bool get isLocalVideoCapturing => _localVideoCapturing;
+  @override
+  bool get isLocalAudioMuted => _localAudioMuted;
 
   // System-audio sharing is web-only (WebRtcRoomService); Agora is no-op.
   @override
@@ -161,6 +164,7 @@ class AgoraService implements RtcRoomService {
     if (!_initialized || !_joinedChannel) {
       return;
     }
+    _localAudioMuted = !enabled;
     await _engine.updateChannelMediaOptions(
       ChannelMediaOptions(
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
@@ -1028,6 +1032,7 @@ class AgoraService implements RtcRoomService {
   /// Mute/unmute local audio
   @override
   Future<void> mute(bool muted) async {
+    _localAudioMuted = muted;
     if (!_initialized) return;
     try {
       await _engine.muteLocalAudioStream(muted);

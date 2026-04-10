@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../services/room_service.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../widgets/brand_ui_kit.dart';
 
 // ── colour aliases ────────────────────────────────────────────────────────────
@@ -187,8 +189,9 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: _surface,
+      safeArea: false,
       body: Stack(
         children: [
           // Ambient blob
@@ -202,7 +205,12 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                 _buildHeader(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                    padding: EdgeInsets.fromLTRB(
+                      context.pageHorizontalPadding,
+                      0,
+                      context.pageHorizontalPadding,
+                      120,
+                    ),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -266,7 +274,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.pageHorizontalPadding,
+        vertical: 12,
+      ),
       child: Row(
         children: [
           GestureDetector(
@@ -902,7 +913,12 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   Widget _buildStartButton() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        12,
+        context.pageHorizontalPadding,
+        24,
+      ),
       decoration: BoxDecoration(
         color: _surface.withAlpha(230),
       ),

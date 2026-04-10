@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/firestore/firestore_error_utils.dart';
 import '../providers/trending_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
+import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/brand_ui_kit.dart';
 
 class TrendingScreen extends ConsumerStatefulWidget {
@@ -21,10 +23,8 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        backgroundColor: VelvetNoir.surface,
+      child: AppPageScaffold(
         appBar: AppBar(
-          backgroundColor: VelvetNoir.surface,
           title: const MixvyAppBarLogo(fontSize: 20),
           bottom: const TabBar(
             indicatorColor: VelvetNoir.primary,
@@ -50,17 +50,16 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
   Widget _buildTrendingPosts() {
     final postsAsync = ref.watch(trendingPostsProvider);
 
-    return postsAsync.when(
-      data: (posts) {
-        if (posts.isEmpty) {
-          return const Center(
-            child: Text(
-              'No trending posts yet',
-              style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-            ),
-          );
-        }
-        return ListView.builder(
+    return AppAsyncValueView<List<TrendingPost>>(
+      value: postsAsync,
+      fallbackContext: 'trending posts',
+      isEmpty: (posts) => posts.isEmpty,
+      empty: const AppEmptyView(
+        icon: Icons.local_fire_department_outlined,
+        title: 'No trending posts yet',
+        message: 'Trending content will appear here once posts gain momentum.',
+      ),
+      data: (posts) => ListView.builder(
           padding: const EdgeInsets.only(top: 4, bottom: 80),
           itemCount: posts.length,
           itemBuilder: (context, index) {
@@ -80,19 +79,6 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
               currentUserId: uid,
             );
           },
-        );
-      },
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: VelvetNoir.primary)),
-      error: (e, _) => Center(
-        child: Text(
-          friendlyFirestoreMessage(
-            e,
-            fallbackContext: 'trending posts',
-          ),
-          style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
       ),
     );
   }
@@ -107,18 +93,21 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
     );
     final hashtagsAsync = ref.watch(trendingHashtagsProvider(now));
 
-    return hashtagsAsync.when(
+    return AppAsyncValueView<List<Map<String, dynamic>>>(
+      value: hashtagsAsync,
+      fallbackContext: 'hashtags',
+      isEmpty: (hashtags) => hashtags.isEmpty,
+      empty: const AppEmptyView(
+        icon: Icons.tag_outlined,
+        title: 'No trending hashtags yet',
+        message: 'Popular hashtags will appear here when conversations build up.',
+      ),
       data: (hashtags) {
-        if (hashtags.isEmpty) {
-          return const Center(
-            child: Text(
-              'No trending hashtags yet',
-              style: TextStyle(color: VelvetNoir.onSurfaceVariant),
-            ),
-          );
-        }
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.pageHorizontalPadding,
+            vertical: 12,
+          ),
           itemCount: hashtags.length,
           itemBuilder: (context, index) {
             final tag = hashtags[index];
@@ -187,18 +176,6 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
           },
         );
       },
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: VelvetNoir.primary)),
-      error: (e, _) => Center(
-        child: Text(
-          friendlyFirestoreMessage(
-            e,
-            fallbackContext: 'hashtags',
-          ),
-          style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-      ),
     );
   }
 
@@ -246,19 +223,16 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                   ),
                   const SizedBox(height: 12),
                   Expanded(
-                    child: postsAsync.when(
+                    child: AppAsyncValueView<List<TrendingPost>>(
+                      value: postsAsync,
+                      fallbackContext: 'hashtag posts',
+                      isEmpty: (posts) => posts.isEmpty,
+                      empty: const AppEmptyView(
+                        icon: Icons.forum_outlined,
+                        title: 'No posts with this hashtag',
+                      ),
                       data: (posts) {
-                        if (posts.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'No posts with this hashtag',
-                              style: TextStyle(
-                                  color: VelvetNoir.onSurfaceVariant),
-                            ),
-                          );
-                        }
-                        final uid =
-                            FirebaseAuth.instance.currentUser?.uid ?? '';
+                        final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
                         return ListView.builder(
                           controller: scrollController,
                           itemCount: posts.length,
@@ -280,14 +254,6 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                           },
                         );
                       },
-                      loading: () => const Center(
-                          child: CircularProgressIndicator(
-                              color: VelvetNoir.primary)),
-                      error: (e, _) => const Center(
-                        child: Text('Could not load posts',
-                            style: TextStyle(
-                                color: VelvetNoir.onSurfaceVariant)),
-                      ),
                     ),
                   ),
                 ],

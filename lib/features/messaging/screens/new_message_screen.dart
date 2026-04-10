@@ -2,6 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/layout/app_layout.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/messaging_provider.dart';
 
 class NewMessageScreen extends ConsumerStatefulWidget {
@@ -124,14 +128,14 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('New Message'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.pageHorizontalPadding),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -147,12 +151,15 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
           if (_isSearching)
             const Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(),
+              child: AppLoadingView(label: 'Searching users'),
             )
           else if (_searchResults.isEmpty && _searchController.text.isNotEmpty)
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('No users found'),
+              child: AppEmptyView(
+                title: 'No users found',
+                icon: Icons.search_off_rounded,
+              ),
             )
           else
             Expanded(

@@ -4,14 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/firestore/firestore_error_utils.dart';
+import '../../core/layout/app_layout.dart';
 import '../providers/app_settings_provider.dart';
 import '../../features/beta/beta_tester_provider.dart';
 import '../../features/after_dark/providers/after_dark_provider.dart';
 import '../../features/profile/widgets/device_settings_panel.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 
 // ── Velvet Noir brand tokens ──────────────────────────────────────────────────
-const _svSurface   = Color(0xFF0B0B0B);
 const _svHigh      = Color(0xFF1A1A1A);
 const _svCard      = Color(0xFF141414);
 const _svPrimary   = Color(0xFFD4AF37);
@@ -28,10 +29,8 @@ class SettingsScreen extends ConsumerWidget {
     final settingsAsync = ref.watch(appSettingsControllerProvider);
     final controller = ref.read(appSettingsControllerProvider.notifier);
 
-    return Scaffold(
-      backgroundColor: _svSurface,
+    return AppPageScaffold(
       appBar: AppBar(
-        backgroundColor: _svSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
@@ -49,19 +48,9 @@ class SettingsScreen extends ConsumerWidget {
               height: 1, color: _svPrimary.withValues(alpha: 0.15)),
         ),
       ),
-      body: settingsAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator(color: _svPrimary)),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              friendlyFirestoreMessage(e, fallbackContext: 'settings'),
-              style: const TextStyle(color: _svCream),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
+      body: AppAsyncValueView(
+        value: settingsAsync,
+        fallbackContext: 'settings',
         data: (settings) => ListView(
           padding: const EdgeInsets.symmetric(vertical: 20),
           children: [
@@ -100,7 +89,8 @@ class SettingsScreen extends ConsumerWidget {
 
             // Appearance sub-section
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              margin: EdgeInsets.symmetric(
+                  horizontal: context.pageHorizontalPadding, vertical: 4),
               decoration: BoxDecoration(
                 color: _svCard,
                 borderRadius: BorderRadius.circular(14),
@@ -208,7 +198,8 @@ class SettingsScreen extends ConsumerWidget {
 
             // Camera & Mic sub-section
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              margin: EdgeInsets.symmetric(
+                  horizontal: context.pageHorizontalPadding, vertical: 4),
               decoration: BoxDecoration(
                 color: _svCard,
                 borderRadius: BorderRadius.circular(14),
