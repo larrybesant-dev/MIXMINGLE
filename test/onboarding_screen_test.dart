@@ -52,20 +52,20 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('Step Into The Hottest Rooms'), findsOneWidget);
-      expect(find.text('KEEP THE VIBE'), findsOneWidget);
+      expect(find.text('Step into rooms with real chemistry.'), findsOneWidget);
+      expect(find.text('CONTINUE'), findsOneWidget);
       // Legal checkbox only appears on last page
       expect(find.byType(Checkbox), findsNothing);
     });
 
-    testWidgets('advances to second page via KEEP THE VIBE', (tester) async {
+    testWidgets('advances to second page via CONTINUE', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Find Your Night Crew Fast'), findsOneWidget);
+      expect(find.text('Meet people who match your energy fast.'), findsOneWidget);
     });
 
     testWidgets('advances through all pages to final page', (tester) async {
@@ -73,68 +73,65 @@ void main() {
       await tester.pumpAndSettle();
 
       // Page 0 → 1
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
       // Page 1 → 2
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
       // Page 2 → 3 (interests/final page)
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
-      // Final page shows interests picker and JOIN THE PARTY CTA
-      expect(find.text('What are you into?'), findsOneWidget);
-      expect(find.text('JOIN THE PARTY'), findsOneWidget);
+      expect(find.text('Choose the energy you want more of.'), findsOneWidget);
+      expect(find.text('ENTER MIXVY'), findsOneWidget);
     });
 
     testWidgets('final page shows legal checkbox', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
       expect(find.byType(Checkbox), findsOneWidget);
       expect(find.text('I agree to the Terms of Service and Privacy Policy.'), findsOneWidget);
     });
 
-    testWidgets('JOIN THE PARTY is disabled until legal checkbox is ticked',
+    testWidgets('ENTER MIXVY is disabled until legal checkbox is ticked',
         (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
       // Navigate to final page (interests page is page 3)
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
-      // Before accepting legal the InkWell that wraps the CTA label has null onTap.
-      InkWell ctaInkWell() => tester.widget<InkWell>(
-            find
-                .ancestor(
-                  of: find.text('JOIN THE PARTY'),
-                  matching: find.byType(InkWell),
-                )
-                .first,
-          );
+      final elevatedButton = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'ENTER MIXVY'),
+      );
 
-      expect(ctaInkWell().onTap, isNull,
+      expect(elevatedButton.onPressed, isNull,
           reason: 'CTA should be disabled before legal accepted');
 
       // Tick the legal checkbox
       await tester.tap(find.byType(Checkbox));
       await tester.pump();
 
-      expect(ctaInkWell().onTap, isNotNull,
+      final enabledButton = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'ENTER MIXVY'),
+      );
+
+      expect(enabledButton.onPressed, isNotNull,
           reason: 'CTA should be enabled after legal accepted');
     });
 
@@ -142,11 +139,11 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Terms'));

@@ -385,12 +385,12 @@ class _LiveGifCell extends ConsumerWidget {
         return CachedNetworkImage(
           imageUrl: url,
           fit: BoxFit.cover,
-          placeholder: (_, __) => const _LoadingCell(),
-          errorWidget: (_, __, ___) => _Fallback(name: name),
+          placeholder: (context, url) => const _LoadingCell(),
+          errorWidget: (context, error, stackTrace) => _Fallback(name: name),
         );
       },
       loading: () => const _LoadingCell(),
-      error: (_, __) => _Fallback(name: name),
+      error: (error, stackTrace) => _Fallback(name: name),
     );
   }
 }
@@ -406,7 +406,7 @@ class _AssetCell extends StatelessWidget {
     return Image.asset(
       path,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const _Fallback(name: '?'),
+      errorBuilder: (context, error, stackTrace) => const _Fallback(name: '?'),
     );
   }
 }
@@ -498,7 +498,7 @@ class EmojiMessageContent extends ConsumerWidget {
                 width: 100,
                 height: 100,
                 fit: BoxFit.contain,
-                placeholder: (_, __) => const SizedBox(
+                placeholder: (context, url) => const SizedBox(
                   width: 100,
                   height: 100,
                   child: Center(
@@ -508,7 +508,7 @@ class EmojiMessageContent extends ConsumerWidget {
                     ),
                   ),
                 ),
-                errorWidget: (_, __, ___) => const Icon(
+                errorWidget: (context, error, stackTrace) => const Icon(
                   Icons.broken_image_outlined,
                   color: VelvetNoir.onSurfaceVariant,
                   size: 40,
@@ -529,7 +529,7 @@ class EmojiMessageContent extends ConsumerWidget {
             ),
           ),
         ),
-        error: (_, __) => const Icon(
+        error: (error, stackTrace) => const Icon(
           Icons.broken_image_outlined,
           color: VelvetNoir.onSurfaceVariant,
           size: 40,
@@ -543,7 +543,7 @@ class EmojiMessageContent extends ConsumerWidget {
       width: 100,
       height: 100,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => const Icon(
+      errorBuilder: (context, error, stackTrace) => const Icon(
         Icons.image_not_supported_outlined,
         color: VelvetNoir.onSurfaceVariant,
         size: 40,

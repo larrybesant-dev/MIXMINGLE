@@ -321,7 +321,7 @@ class _MessageRequestsSheet extends ConsumerWidget {
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: VelvetNoir.primary),
                 ),
-                error: (_, __) => const Center(
+                error: (error, stackTrace) => const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
                     child: Text(

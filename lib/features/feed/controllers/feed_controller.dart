@@ -103,9 +103,7 @@ class FeedController extends Notifier<FeedState> {
         return;
       }
 
-      final blockedIds = currentUserId == null
-          ? const <String>{}
-          : await _moderationService.getExcludedUserIds(currentUserId);
+      final blockedIds = await _moderationService.getExcludedUserIds(currentUserId);
       final viewerProfile = await _loadViewerProfile(currentUserId);
       final liveRooms = await _roomService.getRecommendedLiveRooms(
         limit: 20,

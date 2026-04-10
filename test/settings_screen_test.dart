@@ -26,7 +26,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Appearance'), findsOneWidget);
-    expect(find.text('Push notifications'), findsOneWidget);
+  expect(find.text('Notifications'), findsOneWidget);
     expect(find.text('Anonymous analytics'), findsOneWidget);
 
     final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();

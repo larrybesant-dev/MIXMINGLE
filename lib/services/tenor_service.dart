@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 /// Lightweight wrapper around the Giphy API.
 ///
 /// Free key: https://developers.giphy.com/dashboard/
-/// Set  GIPHY_API_KEY=<your_key>  in assets/env/app_env.
+/// Set `GIPHY_API_KEY=<your_key>` in assets/env/app_env.
 class GifService {
   GifService._();
 

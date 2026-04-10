@@ -73,7 +73,7 @@ class AfterDarkLiveRoomCard extends StatelessWidget {
                     CachedNetworkImage(
                       imageUrl: room.thumbnailUrl!,
                       fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => _LoungeFallback(
+                      errorWidget: (context, error, stackTrace) => _LoungeFallback(
                         label: moodLabel,
                         gradientColors: gradientColors,
                       ),

@@ -40,15 +40,15 @@ Widget _buildApp({
 
 void main() {
   group('MessagesScreen', () {
-    testWidgets('renders Messages AppBar with Chats and Requests tabs',
+    testWidgets('renders Messages AppBar and request action',
         (tester) async {
       final firestore = FakeFirebaseFirestore();
       await tester.pumpWidget(_buildApp(firestore: firestore));
       await tester.pump();
 
       expect(find.text('Messages'), findsOneWidget);
-      expect(find.text('Chats'), findsOneWidget);
-      expect(find.text('Requests'), findsOneWidget);
+      expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+      expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
     });
 
     testWidgets('shows empty Chats state when no conversations exist',
@@ -89,18 +89,19 @@ void main() {
       expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
     });
 
-    testWidgets('Requests tab shows empty state when no pending requests',
+    testWidgets('requests sheet shows empty state when no pending requests',
         (tester) async {
       final firestore = FakeFirebaseFirestore();
       await tester.pumpWidget(_buildApp(firestore: firestore));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      await tester.tap(find.text('Requests'));
+      await tester.tap(find.byIcon(Icons.more_horiz_rounded));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('No message requests'), findsOneWidget);
+      expect(find.text('Message Requests'), findsOneWidget);
+      expect(find.text('No pending message requests.'), findsOneWidget);
     });
   });
 }

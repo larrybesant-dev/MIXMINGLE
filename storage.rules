@@ -69,6 +69,12 @@ service firebase.storage {
       allow delete: if isOwner(userId);
     }
 
+    match /rooms/{userId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId) && isImageUpload();
+      allow delete: if isOwner(userId);
+    }
+
     // Deny all other Storage paths by default.
     match /{allPaths=**} {
       allow read, write: if false;

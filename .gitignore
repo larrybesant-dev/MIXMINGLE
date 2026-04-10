@@ -52,3 +52,8 @@ functions/.env.*
 !.env.example
 assets/env/app_env
 !assets/env/app_env.example
+
+# Local deployment and audit artifacts
+.firebase/
+code-scan.txt
+*.bak

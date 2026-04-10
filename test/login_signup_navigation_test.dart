@@ -58,9 +58,9 @@ void main() {
     emitAuthState(null);
     await tester.pump();
 
-    expect(find.text("Create Account"), findsOneWidget);
+    expect(find.text('SIGN UP'), findsOneWidget);
 
-    await tester.tap(find.text("Create Account"), warnIfMissed: false);
+    await tester.tap(find.text('SIGN UP'), warnIfMissed: false);
 
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 50));

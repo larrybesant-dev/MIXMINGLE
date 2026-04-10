@@ -1176,10 +1176,6 @@ exports.sendIncomingCallPush = onDocumentCreated(
   async (event) => sendIncomingCallPushHandler(event),
 );
 
-exports.requestCoinTransfer = onCall(async (request) =>
-  requestCoinTransferHandler(request),
-);
-
 async function sendRoomGiftHandler(request, deps = {}) {
   const senderId = requireAuth(request);
   enforceRateLimit("sendRoomGift", senderId);

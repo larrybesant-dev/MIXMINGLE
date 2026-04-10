@@ -1414,7 +1414,7 @@ class _HeroCard extends StatelessWidget {
       }
     }
 
-    final _vnUploadBtn = OutlinedButton.styleFrom(
+    final vnUploadBtn = OutlinedButton.styleFrom(
       foregroundColor: const Color(0xFFD4AF37),
       side: const BorderSide(color: Color(0xFFD4AF37), width: 1.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
@@ -1637,25 +1637,25 @@ class _HeroCard extends StatelessWidget {
                 onPressed: isUploadingPhoto ? null : () => safeRunUpload(onUploadAvatar),
                 icon: const Icon(Icons.photo_camera_back_outlined, size: 16),
                 label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Pic'),
-                style: _vnUploadBtn,
+                style: vnUploadBtn,
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingCover ? null : () => safeRunUpload(onUploadCover),
                 icon: const Icon(Icons.image_outlined, size: 16),
                 label: Text(isUploadingCover ? 'Uploading...' : 'Cover'),
-                style: _vnUploadBtn,
+                style: vnUploadBtn,
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingGallery ? null : () => safeRunUpload(onUploadGallery),
                 icon: const Icon(Icons.collections_outlined, size: 16),
                 label: Text(isUploadingGallery ? 'Uploading...' : 'Gallery'),
-                style: _vnUploadBtn,
+                style: vnUploadBtn,
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingVideo ? null : () => safeRunUpload(onUploadVideo),
                 icon: const Icon(Icons.videocam_outlined, size: 16),
                 label: Text(isUploadingVideo ? 'Uploading...' : 'Intro video'),
-                style: _vnUploadBtn,
+                style: vnUploadBtn,
               ),
             ],
           ),
