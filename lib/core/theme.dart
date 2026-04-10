@@ -1,6 +1,7 @@
 // Neon Pulse Design System — MixVy v3
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../theme/font_fallbacks.dart';
 
 // ── MIXVY Brand Design Tokens — Locked ──────────────────────────────────────
 // Jet Black · Deep Wine Red · Gold · Soft Cream
@@ -42,6 +43,9 @@ class VelvetNoir {
   );
 }
 
+TextStyle _playfair(TextStyle style) => withMixvyFontFallback(style);
+TextStyle _raleway(TextStyle style) => withMixvyFontFallback(style);
+
 final ThemeData midnightCreativeTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
@@ -63,21 +67,21 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   textTheme: TextTheme(
     // Display & Headline — Playfair Display (elegant serif)
-    displayLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: VelvetNoir.onSurface),
-    displayMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: VelvetNoir.onSurface),
-    headlineLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: VelvetNoir.onSurface),
-    headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: VelvetNoir.onSurface),
-    headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: VelvetNoir.onSurface),
-    titleLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: VelvetNoir.onSurface),
+    displayLarge: _playfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: VelvetNoir.onSurface)),
+    displayMedium: _playfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: VelvetNoir.onSurface)),
+    headlineLarge: _playfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: VelvetNoir.onSurface)),
+    headlineMedium: _playfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: VelvetNoir.onSurface)),
+    headlineSmall: _playfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: VelvetNoir.onSurface)),
+    titleLarge: _playfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: VelvetNoir.onSurface)),
     // Body & Labels — Raleway (clean modern — brand-spec)
-    titleMedium: GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface),
-    titleSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface),
-    bodyLarge:   GoogleFonts.raleway(fontSize: 16, color: VelvetNoir.onSurface),
-    bodyMedium:  GoogleFonts.raleway(fontSize: 14, color: VelvetNoir.onSurfaceVariant),
-    bodySmall:   GoogleFonts.raleway(fontSize: 12, color: VelvetNoir.onSurfaceVariant),
-    labelLarge:  GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: 0.8, color: VelvetNoir.onSurface),
-    labelMedium: GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 12, letterSpacing: 0.6, color: VelvetNoir.onSurface),
-    labelSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 1.0, color: VelvetNoir.onSurfaceVariant),
+    titleMedium: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 16, color: VelvetNoir.onSurface)),
+    titleSmall: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 14, color: VelvetNoir.onSurface)),
+    bodyLarge: _raleway(GoogleFonts.raleway(fontSize: 16, color: VelvetNoir.onSurface)),
+    bodyMedium: _raleway(GoogleFonts.raleway(fontSize: 14, color: VelvetNoir.onSurfaceVariant)),
+    bodySmall: _raleway(GoogleFonts.raleway(fontSize: 12, color: VelvetNoir.onSurfaceVariant)),
+    labelLarge: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: 0.8, color: VelvetNoir.onSurface)),
+    labelMedium: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 12, letterSpacing: 0.6, color: VelvetNoir.onSurface)),
+    labelSmall: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 1.0, color: VelvetNoir.onSurfaceVariant)),
   ),
   appBarTheme: AppBarTheme(
     backgroundColor: VelvetNoir.surface,
@@ -86,16 +90,16 @@ final ThemeData midnightCreativeTheme = ThemeData(
     surfaceTintColor: Colors.transparent,
     foregroundColor: VelvetNoir.onSurface,
     centerTitle: true,
-    titleTextStyle: GoogleFonts.playfairDisplay(
+    titleTextStyle: _playfair(GoogleFonts.playfairDisplay(
       color: VelvetNoir.onSurface,
       fontSize: 20,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.2,
-    ),
-    toolbarTextStyle: GoogleFonts.raleway(
+    )),
+    toolbarTextStyle: _raleway(GoogleFonts.raleway(
       color: VelvetNoir.onSurface,
       fontSize: 14,
-    ),
+    )),
   ),
   cardTheme: CardThemeData(
     elevation: 0,
@@ -120,8 +124,8 @@ final ThemeData midnightCreativeTheme = ThemeData(
       borderRadius: BorderRadius.circular(999),
       borderSide: const BorderSide(color: VelvetNoir.primary, width: 1.5),
     ),
-    hintStyle: GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
-    labelStyle: GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
+    hintStyle: _raleway(GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 14)),
+    labelStyle: _raleway(GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 14)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
@@ -130,7 +134,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
       foregroundColor: VelvetNoir.surface,
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-      textStyle: GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6),
+      textStyle: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6)),
       elevation: 0,
     ),
   ),
@@ -140,7 +144,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
       side: const BorderSide(color: VelvetNoir.primary, width: 1.5),
       minimumSize: const Size(double.infinity, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-      textStyle: GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6),
+      textStyle: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6)),
     ),
   ),
   textButtonTheme: TextButtonThemeData(
@@ -156,7 +160,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   snackBarTheme: SnackBarThemeData(
     backgroundColor: VelvetNoir.surfaceHigh,
-    contentTextStyle: GoogleFonts.raleway(color: VelvetNoir.onSurface, fontSize: 14, height: 1.4),
+    contentTextStyle: _raleway(GoogleFonts.raleway(color: VelvetNoir.onSurface, fontSize: 14, height: 1.4)),
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
   ),

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/controllers/feed_controller.dart';
 import '../feed/widgets/post_card.dart';
@@ -71,8 +73,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final currentUser = ref.watch(userProvider);
     final newMembersAsync = ref.watch(newMembersStreamProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
+      safeArea: false,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
@@ -222,8 +225,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           height: 110,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.pageHorizontalPadding,
+                              vertical: 4,
+                            ),
                             itemCount: rooms.length.clamp(0, 12),
                             separatorBuilder: (ctx, idx) =>
                                 const SizedBox(width: 14),
@@ -262,8 +267,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           height: 200,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.pageHorizontalPadding,
+                              vertical: 4,
+                            ),
                             itemCount: users.length.clamp(0, 10),
                             separatorBuilder: (ctx, idx) =>
                                 const SizedBox(width: 10),
@@ -301,8 +308,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           height: 170,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.pageHorizontalPadding,
+                              vertical: 4,
+                            ),
                             itemCount: rooms.length.clamp(0, 8),
                             separatorBuilder: (ctx, idx) =>
                                 const SizedBox(width: 12),
@@ -337,8 +346,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           height: 88,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.pageHorizontalPadding,
+                              vertical: 4,
+                            ),
                             itemCount: members.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(width: 16),

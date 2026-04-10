@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/after_dark_provider.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
 import '../theme/after_dark_theme.dart';
 
 enum _PinMode { setup, unlock }
@@ -104,8 +105,9 @@ class _AfterDarkPinScreenState extends ConsumerState<AfterDarkPinScreen> {
   Widget build(BuildContext context) {
     return Theme(
       data: afterDarkTheme,
-      child: Scaffold(
+      child: AppPageScaffold(
         backgroundColor: EmberDark.surface,
+        safeArea: false,
         appBar: AppBar(
           backgroundColor: EmberDark.surface,
           leading: IconButton(

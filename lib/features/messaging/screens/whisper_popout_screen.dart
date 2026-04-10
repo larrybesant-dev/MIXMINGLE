@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../presentation/providers/user_provider.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/messaging_provider.dart';
 import 'chat_screen.dart';
 
@@ -62,12 +64,15 @@ class _WhisperPopoutScreenState extends ConsumerState<WhisperPopoutScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const AppPageScaffold(
+        body: AppLoadingView(label: 'Opening whisper'),
+      );
     }
     if (_error != null) {
-      return Scaffold(
-        body: Center(
-          child: Text(_error!, style: const TextStyle(color: Colors.red)),
+      return AppPageScaffold(
+        body: AppErrorView(
+          error: _error!,
+          fallbackContext: 'Unable to open whisper.',
         ),
       );
     }

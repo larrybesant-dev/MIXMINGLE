@@ -19,6 +19,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/controllers/auth_controller.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
 import 'profile_completion.dart';
 import 'profile_controller.dart';
 import 'widgets/device_settings_panel.dart';
@@ -33,7 +34,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: const Color(0xFF0D0A0C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF110D0F),
@@ -67,7 +68,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: const SafeArea(child: ProfileFormView()),
+      body: const ProfileFormView(),
     );
   }
 }

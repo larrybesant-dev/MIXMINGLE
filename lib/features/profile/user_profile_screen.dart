@@ -10,6 +10,9 @@ import 'package:mixvy/services/friend_service.dart';
 import 'package:mixvy/services/moderation_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/layout/app_layout.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 import '../../widgets/follow_button.dart';
 import '../../widgets/gift_picker_sheet.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
@@ -342,7 +345,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       const <String>{};
     final isFriend = friendIds.contains(widget.userId);
     final isRequestPending = pendingIds.contains(widget.userId);
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Profile'),
         bottom: TabBar(
@@ -361,16 +364,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             future: _profileFuture,
             builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppLoadingView(label: 'Loading profile');
           }
           final payload = snapshot.data;
           if (payload == null) {
-            return const Center(child: Text('User not found.'));
+            return const AppEmptyView(title: 'User not found');
           }
 
           final userSnapshot = payload['user'] as DocumentSnapshot<Map<String, dynamic>>;
           if (!userSnapshot.exists) {
-            return const Center(child: Text('User not found.'));
+            return const AppEmptyView(title: 'User not found');
           }
 
           final data = userSnapshot.data() ?? const <String, dynamic>{};
@@ -428,7 +431,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           }
 
           return ListView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(context.pageHorizontalPadding),
             children: [
               Container(
                 decoration: BoxDecoration(
@@ -810,18 +813,19 @@ class _UserPostsTab extends ConsumerWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const AppLoadingView(label: 'Loading posts');
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return AppErrorView(
+            error: snapshot.error ?? 'Unknown error',
+            fallbackContext: 'Unable to load posts.',
+          );
         }
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: Text('No posts yet.', textAlign: TextAlign.center),
-            ),
+          return const AppEmptyView(
+            title: 'No posts yet',
+            icon: Icons.post_add_outlined,
           );
         }
         final posts = docs.map((d) => PostModel.fromDoc(d.id, d.data())).toList();

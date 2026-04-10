@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/app_settings_service.dart';
 import '../router/app_router.dart';
 import '../presentation/providers/app_settings_provider.dart';
+import '../theme/font_fallbacks.dart';
 import '../theme/app_theme.dart';
 import '../core/theme.dart';
 import '../shared/widgets/beta_feedback_overlay.dart';
@@ -28,14 +29,7 @@ class MixVyApp extends ConsumerWidget {
       themeMode: afterDarkActive ? ThemeMode.dark : settings.themeMode,
       builder: (context, child) {
         return DefaultTextStyle.merge(
-          style: const TextStyle(
-            fontFamilyFallback: [
-              'NotoColorEmoji',
-              'NotoSans',
-              'NotoSansSymbols',
-              'NotoSansSymbols2',
-            ],
-          ),
+          style: const TextStyle(fontFamilyFallback: mixvyFontFamilyFallback),
           child: IncomingCallOverlay(
             child: BetaFeedbackOverlay(
               child: child ?? const SizedBox.shrink(),

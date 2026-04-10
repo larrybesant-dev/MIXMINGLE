@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/layout/app_layout.dart';
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/after_dark_provider.dart';
 import '../theme/after_dark_theme.dart';
 
@@ -124,17 +127,16 @@ class _AfterDarkProfileScreenState
   @override
   Widget build(BuildContext context) {
     if (!_loaded) {
-      return const Scaffold(
+      return const AppPageScaffold(
         backgroundColor: EmberDark.surface,
-        body: Center(
-            child: CircularProgressIndicator(color: EmberDark.primary)),
+        body: AppLoadingView(label: 'Loading After Dark profile'),
       );
     }
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: EmberDark.surface,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

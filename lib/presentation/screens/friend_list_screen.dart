@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/app_layout.dart';
 import '../../models/user_model.dart';
 import '../../models/presence_model.dart';
 import '../providers/friend_provider.dart';
 import '../providers/user_provider.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 import '../../widgets/user_profile_popup.dart';
 import '../../services/notification_service.dart';
 import '../../services/presence_service.dart';
@@ -52,15 +55,18 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
     final myRoomId = myPresenceAsync.valueOrNull?.inRoom;
 
     if (currentUserId == null) {
-      return Scaffold(
+      return AppPageScaffold(
         appBar: AppBar(title: const Text('Friends')),
-        body: const Center(child: Text('Please log in to manage friends.')),
+        body: const AppEmptyView(
+          title: 'Please log in to manage friends',
+          icon: Icons.login_rounded,
+        ),
       );
     }
 
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
         backgroundColor: VelvetNoir.surfaceHigh,
@@ -75,7 +81,12 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        padding: EdgeInsets.fromLTRB(
+          context.pageHorizontalPadding,
+          12,
+          context.pageHorizontalPadding,
+          32,
+        ),
         children: [
           // ── Status toggle ──────────────────────────────────────────────
           _StatusToggleBar(userId: currentUserId),

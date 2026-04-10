@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mixvy/core/layout/app_layout.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 import 'package:mixvy/services/analytics_service.dart';
 import 'package:mixvy/widgets/brand_ui_kit.dart';
 
@@ -147,8 +149,9 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: _surface,
+      safeArea: false,
       body: FadeTransition(
         opacity: _fadeAnim,
         child: Stack(
@@ -176,7 +179,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
             // System live indicator — bottom-left
             Positioned(
               bottom: 20,
-              left: 24,
+              left: context.pageHorizontalPadding,
               child: _systemLiveIndicator(),
             ),
           ],
@@ -236,7 +239,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
         // Left panel – branding
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(48),
+            padding: EdgeInsets.all(context.isExpandedLayout ? 48 : 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -272,7 +275,10 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
         // Right panel – auth card
         Container(
           width: 440,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 56),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.isExpandedLayout ? 40 : 28,
+            vertical: context.isExpandedLayout ? 56 : 40,
+          ),
           child: Center(child: _authCard(authState)),
         ),
       ],
@@ -282,7 +288,12 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   // ── narrow single-column layout ───────────────────────────────────────────
   Widget _narrowLayout(dynamic authState) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        40,
+        context.pageHorizontalPadding,
+        40,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

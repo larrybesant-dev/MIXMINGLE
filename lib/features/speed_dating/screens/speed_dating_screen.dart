@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../../../core/theme.dart';
 import '../models/speed_dating_models.dart';
 import '../services/speed_dating_service.dart';
@@ -445,13 +447,16 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     final theme = Theme.of(context);
 
     if (user == null) {
-      return Scaffold(
+      return AppPageScaffold(
         appBar: AppBar(title: const Text('Speed Dating')),
-        body: const Center(child: Text('Please sign in to use speed dating.')),
+        body: const AppEmptyView(
+          title: 'Please sign in to use speed dating',
+          icon: Icons.login_rounded,
+        ),
       );
     }
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
         backgroundColor: VelvetNoir.surfaceHigh,
@@ -531,28 +536,27 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
         stream: _service.candidatesStream(currentUserId: user.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppLoadingView(label: 'Loading speed dating queue');
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Failed to load queue: ${snapshot.error}'));
+            return AppErrorView(
+              error: snapshot.error ?? 'Unknown error',
+              fallbackContext: 'Failed to load queue.',
+            );
           }
 
           final candidates = snapshot.data ?? const [];
           if (candidates.isEmpty) {
             // Session done — show summary
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
+              child: AppEmptyView(
+                title: 'Session complete',
+                message: 'Check back later for more matches.',
+                icon: Icons.favorite_outline_rounded,
+                action: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🎊', style: TextStyle(fontSize: 64)),
-                    const SizedBox(height: 16),
-                    Text('Session complete!',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

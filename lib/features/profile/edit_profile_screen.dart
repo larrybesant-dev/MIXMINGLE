@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
 import 'profile_completion.dart';
 import 'profile_controller.dart';
 
@@ -430,7 +432,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(profileControllerProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       appBar: AppBar(
         backgroundColor: VelvetNoir.surface,
@@ -462,7 +464,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           _completionBanner(state),
           if (state.error != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                8,
+                context.pageHorizontalPadding,
+                0,
+              ),
               child: Text(state.error!,
                   style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
             ),

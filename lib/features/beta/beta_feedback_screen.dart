@@ -2,6 +2,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/widgets/app_page_scaffold.dart';
+
 // ---------------------------------------------------------------------------
 // Data model
 // ---------------------------------------------------------------------------
@@ -192,7 +194,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (_submitted) {
-      return Scaffold(
+      return AppPageScaffold(
         appBar: AppBar(title: const Text('Beta Feedback')),
         body: const Center(
           child: Column(
@@ -212,7 +214,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
       );
     }
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Beta Feedback')),
       body: Column(
         children: [

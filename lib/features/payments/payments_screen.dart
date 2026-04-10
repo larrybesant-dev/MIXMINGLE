@@ -7,9 +7,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/mixvy_economy_config.dart';
+import '../../core/layout/app_layout.dart';
 import '../../models/cash_out_request_model.dart';
 import '../../models/user_model.dart';
 import '../../models/wallet_model.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 import '../../services/cash_out_service.dart';
 import '../../services/payment_api.dart';
 import 'stripe_web_payment_widget.dart';
@@ -328,7 +331,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       ),
     );
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: const Color(0xFF0D0A0C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF110D0F),
@@ -352,7 +355,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(context.pageHorizontalPadding),
         children: [
           if (kIsWeb) ...[
             const StripeWebPaymentWidget(),
@@ -362,7 +365,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             future: _connectStatusFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const LinearProgressIndicator();
+                return const AppLoadingView(label: 'Loading payout setup');
               }
 
               if (snapshot.hasError) {
@@ -543,8 +546,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 },
               );
             },
-            loading: () => const LinearProgressIndicator(),
-            error: (e, _) => Text('Wallet unavailable: $e'),
+            loading: () => const AppLoadingView(label: 'Loading wallet'),
+            error: (e, _) => AppErrorView(
+              error: e,
+              fallbackContext: 'Wallet unavailable.',
+            ),
           ),
           const SizedBox(height: 14),
           Card(
@@ -586,14 +592,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ],
                       ],
                     ),
-                    loading: () => const LinearProgressIndicator(),
-                    error: (e, _) => Text('Referral code unavailable: $e'),
+                    loading: () => const AppLoadingView(label: 'Loading referral code'),
+                    error: (e, _) => AppErrorView(
+                      error: e,
+                      fallbackContext: 'Referral code unavailable.',
+                    ),
                   ),
                   const SizedBox(height: 8),
                   referralEarningsAsync.when(
                     data: (total) => Text('Referral earnings: ${total.toStringAsFixed(2)}'),
                     loading: () => const SizedBox.shrink(),
-                    error: (e, _) => Text('Referral earnings unavailable: $e'),
+                    error: (e, _) => Text('Referral earnings unavailable.'),
                   ),
                   const SizedBox(height: 8),
                   Align(
@@ -743,8 +752,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   ],
                 );
               },
-              loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('Unable to load recipients: $e'),
+              loading: () => const AppLoadingView(label: 'Loading recipients'),
+              error: (e, _) => AppErrorView(
+                error: e,
+                fallbackContext: 'Unable to load recipients.',
+              ),
             ),
           const SizedBox(height: 16),
           TextField(
@@ -842,7 +854,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           transactionsAsync.when(
             data: (transactions) {
               if (transactions.isEmpty) {
-                return const Text('No transactions yet.');
+                return const AppEmptyView(
+                  title: 'No transactions yet',
+                  icon: Icons.receipt_long_outlined,
+                );
               }
 
               return Column(
@@ -894,8 +909,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 }).toList(growable: false),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Unable to load transactions: $e'),
+            loading: () => const AppLoadingView(label: 'Loading transactions'),
+            error: (e, _) => AppErrorView(
+              error: e,
+              fallbackContext: 'Unable to load transactions.',
+            ),
           ),
         ],
       ),

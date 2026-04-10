@@ -1,6 +1,7 @@
 // Ember Dark Design System — MixVy After Dark
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../theme/font_fallbacks.dart';
 
 // ── Ember Dark colour tokens ──────────────────────────────────────────────────
 class EmberDark {
@@ -47,6 +48,9 @@ class EmberDark {
   );
 }
 
+TextStyle _afterDarkPlayfair(TextStyle style) => withMixvyFontFallback(style);
+TextStyle _afterDarkRaleway(TextStyle style) => withMixvyFontFallback(style);
+
 final ThemeData afterDarkTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
@@ -67,20 +71,20 @@ final ThemeData afterDarkTheme = ThemeData(
     outline: EmberDark.outlineVariant,
   ),
   textTheme: TextTheme(
-    displayLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: EmberDark.onSurface),
-    displayMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: EmberDark.onSurface),
-    headlineLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: EmberDark.onSurface),
-    headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: EmberDark.onSurface),
-    headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: EmberDark.onSurface),
-    titleLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: EmberDark.onSurface),
-    titleMedium: GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 16, color: EmberDark.onSurface),
-    titleSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 14, color: EmberDark.onSurface),
-    bodyLarge:   GoogleFonts.raleway(fontSize: 16, color: EmberDark.onSurface),
-    bodyMedium:  GoogleFonts.raleway(fontSize: 14, color: EmberDark.onSurfaceVariant),
-    bodySmall:   GoogleFonts.raleway(fontSize: 12, color: EmberDark.onSurfaceVariant),
-    labelLarge:  GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14, color: EmberDark.onSurface),
-    labelMedium: GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 12, color: EmberDark.onSurface),
-    labelSmall:  GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.6, color: EmberDark.onSurfaceVariant),
+    displayLarge: _afterDarkPlayfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: EmberDark.onSurface)),
+    displayMedium: _afterDarkPlayfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: EmberDark.onSurface)),
+    headlineLarge: _afterDarkPlayfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: EmberDark.onSurface)),
+    headlineMedium: _afterDarkPlayfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: EmberDark.onSurface)),
+    headlineSmall: _afterDarkPlayfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: EmberDark.onSurface)),
+    titleLarge: _afterDarkPlayfair(GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: EmberDark.onSurface)),
+    titleMedium: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 16, color: EmberDark.onSurface)),
+    titleSmall: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 14, color: EmberDark.onSurface)),
+    bodyLarge: _afterDarkRaleway(GoogleFonts.raleway(fontSize: 16, color: EmberDark.onSurface)),
+    bodyMedium: _afterDarkRaleway(GoogleFonts.raleway(fontSize: 14, color: EmberDark.onSurfaceVariant)),
+    bodySmall: _afterDarkRaleway(GoogleFonts.raleway(fontSize: 12, color: EmberDark.onSurfaceVariant)),
+    labelLarge: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14, color: EmberDark.onSurface)),
+    labelMedium: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 12, color: EmberDark.onSurface)),
+    labelSmall: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.6, color: EmberDark.onSurfaceVariant)),
   ),
   appBarTheme: AppBarTheme(
     backgroundColor: EmberDark.surface,
@@ -89,11 +93,11 @@ final ThemeData afterDarkTheme = ThemeData(
     surfaceTintColor: Colors.transparent,
     foregroundColor: EmberDark.onSurface,
     centerTitle: true,
-    titleTextStyle: GoogleFonts.playfairDisplay(
+    titleTextStyle: _afterDarkPlayfair(GoogleFonts.playfairDisplay(
       color: EmberDark.onSurface,
       fontSize: 18,
       fontWeight: FontWeight.w700,
-    ),
+    )),
   ),
   cardTheme: CardThemeData(
     elevation: 0,
@@ -106,7 +110,7 @@ final ThemeData afterDarkTheme = ThemeData(
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: EmberDark.surfaceHighest,
-    hintStyle: GoogleFonts.raleway(color: EmberDark.onSurfaceVariant),
+    hintStyle: _afterDarkRaleway(GoogleFonts.raleway(color: EmberDark.onSurfaceVariant)),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(999),
       borderSide: BorderSide.none,
@@ -128,7 +132,7 @@ final ThemeData afterDarkTheme = ThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-      textStyle: GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.5),
+      textStyle: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.5)),
     ),
   ),
   filledButtonTheme: FilledButtonThemeData(
@@ -137,7 +141,7 @@ final ThemeData afterDarkTheme = ThemeData(
       foregroundColor: EmberDark.onSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-      textStyle: GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.5),
+      textStyle: _afterDarkRaleway(GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.5)),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(

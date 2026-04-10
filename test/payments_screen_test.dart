@@ -177,7 +177,7 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      expect(find.text('No transactions yet.'), findsOneWidget);
+      expect(find.text('No transactions yet'), findsOneWidget);
     });
 
     testWidgets('shows no open refund requests initially', (tester) async {
