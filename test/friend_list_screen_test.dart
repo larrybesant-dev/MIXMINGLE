@@ -1,58 +1,104 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mixvy/features/friends/models/friend_roster_entry.dart';
+import 'package:mixvy/features/friends/models/friendship_model.dart';
+import 'package:mixvy/features/friends/providers/friends_providers.dart';
+import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/models/user_model.dart';
-import 'package:mixvy/presentation/providers/friend_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/presentation/screens/friend_list_screen.dart';
 
 void main() {
-  testWidgets('FriendListScreen renders friends and suggestions', (tester) async {
-    final firestore = FakeFirebaseFirestore();
-    await firestore.collection('users').doc('user-1').set({
-      'uid': 'user-1',
-      'email': 'user1@mixvy.dev',
-      'username': 'User One',
-      'friends': ['user-2'],
-    });
-    await firestore.collection('users').doc('user-2').set({
-      'uid': 'user-2',
-      'email': 'user2@mixvy.dev',
-      'username': 'User Two',
-    });
-    await firestore.collection('users').doc('user-3').set({
-      'uid': 'user-3',
-      'email': 'guest@mixvy.dev',
-      'username': 'Guest Person',
-    });
-    await firestore.collection('users').doc('user-4').set({
-      'uid': 'user-4',
-      'email': 'requested@mixvy.dev',
-      'username': 'Requested Person',
-    });
-    await firestore.collection('users').doc('user-5').set({
-      'uid': 'user-5',
-      'email': 'available@mixvy.dev',
-      'username': 'Available Person',
-    });
-    await firestore.collection('friend_requests').doc('incoming-1').set({
-      'fromUserId': 'user-3',
-      'toUserId': 'user-1',
-      'status': 'pending',
-      'createdAt': DateTime(2026, 1, 2),
-    });
-    await firestore.collection('friend_requests').doc('outgoing-1').set({
-      'fromUserId': 'user-1',
-      'toUserId': 'user-4',
-      'status': 'pending',
-      'createdAt': DateTime(2026, 1, 3),
-    });
+  testWidgets('FriendListScreen renders online, in-room, and offline sections', (tester) async {
+    final now = DateTime.now();
+    final roster = <FriendRosterEntry>[
+      FriendRosterEntry(
+        friendship: FriendshipModel(
+          id: 'user-1_user-2',
+          userA: 'user-1',
+          userB: 'user-2',
+          status: 'accepted',
+          requestedBy: 'user-1',
+          createdAt: DateTime(2026, 1, 2),
+        ),
+        user: UserModel(
+          id: 'user-2',
+          email: 'user2@mixvy.dev',
+          username: 'User Two',
+          createdAt: DateTime(2026, 1, 2),
+        ),
+        presence: PresenceModel(
+          userId: 'user-2',
+          isOnline: true,
+          inRoom: null,
+          lastSeen: now,
+          status: UserStatus.online,
+        ),
+      ),
+      FriendRosterEntry(
+        friendship: FriendshipModel(
+          id: 'user-1_user-3',
+          userA: 'user-1',
+          userB: 'user-3',
+          status: 'accepted',
+          requestedBy: 'user-1',
+          createdAt: DateTime(2026, 1, 3),
+        ),
+        user: UserModel(
+          id: 'user-3',
+          email: 'user3@mixvy.dev',
+          username: 'Room Friend',
+          createdAt: DateTime(2026, 1, 3),
+        ),
+        presence: PresenceModel(
+          userId: 'user-3',
+          isOnline: true,
+          inRoom: 'room-123',
+          lastSeen: now,
+          status: UserStatus.online,
+        ),
+      ),
+      FriendRosterEntry(
+        friendship: FriendshipModel(
+          id: 'user-1_user-4',
+          userA: 'user-1',
+          userB: 'user-4',
+          status: 'accepted',
+          requestedBy: 'user-1',
+          createdAt: DateTime(2026, 1, 4),
+        ),
+        user: UserModel(
+          id: 'user-4',
+          email: 'user4@mixvy.dev',
+          username: 'Offline Friend',
+          createdAt: DateTime(2026, 1, 4),
+        ),
+        presence: PresenceModel(
+          userId: 'user-4',
+          isOnline: false,
+          inRoom: null,
+          lastSeen: now.subtract(const Duration(hours: 2)),
+          status: UserStatus.offline,
+        ),
+      ),
+    ];
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          friendFirestoreProvider.overrideWithValue(firestore),
+          friendRosterProvider.overrideWith((ref) => Stream.value(roster)),
+          currentUserPresenceProvider.overrideWith(
+            (ref) => Stream.value(
+              PresenceModel(
+                userId: 'user-1',
+                isOnline: true,
+                inRoom: 'my-room',
+                lastSeen: now,
+                status: UserStatus.online,
+              ),
+            ),
+          ),
           userProvider.overrideWithValue(
             UserModel(
               id: 'user-1',
@@ -67,18 +113,16 @@ void main() {
     );
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 50));
 
-    expect(find.text('REQUESTS'), findsOneWidget);
-    expect(find.text('Guest Person'), findsOneWidget);
-    expect(find.text('Accept'), findsOneWidget);
-    expect(find.text('Decline'), findsOneWidget);
-    expect(find.text('FRIENDS'), findsOneWidget);
+    expect(find.text('ONLINE'), findsOneWidget);
+    expect(find.text('IN ROOMS'), findsOneWidget);
+    expect(find.text('OFFLINE'), findsOneWidget);
     expect(find.text('User Two'), findsOneWidget);
-    expect(find.text('PEOPLE YOU MAY KNOW'), findsOneWidget);
-    expect(find.text('Available Person'), findsOneWidget);
-    // Add friend icon is shown for candidates; Requested icon for pending outgoing
-    expect(find.byTooltip('Add friend'), findsWidgets);
-    expect(find.byTooltip('Remove friend'), findsOneWidget);
+    expect(find.text('Room Friend'), findsOneWidget);
+    expect(find.text('Offline Friend'), findsOneWidget);
+    expect(find.text('Invite'), findsOneWidget);
+    expect(find.text('Join Room'), findsOneWidget);
+    expect(find.textContaining('Last seen'), findsOneWidget);
   });
 }

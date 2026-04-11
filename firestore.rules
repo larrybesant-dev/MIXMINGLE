@@ -9,6 +9,13 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    function isFriendParticipant(data) {
+      return signedIn()
+        && data.userA is string
+        && data.userB is string
+        && (data.userA == request.auth.uid || data.userB == request.auth.uid);
+    }
+
     function isFriendLinkUpdate() {
       // Allow updating 'friends' (required) and optionally 'updatedAt'.
       // This covers acceptFriendRequest and removeFriend which write both fields.
@@ -381,18 +388,25 @@ service cloud.firestore {
       allow create, update: if isSelf(userId)
         && request.resource.data.keys().hasOnly([
           'isOnline',
+          'online',
           'status',
           'lastSeen',
           'inRoom',
+          'roomId',
           'lastOnlineNotifiedAt'
         ])
         && (!('isOnline' in request.resource.data)
           || request.resource.data.isOnline is bool)
+        && (!('online' in request.resource.data)
+          || request.resource.data.online is bool)
         && (!('status' in request.resource.data)
           || request.resource.data.status is string)
         && (!('inRoom' in request.resource.data)
           || request.resource.data.inRoom == null
-          || request.resource.data.inRoom is string);
+          || request.resource.data.inRoom is string)
+        && (!('roomId' in request.resource.data)
+          || request.resource.data.roomId == null
+          || request.resource.data.roomId is string);
       allow delete: if isSelf(userId);
     }
 
@@ -440,6 +454,44 @@ service cloud.firestore {
         && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    match /friendships/{friendshipId} {
+      allow read: if isFriendParticipant(resource.data);
+      allow create: if isFriendParticipant(request.resource.data)
+        && request.resource.data.keys().hasOnly([
+          'userA',
+          'userB',
+          'status',
+          'requestedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.userA is string
+        && request.resource.data.userB is string
+        && request.resource.data.userA < request.resource.data.userB
+        && friendshipId == request.resource.data.userA + '_' + request.resource.data.userB
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedBy == request.auth.uid;
+      allow update: if isFriendParticipant(resource.data)
+        && request.resource.data.userA == resource.data.userA
+        && request.resource.data.userB == resource.data.userB
+        && request.resource.data.requestedBy == resource.data.requestedBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.keys().hasOnly([
+          'userA',
+          'userB',
+          'status',
+          'requestedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && (
+          (resource.data.status == 'pending' && request.resource.data.status == 'accepted')
+          || request.resource.data.status == 'blocked'
+          || (resource.data.status == 'blocked' && request.resource.data.status == 'accepted')
+        );
+      allow delete: if isFriendParticipant(resource.data);
     }
 
     match /friend_requests/{requestId} {

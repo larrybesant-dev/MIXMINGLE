@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../models/user_model.dart';
 import '../core/utils/network_image_url.dart';
+import '../features/messaging/providers/messaging_provider.dart';
 import '../presentation/providers/friend_provider.dart';
 import '../presentation/providers/user_provider.dart';
 
@@ -305,15 +306,29 @@ class _MessageButton extends ConsumerWidget {
     final currentUser = ref.watch(userProvider);
     if (currentUser == null) return const SizedBox.shrink();
 
-    final ids = [currentUser.id, friend.id]..sort();
-    final convId = '${ids[0]}_${ids[1]}';
-
     return IconButton(
       tooltip: 'Message',
       icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
-      onPressed: () {
-        Navigator.of(context).pop();
-        GoRouter.of(context).push('/messages/$convId');
+      onPressed: () async {
+        final navigator = Navigator.of(context);
+        final router = GoRouter.of(context);
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          final conversationId = await ref.read(messagingControllerProvider).createDirectConversation(
+                userId1: currentUser.id,
+                user1Name: currentUser.username,
+                user1AvatarUrl: currentUser.avatarUrl,
+                userId2: friend.id,
+                user2Name: friend.username,
+                user2AvatarUrl: friend.avatarUrl,
+              );
+          navigator.pop();
+          router.push('/messages/$conversationId');
+        } catch (error) {
+          messenger.showSnackBar(
+            SnackBar(content: Text('Could not open chat: $error')),
+          );
+        }
       },
     );
   }

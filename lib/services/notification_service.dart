@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -139,5 +141,9 @@ class NotificationService {
 			});
 		}
 		await batch.commit();
+		developer.log(
+			'room_invite_sent inviterId=$inviterId roomId=$roomId recipients=${friendIds.length}',
+			name: 'NotificationService',
+		);
 	}
 }

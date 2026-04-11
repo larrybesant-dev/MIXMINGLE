@@ -3,13 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum UserStatus { online, away, dnd, offline }
 
 class PresenceModel {
-	final String? id;
-	final String? userId;
-	final bool? isOnline;
-	final DateTime? lastSeen;
-	final UserStatus status;
-	final String? inRoom;
-
 	PresenceModel({
 		this.id,
 		this.userId,
@@ -17,7 +10,22 @@ class PresenceModel {
 		this.lastSeen,
 		this.status = UserStatus.offline,
 		this.inRoom,
-	});
+		bool? online,
+		String? roomId,
+	})  : _online = online,
+				_roomId = roomId;
+
+	final String? id;
+	final String? userId;
+	final bool? isOnline;
+	final DateTime? lastSeen;
+	final UserStatus status;
+	final String? inRoom;
+	final bool? _online;
+	final String? _roomId;
+
+	bool get online => (_online ?? isOnline) == true;
+	String? get roomId => _roomId ?? inRoom;
 
 	static String? _asNullableString(dynamic value) {
 		if (value is String) {
@@ -49,10 +57,14 @@ class PresenceModel {
 	static UserStatus _parseStatus(dynamic value) {
 		if (value is String) {
 			switch (value.trim().toLowerCase()) {
-				case 'online': return UserStatus.online;
-				case 'away': return UserStatus.away;
-				case 'dnd': return UserStatus.dnd;
-				default: return UserStatus.offline;
+				case 'online':
+					return UserStatus.online;
+				case 'away':
+					return UserStatus.away;
+				case 'dnd':
+					return UserStatus.dnd;
+				default:
+					return UserStatus.offline;
 			}
 		}
 		return UserStatus.offline;
@@ -69,11 +81,13 @@ class PresenceModel {
 			userId: _asNullableString(json['userId']),
 			isOnline: explicitOnline ??
 					(status != UserStatus.offline || inRoom != null),
+			online: explicitOnline,
 			lastSeen: _parseDateTime(
 				json['lastSeen'] ?? json['lastActiveAt'] ?? json['lastHeartbeatAt'],
 			),
 			status: status,
 			inRoom: inRoom,
+			roomId: inRoom,
 		);
 	}
 
@@ -81,15 +95,12 @@ class PresenceModel {
 		if (value == null) {
 			return null;
 		}
-
 		if (value is Timestamp) {
 			return value.toDate();
 		}
-
 		if (value is DateTime) {
 			return value;
 		}
-
 		return DateTime.tryParse(value.toString());
 	}
 
@@ -97,8 +108,10 @@ class PresenceModel {
 				'id': id,
 				'userId': userId,
 				'isOnline': isOnline,
+				'online': online,
 				'lastSeen': lastSeen?.toIso8601String(),
 				'status': status.name,
 				'inRoom': inRoom,
+				'roomId': roomId,
 			};
 }

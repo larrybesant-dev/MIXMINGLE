@@ -10,15 +10,15 @@ import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
-/// bottom nav bar (Home / Rooms / Discover / Messages / Profile / Menu).
+/// bottom nav bar (Home / Rooms / Messages / Friends / Profile).
 class AppShell extends ConsumerWidget {
   final Widget child;
   const AppShell({required this.child, super.key});
 
   static int _indexForLocation(String location) {
     if (location.startsWith('/rooms'))    return 1;
-    if (location.startsWith('/discover')) return 2;
-    if (location.startsWith('/messages')) return 3;
+    if (location.startsWith('/messages')) return 2;
+    if (location.startsWith('/friends'))  return 3;
     if (location.startsWith('/profile'))  return 4;
     return 0;
   }
@@ -26,8 +26,8 @@ class AppShell extends ConsumerWidget {
   static const List<String> _roots = [
     '/',
     '/rooms',
-    '/discover',
     '/messages',
+    '/friends',
     '/profile',
   ];
 
@@ -48,7 +48,6 @@ class AppShell extends ConsumerWidget {
           unreadMsgs: unreadMsgs,
           compact: context.isCompactLayout,
           onTap: (i) => context.go(_roots[i]),
-          onMenuTap: () => Scaffold.of(context).openDrawer(),
         ),
       ),
     );
@@ -62,14 +61,12 @@ class _VelvetBottomNav extends StatelessWidget {
     required this.unreadMsgs,
     required this.compact,
     required this.onTap,
-    required this.onMenuTap,
   });
 
   final int selectedIndex;
   final int unreadMsgs;
   final bool compact;
   final void Function(int) onTap;
-  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -111,10 +108,9 @@ class _VelvetBottomNav extends StatelessWidget {
                 children: [
                   _navItem(context, 0, Icons.home_outlined, Icons.home_rounded, 'Home'),
                   _navItem(context, 1, Icons.meeting_room_outlined, Icons.meeting_room_rounded, 'Rooms'),
-                  _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
-                  _navItemBadge(context, 3, Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
+                  _navItemBadge(context, 2, Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
+                  _navItem(context, 3, Icons.people_alt_outlined, Icons.people_alt_rounded, 'Friends'),
                   _navItem(context, 4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
-                  _navActionItem(context, Icons.menu_rounded, 'Menu', onMenuTap),
                 ],
               ),
             ),
@@ -266,47 +262,6 @@ class _VelvetBottomNav extends StatelessWidget {
                 fontSize: compact ? 10 : 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 color: isSelected ? selectedColor : idleColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navActionItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onPressed,
-  ) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onPressed,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 30,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: VelvetNoir.surfaceHigh.withValues(alpha: 0.35),
-              ),
-              child: Icon(
-                icon,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                size: 22,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: GoogleFonts.raleway(
-                fontSize: compact ? 10 : 11,
-                fontWeight: FontWeight.w400,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

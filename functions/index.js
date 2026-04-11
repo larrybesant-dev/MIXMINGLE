@@ -2138,8 +2138,8 @@ exports.notifyFriendsUserOnline = onDocumentWritten(
 
     if (!after) return; // document deleted
 
-    const wasOnline = before ? !!before.isOnline : false;
-    const isNowOnline = !!after.isOnline;
+    const wasOnline = before ? !!(before.online ?? before.isOnline) : false;
+    const isNowOnline = !!(after.online ?? after.isOnline);
 
     // Only fire when user *comes* online.
     if (wasOnline || !isNowOnline) return;
@@ -2163,7 +2163,25 @@ exports.notifyFriendsUserOnline = onDocumentWritten(
 
     const userData = userSnap.data() || {};
     const username = (userData.username || userData.displayName || "Someone").trim() || "Someone";
-    const friendIds = Array.isArray(userData.friends) ? userData.friends.slice(0, 50) : [];
+
+    const [userASnapshot, userBSnapshot] = await Promise.all([
+      db.collection("friendships")
+        .where("userA", "==", userId)
+        .where("status", "==", "accepted")
+        .limit(50)
+        .get(),
+      db.collection("friendships")
+        .where("userB", "==", userId)
+        .where("status", "==", "accepted")
+        .limit(50)
+        .get(),
+    ]);
+
+    const friendIds = [...userASnapshot.docs, ...userBSnapshot.docs]
+      .map((doc) => doc.data() || {})
+      .map((friendship) => friendship.userA === userId ? friendship.userB : friendship.userA)
+      .filter((friendId) => typeof friendId === "string" && friendId.trim())
+      .slice(0, 50);
     if (friendIds.length === 0) return;
 
     const batch = db.batch();

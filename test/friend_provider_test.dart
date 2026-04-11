@@ -1,8 +1,8 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mixvy/features/friends/providers/friends_providers.dart';
 import 'package:mixvy/models/user_model.dart';
-import 'package:mixvy/presentation/providers/friend_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 
 void main() {
@@ -17,7 +17,6 @@ void main() {
         'email': 'user1@mixvy.dev',
         'username': 'User One',
         'usernameLower': 'user one',
-        'friends': ['user-2'],
         'createdAt': DateTime(2026, 1, 1),
       });
       await firestore.collection('users').doc('user-2').set({
@@ -34,13 +33,6 @@ void main() {
         'usernameLower': 'searchable person',
         'createdAt': DateTime(2026, 1, 3),
       });
-      await firestore.collection('users').doc('user-5').set({
-        'uid': 'user-5',
-        'email': 'search-candidate@mixvy.dev',
-        'username': 'Search Candidate',
-        'usernameLower': 'search candidate',
-        'createdAt': DateTime(2026, 1, 5),
-      });
       await firestore.collection('users').doc('user-4').set({
         'uid': 'user-4',
         'email': 'pending@mixvy.dev',
@@ -48,17 +40,39 @@ void main() {
         'usernameLower': 'pending person',
         'createdAt': DateTime(2026, 1, 4),
       });
-      await firestore.collection('friend_requests').doc('incoming-1').set({
-        'fromUserId': 'user-3',
-        'toUserId': 'user-1',
+      await firestore.collection('users').doc('user-5').set({
+        'uid': 'user-5',
+        'email': 'search-candidate@mixvy.dev',
+        'username': 'Search Candidate',
+        'usernameLower': 'search candidate',
+        'createdAt': DateTime(2026, 1, 5),
+      });
+
+      await firestore.collection('friendships').doc('user-1_user-2').set({
+        'userA': 'user-1',
+        'userB': 'user-2',
+        'status': 'accepted',
+        'requestedBy': 'user-1',
+        'createdAt': DateTime(2026, 1, 2),
+      });
+      await firestore.collection('friendships').doc('user-1_user-3').set({
+        'userA': 'user-1',
+        'userB': 'user-3',
         'status': 'pending',
+        'requestedBy': 'user-3',
         'createdAt': DateTime(2026, 1, 3),
       });
-      await firestore.collection('friend_requests').doc('outgoing-1').set({
-        'fromUserId': 'user-1',
-        'toUserId': 'user-4',
+      await firestore.collection('friendships').doc('user-1_user-4').set({
+        'userA': 'user-1',
+        'userB': 'user-4',
         'status': 'pending',
+        'requestedBy': 'user-1',
         'createdAt': DateTime(2026, 1, 4),
+      });
+      await firestore.collection('presence').doc('user-2').set({
+        'online': true,
+        'roomId': null,
+        'lastSeen': DateTime(2026, 1, 5),
       });
 
       container = ProviderContainer(
@@ -80,7 +94,7 @@ void main() {
       container.dispose();
     });
 
-    test('friendsListProvider resolves friends from user friend ids', () async {
+    test('friendsListProvider resolves accepted friends from friendships', () async {
       final friends = await container.read(friendsListProvider.future);
 
       expect(friends, hasLength(1));
@@ -88,7 +102,7 @@ void main() {
       expect(friends.single.username, 'User Two');
     });
 
-    test('friendCandidateSearchProvider excludes current user and existing friends', () async {
+    test('friendCandidateSearchProvider excludes friends and pending requests', () async {
       container.read(friendSearchQueryProvider.notifier).state = 'search';
 
       final users = await container.read(friendCandidateSearchProvider.future);
@@ -97,25 +111,30 @@ void main() {
       expect(users.single.id, 'user-5');
     });
 
-    test('incomingFriendRequestsProvider resolves sender user details', () async {
+    test('incomingFriendRequestsProvider resolves sender user details from friendships', () async {
       final requests = await container.read(incomingFriendRequestsProvider.future);
 
       expect(requests, hasLength(1));
-      expect(requests.single.request.id, 'incoming-1');
+      expect(requests.single.request.id, 'user-1_user-3');
       expect(requests.single.fromUser?.id, 'user-3');
       expect(requests.single.fromUser?.username, 'Searchable Person');
     });
 
-    test('pendingOutgoingFriendRequestIdsProvider returns requested user ids', () async {
-      final ids = await container.read(pendingOutgoingFriendRequestIdsProvider.future);
+    test('onlineFriendsProvider filters live online friends', () async {
+      final onlineFriends = await container.read(friendRosterProvider.future);
 
-      expect(ids, contains('user-4'));
+      expect(onlineFriends, hasLength(1));
+      expect(onlineFriends.single.user.id, 'user-2');
+      expect(onlineFriends.single.isOnline, isTrue);
     });
 
-    test('sendFriendRequest reconciles reciprocal pending requests', () async {
+    test('sendFriendRequest reconciles reciprocal pending friendships', () async {
       final service = container.read(friendServiceProvider);
 
       await service.sendFriendRequest('user-1', 'user-3');
+
+      final friendship = await firestore.collection('friendships').doc('user-1_user-3').get();
+      expect(friendship.data()?['status'], 'accepted');
 
       final notifications = await firestore
           .collection('notifications')
@@ -125,14 +144,6 @@ void main() {
       expect(notifications.docs, isNotEmpty);
       expect(notifications.docs.last.data()['type'], 'friend_accept');
       expect(notifications.docs.last.data()['actorId'], 'user-1');
-
-      final pendingRequests = await firestore
-          .collection('friend_requests')
-          .where('fromUserId', isEqualTo: 'user-3')
-          .where('toUserId', isEqualTo: 'user-1')
-          .where('status', isEqualTo: 'pending')
-          .get();
-      expect(pendingRequests.docs, isEmpty);
     });
   });
 }

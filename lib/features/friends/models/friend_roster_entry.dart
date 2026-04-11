@@ -14,7 +14,7 @@ class FriendRosterEntry {
   final PresenceModel presence;
 
   String get friendId => user.id;
-  bool get isOnline => presence.online;
-  String? get roomId => presence.roomId;
+  bool get isOnline => presence.isOnline == true;
+  String? get roomId => presence.inRoom;
   DateTime? get lastSeen => presence.lastSeen;
 }
