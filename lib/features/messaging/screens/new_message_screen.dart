@@ -8,7 +8,7 @@ import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../providers/messaging_provider.dart';
 
-class NewMessageScreen extends ConsumerStatefulWidget {
+class NewMessageScreen extends StatelessWidget {
   final String userId;
   final String username;
   final String? avatarUrl;
@@ -21,10 +21,40 @@ class NewMessageScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<NewMessageScreen> createState() => _NewMessageScreenState();
+  Widget build(BuildContext context) {
+    return AppPageScaffold(
+      appBar: AppBar(
+        title: const Text('New Message'),
+      ),
+      body: NewMessagePaneView(
+        userId: userId,
+        username: username,
+        avatarUrl: avatarUrl,
+        showHeader: false,
+      ),
+    );
+  }
 }
 
-class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
+class NewMessagePaneView extends ConsumerStatefulWidget {
+  final String userId;
+  final String username;
+  final String? avatarUrl;
+  final bool showHeader;
+
+  const NewMessagePaneView({
+    super.key,
+    required this.userId,
+    required this.username,
+    this.avatarUrl,
+    this.showHeader = true,
+  });
+
+  @override
+  ConsumerState<NewMessagePaneView> createState() => _NewMessagePaneViewState();
+}
+
+class _NewMessagePaneViewState extends ConsumerState<NewMessagePaneView> {
   late TextEditingController _searchController;
   List<Map<String, String>> _searchResults = [];
   bool _isSearching = false;
@@ -128,68 +158,82 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AppPageScaffold(
-      appBar: AppBar(
-        title: const Text('New Message'),
-      ),
-      body: Column(
-        children: [
+    return Column(
+      children: [
+        if (widget.showHeader)
           Padding(
-            padding: EdgeInsets.all(context.pageHorizontalPadding),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search people...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              24,
+              context.pageHorizontalPadding,
+              8,
+            ),
+            child: const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'New Message',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              onChanged: _searchUsers,
             ),
           ),
-          if (_isSearching)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: AppLoadingView(label: 'Searching users'),
-            )
-          else if (_searchResults.isEmpty && _searchController.text.isNotEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: AppEmptyView(
-                title: 'No users found',
-                icon: Icons.search_off_rounded,
-              ),
-            )
-          else
-            Expanded(
-              child: ListView.separated(
-                itemCount: _searchResults.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final user = _searchResults[index];
-                  final userId = (user['id'] ?? '').trim();
-                  final userName = (user['name'] ?? '').trim();
-                  final safeName = userName.isEmpty ? 'Unknown' : userName;
-                  return ListTile(
-                    leading: CircleAvatar(
-                      child: Text(safeName.substring(0, 1).toUpperCase()),
-                    ),
-                    title: Text(safeName),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: userId.isEmpty
-                        ? null
-                        : () => _startConversation(
-                            userId,
-                            safeName,
-                            user['avatar'],
-                          ),
-                  );
-                },
+        Padding(
+          padding: EdgeInsets.all(context.pageHorizontalPadding),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search people...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
-        ],
-      ),
+            onChanged: _searchUsers,
+          ),
+        ),
+        if (_isSearching)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: AppLoadingView(label: 'Searching users'),
+          )
+        else if (_searchResults.isEmpty && _searchController.text.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: AppEmptyView(
+              title: 'No users found',
+              icon: Icons.search_off_rounded,
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              itemCount: _searchResults.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final user = _searchResults[index];
+                final userId = (user['id'] ?? '').trim();
+                final userName = (user['name'] ?? '').trim();
+                final safeName = userName.isEmpty ? 'Unknown' : userName;
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(safeName.substring(0, 1).toUpperCase()),
+                  ),
+                  title: Text(safeName),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: userId.isEmpty
+                      ? null
+                      : () => _startConversation(
+                          userId,
+                          safeName,
+                          user['avatar'],
+                        ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

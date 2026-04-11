@@ -6,7 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
+import '../../features/friends/panes/friends_pane_view.dart';
+import '../../features/messaging/panes/chat_pane_view.dart';
+import '../../features/messaging/panes/messages_pane_view.dart';
+import '../../features/messaging/screens/new_message_screen.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
+import '../../presentation/providers/user_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 import 'desktop_messenger_shell.dart';
 
@@ -34,9 +39,12 @@ class AppShell extends ConsumerWidget {
   ];
 
   static bool _usesDesktopMessengerShell(String location) {
-    return location == '/' ||
-        location.startsWith('/messages') ||
-        location.startsWith('/friends');
+    final uri = Uri.parse(location);
+    final isMessagesRoute =
+        uri.path == '/' ||
+        uri.path == '/messages' ||
+        (uri.pathSegments.isNotEmpty && uri.pathSegments.first == 'messages');
+    return uri.path == '/friends' || isMessagesRoute;
   }
 
   @override
@@ -45,14 +53,45 @@ class AppShell extends ConsumerWidget {
     final selectedIndex = _indexForLocation(location);
     final unreadMsgs = ref.watch(unreadMessageCountProvider);
     final theme = Theme.of(context);
+    final currentUser = ref.watch(userProvider);
     final isDesktopMessengerLayout =
-      context.isExpandedLayout && _usesDesktopMessengerShell(location);
+        context.isExpandedLayout && _usesDesktopMessengerShell(location);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       drawer: isDesktopMessengerLayout ? null : const MixVyDrawer(),
       body: isDesktopMessengerLayout
-          ? DesktopMessengerShell(location: location, child: child)
+          ? DesktopMessengerShell(
+              location: location,
+              messagesPane: currentUser == null
+                  ? const SizedBox.shrink()
+                  : MessagesPaneView(
+                      userId: currentUser.id,
+                      username: currentUser.username,
+                      showHeader: true,
+                    ),
+              newMessagePane: currentUser == null
+                  ? const SizedBox.shrink()
+                  : NewMessagePaneView(
+                      userId: currentUser.id,
+                      username: currentUser.username,
+                      avatarUrl: currentUser.avatarUrl,
+                      showHeader: true,
+                    ),
+              friendsPane: const FriendsPaneView(showHeader: true),
+              chatPaneBuilder: (conversationId) {
+                if (currentUser == null) {
+                  return const SizedBox.shrink();
+                }
+                return ChatPaneView(
+                  conversationId: conversationId,
+                  userId: currentUser.id,
+                  username: currentUser.username,
+                  avatarUrl: currentUser.avatarUrl,
+                  showHeader: true,
+                );
+              },
+            )
           : child,
       bottomNavigationBar: isDesktopMessengerLayout
           ? null

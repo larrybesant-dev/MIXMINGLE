@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/firestore/firestore_error_utils.dart';
 import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
+import '../../../core/utils/network_image_url.dart';
+import '../../../features/feed/providers/user_providers.dart' as feed_user;
+import '../../../features/friends/providers/friends_providers.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
@@ -134,6 +137,32 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(messagesStreamProvider(widget.conversationId));
     final paginatedState = ref.watch(paginatedMessagesProvider(widget.conversationId));
+    final conversationAsync = ref.watch(conversationDocProvider(widget.conversationId));
+    final conversation = conversationAsync.valueOrNull;
+    final otherUserId = conversation == null
+        ? ''
+        : conversation.participantIds.firstWhere(
+            (participantId) => participantId != widget.userId,
+            orElse: () => '',
+          );
+    final roster = ref.watch(friendRosterProvider).valueOrNull ?? const [];
+    final rosterEntry = roster.cast<dynamic>().firstWhere(
+          (entry) => entry.friendId == otherUserId,
+          orElse: () => null,
+        );
+    final otherUserAsync = otherUserId.isEmpty
+        ? const AsyncValue<dynamic>.data(null)
+        : ref.watch(feed_user.userProvider(otherUserId));
+    final displayName = conversation?.type == 'group'
+        ? (conversation?.groupName ?? 'Group Chat')
+        : (conversation?.getDisplayName(widget.userId).trim().isNotEmpty == true
+            ? conversation!.getDisplayName(widget.userId)
+            : (otherUserAsync.valueOrNull?.username ?? 'Conversation'));
+    final displayAvatarUrl = sanitizeNetworkImageUrl(
+      conversation?.type == 'group'
+          ? conversation?.groupAvatarUrl
+          : rosterEntry?.user.avatarUrl ?? otherUserAsync.valueOrNull?.avatarUrl,
+    );
 
     return Column(
       children: [
@@ -150,13 +179,13 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: VelvetNoir.primaryDim,
-                  backgroundImage: widget.avatarUrl != null
-                      ? CachedNetworkImageProvider(widget.avatarUrl!)
+                  backgroundImage: displayAvatarUrl != null
+                    ? CachedNetworkImageProvider(displayAvatarUrl)
                       : null,
-                  child: widget.avatarUrl == null
+                  child: displayAvatarUrl == null
                       ? Text(
-                          widget.username.isNotEmpty
-                              ? widget.username[0].toUpperCase()
+                      displayName.isNotEmpty
+                        ? displayName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
                             color: Colors.white,
@@ -169,7 +198,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    widget.username,
+                    displayName,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -182,8 +211,8 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                     icon: const Icon(Icons.open_in_new),
                     tooltip: 'Pop out',
                     onPressed: () => WebPopoutService().openWhisperWindow(
-                      widget.userId,
-                      widget.username,
+                      otherUserId,
+                      displayName,
                     ),
                   ),
               ],
@@ -241,8 +270,6 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                   final message =
                       allMessages[index - (paginatedState.hasMore ? 1 : 0)];
                   final isOwn = message.senderId == widget.userId;
-                  final convAsync = ref.watch(conversationDocProvider(widget.conversationId));
-                  final conversation = convAsync.valueOrNull;
                   var isReadByOther = false;
                   if (isOwn && conversation != null) {
                     final otherIds =
@@ -280,13 +307,13 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                             CircleAvatar(
                               radius: 14,
                               backgroundColor: VelvetNoir.primaryDim,
-                              backgroundImage: widget.avatarUrl != null
-                                  ? CachedNetworkImageProvider(widget.avatarUrl!)
+                              backgroundImage: message.senderAvatarUrl != null
+                                ? CachedNetworkImageProvider(message.senderAvatarUrl!)
                                   : null,
-                              child: widget.avatarUrl == null
+                              child: message.senderAvatarUrl == null
                                   ? Text(
-                                      widget.username.isNotEmpty
-                                          ? widget.username[0].toUpperCase()
+                                  message.senderName.isNotEmpty
+                                    ? message.senderName[0].toUpperCase()
                                           : '?',
                                       style: const TextStyle(
                                         color: Colors.white,
@@ -437,7 +464,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
         _TypingIndicatorRow(
           conversationId: widget.conversationId,
           currentUserId: widget.userId,
-          otherUsername: widget.username,
+            otherUsername: displayName,
         ),
         Padding(
           padding: EdgeInsets.only(

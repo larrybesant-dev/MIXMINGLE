@@ -3,15 +3,14 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixvy/core/layout/app_layout.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:mixvy/core/services/first_run_service.dart';
 import 'package:mixvy/core/services/profile_gate_service.dart';
+import 'package:mixvy/features/friends/screens/friends_list_screen.dart';
 import 'package:mixvy/features/onboarding/onboarding_screen.dart';
 import 'package:mixvy/features/splash/splash_screen.dart';
 import 'package:mixvy/features/feed/screens/discovery_feed_screen.dart';
 import 'package:mixvy/features/profile/user_profile_screen.dart';
-import 'package:mixvy/presentation/screens/friend_list_screen.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 import 'package:mixvy/presentation/screens/notifications_screen.dart';
 import 'package:mixvy/presentation/screens/settings_screen.dart';
@@ -351,9 +350,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/friends',
-            builder: (context, state) => context.isExpandedLayout
-                ? const FriendsPaneView(showHeader: true)
-                : const FriendListScreen(),
+            builder: (context, state) => const FriendListScreen(),
           ),
           GoRoute(
             path: '/notifications',
@@ -404,16 +401,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final uid = _currentUid(ref);
               if (uid == null) return const LoginScreen();
-              return context.isExpandedLayout
-                  ? MessagesPaneView(
-                      userId: uid,
-                      username: _currentUsername(ref),
-                      showHeader: true,
-                    )
-                  : MessagesScreen(
-                      userId: uid,
-                      username: _currentUsername(ref),
-                    );
+              return MessagesScreen(
+                userId: uid,
+                username: _currentUsername(ref),
+              );
             },
           ),
           GoRoute(
@@ -438,20 +429,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               }
               final uid = _currentUid(ref);
               if (uid == null) return const LoginScreen();
-              return context.isExpandedLayout
-                  ? ChatPaneView(
-                      conversationId: conversationId,
-                      userId: uid,
-                      username: _currentUsername(ref),
-                      avatarUrl: _currentAvatarUrl(ref),
-                      showHeader: true,
-                    )
-                  : ChatScreen(
-                      conversationId: conversationId,
-                      userId: uid,
-                      username: _currentUsername(ref),
-                      avatarUrl: _currentAvatarUrl(ref),
-                    );
+              return ChatScreen(
+                conversationId: conversationId,
+                userId: uid,
+                username: _currentUsername(ref),
+                avatarUrl: _currentAvatarUrl(ref),
+              );
             },
           ),
           GoRoute(
