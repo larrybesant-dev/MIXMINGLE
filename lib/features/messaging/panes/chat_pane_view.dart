@@ -14,6 +14,7 @@ import '../../../features/friends/providers/friends_providers.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
+import '../models/message_model.dart';
 import '../providers/messaging_provider.dart';
 
 class ChatPaneView extends ConsumerStatefulWidget {
@@ -42,6 +43,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
   Timer? _typingTimer;
   bool _isTyping = false;
   bool _didAutoScrollInitialLoad = false;
+  late final double? _savedScrollOffset;
   final List<_PendingMessage> _pendingMessages = <_PendingMessage>[];
 
   @override
@@ -51,6 +53,8 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _messageController.addListener(_onTextChanged);
+    _savedScrollOffset =
+      ref.read(conversationScrollMemoryProvider)[widget.conversationId];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(messagingControllerProvider).markAsRead(
@@ -97,6 +101,12 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
           .read(paginatedMessagesProvider(widget.conversationId).notifier)
           .loadMore(null);
     }
+    if (_scrollController.hasClients &&
+        _scrollController.position.hasContentDimensions) {
+      ref
+          .read(conversationScrollMemoryProvider.notifier)
+          .setOffset(widget.conversationId, _scrollController.offset);
+    }
   }
 
   bool _isNearBottom() {
@@ -128,6 +138,12 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
 
   @override
   void dispose() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.hasContentDimensions) {
+      ref
+          .read(conversationScrollMemoryProvider.notifier)
+          .setOffset(widget.conversationId, _scrollController.offset);
+    }
     _clearTyping();
     _typingTimer?.cancel();
     _messageController.removeListener(_onTextChanged);
@@ -306,9 +322,13 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
               if (!_didAutoScrollInitialLoad) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!_scrollController.hasClients) return;
-                  _scrollController.jumpTo(
-                    _scrollController.position.maxScrollExtent,
-                  );
+                  final targetOffset = _savedScrollOffset == null
+                      ? _scrollController.position.maxScrollExtent
+                      : _savedScrollOffset!.clamp(
+                          _scrollController.position.minScrollExtent,
+                          _scrollController.position.maxScrollExtent,
+                        );
+                  _scrollController.jumpTo(targetOffset.toDouble());
                   _didAutoScrollInitialLoad = true;
                 });
               } else {
@@ -517,15 +537,35 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                             isPending: isPending,
                                             isReadByOther: isReadByOther,
                                           ),
-                                          child: Icon(
-                                            _deliveryStateIcon(
-                                              isPending: isPending,
-                                              isReadByOther: isReadByOther,
-                                            ),
-                                            size: 13,
-                                            color: _deliveryStateColor(
-                                              isPending: isPending,
-                                              isReadByOther: isReadByOther,
+                                          child: AnimatedSwitcher(
+                                            duration: const Duration(milliseconds: 180),
+                                            switchInCurve: Curves.easeOutCubic,
+                                            switchOutCurve: Curves.easeInCubic,
+                                            transitionBuilder: (child, animation) {
+                                              return FadeTransition(
+                                                opacity: animation,
+                                                child: ScaleTransition(
+                                                  scale: Tween<double>(begin: 0.85, end: 1).animate(animation),
+                                                  child: child,
+                                                ),
+                                              );
+                                            },
+                                            child: Icon(
+                                              _deliveryStateIcon(
+                                                isPending: isPending,
+                                                isReadByOther: isReadByOther,
+                                              ),
+                                              key: ValueKey<String>(
+                                                _deliveryStateLabel(
+                                                  isPending: isPending,
+                                                  isReadByOther: isReadByOther,
+                                                ),
+                                              ),
+                                              size: 13,
+                                              color: _deliveryStateColor(
+                                                isPending: isPending,
+                                                isReadByOther: isReadByOther,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -747,22 +787,39 @@ class _TypingIndicatorRow extends ConsumerWidget {
     return typingAsync.when(
       data: (ids) {
         final othersTyping = ids.any((id) => id != currentUserId);
-        if (!othersTyping) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.only(left: 20, bottom: 2),
-          child: Row(
-            children: [
-              _BouncingDots(),
-              const SizedBox(width: 6),
-              Text(
-                '$otherUsername is typing…',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey),
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SizeTransition(
+                sizeFactor: animation,
+                axisAlignment: -1,
+                child: child,
               ),
-            ],
-          ),
+            );
+          },
+          child: !othersTyping
+              ? const SizedBox.shrink(key: ValueKey<String>('typing-hidden'))
+              : Padding(
+                  key: const ValueKey<String>('typing-visible'),
+                  padding: const EdgeInsets.only(left: 20, bottom: 2),
+                  child: Row(
+                    children: [
+                      _BouncingDots(),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$otherUsername is typing…',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
         );
       },
       loading: () => const SizedBox.shrink(),

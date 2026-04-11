@@ -78,6 +78,7 @@ class Conversation {
   final String type; // 'direct' or 'group'
   final List<String> participantIds;
   final Map<String, String> participantNames; // {userId: username}
+  final List<String> pinnedBy;
   final String? groupName;
   final String? groupAvatarUrl;
   final String? lastMessageId;
@@ -94,6 +95,7 @@ class Conversation {
     required this.type,
     required this.participantIds,
     required this.participantNames,
+    this.pinnedBy = const [],
     this.groupName,
     this.groupAvatarUrl,
     this.lastMessageId,
@@ -112,6 +114,7 @@ class Conversation {
       type: _asString(json['type'], fallback: 'direct'),
       participantIds: _asStringList(json['participantIds']),
       participantNames: _asStringMap(json['participantNames']),
+      pinnedBy: _asStringList(json['pinnedBy']),
       groupName: _asNullableString(json['groupName']),
       groupAvatarUrl: _asNullableString(json['groupAvatarUrl']),
       lastMessageId: _asNullableString(json['lastMessageId']),
@@ -146,6 +149,7 @@ class Conversation {
       'type': type,
       'participantIds': participantIds,
       'participantNames': participantNames,
+      'pinnedBy': pinnedBy,
       'groupName': groupName,
       'groupAvatarUrl': groupAvatarUrl,
       'lastMessageId': lastMessageId,
@@ -174,4 +178,6 @@ class Conversation {
     return lastMessageAt != null &&
         (lastReadAt[userId] == null || lastReadAt[userId]!.isBefore(lastMessageAt!));
   }
+
+  bool isPinnedFor(String userId) => pinnedBy.contains(userId);
 }

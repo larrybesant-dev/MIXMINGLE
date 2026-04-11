@@ -91,7 +91,7 @@ class PresenceController extends Notifier<PresenceControllerState>
     if (initialUid != null) {
       Future.microtask(() async {
         _startHeartbeat();
-        await _syncPresence();
+        await _writePresence();
       });
     }
 

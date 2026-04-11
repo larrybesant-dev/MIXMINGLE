@@ -44,7 +44,26 @@ class _DelayedMessagingController extends messaging.MessagingController {
 Widget _buildChatApp({
   required FakeFirebaseFirestore firestore,
   messaging.MessagingController? controller,
+  ProviderContainer? container,
 }) {
+  final child = const MaterialApp(
+    home: Scaffold(
+      body: ChatPaneView(
+        conversationId: 'conv-1',
+        userId: 'user-1',
+        username: 'Test User',
+        showHeader: false,
+      ),
+    ),
+  );
+
+  if (container != null) {
+    return UncontrolledProviderScope(
+      container: container,
+      child: child,
+    );
+  }
+
   return ProviderScope(
     overrides: [
       messaging.firestoreProvider.overrideWithValue(firestore),
@@ -53,17 +72,32 @@ Widget _buildChatApp({
       if (controller != null)
         messaging.messagingControllerProvider.overrideWithValue(controller),
     ],
-    child: const MaterialApp(
-      home: Scaffold(
-        body: ChatPaneView(
-          conversationId: 'conv-1',
-          userId: 'user-1',
-          username: 'Test User',
-          showHeader: false,
-        ),
-      ),
-    ),
+    child: child,
   );
+}
+
+Future<void> _seedMessages(
+  FakeFirebaseFirestore firestore, {
+  required int count,
+  required DateTime startAt,
+}) async {
+  for (var index = 0; index < count; index++) {
+    final createdAt = startAt.add(Duration(minutes: index));
+    await firestore
+        .collection('conversations')
+        .doc('conv-1')
+        .collection('messages')
+        .doc('msg-$index')
+        .set({
+      'conversationId': 'conv-1',
+      'senderId': index.isEven ? 'user-1' : 'user-2',
+      'senderName': index.isEven ? 'Test User' : 'Alice',
+      'content': 'Message $index',
+      'createdAt': Timestamp.fromDate(createdAt),
+      'isDeleted': false,
+      'readBy': ['user-1', if (index.isEven) 'user-2'],
+    });
+  }
 }
 
 Future<void> _seedConversation(
@@ -194,6 +228,62 @@ void main() {
       await tester.pump(const Duration(milliseconds: 20));
 
       expect(find.text('Alice is typing…'), findsOneWidget);
+    });
+
+    testWidgets('restores scroll position when reopening a conversation', (tester) async {
+      final firestore = FakeFirebaseFirestore();
+      final now = DateTime.now();
+      await _seedConversation(
+        firestore,
+        createdAt: now.subtract(const Duration(days: 1)),
+        lastMessageAt: now,
+        lastReadAt: now,
+      );
+      await _seedMessages(
+        firestore,
+        count: 30,
+        startAt: now.subtract(const Duration(hours: 2)),
+      );
+
+      final container = ProviderContainer(overrides: [
+        messaging.firestoreProvider.overrideWithValue(firestore),
+        core_firebase.firestoreProvider.overrideWithValue(firestore),
+        friendRosterProvider.overrideWith((ref) => const Stream<List<FriendRosterEntry>>.empty()),
+      ]);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_buildChatApp(
+        firestore: firestore,
+        container: container,
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      final scrollable = find.byType(Scrollable).first;
+      final initialPosition = tester.state<ScrollableState>(scrollable).position;
+      final initialOffset = initialPosition.pixels;
+
+      await tester.drag(find.byType(ListView).first, const Offset(0, 300));
+      await tester.pumpAndSettle();
+
+      final scrolledPosition = tester.state<ScrollableState>(scrollable).position;
+      final savedOffset = scrolledPosition.pixels;
+      expect(savedOffset, lessThan(initialOffset));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      await tester.pumpWidget(_buildChatApp(
+        firestore: firestore,
+        container: container,
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      final restoredScrollable = find.byType(Scrollable).first;
+      final restoredPosition = tester.state<ScrollableState>(restoredScrollable).position;
+      expect(restoredPosition.pixels, closeTo(savedOffset, 24));
+      expect(restoredPosition.pixels, lessThan(restoredPosition.maxScrollExtent));
     });
   });
 }

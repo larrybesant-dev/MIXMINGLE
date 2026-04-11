@@ -139,7 +139,15 @@ class _MessengerSidebar extends ConsumerWidget {
       final preview = (conversation.lastMessagePreview ?? '').toLowerCase();
       return displayName.contains(query) || preview.contains(query);
     }).toList(growable: false)
-      ..sort((left, right) => (right.lastMessageAt ?? right.createdAt).compareTo(left.lastMessageAt ?? left.createdAt));
+      ..sort((left, right) {
+        final leftPinned = left.isPinnedFor(currentUser.id);
+        final rightPinned = right.isPinnedFor(currentUser.id);
+        if (leftPinned != rightPinned) {
+          return leftPinned ? -1 : 1;
+        }
+        return (right.lastMessageAt ?? right.createdAt)
+            .compareTo(left.lastMessageAt ?? left.createdAt);
+      });
 
     final filteredRoster = roster.where((entry) {
       if (query.isEmpty) return true;
@@ -213,12 +221,18 @@ class _MessengerSidebar extends ConsumerWidget {
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: _RecentConversationRow(
                                   isSelected: selectedConversationId == conversation.id,
+                                  pinned: conversation.isPinnedFor(currentUser.id),
                                   isOnline: rosterEntry?.isOnline ?? false,
                                   displayName: conversation.getDisplayName(currentUser.id),
                                   avatarUrl: rosterEntry == null ? null : sanitizeNetworkImageUrl(rosterEntry.user.avatarUrl),
                                   preview: conversation.lastMessagePreview ?? 'No messages yet',
                                   timestamp: conversation.lastMessageAt ?? conversation.createdAt,
                                   unread: conversation.hasUnreadMessages(currentUser.id),
+                                  onTogglePin: () => controller.togglePinned(
+                                    conversationId: conversation.id,
+                                    userId: currentUser.id,
+                                    pinned: !conversation.isPinnedFor(currentUser.id),
+                                  ),
                                   onTap: () => context.go('/messages/${conversation.id}'),
                                 ),
                               );
@@ -326,6 +340,18 @@ class _MessengerSidebarController {
   }
 
   Future<void> blockUser(String friendId) => moderationService.blockUser(friendId);
+
+  Future<void> togglePinned({
+    required String conversationId,
+    required String userId,
+    required bool pinned,
+  }) {
+    return messagingController.setConversationPinned(
+      conversationId: conversationId,
+      userId: userId,
+      pinned: pinned,
+    );
+  }
 }
 
 class _DesktopSocialRail extends ConsumerWidget {
@@ -342,6 +368,7 @@ class _DesktopSocialRail extends ConsumerWidget {
     final onlineCount = roster.where((entry) => entry.isOnline).length;
     final inRoomCount = roster.where((entry) => (entry.roomId ?? '').isNotEmpty).length;
     final unreadCount = conversations.where((c) => c.hasUnreadMessages(currentUser.id)).length;
+    final pinnedCount = conversations.where((c) => c.isPinnedFor(currentUser.id)).length;
 
     return Container(
       decoration: BoxDecoration(
@@ -356,6 +383,7 @@ class _DesktopSocialRail extends ConsumerWidget {
               _StatRow(label: 'Online friends', value: '$onlineCount'),
               _StatRow(label: 'Friends in rooms', value: '$inRoomCount'),
               _StatRow(label: 'Unread chats', value: '$unreadCount'),
+              _StatRow(label: 'Pinned chats', value: '$pinnedCount'),
               _StatRow(label: 'Requests', value: '$requestCount'),
             ])),
             const SizedBox(height: 14),
@@ -380,7 +408,7 @@ class _DesktopSocialRail extends ConsumerWidget {
   }
 }
 
-class _FriendRosterRow extends StatelessWidget {
+class _FriendRosterRow extends StatefulWidget {
   const _FriendRosterRow({
     required this.entry,
     required this.conversation,
@@ -402,22 +430,50 @@ class _FriendRosterRow extends StatelessWidget {
   final VoidCallback onBlockUser;
 
   @override
-  Widget build(BuildContext context) {
-    final preview = conversation?.lastMessagePreview ?? _presenceLabel(entry.presence);
-    final timestamp = conversation?.lastMessageAt ?? entry.lastSeen;
-    final avatarUrl = sanitizeNetworkImageUrl(entry.user.avatarUrl);
+  State<_FriendRosterRow> createState() => _FriendRosterRowState();
+}
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onOpenChat,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
+class _FriendRosterRowState extends State<_FriendRosterRow> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = widget.conversation?.lastMessagePreview ?? _presenceLabel(widget.entry.presence);
+    final timestamp = widget.conversation?.lastMessageAt ?? widget.entry.lastSeen;
+    final avatarUrl = sanitizeNetworkImageUrl(widget.entry.user.avatarUrl);
+    final borderColor = widget.unread
+        ? VelvetNoir.primary.withValues(alpha: 0.42)
+        : _isHovered
+            ? VelvetNoir.secondary.withValues(alpha: 0.32)
+            : VelvetNoir.outlineVariant.withValues(alpha: 0.28);
+    final backgroundColor = _isHovered
+        ? VelvetNoir.surfaceContainer.withValues(alpha: 0.92)
+        : VelvetNoir.surfaceHigh.withValues(alpha: 0.95);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onOpenChat,
+          borderRadius: BorderRadius.circular(18),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 170),
+            curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.95),
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: unread ? VelvetNoir.primary.withValues(alpha: 0.42) : VelvetNoir.outlineVariant.withValues(alpha: 0.28)),
+              border: Border.all(color: borderColor),
+              boxShadow: [
+                if (_isHovered)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.16),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+              ],
           ),
           child: Row(
             children: [
@@ -426,13 +482,20 @@ class _FriendRosterRow extends StatelessWidget {
                 backgroundColor: VelvetNoir.surfaceHighest,
                 backgroundImage: avatarUrl == null ? null : CachedNetworkImageProvider(avatarUrl),
                 child: avatarUrl == null
-                    ? Text(entry.user.username.isNotEmpty ? entry.user.username[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
+                    ? Text(widget.entry.user.username.isNotEmpty ? widget.entry.user.username[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
                     : null,
               ),
-              if (entry.isOnline)
-                Transform.translate(
-                  offset: const Offset(-10, 16),
-                  child: const _PresenceDot(),
+                AnimatedSlide(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  offset: widget.entry.isOnline
+                      ? const Offset(-0.82, 1.32)
+                      : const Offset(-0.82, 1.0),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    opacity: widget.entry.isOnline ? 1 : 0,
+                    child: const _PresenceDot(),
+                  ),
                 ),
               const SizedBox(width: 12),
               Expanded(
@@ -441,93 +504,126 @@ class _FriendRosterRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: Text(entry.user.username, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: VelvetNoir.onSurface, fontSize: 14, fontWeight: FontWeight.w700))),
+                        Expanded(child: Text(widget.entry.user.username, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: VelvetNoir.onSurface, fontSize: 14, fontWeight: FontWeight.w700))),
                         if (timestamp != null) Text(_formatConversationTime(timestamp), style: const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(preview, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: unread ? VelvetNoir.onSurface : VelvetNoir.onSurfaceVariant, fontSize: 12, fontWeight: unread ? FontWeight.w700 : FontWeight.w500)),
+                    Text(preview, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: widget.unread ? VelvetNoir.onSurface : VelvetNoir.onSurfaceVariant, fontSize: 12, fontWeight: widget.unread ? FontWeight.w700 : FontWeight.w500)),
                   ],
                 ),
               ),
-              PopupMenuButton<_FriendMenuAction>(
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 140),
+                opacity: _isHovered || widget.unread ? 1 : 0.7,
+                child: PopupMenuButton<_FriendMenuAction>(
                 tooltip: 'Friend actions',
                 color: VelvetNoir.surfaceHigh,
                 onSelected: (value) {
                   switch (value) {
                     case _FriendMenuAction.viewProfile:
-                      onViewProfile();
+                        widget.onViewProfile();
                     case _FriendMenuAction.startChat:
-                      onOpenChat();
+                        widget.onOpenChat();
                     case _FriendMenuAction.inviteToRoom:
-                      onInviteToRoom?.call();
+                        widget.onInviteToRoom?.call();
                     case _FriendMenuAction.blockUser:
-                      onBlockUser();
+                        widget.onBlockUser();
                   }
                 },
                 itemBuilder: (context) => [
                   const PopupMenuItem<_FriendMenuAction>(value: _FriendMenuAction.viewProfile, child: Text('View Profile')),
                   const PopupMenuItem<_FriendMenuAction>(value: _FriendMenuAction.startChat, child: Text('Start Chat')),
-                  PopupMenuItem<_FriendMenuAction>(value: _FriendMenuAction.inviteToRoom, enabled: canInviteToRoom, child: const Text('Invite to Room')),
+                    PopupMenuItem<_FriendMenuAction>(value: _FriendMenuAction.inviteToRoom, enabled: widget.canInviteToRoom, child: const Text('Invite to Room')),
                   const PopupMenuItem<_FriendMenuAction>(value: _FriendMenuAction.blockUser, child: Text('Block User')),
                 ],
                 icon: const Icon(Icons.more_vert_rounded, color: VelvetNoir.onSurfaceVariant),
+              ),
               ),
             ],
           ),
         ),
       ),
+      ),
     );
   }
 }
 
-class _RecentConversationRow extends StatelessWidget {
+class _RecentConversationRow extends StatefulWidget {
   const _RecentConversationRow({
     required this.isSelected,
+    required this.pinned,
     required this.isOnline,
     required this.displayName,
     required this.avatarUrl,
     required this.preview,
     required this.timestamp,
     required this.unread,
+    required this.onTogglePin,
     required this.onTap,
   });
 
   final bool isSelected;
+  final bool pinned;
   final bool isOnline;
   final String displayName;
   final String? avatarUrl;
   final String preview;
   final DateTime timestamp;
   final bool unread;
+  final VoidCallback onTogglePin;
   final VoidCallback onTap;
 
   @override
+  State<_RecentConversationRow> createState() => _RecentConversationRowState();
+}
+
+class _RecentConversationRowState extends State<_RecentConversationRow> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final avatarImage = switch (avatarUrl) {
+    final avatarImage = switch (widget.avatarUrl) {
       final url? => CachedNetworkImageProvider(url),
       null => null,
     };
+    final backgroundColor = widget.isSelected
+        ? VelvetNoir.primary.withValues(alpha: 0.12)
+        : _isHovered
+            ? VelvetNoir.surfaceContainer.withValues(alpha: 0.94)
+            : VelvetNoir.surfaceHigh.withValues(alpha: 0.95);
+    final borderColor = widget.isSelected
+        ? VelvetNoir.primary.withValues(alpha: 0.52)
+        : widget.unread
+            ? VelvetNoir.primary.withValues(alpha: 0.42)
+            : _isHovered
+                ? VelvetNoir.secondary.withValues(alpha: 0.28)
+                : VelvetNoir.outlineVariant.withValues(alpha: 0.28);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 170),
+            curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected
-                ? VelvetNoir.primary.withValues(alpha: 0.12)
-                : VelvetNoir.surfaceHigh.withValues(alpha: 0.95),
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isSelected
-                  ? VelvetNoir.primary.withValues(alpha: 0.52)
-                  : unread
-                      ? VelvetNoir.primary.withValues(alpha: 0.42)
-                      : VelvetNoir.outlineVariant.withValues(alpha: 0.28),
-            ),
+              border: Border.all(color: borderColor),
+              boxShadow: [
+                if (_isHovered || widget.isSelected)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.16),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+              ],
           ),
           child: Row(
             children: [
@@ -535,14 +631,21 @@ class _RecentConversationRow extends StatelessWidget {
                 radius: 24,
                 backgroundColor: VelvetNoir.surfaceHighest,
                 backgroundImage: avatarImage,
-                child: avatarUrl == null
-                    ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
+                child: widget.avatarUrl == null
+                    ? Text(widget.displayName.isNotEmpty ? widget.displayName[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
                     : null,
               ),
-              if (isOnline)
-                Transform.translate(
-                  offset: const Offset(-10, 16),
-                  child: const _PresenceDot(),
+                AnimatedSlide(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  offset: widget.isOnline
+                      ? const Offset(-0.82, 1.32)
+                      : const Offset(-0.82, 1.0),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    opacity: widget.isOnline ? 1 : 0,
+                    child: const _PresenceDot(),
+                  ),
                 ),
               const SizedBox(width: 12),
               Expanded(
@@ -551,18 +654,40 @@ class _RecentConversationRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: Text(displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: VelvetNoir.onSurface, fontSize: 14, fontWeight: unread ? FontWeight.w800 : FontWeight.w700))),
-                        Text(_formatConversationTime(timestamp), style: TextStyle(color: unread ? VelvetNoir.primary : VelvetNoir.onSurfaceVariant, fontSize: 11, fontWeight: unread ? FontWeight.w700 : FontWeight.w600)),
+                        Expanded(child: Text(widget.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: VelvetNoir.onSurface, fontSize: 14, fontWeight: widget.unread ? FontWeight.w800 : FontWeight.w700))),
+                        Text(_formatConversationTime(widget.timestamp), style: TextStyle(color: widget.unread ? VelvetNoir.primary : VelvetNoir.onSurfaceVariant, fontSize: 11, fontWeight: widget.unread ? FontWeight.w700 : FontWeight.w600)),
+                        const SizedBox(width: 4),
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 160),
+                          scale: widget.pinned ? 1 : (_isHovered ? 1 : 0.92),
+                          child: IconButton(
+                          tooltip: widget.pinned ? 'Unpin conversation' : 'Pin conversation',
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                          onPressed: widget.onTogglePin,
+                          icon: Icon(
+                            widget.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                            size: 16,
+                            color: widget.pinned ? VelvetNoir.secondaryBright : VelvetNoir.onSurfaceVariant,
+                          ),
+                        ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(preview, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: unread ? VelvetNoir.onSurface : VelvetNoir.onSurfaceVariant, fontSize: 12, fontWeight: unread ? FontWeight.w700 : FontWeight.w500)),
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 150),
+                      style: TextStyle(color: widget.unread ? VelvetNoir.onSurface : VelvetNoir.onSurfaceVariant, fontSize: 12, fontWeight: widget.unread ? FontWeight.w700 : FontWeight.w500),
+                      child: Text(widget.preview, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
+      ),
       ),
     );
   }

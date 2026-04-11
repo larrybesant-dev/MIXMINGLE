@@ -33,15 +33,42 @@ final conversationsStreamProvider =
       final moderationService = ModerationService();
       final excludedIds = await moderationService.getExcludedUserIds(userId);
       if (excludedIds.isEmpty) return allConversations;
-      return allConversations.where((conv) {
+      final visibleConversations = allConversations.where((conv) {
         final others = conv.participantIds.where((id) => id != userId);
         return !others.any((id) => excludedIds.contains(id));
       }).toList();
+      visibleConversations.sort((left, right) => _compareConversationsForUser(
+            left,
+            right,
+            userId,
+          ));
+      return visibleConversations;
     } catch (_) {
+      allConversations.sort((left, right) => _compareConversationsForUser(
+            left,
+            right,
+            userId,
+          ));
       return allConversations;
     }
   });
 });
+
+int _compareConversationsForUser(
+  Conversation left,
+  Conversation right,
+  String userId,
+) {
+  final leftPinned = left.isPinnedFor(userId);
+  final rightPinned = right.isPinnedFor(userId);
+  if (leftPinned != rightPinned) {
+    return leftPinned ? -1 : 1;
+  }
+
+  final leftTimestamp = left.lastMessageAt ?? left.createdAt;
+  final rightTimestamp = right.lastMessageAt ?? right.createdAt;
+  return rightTimestamp.compareTo(leftTimestamp);
+}
 
 // Stream of pending message requests for the current user.
 final requestsStreamProvider =
@@ -181,6 +208,23 @@ final messagingControllerProvider =
   final firestore = ref.watch(firestoreProvider);
   return MessagingController(firestore: firestore);
 });
+
+class ConversationScrollMemoryNotifier
+    extends StateNotifier<Map<String, double>> {
+  ConversationScrollMemoryNotifier() : super(const <String, double>{});
+
+  void setOffset(String conversationId, double offset) {
+    state = <String, double>{
+      ...state,
+      conversationId: offset,
+    };
+  }
+}
+
+final conversationScrollMemoryProvider = StateNotifierProvider<
+    ConversationScrollMemoryNotifier, Map<String, double>>(
+  (ref) => ConversationScrollMemoryNotifier(),
+);
 
 class MessagingController {
   static const int messageRetentionDays = 90;
@@ -335,6 +379,18 @@ class MessagingController {
         .collection('conversations')
         .doc(conversationId)
         .update({'isArchived': true});
+  }
+
+  Future<void> setConversationPinned({
+    required String conversationId,
+    required String userId,
+    required bool pinned,
+  }) async {
+    await _firestore.collection('conversations').doc(conversationId).update({
+      'pinnedBy': pinned
+          ? FieldValue.arrayUnion([userId])
+          : FieldValue.arrayRemove([userId]),
+    });
   }
 
   Future<void> acceptMessageRequest({

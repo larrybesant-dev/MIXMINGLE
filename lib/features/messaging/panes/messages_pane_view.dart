@@ -512,7 +512,7 @@ class _ConversationsList extends StatelessWidget {
   }
 }
 
-class _ConversationTile extends StatelessWidget {
+class _ConversationTile extends ConsumerWidget {
   const _ConversationTile({
     required this.conversation,
     required this.userId,
@@ -522,8 +522,9 @@ class _ConversationTile extends StatelessWidget {
   final String userId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final unread = conversation.hasUnreadMessages(userId);
+    final pinned = conversation.isPinnedFor(userId);
     final displayName = conversation.getDisplayName(userId);
     final avatarUrl = conversation.groupAvatarUrl;
     final previewText = conversation.lastMessagePreview ?? 'No messages yet';
@@ -586,6 +587,28 @@ class _ConversationTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                  if (pinned)
+                    Positioned(
+                      left: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: VelvetNoir.secondary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: VelvetNoir.surface,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.push_pin_rounded,
+                          size: 10,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(width: 14),
@@ -617,6 +640,32 @@ class _ConversationTile extends StatelessWidget {
                                 unread ? FontWeight.w700 : FontWeight.w500,
                             color: unread
                                 ? VelvetNoir.primary
+                                : VelvetNoir.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          tooltip: pinned ? 'Unpin conversation' : 'Pin conversation',
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
+                          onPressed: () => ref
+                              .read(messagingControllerProvider)
+                              .setConversationPinned(
+                                conversationId: conversation.id,
+                                userId: userId,
+                                pinned: !pinned,
+                              ),
+                          icon: Icon(
+                            pinned
+                                ? Icons.push_pin_rounded
+                                : Icons.push_pin_outlined,
+                            size: 18,
+                            color: pinned
+                                ? VelvetNoir.secondaryBright
                                 : VelvetNoir.onSurfaceVariant,
                           ),
                         ),
