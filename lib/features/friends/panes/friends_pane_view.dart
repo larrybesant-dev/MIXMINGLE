@@ -35,7 +35,7 @@ class FriendsPaneView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'Could not load friends: $error',
+            'Could not load friends right now. Please try again shortly.',
             style: const TextStyle(color: VelvetNoir.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),

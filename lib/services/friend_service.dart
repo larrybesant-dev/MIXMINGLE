@@ -32,6 +32,20 @@ class FriendService {
   final ModerationService _moderationService;
   final PresenceRepository _presenceRepository;
 
+  bool _isPermissionDenied(Object error) {
+    if (error is FirebaseException) {
+      final code = error.code.trim().toLowerCase();
+      return code == 'permission-denied' ||
+          code == 'unauthenticated' ||
+          code == 'unauthorized';
+    }
+    final normalized = error.toString().toLowerCase();
+    return normalized.contains('permission-denied') ||
+        normalized.contains('insufficient permissions') ||
+        normalized.contains('unauthenticated') ||
+        normalized.contains('unauthorized');
+  }
+
   CollectionReference<Map<String, dynamic>> get _friendshipsCollection =>
       _firestore.collection('friendships');
 
@@ -114,14 +128,28 @@ class FriendService {
             .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
             .toList(growable: false);
         emit();
-      }, onError: controller.addError);
+      }, onError: (error, stackTrace) {
+        if (_isPermissionDenied(error)) {
+          userAFriendships = const <FriendshipModel>[];
+          emit();
+          return;
+        }
+        controller.addError(error, stackTrace);
+      });
 
       final subB = buildQuery('userB').snapshots().listen((snapshot) {
         userBFriendships = snapshot.docs
             .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
             .toList(growable: false);
         emit();
-      }, onError: controller.addError);
+      }, onError: (error, stackTrace) {
+        if (_isPermissionDenied(error)) {
+          userBFriendships = const <FriendshipModel>[];
+          emit();
+          return;
+        }
+        controller.addError(error, stackTrace);
+      });
 
       controller.onCancel = () async {
         await subA.cancel();
@@ -169,7 +197,13 @@ class FriendService {
 
       friendshipsSub = watchAcceptedFriendships(normalizedUserId).listen(
         (friendships) => bindUsers(friendships),
-        onError: controller.addError,
+        onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            controller.add(const <UserModel>[]);
+            return;
+          }
+          controller.addError(error, stackTrace);
+        },
       );
 
       controller.onCancel = () async {
@@ -271,19 +305,46 @@ class FriendService {
           usersById = {for (final user in users) user.id: user};
           usersReady = true;
           emit();
-        }, onError: controller.addError);
+        }, onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            usersById = const <String, UserModel>{};
+            usersReady = true;
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        });
 
         presenceSub = _watchPresenceByUserIds(friendIds).listen((presenceMap) {
           logPresenceTransitions(presenceMap);
           presenceById = presenceMap;
           presenceReady = true;
           emit();
-        }, onError: controller.addError);
+        }, onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            presenceById = const <String, PresenceModel>{};
+            presenceReady = true;
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        });
       }
 
       friendshipsSub = watchAcceptedFriendships(normalizedUserId).listen(
         (friendships) => rebindFriendData(friendships),
-        onError: controller.addError,
+        onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            latestFriendships = const <FriendshipModel>[];
+            usersById = const <String, UserModel>{};
+            presenceById = const <String, PresenceModel>{};
+            usersReady = true;
+            presenceReady = true;
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        },
       );
 
       controller.onCancel = () async {
@@ -696,7 +757,14 @@ class FriendService {
               doc.id: UserModel.fromJson({'id': doc.id, ...doc.data()}),
           };
           emit();
-        }, onError: controller.addError);
+        }, onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            chunkMaps[index] = <String, UserModel>{};
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        });
         subscriptions.add(sub);
       }
 
