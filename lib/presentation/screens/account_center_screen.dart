@@ -1,18 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/layout/app_layout.dart';
+import '../../features/auth/controllers/auth_controller.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 
-class AccountCenterScreen extends StatefulWidget {
+class AccountCenterScreen extends ConsumerStatefulWidget {
   const AccountCenterScreen({super.key});
 
   @override
-  State<AccountCenterScreen> createState() => _AccountCenterScreenState();
+  ConsumerState<AccountCenterScreen> createState() => _AccountCenterScreenState();
 }
 
-class _AccountCenterScreenState extends State<AccountCenterScreen> {
+class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
   bool _busy = false;
 
   String _providerLabel(String providerId) {
@@ -166,8 +168,11 @@ class _AccountCenterScreenState extends State<AccountCenterScreen> {
 
     setState(() => _busy = true);
     try {
+      final uid = user.uid;
       await user.delete();
-      await FirebaseAuth.instance.signOut();
+      await ref.read(authControllerProvider.notifier).finalizeSessionCleanup(
+        uidOverride: uid,
+          );
       if (!mounted) return;
       context.go('/login');
     } on FirebaseAuthException catch (e) {

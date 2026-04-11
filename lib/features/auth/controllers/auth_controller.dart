@@ -287,12 +287,39 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid != null) {
-      (_presenceService ?? PresenceService()).setStatus(uid, UserStatus.offline).ignore();
+    await _cleanupSession();
+  }
+
+  Future<void> finalizeSessionCleanup({String? uidOverride}) async {
+    await _cleanupSession(signOut: false, uidOverride: uidOverride);
+  }
+
+  Future<void> _cleanupSession({
+    bool signOut = true,
+    String? uidOverride,
+  }) async {
+    final uid = uidOverride ?? _auth.currentUser?.uid ?? state.uid;
+    final presenceService = _presenceService ?? PresenceService();
+
+    if (uid != null && uid.trim().isNotEmpty) {
+      try {
+        await presenceService.setStatus(uid, UserStatus.offline);
+      } catch (_) {
+        // Best-effort cleanup.
+      }
     }
-    await (_unregisterToken?.call() ?? PushMessagingService.instance.unregisterCurrentToken());
-    await _auth.signOut();
+
+    try {
+      await (_unregisterToken?.call() ??
+          PushMessagingService.instance.unregisterCurrentToken());
+    } catch (_) {
+      // Best-effort cleanup.
+    }
+
+    if (signOut) {
+      await _auth.signOut();
+    }
+
     state = state.copyWith(isLoading: false, uid: null, error: null);
   }
 

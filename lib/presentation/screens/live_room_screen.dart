@@ -14,6 +14,8 @@ import '../../models/moderation_model.dart';
 import '../../models/message_model.dart';
 import '../../models/room_participant_model.dart';
 import '../providers/user_provider.dart';
+import '../../features/room/controllers/live_room_controller.dart';
+import '../../features/room/controllers/live_room_media_controller.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
@@ -22,7 +24,6 @@ import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/widgets/camera_wall.dart';
 import '../../features/room/widgets/room_control_sheets.dart';
 import '../../features/room/widgets/floating_gift_overlay.dart';
-import '../../widgets/coin_balance_widget.dart';
 import '../../widgets/user_profile_popup.dart';
 import '../../widgets/floating_whisper_panel.dart';
 import '../../features/room/widgets/dockable_panel.dart';
@@ -34,6 +35,9 @@ import '../../features/room/widgets/cam_preview_sheet.dart';
 import '../../features/room/widgets/rich_text_toolbar.dart';
 import '../../features/room/widgets/floating_cam_window.dart';
 import '../../features/room/widgets/room_host_control_panel.dart';
+import '../../features/room/widgets/live_room_app_bar_actions.dart';
+import '../../features/room/widgets/live_room_app_bar_status.dart';
+import '../../features/room/widgets/live_room_media_action_strip.dart';
 import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
@@ -56,10 +60,10 @@ import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
 import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
-import '../../services/presence_service.dart';
 import '../../services/room_audio_cues.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
-import '../../widgets/friends_panel_button.dart';
+import '../../shared/widgets/app_page_scaffold.dart';
+import '../../shared/widgets/async_state_view.dart';
 import '../../core/theme.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
@@ -85,12 +89,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _hasTrackedRoomJoin = false;
   bool _hasTrackedFirstMessage = false;
   RtcRoomService? _agoraService;
-  bool _isCallConnecting = false;
-  bool _isCallReady = false;
-  bool _isMicMuted = false;
-  bool _isVideoEnabled = false;
-  bool _isSharingSystemAudio = false;
-  bool _isSystemAudioActionInFlight = false;
   /// Order of the three desktop columns. Valid values: 'cams', 'chat', 'users'.
   List<String> _columnOrder = const ['cams', 'chat', 'users'];
   double _chatColW = 280.0;
@@ -109,28 +107,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       setState(() => _columnOrder = List.unmodifiable(list));
     }
   }
-  bool _isMicActionInFlight = false;
-  bool _isVideoActionInFlight = false;
   // Volume controls — persisted only for the lifetime of the room session.
   double _micVolume = 1.0;
   double _speakerVolume = 1.0;
   bool _showVolumeControls = false;
-  String? _cameraStatus;
-  String _connectPhase = 'idle';
   bool _showEmojiTray = false;
   bool _showRichToolbar = false;
   String? _pendingRichColorHex;
-  String? _callError;
-  int? _currentRtcUid;
-  /// Slot id in rooms/{roomId}/slots currently held by this user, if any.
-  String? _claimedSlotId;
   /// Prevents re-triggering camera toggle (double-click / web event replay).
   DateTime? _videoToggleCooldownUntil;
   Set<String> _excludedUserIds = const <String>{};
-  String? _appliedMediaRole;
   bool _isHandlingParticipantRemoval = false;
   bool _preWarmDone = false;
-  Timer? _presenceHeartbeatTimer;
 
   String _buildOutgoingChatMessage(String rawText) {
     final trimmed = rawText.trim();
@@ -151,9 +139,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   final List<_GiftToast> _giftToasts = [];
   Timer? _giftToastTimer;
   Timer? _typingTimer;
+  bool _typingStatusActive = false;
+  DateTime? _lastTypingWriteAt;
   final GlobalKey<FloatingGiftOverlayState> _floatingGiftKey =
       GlobalKey<FloatingGiftOverlayState>();
   final GlobalKey<BuzzOverlayState> _buzzKey = GlobalKey<BuzzOverlayState>();
+  late final LiveRoomMediaController _liveRoomMediaNotifier;
+  late final ProviderSubscription<LiveRoomMediaState> _mediaStateSubscription;
+  LiveRoomMediaState _latestMediaState = const LiveRoomMediaState();
   final Set<String> _shownBuzzIds = {};
   final Set<String> _shownCamViewRequestIds = {};
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>?
@@ -166,6 +159,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Timer? _micExpiryTimer;
   DateTime? _scheduledMicExpiresAt;
   static const int _kMaxBackoffSeconds = 30;
+  static const Duration _kTypingIdleTimeout = Duration(seconds: 3);
+  static const Duration _kTypingWriteThrottle = Duration(seconds: 4);
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Map<String, int> _senderVipLevelById = <String, int>{};
   /// GlobalKeys for remote RTCVideoViews — lets Flutter move the platform-view
@@ -177,11 +172,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
   final Map<String, String?> _senderGenderById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
-  Set<int> _requestedHighQualityRemoteUids = <int>{};
-  Set<int> _requestedLowQualityRemoteUids = <int>{};
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
-  int _localViewEpoch = 0;
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
   int _maxBroadcasters = 6;
   static const List<String> _quickEmojis = <String>[
@@ -209,25 +201,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return fallback;
   }
 
-  bool _asBool(dynamic value, {bool fallback = false}) {
-    if (value is bool) {
-      return value;
-    }
-    if (value is num) {
-      return value != 0;
-    }
-    if (value is String) {
-      final normalized = value.trim().toLowerCase();
-      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
-        return true;
-      }
-      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
-        return false;
-      }
-    }
-    return fallback;
-  }
-
   bool _looksLikeAgoraAppId(String value) {
     final trimmed = value.trim();
     if (trimmed.length != 32) {
@@ -236,10 +209,43 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return RegExp(r'^[a-zA-Z0-9]{32}$').hasMatch(trimmed);
   }
 
+  LiveRoomMediaState get _mediaState => _latestMediaState;
+
+    LiveRoomMediaController get _mediaController => _liveRoomMediaNotifier;
+
+  bool get _isCallConnecting => _mediaState.isCallConnecting;
+  bool get _isCallReady => _mediaState.isCallReady;
+  bool get _isMicMuted => _mediaState.isMicMuted;
+  bool get _isVideoEnabled => _mediaState.isVideoEnabled;
+  bool get _isSharingSystemAudio => _mediaState.isSharingSystemAudio;
+  bool get _isSystemAudioActionInFlight =>
+      _mediaState.isSystemAudioActionInFlight;
+  bool get _isMicActionInFlight => _mediaState.isMicActionInFlight;
+  bool get _isVideoActionInFlight => _mediaState.isVideoActionInFlight;
+  String? get _cameraStatus => _mediaState.cameraStatus;
+  String? get _callError => _mediaState.callError;
+  int? get _currentRtcUid => _mediaState.currentRtcUid;
+  String? get _claimedSlotId => _mediaState.claimedSlotId;
+  String? get _appliedMediaRole => _mediaState.appliedMediaRole;
+  Set<int> get _requestedHighQualityRemoteUids =>
+      _mediaState.requestedHighQualityRemoteUids;
+  Set<int> get _requestedLowQualityRemoteUids =>
+      _mediaState.requestedLowQualityRemoteUids;
+  int get _localViewEpoch => _mediaState.localViewEpoch;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _liveRoomMediaNotifier =
+        ref.read(liveRoomMediaControllerProvider(widget.roomId).notifier);
+    _mediaStateSubscription = ref.listenManual<LiveRoomMediaState>(
+      liveRoomMediaControllerProvider(widget.roomId),
+      (_, next) {
+        _latestMediaState = next;
+      },
+      fireImmediately: true,
+    );
     messageController = TextEditingController();
     scrollController = ScrollController();
 
@@ -439,8 +445,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return;
     }
 
-    _requestedHighQualityRemoteUids = normalizedHighQuality;
-    _requestedLowQualityRemoteUids = normalizedLowQuality;
+    _mediaController.updateRequestedRemoteQualities(
+      highQualityUids: normalizedHighQuality,
+      lowQualityUids: normalizedLowQuality,
+    );
 
     if (_remoteLayoutSyncQueued) {
       return;
@@ -539,9 +547,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required Future<T> Function() action,
   }) async {
     if (mounted) {
-      setState(() {
-        _connectPhase = phase;
-      });
+      _mediaController.setConnectPhase(phase);
     }
     return action().timeout(
       timeout,
@@ -572,16 +578,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final nextVideoEnabled = service.isLocalVideoCapturing;
     final nextMicMuted = service.isLocalAudioMuted;
     final nextSystemAudio = service.isSharingSystemAudio;
-    if (_isVideoEnabled == nextVideoEnabled &&
-        _isMicMuted == nextMicMuted &&
-        _isSharingSystemAudio == nextSystemAudio) {
-      return;
-    }
-    setState(() {
-      _isVideoEnabled = nextVideoEnabled;
-      _isMicMuted = nextMicMuted;
-      _isSharingSystemAudio = nextSystemAudio;
-    });
+    _mediaController.syncFromService(
+      isVideoEnabled: nextVideoEnabled,
+      isMicMuted: nextMicMuted,
+      isSharingSystemAudio: nextSystemAudio,
+    );
   }
 
   /// Wires up the common callbacks on any [RtcRoomService] implementation.
@@ -632,11 +633,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Future<void> _connectCall(String userId) async {
     if (_isCallConnecting || _isCallReady) return;
 
-    setState(() {
-      _isCallConnecting = true;
-      _callError = null;
-      _connectPhase = 'starting';
-    });
+    _mediaController.beginConnecting();
 
     RtcRoomService? connectedService;
 
@@ -652,7 +649,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         // Firestore is used for signaling (offer/answer/ICE).
         _logLiveRoom('connect:webrtc_path uid=$rtcUid');
         if (mounted) {
-          setState(() => _cameraStatus = 'Connecting to live room…');
+          _mediaController.setCameraStatus('Connecting to live room…');
         }
         final iceServers = await _fetchIceServers();
         final service = WebRtcRoomService(
@@ -686,7 +683,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       } else {
         // ── Agora path (native mobile) ────────────────────────────────────
         if (mounted) {
-          setState(() => _cameraStatus = 'Connecting: requesting token...');
+          _mediaController.setCameraStatus('Connecting: requesting token...');
         }
         final credentials = await _runWithWatchdog<({String token, String appId})>(
           phase: 'token',
@@ -707,11 +704,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
           try {
             if (mounted) {
-              setState(() {
-                _cameraStatus = attempt == 1
+              _mediaController.setCameraStatus(
+                attempt == 1
                     ? 'Connecting: initializing media engine…'
-                    : 'Retrying media engine initialization…';
-              });
+                    : 'Retrying media engine initialization…',
+              );
             }
             _logLiveRoom('connect:agora_init attempt=$attempt');
             await _runWithWatchdog<void>(
@@ -723,7 +720,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             );
             _logLiveRoom('connect:agora_initialized attempt=$attempt');
             if (mounted) {
-              setState(() => _cameraStatus = 'Connecting: joining live room...');
+              _mediaController.setCameraStatus(
+                'Connecting: joining live room...',
+              );
             }
             await _runWithWatchdog<void>(
               phase: 'join-attempt-$attempt',
@@ -754,10 +753,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 errorCode == 'agora-initialize-live-media-failed';
             if (canRetry) {
               if (mounted) {
-                setState(() {
-                  _connectPhase = 'retrying-init';
-                  _cameraStatus = 'Retrying media engine initialization...';
-                });
+                _mediaController.markRetryingInitialization();
               }
               await Future<void>.delayed(const Duration(milliseconds: 450));
               continue;
@@ -779,27 +775,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         await connectedService.dispose();
         return;
       }
-      // Store uid for later token renewal without channel rejoin.
-      _currentRtcUid = rtcUid;
       // Auto-sync UI when system-audio sharing stops externally (Chrome bar X).
       // Cast needed: onSystemAudioStopped is only on WebRtcRoomService.
       if (connectedService is WebRtcRoomService) {
         connectedService.onSystemAudioStopped = () {
-          if (mounted) setState(() => _isSharingSystemAudio = false);
+          if (mounted) {
+            _mediaController.markSystemAudioStopped();
+          }
         };
       }
       setState(() {
         _agoraService = connectedService;
-        _isCallReady = true;
-        // Do NOT set _appliedMediaRole here. Leave it null so the first
-        // build after connect calls _applyRoleMediaState with the actual
-        // Firestore participant role rather than hardcoding 'member'.
-        _isMicMuted = true;
-        _isVideoEnabled = false;
-        _localViewEpoch++;
-        _connectPhase = 'ready';
-        _cameraStatus = 'Live media ready. Tap camera to publish.';
       });
+      _mediaController.markReady(
+        rtcUid: rtcUid,
+        cameraStatus: 'Live media ready. Tap camera to publish.',
+      );
       _syncMediaUiFromService();
     } catch (e, stackTrace) {
       _logLiveRoom(
@@ -811,29 +802,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         await connectedService.dispose();
       }
       if (mounted) {
-        setState(() {
-          final errorCode = _extractErrorCode(e);
-          final mappedError =
-              errorCode == 'agora-initialize-live-media-failed' ||
-                      errorCode == 'webrtc-initialize-failed' ||
-                      errorCode == 'webrtc-join-failed'
-                  ? "We couldn't connect to the live room. Check your connection and try again."
-                  : _mapMediaError(e, canBroadcast: true);
-          final debugSuffix = e is AgoraServiceException
-              ? ' [${e.code}] ${e.cause ?? e.message}'
-              : ' [$e]';
-          _connectPhase = 'failed';
-          _callError = '$mappedError$debugSuffix';
-          _cameraStatus =
-              'Live media connect failed (phase=$_connectPhase code=$errorCode): $mappedError$debugSuffix';
-          _isCallReady = false;
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCallConnecting = false;
-        });
+        final errorCode = _extractErrorCode(e);
+        final mappedError =
+            errorCode == 'agora-initialize-live-media-failed' ||
+                    errorCode == 'webrtc-initialize-failed' ||
+                    errorCode == 'webrtc-join-failed'
+                ? "We couldn't connect to the live room. Check your connection and try again."
+                : _mapMediaError(e, canBroadcast: true);
+        final debugSuffix = e is AgoraServiceException
+            ? ' [${e.code}] ${e.cause ?? e.message}'
+            : ' [$e]';
+        final callError = '$mappedError$debugSuffix';
+        _mediaController.markConnectionFailed(
+          callError: callError,
+          cameraStatus:
+              'Live media connect failed (phase=failed code=$errorCode): $callError',
+        );
       }
     }
   }
@@ -842,7 +826,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final service = _agoraService;
     if (service == null || !_isCallReady || _isMicActionInFlight) return;
     final next = !_isMicMuted;
-    setState(() => _isMicActionInFlight = true);
+    _mediaController.beginMicAction();
     try {
       if (!next) {
         await service.ensureDeviceAccess(video: false, audio: true);
@@ -851,9 +835,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       await service.mute(next);
       if (mounted) {
-        setState(() {
-          _isMicMuted = next;
-        });
+        _mediaController.finishMicAction(isMuted: next);
       }
       _syncMediaUiFromService();
       // Start or stop the timer that refreshes the mic level bar.
@@ -866,7 +848,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
     } finally {
       if (mounted) {
-        setState(() => _isMicActionInFlight = false);
+        _mediaController.endMicAction();
       }
     }
   }
@@ -984,16 +966,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (!proceed || !mounted) return;
     }
 
-    setState(() => _isSystemAudioActionInFlight = true);
+    _mediaController.beginSystemAudioAction();
     try {
       await service.shareSystemAudio(!_isSharingSystemAudio);
       if (mounted) {
-        setState(() => _isSharingSystemAudio = !_isSharingSystemAudio);
+        _mediaController.finishSystemAudioAction(
+          isSharing: !_isSharingSystemAudio,
+        );
       }
     } catch (e) {
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
     } finally {
-      if (mounted) setState(() => _isSystemAudioActionInFlight = false);
+      if (mounted) _mediaController.endSystemAudioAction();
     }
   }
 
@@ -1017,24 +1001,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (service == null) {
         _logLiveRoom('toggle_video:blocked service_null');
         if (mounted) {
-          setState(
-            () => _cameraStatus =
-                'Camera blocked: live media service not initialized.',
+          _mediaController.blockVideoAction(
+            'Camera blocked: live media service not initialized.',
           );
         }
         _showSnackBar('Agora service not initialized.');
       } else if (!_isCallReady) {
         _logLiveRoom('toggle_video:blocked call_not_ready');
         if (mounted) {
-          setState(
-            () => _cameraStatus = 'Camera blocked: live media not ready yet.',
+          _mediaController.blockVideoAction(
+            'Camera blocked: live media not ready yet.',
           );
         }
         _showSnackBar('Call not ready. Wait a moment and retry.');
       } else {
         _logLiveRoom('toggle_video:blocked already_in_flight');
         if (mounted) {
-          setState(() => _cameraStatus = 'Camera action already in progress...');
+          _mediaController.blockVideoAction(
+            'Camera action already in progress...',
+          );
         }
         _showSnackBar('Camera action in progress...');
       }
@@ -1045,14 +1030,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _logLiveRoom(
       'toggle_video:next=$next broadcaster=${service.isBroadcaster} joined=${service.isJoinedChannel}',
     );
-    setState(() {
-      _isVideoActionInFlight = true;
-      _cameraStatus = next ? 'Starting camera...' : 'Stopping camera...';
-    });
+    _mediaController.beginVideoAction(
+      next ? 'Starting camera...' : 'Stopping camera...',
+    );
     try {
       if (next) {
         if (mounted) {
-          setState(() => _cameraStatus = 'Requesting browser camera access...');
+          _mediaController.setCameraStatus('Requesting browser camera access...');
         }
 
         // Claim a broadcaster slot in Firebase before enabling the camera.
@@ -1067,15 +1051,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           );
           if (slotId == null) {
             if (mounted) {
-              setState(() {
-                _isVideoActionInFlight = false;
-                _cameraStatus = 'All camera slots are full.';
-              });
+              _mediaController.failVideoAction('All camera slots are full.');
               _showSnackBar('All camera slots are full. Try again later.');
             }
             return;
           }
-          _claimedSlotId = slotId;
+          _mediaController.setClaimedSlotId(slotId);
           _logLiveRoom('slot_claimed: slotId=$slotId');
         }
 
@@ -1084,7 +1065,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         // the camera does not silently re-enable a muted microphone.
         await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
         if (mounted) {
-          setState(() => _appliedMediaRole = 'member');
+          _mediaController.setAppliedMediaRole('member');
         }
       } else {
         // Turning camera off — release the slot (fire-and-forget to Firestore).
@@ -1110,7 +1091,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           } catch (e) {
             _logLiveRoom('toggle_video:mic_restore_failed', error: e);
             // Mic track could not be restored; mark mic muted to reflect reality.
-            if (mounted) setState(() => _isMicMuted = true);
+            if (mounted) _mediaController.setMicMuted(true);
           }
         }
       }
@@ -1121,13 +1102,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       // _awaitLocalVideoCapturing times out silently, so enableVideo() returns
       // success even after the old service was disposed and a new one created.
       if (mounted && identical(service, _agoraService)) {
-        setState(() {
-          _isVideoEnabled = next;
-          // When turning off, clear the slot atomically with isVideoEnabled so
-          // there is never a frame where claimedSlotId==null but video==true.
-          if (!next) _claimedSlotId = null;
-          _cameraStatus = next ? 'Camera active.' : 'Camera off.';
-        });
+        _mediaController.finishVideoAction(
+          isVideoEnabled: next,
+          claimedSlotId: next ? _claimedSlotId : null,
+          appliedMediaRole: next ? 'member' : null,
+          cameraStatus: next ? 'Camera active.' : 'Camera off.',
+        );
         _syncMediaUiFromService();
         if (next) {
           Future<void>.delayed(const Duration(milliseconds: 450), () {
@@ -1159,7 +1139,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final detail = e is AgoraServiceException
             ? ' [${e.code}] ${e.cause ?? e.message}'
             : ' [$e]';
-        setState(() => _cameraStatus = 'Camera failed: $mapped$detail');
+        _mediaController.failVideoAction('Camera failed: $mapped$detail');
       }
     } finally {
       if (mounted) {
@@ -1168,7 +1148,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         // immediately re-toggling the camera.
         _videoToggleCooldownUntil =
             DateTime.now().add(const Duration(milliseconds: 900));
-        setState(() => _isVideoActionInFlight = false);
+        _mediaController.endVideoAction();
       }
       _logLiveRoom('toggle_video:end');
     }
@@ -1701,38 +1681,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
 
   void _startPresenceHeartbeat(String userId) {
-    _presenceHeartbeatTimer?.cancel();
-    final presenceController = ref.read(roomPresenceControllerProvider);
-    presenceController.setOnline(roomId: widget.roomId, userId: userId);
-    _presenceHeartbeatTimer = Timer.periodic(const Duration(seconds: 20), (_) {
-      presenceController.heartbeat(roomId: widget.roomId, userId: userId);
-      // Keep the participant doc's lastActiveAt fresh so stale docs (from
-      // users who closed their browser without calling _leaveRoom) can be
-      // filtered out by the 90-second staleness window in providers.
-      _firestore
-          ?.collection('rooms')
-          .doc(widget.roomId)
-          .collection('participants')
-          .doc(userId)
-          .update({'lastActiveAt': FieldValue.serverTimestamp()})
-          .ignore();
-    });
+    unawaited(
+      ref.read(liveRoomControllerProvider(widget.roomId).notifier).resumePresence(),
+    );
   }
 
   Future<void> _stopPresenceHeartbeat() async {
-    _presenceHeartbeatTimer?.cancel();
-    _presenceHeartbeatTimer = null;
-    final userId = _joinedUserId;
-    if (userId == null) {
-      return;
-    }
-    try {
-      await ref
-          .read(roomPresenceControllerProvider)
-          .setOffline(roomId: widget.roomId, userId: userId);
-    } catch (_) {
-      // Best-effort cleanup.
-    }
+    await ref.read(liveRoomControllerProvider(widget.roomId).notifier).pausePresence();
   }
 
   /// Fetches a replacement token and calls engine.renewToken() so the channel
@@ -1777,12 +1732,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     await _disconnectCall();
     if (!mounted) return;
 
-    setState(() {
-      _callError = null;
-      _cameraStatus = delaySecs > 1
-          ? 'Reconnecting in ${delaySecs}s…'
-          : 'Reconnecting…';
-    });
+    _mediaController.markReconnecting(
+      delaySecs > 1 ? 'Reconnecting in ${delaySecs}s…' : 'Reconnecting…',
+    );
 
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(Duration(seconds: delaySecs), () async {
@@ -1804,16 +1756,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               maxBroadcasters: _maxBroadcasters,
             );
             if (slotId != null && mounted) {
-              _claimedSlotId = slotId;
+              _mediaController.setClaimedSlotId(slotId);
               await service.enableVideo(true, publishMicrophoneTrack: !wasMicMuted);
               await service.mute(wasMicMuted);
               if (mounted) {
-                setState(() {
-                  _isVideoEnabled = true;
-                  _isMicMuted = wasMicMuted;
-                  _appliedMediaRole = previousRole ?? 'member';
-                  _cameraStatus = 'Camera restored after reconnect.';
-                });
+                _mediaController.restoreBroadcastAfterReconnect(
+                  slotId: slotId,
+                  wasMicMuted: wasMicMuted,
+                  role: previousRole ?? 'member',
+                );
                 // Successful reconnect — reset backoff counter.
                 _reconnectAttempts = 0;
               }
@@ -1835,16 +1786,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final service = _agoraService;
     if (service is WebRtcRoomService) service.onSystemAudioStopped = null;
     _agoraService = null;
-    _isCallReady = false;
-    _isVideoEnabled = false;
-    _isMicMuted = false;
-    _isSharingSystemAudio = false;
-    _isSystemAudioActionInFlight = false;
-    _appliedMediaRole = null;
-    _isMicActionInFlight = false;
-    _isVideoActionInFlight = false;
-    _requestedHighQualityRemoteUids = <int>{};
-    _requestedLowQualityRemoteUids = <int>{};
+    _mediaController.resetDisconnected();
     if (service != null) {
       await service.dispose();
     }
@@ -1873,7 +1815,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         }
         await service.publishLocalAudioStream(true);
         if (mounted) {
-          setState(() => _isMicMuted = false);
+          _mediaController.setMicMuted(false);
           if (role == 'cohost') {
             _showSnackBar('You are now a co-host — your mic is live!');
           }
@@ -1886,7 +1828,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           service.isBroadcaster &&
           _claimedSlotId == null) {
         await service.setBroadcaster(false);
-        if (mounted) setState(() => _isMicMuted = true);
+        if (mounted) _mediaController.setMicMuted(true);
         // If demoted from stage the user was displaced by someone grabbing the
         // mic — show a brief notice so they are not confused.
         if (mounted && _appliedMediaRole == 'stage') {
@@ -1905,7 +1847,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _showSnackBar(_mapMediaError(e, canBroadcast: true));
       }
       // Still update _appliedMediaRole so we don't loop infinitely.
-      if (mounted) setState(() => _appliedMediaRole = role);
+      if (mounted) _mediaController.setAppliedMediaRole(role);
       return;
     }
 
@@ -1913,9 +1855,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return;
     }
 
-    setState(() {
-      _appliedMediaRole = role;
-    });
+    _mediaController.setAppliedMediaRole(role);
   }
 
   void _exitRoom() {
@@ -1955,31 +1895,37 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   void _onTypingInput() {
     _typingTimer?.cancel();
-    final firestore = _firestore;
     final userId = _joinedUserId;
-    if (firestore == null || userId == null || userId.isEmpty) return;
-    firestore
-        .collection('rooms')
-        .doc(widget.roomId)
-        .collection('typing')
-        .doc(userId)
-        .set({'isTyping': true, 'updatedAt': FieldValue.serverTimestamp()});
-    _typingTimer = Timer(const Duration(seconds: 3), _clearTypingStatus);
+    if (userId == null || userId.isEmpty) return;
+    if (messageController.text.trim().isEmpty) {
+      _clearTypingStatus().ignore();
+      return;
+    }
+    final now = DateTime.now();
+    final shouldWrite = !_typingStatusActive ||
+        _lastTypingWriteAt == null ||
+        now.difference(_lastTypingWriteAt!) >= _kTypingWriteThrottle;
+    if (shouldWrite) {
+      _typingStatusActive = true;
+      _lastTypingWriteAt = now;
+      ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .setTyping(userId: userId, isTyping: true)
+          .ignore();
+    }
+    _typingTimer = Timer(_kTypingIdleTimeout, _clearTypingStatus);
   }
 
   Future<void> _clearTypingStatus() async {
     _typingTimer?.cancel();
     _typingTimer = null;
-    final firestore = _firestore;
+    _typingStatusActive = false;
     final userId = _joinedUserId;
-    if (firestore == null || userId == null || userId.isEmpty) return;
+    if (userId == null || userId.isEmpty) return;
     try {
-      await firestore
-          .collection('rooms')
-          .doc(widget.roomId)
-          .collection('typing')
-          .doc(userId)
-          .delete();
+      await ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .setTyping(userId: userId, isTyping: false);
     } catch (_) {}
   }
 
@@ -2242,7 +2188,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       } catch (_) {
         // Best-effort; slot will expire on its own if cleanup fails.
       }
-      _claimedSlotId = null;
+      _mediaController.setClaimedSlotId(null);
     }
 
     if (!mounted) {
@@ -2553,11 +2499,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               icon: Icons.star_outline_rounded,
               onTap: () => runAction(() async {
                 try {
-                  final firestore = _firestore ?? ref.read(roomFirestoreProvider);
-                  await (firestore as FirebaseFirestore)
-                      .collection('rooms')
-                      .doc(widget.roomId)
-                      .update({'spotlightUserId': target.userId});
+                  await ref
+                      .read(liveRoomControllerProvider(widget.roomId).notifier)
+                      .setSpotlightUser(target.userId);
                   _showSnackBar('${presentationByUserId[target.userId]?.displayName ?? target.userId} is now spotlighted!');
                 } catch (e) {
                   _showSnackBar('Could not spotlight user: $e');
@@ -2849,11 +2793,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             TextButton(
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
-                ref.read(roomPresenceControllerProvider).setCustomStatus(
-                  roomId: roomId,
-                  userId: userId,
-                  status: ctrl.text.trim().isEmpty ? null : ctrl.text.trim(),
-                );
+                ref.read(liveRoomControllerProvider(roomId).notifier).setCustomStatus(
+                      userId: userId,
+                      status: ctrl.text.trim().isEmpty ? null : ctrl.text.trim(),
+                    );
               },
               child: const Text('Save', style: TextStyle(color: Color(0xFFD4A853))),
             ),
@@ -2865,26 +2808,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   /// Posts a system event message (join/leave/cam-on/off) to the room chat.
   void _sendSystemEvent(String content) {
-    final firestore = _firestore;
-    if (firestore == null) return;
-    firestore
-        .collection('rooms')
-        .doc(widget.roomId)
-        .collection('messages')
-        .add({
-      'senderId': 'system',
-      'roomId': widget.roomId,
-      'content': content,
-      'type': 'system',
-      'richText': '',
-      'sentAt': FieldValue.serverTimestamp(),
-      'clientSentAt': DateTime.now().toIso8601String(),
-    }).ignore();
+    ref
+        .read(liveRoomControllerProvider(widget.roomId).notifier)
+        .postSystemEvent(content)
+        .ignore();
   }
 
   Future<void> _joinRoom(String userId) async {
-    final firestore = _firestore;
-    if (firestore == null || _isJoiningRoom) return;
+    if (_isJoiningRoom) return;
 
     setState(() {
       _isJoiningRoom = true;
@@ -2892,118 +2823,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     });
 
     try {
+      final joinResult = await ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .joinRoom(userId);
+      _excludedUserIds = joinResult.excludedUserIds;
+      if (!joinResult.isSuccess) {
+        if (mounted) {
+          setState(() => _roomJoinError =
+              joinResult.errorMessage ?? 'Could not join room. Please try again.');
+        }
+        _joinedUserId = null;
+        _exitRoom();
+        return;
+      }
+
       _joinedUserId = userId;
-      final now = DateTime.now();
-      final roomDoc = await firestore
-          .collection('rooms')
-          .doc(widget.roomId)
-          .get();
-      if (!roomDoc.exists) {
-        setState(() => _roomJoinError = 'This room no longer exists.');
-        _joinedUserId = null;
-        _exitRoom();
-        return;
-      }
-
-      final ownerId = _asString(
-        roomDoc.data()?['ownerId'],
-        fallback: _asString(roomDoc.data()?['hostId']),
-      );
-      final moderationService = ModerationService(firestore: firestore);
-      _excludedUserIds = await moderationService.getExcludedUserIds(userId);
-
-      if (ownerId.isNotEmpty) {
-        final hasBlockingRelationship = await moderationService
-            .hasBlockingRelationship(userId, ownerId);
-        if (hasBlockingRelationship) {
-          setState(() => _roomJoinError = 'You cannot join this room.');
-          _joinedUserId = null;
-          _exitRoom();
-          return;
-        }
-      }
-
-      if (_excludedUserIds.isNotEmpty) {
-        final participantsSnapshot = await firestore
-            .collection('rooms')
-            .doc(widget.roomId)
-            .collection('participants')
-            .get();
-        final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
-          final participantData = doc.data();
-          final participantId = _asString(
-            participantData['userId'],
-            fallback: doc.id,
-          );
-          return participantId.isNotEmpty &&
-              participantId != userId &&
-              _excludedUserIds.contains(participantId);
-        });
-        if (hasBlockedParticipant) {
-          setState(
-            () => _roomJoinError =
-                'You cannot join while a blocked user is in this room.',
-          );
-          _joinedUserId = null;
-          _exitRoom();
-          return;
-        }
-      }
-
-      final isLocked = _asBool(roomDoc.data()?['isLocked']);
-      if (isLocked) {
-        setState(() => _roomJoinError = 'Room is locked by host.');
-        _joinedUserId = null;
-        _exitRoom();
-        return;
-      }
-
-      final docRef = firestore
-          .collection('rooms')
-          .doc(widget.roomId)
-          .collection('participants')
-          .doc(userId);
-      final memberDocRef = firestore
-          .collection('rooms')
-          .doc(widget.roomId)
-          .collection('members')
-          .doc(userId);
-      final doc = await docRef.get();
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (data['isBanned'] == true) {
-          setState(() => _roomJoinError = 'You are banned from this room.');
-          _joinedUserId = null;
-          _exitRoom();
-          return;
-        }
-        // Migrate legacy 'owner' role to 'host' so the broadcaster
-        // controls always render for the room creator.
-        final correctedRole = ownerId == userId ? 'host' : (data['role'] as String? ?? 'audience');
-        await docRef.update({'lastActiveAt': now, 'role': correctedRole, 'camOn': false});
-        await memberDocRef.set({
-          'userId': userId,
-          'role': ownerId == userId ? 'owner' : 'member',
-          'joinedAt': data['joinedAt'] ?? now,
-          'lastActiveAt': now,
-        }, SetOptions(merge: true));
-      } else {
-        final participantRole = ownerId == userId ? 'host' : 'audience';
-        await docRef.set({
-          'userId': userId,
-          'role': participantRole,
-          'isMuted': false,
-          'isBanned': false,
-          'joinedAt': now,
-          'lastActiveAt': now,
-        });
-        await memberDocRef.set({
-          'userId': userId,
-          'role': ownerId == userId ? 'owner' : 'member',
-          'joinedAt': now,
-          'lastActiveAt': now,
-        });
-      }
 
       // Connect the media service automatically on both platforms.
       // On web this uses WebRTC which is instant (no WASM download).
@@ -3017,9 +2851,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           params: {'room_id': widget.roomId, 'user_id': userId},
         );
       }
-      _startPresenceHeartbeat(userId);
-      _roomJoinedAt = DateTime.now();
-      PresenceService().setInRoom(userId, widget.roomId).ignore();
+      _roomJoinedAt = joinResult.joinedAt ?? DateTime.now();
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName joined the room');
     } catch (_) {
@@ -3068,8 +2900,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Future<void> _leaveRoom() async {
     final userId = _joinedUserId;
-    final firestore = _firestore;
-    if (userId == null || firestore == null) return;
+    if (userId == null) return;
 
     // Release any camera slot this user holds before removing their presence.
     if (_claimedSlotId != null) {
@@ -3077,29 +2908,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final slotService = ref.read(roomSlotServiceProvider);
         await slotService.releaseSlot(widget.roomId, userId);
       } catch (_) {}
-      _claimedSlotId = null;
+      _mediaController.setClaimedSlotId(null);
     }
 
-    final docRef = firestore
-        .collection('rooms')
-        .doc(widget.roomId)
-        .collection('participants')
-        .doc(userId);
-    final memberDocRef = firestore
-        .collection('rooms')
-        .doc(widget.roomId)
-        .collection('members')
-        .doc(userId);
     try {
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName left the room');
       await _stopPresenceHeartbeat();
-      await docRef.delete();
-      await memberDocRef.delete();
-      final leavingUserId = userId;
-      PresenceService().clearRoom(leavingUserId).ignore();
+      await ref.read(liveRoomControllerProvider(widget.roomId).notifier).leaveRoom();
     } catch (_) {
       // Best-effort cleanup when users leave a room.
+    } finally {
+      _joinedUserId = null;
     }
   }
 
@@ -3404,7 +3224,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _presenceHeartbeatTimer?.cancel();
     _giftToastTimer?.cancel();
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
@@ -3415,6 +3234,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
     _recentChatterTimers.clear();
     _giftEventsSubscription?.close();
+    _mediaStateSubscription.close();
     unawaited(_clearTypingStatus());
     unawaited(_disconnectCall());
     unawaited(_leaveRoom());
@@ -3430,13 +3250,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     if (userId == null) {
       return;
     }
-    final presenceController = ref.read(roomPresenceControllerProvider);
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.inactive) {
-      _presenceHeartbeatTimer?.cancel();
-      _presenceHeartbeatTimer = null;
-      presenceController.setOffline(roomId: widget.roomId, userId: userId);
+      ref.read(liveRoomControllerProvider(widget.roomId).notifier).pausePresence();
     } else if (state == AppLifecycleState.resumed) {
       _startPresenceHeartbeat(userId);
     }
@@ -3445,8 +3262,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
+    ref.watch(liveRoomMediaControllerProvider(widget.roomId));
     if (user == null) {
-      return const Scaffold(body: Center(child: Text('Please log in.')));
+      return const AppPageScaffold(
+        safeArea: false,
+        maxContentWidth: double.infinity,
+        body: AppEmptyView(
+          title: 'Please log in',
+          message: 'Sign in to join this live room.',
+          icon: Icons.lock_outline,
+        ),
+      );
     }
     if (_joinedUserId != user.id && !_isJoiningRoom) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3575,8 +3401,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _handleForcedRoomExit('This room has ended.');
               });
-              return const Scaffold(
-                body: Center(child: Text('This room has ended.')),
+              return const AppPageScaffold(
+                safeArea: false,
+                maxContentWidth: double.infinity,
+                body: AppEmptyView(
+                  title: 'This room has ended',
+                  icon: Icons.videocam_off_outlined,
+                ),
               );
             }
             // Ban enforcement
@@ -3584,8 +3415,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _handleForcedRoomExit('You were banned from this room.');
               });
-              return const Scaffold(
-                body: Center(child: Text('You are banned from this room.')),
+              return const AppPageScaffold(
+                safeArea: false,
+                maxContentWidth: double.infinity,
+                body: AppEmptyView(
+                  title: 'You are banned from this room',
+                  icon: Icons.block_outlined,
+                ),
               );
             }
             if (participant == null &&
@@ -3595,12 +3431,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _handleForcedRoomExit('You were removed from this room.');
               });
-              return const Scaffold(
-                body: Center(child: Text('You were removed from this room.')),
+              return const AppPageScaffold(
+                safeArea: false,
+                maxContentWidth: double.infinity,
+                body: AppEmptyView(
+                  title: 'You were removed from this room',
+                  icon: Icons.exit_to_app_outlined,
+                ),
               );
             }
             if (_roomJoinError != null && _joinedUserId == null) {
-              return Scaffold(body: Center(child: Text(_roomJoinError!)));
+              return AppPageScaffold(
+                safeArea: false,
+                maxContentWidth: double.infinity,
+                body: AppErrorView(
+                  error: _roomJoinError!,
+                  fallbackContext: 'join the live room',
+                ),
+              );
             }
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             final participantsInRoom =
@@ -3628,8 +3476,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             });
             final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
             if (isLocked && !isHost && !isCohost && !isModerator) {
-              return const Scaffold(
-                body: Center(child: Text('Room is locked.')),
+              return const AppPageScaffold(
+                safeArea: false,
+                maxContentWidth: double.infinity,
+                body: AppEmptyView(
+                  title: 'Room is locked',
+                  message: 'Only approved speakers and moderators can enter right now.',
+                  icon: Icons.lock_outline,
+                ),
               );
             }
             final roomName = _asString(roomData?['name'], fallback: 'Live Room');
@@ -3694,10 +3548,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final spotlightName = spotlightUserId.isNotEmpty
                 ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
                 : null;
-            return Scaffold(
-              extendBodyBehindAppBar: false,
-              extendBody: true,
+            return AppPageScaffold(
               backgroundColor: const Color(0xFF0D0A0C),
+              safeArea: false,
+              maxContentWidth: double.infinity,
               appBar: AppBar(
                 backgroundColor: const Color(0xB40D0A0C),
                 foregroundColor: Colors.white,
@@ -3705,318 +3559,112 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 title: Text(roomName),
                 bottom: (roomDescription.isEmpty && _cameraStatus == null)
                     ? null
-                    : PreferredSize(
-                        preferredSize: Size.fromHeight(
-                          (roomDescription.isEmpty ? 0.0 : 24.0) +
-                              (_cameraStatus != null ? 20.0 : 0.0),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (roomDescription.isNotEmpty)
-                              _TickerBanner(text: roomDescription),
-                            if (_cameraStatus != null)
-                              Container(
-                                width: double.infinity,
-                                color: const Color(0x9910131A),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 2),
-                                child: Text(
-                                  _cameraStatus!,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 11,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                          ],
-                        ),
+                    : LiveRoomAppBarStatus(
+                        roomDescription: roomDescription,
+                        cameraStatus: _cameraStatus,
+                        tickerBuilder: (text) => _TickerBanner(text: text),
                       ),
                 actions: [
-                  // ── Media controls ─────────────────────────────────────
-                  // Mic toggle
-                  IconButton(
-                    tooltip: _isMicMuted
-                        ? 'Unmute microphone'
-                        : 'Mute microphone',
-                    icon: Icon(
-                      _isMicMuted ? Icons.mic_off : Icons.mic,
-                      color: _isMicMuted
-                          ? const Color(0xFFFF6E84)
-                          : Colors.white,
-                    ),
-                    onPressed:
-                        (!_isCallReady || _agoraService == null || _isMicActionInFlight)
-                            ? null
-                            : _toggleMic,
-                  ),
-                  // Live mic level bar — visible when unmuted
-                  if (!_isMicMuted && _agoraService != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Center(
-                        child: _MicLevelBar(
-                            level: _agoraService!.localAudioLevel),
-                      ),
-                    ),
-                  // Camera toggle
-                  Tooltip(
-                    message: _isVideoEnabled
-                        ? 'Turn camera off (long-press to manage viewers)'
-                        : 'Turn camera on (long-press to manage viewers)',
-                    child: GestureDetector(
-                      onLongPress: () {
-                        final camController = ref.read(
-                          userCamPermissionsControllerProvider,
-                        );
-                        final allowedViewers = ref
-                                .read(userCamAllowedViewersProvider(user.id))
-                                .valueOrNull ??
-                            const <String>[];
-                        _openManageCamViewersSheet(
-                          members: participantsInRoom,
-                          currentUserId: user.id,
-                          currentAllowedViewers: allowedViewers,
-                          controller: camController,
-                        );
-                      },
-                      child: IconButton(
-                        tooltip: _isVideoEnabled
-                            ? 'Turn camera off'
-                            : 'Turn camera on',
-                        icon: Icon(
-                          _isVideoEnabled
-                              ? Icons.videocam
-                              : Icons.videocam_off,
-                          color: _isVideoEnabled
-                              ? Colors.white
-                              : const Color(0xFFFF6E84),
-                        ),
-                        onPressed: (!_isCallReady ||
-                                _agoraService == null ||
-                                _isVideoActionInFlight)
-                            ? null
-                            : () async {
-                                if (!_isVideoEnabled) {
-                                  final localPreview = _buildLocalCamContent(
-                                    avatarUrl: _senderAvatarUrlById[
-                                        _joinedUserId ?? ''],
-                                  );
-                                  if (!context.mounted) return;
-                                  final confirmed = await CamPreviewSheet.show(
-                                    context,
-                                    previewWidget: localPreview,
-                                    isVideoEnabled: _isVideoEnabled,
-                                  );
-                                  if (confirmed != true) return;
-                                }
-                                await _toggleVideo();
-                              },
-                      ),
-                    ),
-                  ),
-                  // Share system audio (web only)
-                  if (kIsWeb)
-                    IconButton(
-                      tooltip: _isSharingSystemAudio
-                          ? 'Stop sharing computer audio'
-                          : 'Share computer audio',
-                      icon: Icon(
-                        _isSharingSystemAudio
-                            ? Icons.headset
-                            : Icons.headset_off,
-                        color: _isSharingSystemAudio
-                            ? const Color(0xFF7C5FFF)
-                            : Colors.white70,
-                      ),
-                      onPressed: (!_isCallReady ||
-                              _agoraService == null ||
-                              _isSystemAudioActionInFlight)
-                          ? null
-                          : _toggleSystemAudio,
-                    ),
-                  // Volume controls toggle
-                  IconButton(
-                    tooltip: 'Volume controls',
-                    icon: Icon(
-                      _showVolumeControls
-                          ? Icons.volume_up
-                          : Icons.volume_up_outlined,
-                      color: _showVolumeControls
-                          ? VelvetNoir.primary
-                          : Colors.white70,
-                    ),
-                    onPressed: () => setState(
-                        () => _showVolumeControls = !_showVolumeControls),
-                  ),
-                  // Home button
-                  IconButton(
-                    tooltip: 'Go to Home',
-                    icon: const Icon(Icons.home_rounded),
-                    onPressed: () async {
-                      await _disconnectCall();
-                      await _leaveRoom();
-                      if (context.mounted) context.go('/');
-                    },
-                  ),
-                  // Friends panel
-                  FriendsPanelButton(iconColor: Colors.white),
-                  // Coin balance
-                  walletAsync.when(
-                    data: (wallet) => Padding(
-                      padding: const EdgeInsets.only(right: 4),
-                      child: Center(child: CoinBalanceWidget(balance: wallet.coinBalance)),
-                    ),
-                    loading: () => const SizedBox.shrink(),
-                    error: (e, _) => const SizedBox.shrink(),
-                  ),
-                  // People in room (with pending mic badge)
-                  Builder(builder: (ctx) {
-                    final pendingCount = isHost
+                  LiveRoomAppBarActions(
+                    isCallReady: _isCallReady,
+                    hasRtcService: _agoraService != null,
+                    isMicMuted: _isMicMuted,
+                    isVideoEnabled: _isVideoEnabled,
+                    isSharingSystemAudio: _isSharingSystemAudio,
+                    isMicActionInFlight: _isMicActionInFlight,
+                    isVideoActionInFlight: _isVideoActionInFlight,
+                    isSystemAudioActionInFlight: _isSystemAudioActionInFlight,
+                    localAudioLevel: _agoraService?.localAudioLevel ?? 0,
+                    showVolumeControls: _showVolumeControls,
+                    hasParticipants: participantsInRoom.isNotEmpty,
+                    pendingMicCount: isHost
                         ? (micRequestsAsync.valueOrNull
                                 ?.where((r) => r.status == 'pending')
                                 .length ??
                             0)
-                        : 0;
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        IconButton(
-                          tooltip: 'People in room',
-                          onPressed: participantsInRoom.isEmpty
-                              ? null
-                              : () => _openPeopleSheet(
-                                  participants: participantsInRoom,
-                                  currentParticipant: participant,
-                                  currentUserId: user.id,
-                                  currentUsername: user.username,
-                                  currentAvatarUrl: user.avatarUrl,
-                                  hostId: hostId,
-                                  isHost: isHost,
-                                  isModerator: isModerator,
-                                  hostControls: hostControls,
-                                  presenceList:
-                                      presenceAsync.valueOrNull ?? const [],
-                                ),
-                          icon: const Icon(Icons.people_alt_outlined),
-                        ),
-                        if (pendingCount > 0)
-                          Positioned(
-                            right: 4,
-                            top: 4,
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFD4A853),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '$pendingCount',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  }),
-                  // Leave room
-                  IconButton(
-                    tooltip: 'Leave Room',
-                    onPressed: () async {
+                        : 0,
+                    coinBalance: walletAsync.valueOrNull?.coinBalance,
+                    onToggleMic: _toggleMic,
+                    onToggleVideo: () async {
+                      if (!_isVideoEnabled) {
+                        final localPreview = _buildLocalCamContent(
+                          avatarUrl: _senderAvatarUrlById[_joinedUserId ?? ''],
+                        );
+                        if (!context.mounted) return;
+                        final confirmed = await CamPreviewSheet.show(
+                          context,
+                          previewWidget: localPreview,
+                          isVideoEnabled: _isVideoEnabled,
+                        );
+                        if (confirmed != true) return;
+                      }
+                      await _toggleVideo();
+                    },
+                    onLongPressVideo: () {
+                      final camController = ref.read(
+                        userCamPermissionsControllerProvider,
+                      );
+                      final allowedViewers = ref
+                              .read(userCamAllowedViewersProvider(user.id))
+                              .valueOrNull ??
+                          const <String>[];
+                      _openManageCamViewersSheet(
+                        members: participantsInRoom,
+                        currentUserId: user.id,
+                        currentAllowedViewers: allowedViewers,
+                        controller: camController,
+                      );
+                    },
+                    onToggleSystemAudio: _toggleSystemAudio,
+                    onToggleVolumeControls: () =>
+                        setState(() => _showVolumeControls = !_showVolumeControls),
+                    onGoHome: () async {
+                      await _disconnectCall();
+                      await _leaveRoom();
+                      if (context.mounted) context.go('/');
+                    },
+                    onOpenPeople: () => _openPeopleSheet(
+                      participants: participantsInRoom,
+                      currentParticipant: participant,
+                      currentUserId: user.id,
+                      currentUsername: user.username,
+                      currentAvatarUrl: user.avatarUrl,
+                      hostId: hostId,
+                      isHost: isHost,
+                      isModerator: isModerator,
+                      hostControls: hostControls,
+                      presenceList: presenceAsync.valueOrNull ?? const [],
+                    ),
+                    onLeaveRoom: () async {
                       await _disconnectCall();
                       await _leaveRoom();
                       _exitRoom();
                     },
-                    icon: const Icon(Icons.logout),
-                  ),
-                  // Overflow: Invite, Online Friends, Share, Report
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'invite':
-                          _inviteFriendsToRoom(
-                            userId: user.id,
-                            username: user.username,
-                            roomName: roomName,
-                          );
-                        case 'online_friends':
-                          _showOnlineFriendsSheet(
-                            currentUserId: user.id,
-                            roomId: widget.roomId,
-                          );
-                        case 'share':
-                          SharePlus.instance.share(
-                            ShareParams(
-                              text: 'Join me in "$roomName" on MixVy!\nhttps://mixvy.app/room/${widget.roomId}',
-                              subject: '$roomName – MixVy live room',
-                            ),
-                          );
-                        case 'report_room':
-                          _reportTarget(
-                            targetId: widget.roomId,
-                            targetType: ReportTargetType.room,
-                            title: 'Report room',
-                            fallbackReason: 'Live room review requested',
-                          );
-                        case 'report_issue':
-                          BetaFeedbackSheet.show(context);
-                      }
+                    onInviteFriends: () => _inviteFriendsToRoom(
+                      userId: user.id,
+                      username: user.username,
+                      roomName: roomName,
+                    ),
+                    onShowOnlineFriends: () => _showOnlineFriendsSheet(
+                      currentUserId: user.id,
+                      roomId: widget.roomId,
+                    ),
+                    onShareRoom: () {
+                      SharePlus.instance.share(
+                        ShareParams(
+                          text:
+                              'Join me in "$roomName" on MixVy!\nhttps://mixvy.app/room/${widget.roomId}',
+                          subject: '$roomName – MixVy live room',
+                        ),
+                      );
                     },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem<String>(
-                        value: 'invite',
-                        child: ListTile(
-                          leading: Icon(Icons.group_add_outlined),
-                          title: Text('Invite friends'),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'online_friends',
-                        child: ListTile(
-                          leading: Icon(Icons.people_outline),
-                          title: Text('Online friends'),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'share',
-                        child: ListTile(
-                          leading: Icon(Icons.share_outlined),
-                          title: Text('Share room'),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'report_room',
-                        child: ListTile(
-                          leading: Icon(Icons.flag_outlined),
-                          title: Text('Report room'),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'report_issue',
-                        child: ListTile(
-                          leading: Icon(Icons.bug_report_outlined),
-                          title: Text('Report issue'),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      ),
-                    ],
+                    onReportRoom: () => _reportTarget(
+                      targetId: widget.roomId,
+                      targetType: ReportTargetType.room,
+                      title: 'Report room',
+                      fallbackReason: 'Live room review requested',
+                    ),
+                    onReportIssue: () => BetaFeedbackSheet.show(context),
                   ),
                 ],
               ),
@@ -4300,14 +3948,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 tooltip: 'Clear spotlight',
                                 icon: const Icon(Icons.close, size: 16),
                                 onPressed: () async {
-                                  final fs = _firestore ??
-                                      ref.read(roomFirestoreProvider);
-                                  await (fs as FirebaseFirestore)
-                                      .collection('rooms')
-                                      .doc(widget.roomId)
-                                      .update({
-                                    'spotlightUserId': FieldValue.delete(),
-                                  });
+                                  await ref
+                                      .read(liveRoomControllerProvider(widget.roomId).notifier)
+                                      .setSpotlightUser(null);
                                 },
                               ),
                           ],
@@ -5262,7 +4905,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 final svc = _agoraService;
                                 if (svc != null && _isCallReady && !_isMicMuted) {
                                   await svc.mute(true);
-                                  if (mounted) setState(() => _isMicMuted = true);
+                                      if (mounted) {
+                                        _mediaController.setMicMuted(true);
+                                      }
                                 }
                                 if (mounted) _showSnackBar('Mic released.');
                               } catch (e) {
@@ -5420,11 +5065,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           },
         );
       },
-      loading: () => Scaffold(
+      loading: () => AppPageScaffold(
           backgroundColor: const Color(0xFF0D0A0C),
+          safeArea: false,
+          maxContentWidth: double.infinity,
           body: Stack(
             children: [
-              const Center(child: CircularProgressIndicator()),
+              const AppLoadingView(label: 'Joining live room...'),
               // Show mic/cam controls while participant stream is loading so
               // users don't lose their buttons during reconnect/init lag.
               Positioned(
@@ -5443,43 +5090,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              tooltip: _isMicMuted ? 'Unmute microphone' : 'Mute microphone',
-                              icon: Icon(
-                                _isMicMuted ? Icons.mic_off : Icons.mic,
-                                color: _isMicMuted ? const Color(0xFFFF6E84) : Colors.white,
-                              ),
-                              onPressed: (!_isCallReady || _agoraService == null || _isMicActionInFlight)
-                                  ? null
-                                  : _toggleMic,
+                            LiveRoomMediaActionStrip(
+                              isCallReady: _isCallReady,
+                              hasRtcService: _agoraService != null,
+                              isMicMuted: _isMicMuted,
+                              isVideoEnabled: _isVideoEnabled,
+                              isSharingSystemAudio: _isSharingSystemAudio,
+                              isMicActionInFlight: _isMicActionInFlight,
+                              isVideoActionInFlight: _isVideoActionInFlight,
+                              isSystemAudioActionInFlight:
+                                  _isSystemAudioActionInFlight,
+                              localAudioLevel: _agoraService?.localAudioLevel ?? 0,
+                              onToggleMic: _toggleMic,
+                              onToggleVideo: _toggleVideo,
+                              showSystemAudioButton: kIsWeb,
+                              onToggleSystemAudio: _toggleSystemAudio,
+                              showMicLevel: false,
                             ),
-                            IconButton(
-                              tooltip: _isVideoEnabled ? 'Turn camera off' : 'Turn camera on',
-                              icon: Icon(
-                                _isVideoEnabled ? Icons.videocam : Icons.videocam_off,
-                                color: _isVideoEnabled ? Colors.white : const Color(0xFFFF6E84),
-                              ),
-                              onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
-                                  ? null
-                                  : _toggleVideo,
-                            ),
-                            if (kIsWeb)
-                              IconButton(
-                                tooltip: _isSharingSystemAudio
-                                    ? 'Stop sharing computer audio'
-                                    : 'Share computer audio',
-                                icon: Icon(
-                                  _isSharingSystemAudio
-                                      ? Icons.headset
-                                      : Icons.headset_off,
-                                  color: _isSharingSystemAudio
-                                      ? const Color(0xFF7C5FFF)
-                                      : Colors.white70,
-                                ),
-                                onPressed: (!_isCallReady || _agoraService == null || _isSystemAudioActionInFlight)
-                                    ? null
-                                    : _toggleSystemAudio,
-                              ),
                           ],
                         ),
                       ),
@@ -5489,7 +5116,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             ],
           ),
         ),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => AppPageScaffold(
+        safeArea: false,
+        maxContentWidth: double.infinity,
+        body: AppErrorView(
+          error: e,
+          fallbackContext: 'load the live room',
+        ),
+      ),
     );
   }
 }
@@ -6313,46 +5947,6 @@ class _SystemAudioStep extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _MicLevelBar extends StatelessWidget {
-  const _MicLevelBar({required this.level});
-
-  /// Normalised audio energy in [0.0, 1.0].
-  final double level;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 32,
-      height: 20,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(5, (i) {
-          // Each bar lights up progressively: bar 0 at 10 %, bar 4 at 90 %.
-          final threshold = (i + 1) / 5.5;
-          final active = level >= threshold;
-          final maxH = 6.0 + i * 3.0;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 60),
-            width: 4,
-            height: active ? maxH : 3.0,
-            decoration: BoxDecoration(
-              color: active ? _barColor(i) : const Color(0x40FFFFFF),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  static Color _barColor(int index) {
-    if (index <= 2) return const Color(0xFF4CF07A); // green
-    if (index == 3) return const Color(0xFFFFD04C); // yellow/amber
-    return const Color(0xFFFF6E84);                 // red (loud)
   }
 }
 

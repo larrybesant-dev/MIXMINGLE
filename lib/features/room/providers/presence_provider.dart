@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../models/room_participant_model.dart';
 import 'room_firestore_provider.dart';
 
 class RoomPresenceModel {
@@ -65,7 +66,7 @@ class RoomPresenceController {
   final FirebaseFirestore _db;
 
   DocumentReference<Map<String, dynamic>> _presenceRef(String roomId, String userId) {
-    return _db.collection('rooms').doc(roomId).collection('presence').doc(userId);
+    return _db.collection('rooms').doc(roomId).collection('participants').doc(userId);
   }
 
   Future<void> setOnline({
@@ -74,9 +75,8 @@ class RoomPresenceController {
   }) {
     return _presenceRef(roomId, userId).set({
       'userId': userId,
-      'isOnline': true,
-      'lastHeartbeatAt': FieldValue.serverTimestamp(),
-      'lastSeenAt': FieldValue.serverTimestamp(),
+      'userStatus': 'online',
+      'lastActiveAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -86,8 +86,8 @@ class RoomPresenceController {
   }) {
     return _presenceRef(roomId, userId).set({
       'userId': userId,
-      'isOnline': true,
-      'lastHeartbeatAt': FieldValue.serverTimestamp(),
+      'userStatus': 'online',
+      'lastActiveAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -97,8 +97,8 @@ class RoomPresenceController {
   }) {
     return _presenceRef(roomId, userId).set({
       'userId': userId,
-      'isOnline': false,
-      'lastSeenAt': FieldValue.serverTimestamp(),
+      'userStatus': 'offline',
+      'lastActiveAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -111,7 +111,7 @@ class RoomPresenceController {
     return _presenceRef(roomId, userId).set({
       'customStatus': status,
       'userStatus': userStatus,
-      'lastHeartbeatAt': FieldValue.serverTimestamp(),
+      'lastActiveAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 }
@@ -126,9 +126,19 @@ final roomPresenceStreamProvider =
   return firestore
       .collection('rooms')
       .doc(roomId)
-      .collection('presence')
+      .collection('participants')
       .snapshots()
       .map((snapshot) => snapshot.docs
-          .map((doc) => RoomPresenceModel.fromMap(doc.id, doc.data()))
+          .map((doc) {
+            final participant = RoomParticipantModel.fromMap(doc.data());
+            return RoomPresenceModel(
+              userId: participant.userId.isEmpty ? doc.id : participant.userId,
+              isOnline: participant.userStatus != 'offline',
+              lastHeartbeatAt: participant.lastActiveAt,
+              lastSeenAt: participant.lastActiveAt,
+              customStatus: participant.customStatus,
+              userStatus: participant.userStatus,
+            );
+          })
           .toList(growable: false));
 });

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import '../providers/app_settings_provider.dart';
 import '../../features/beta/beta_tester_provider.dart';
 import '../../features/after_dark/providers/after_dark_provider.dart';
 import '../../features/profile/widgets/device_settings_panel.dart';
+import '../../features/auth/controllers/auth_controller.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 
@@ -297,7 +297,7 @@ class SettingsScreen extends ConsumerWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: OutlinedButton.icon(
-                onPressed: () => _confirmLogout(context),
+                onPressed: () => _confirmLogout(context, ref),
                 icon: const Icon(Icons.logout_rounded, color: _svDanger),
                 label: Text(
                   'Log Out',
@@ -322,7 +322,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context) async {
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -349,7 +349,7 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
     if (confirmed == true && context.mounted) {
-      await FirebaseAuth.instance.signOut();
+      await ref.read(authControllerProvider.notifier).logout();
       if (context.mounted) context.go('/login');
     }
   }

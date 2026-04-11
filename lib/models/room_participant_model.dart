@@ -15,6 +15,8 @@ class RoomParticipantModel {
   final bool isBanned;
   final bool camOn;
   final bool micOn;
+  final String? customStatus;
+  final String? userStatus;
   final DateTime joinedAt;
   final DateTime lastActiveAt;
   /// Set when the room owner has enabled a mic play-time limit.
@@ -29,6 +31,8 @@ class RoomParticipantModel {
     this.isBanned = false,
     this.camOn = false,
     this.micOn = false,
+    this.customStatus,
+    this.userStatus,
     required this.joinedAt,
     required this.lastActiveAt,
     this.micExpiresAt,
@@ -42,6 +46,8 @@ class RoomParticipantModel {
       isBanned: map['isBanned'] ?? false,
       camOn: map['camOn'] ?? false,
       micOn: map['micOn'] ?? false,
+      customStatus: map['customStatus'] as String?,
+      userStatus: map['userStatus'] as String?,
       joinedAt: (map['joinedAt'] is Timestamp)
           ? (map['joinedAt'] as Timestamp).toDate()
           : DateTime.tryParse(map['joinedAt']?.toString() ?? '') ?? DateTime.now(),
@@ -60,6 +66,8 @@ class RoomParticipantModel {
       'isBanned': isBanned,
       'camOn': camOn,
       'micOn': micOn,
+      if (customStatus != null) 'customStatus': customStatus,
+      if (userStatus != null) 'userStatus': userStatus,
       'joinedAt': Timestamp.fromDate(joinedAt),
       'lastActiveAt': Timestamp.fromDate(lastActiveAt),
       if (micExpiresAt != null) 'micExpiresAt': Timestamp.fromDate(micExpiresAt!),
@@ -73,6 +81,8 @@ class RoomParticipantModel {
     bool? isBanned,
     bool? camOn,
     bool? micOn,
+    String? customStatus,
+    String? userStatus,
     DateTime? joinedAt,
     DateTime? lastActiveAt,
     DateTime? micExpiresAt,
@@ -84,6 +94,8 @@ class RoomParticipantModel {
       isBanned: isBanned ?? this.isBanned,
       camOn: camOn ?? this.camOn,
       micOn: micOn ?? this.micOn,
+      customStatus: customStatus ?? this.customStatus,
+      userStatus: userStatus ?? this.userStatus,
       joinedAt: joinedAt ?? this.joinedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
       micExpiresAt: micExpiresAt ?? this.micExpiresAt,

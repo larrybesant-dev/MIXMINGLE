@@ -40,7 +40,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Please log in.'), findsOneWidget);
+    expect(find.text('Please log in'), findsOneWidget);
   });
 
   testWidgets('LiveRoomScreen renders joined audience state', (
