@@ -14,7 +14,7 @@ import '../../../services/web_popout_service.dart';
 import '../../../core/theme.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
 
-class ChatScreen extends ConsumerStatefulWidget {
+class ChatScreen extends StatelessWidget {
   final String conversationId;
   final String userId;
   final String username;
@@ -29,10 +29,85 @@ class ChatScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ChatScreen> createState() => _ChatScreenState();
+  Widget build(BuildContext context) {
+    return AppPageScaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: VelvetNoir.primaryDim,
+              backgroundImage: avatarUrl != null
+                  ? CachedNetworkImageProvider(avatarUrl!)
+                  : null,
+              child: avatarUrl == null
+                  ? Text(
+                      username.isNotEmpty ? username[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              username,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: VelvetNoir.onSurface,
+              ),
+            ),
+          ],
+        ),
+        elevation: 0,
+        backgroundColor: VelvetNoir.surfaceLow,
+        actions: [
+          if (kIsWeb)
+            IconButton(
+              icon: const Icon(Icons.open_in_new),
+              tooltip: 'Pop out',
+              onPressed: () => WebPopoutService().openWhisperWindow(
+                userId,
+                username,
+              ),
+            ),
+        ],
+      ),
+      body: ChatPaneView(
+        conversationId: conversationId,
+        userId: userId,
+        username: username,
+        avatarUrl: avatarUrl,
+        showHeader: false,
+      ),
+    );
+  }
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class ChatPaneView extends ConsumerStatefulWidget {
+  final String conversationId;
+  final String userId;
+  final String username;
+  final String? avatarUrl;
+  final bool showHeader;
+
+  const ChatPaneView({
+    super.key,
+    required this.conversationId,
+    required this.userId,
+    required this.username,
+    this.avatarUrl,
+    this.showHeader = true,
+  });
+
+  @override
+  ConsumerState<ChatPaneView> createState() => _ChatPaneViewState();
+}
+
+class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
   late TextEditingController _messageController;
   late ScrollController _scrollController;
   Timer? _typingTimer;
@@ -137,62 +212,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = ref.watch(messagesStreamProvider(widget.conversationId));
     final paginatedState = ref.watch(paginatedMessagesProvider(widget.conversationId));
 
-    return AppPageScaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: VelvetNoir.primaryDim,
-              backgroundImage: widget.avatarUrl != null
-                  ? CachedNetworkImageProvider(widget.avatarUrl!)
-                  : null,
-              child: widget.avatarUrl == null
-                  ? Text(
-                      widget.username.isNotEmpty
-                          ? widget.username[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.username,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: VelvetNoir.onSurface,
+    return Column(
+        children: [
+          if (widget.showHeader)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                context.pageHorizontalPadding,
+                24,
+                context.pageHorizontalPadding,
+                12,
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: VelvetNoir.primaryDim,
+                    backgroundImage: widget.avatarUrl != null
+                        ? CachedNetworkImageProvider(widget.avatarUrl!)
+                        : null,
+                    child: widget.avatarUrl == null
+                        ? Text(
+                            widget.username.isNotEmpty
+                                ? widget.username[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          )
+                        : null,
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        elevation: 0,
-        backgroundColor: VelvetNoir.surfaceLow,
-        actions: [
-          if (kIsWeb)
-            IconButton(
-              icon: const Icon(Icons.open_in_new),
-              tooltip: 'Pop out',
-              onPressed: () => WebPopoutService().openWhisperWindow(
-                widget.userId,
-                widget.username,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.username,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: VelvetNoir.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (kIsWeb)
+                    IconButton(
+                      icon: const Icon(Icons.open_in_new),
+                      tooltip: 'Pop out',
+                      onPressed: () => WebPopoutService().openWhisperWindow(
+                        widget.userId,
+                        widget.username,
+                      ),
+                    ),
+                ],
               ),
             ),
-        ],
-      ),
-      body: Column(
-        children: [
           Expanded(
             child: messagesAsync.when(
               data: (liveMessages) {
@@ -530,8 +603,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           const SizedBox(height: 8),
         ],
-      ),
-    );
+      );
   }
 
   String _formatTime(DateTime dateTime) {

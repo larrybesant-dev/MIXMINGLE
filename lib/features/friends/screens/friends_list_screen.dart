@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/layout/app_layout.dart';
 import '../../../models/user_model.dart';
 import '../../../presentation/providers/friend_provider.dart';
 import '../../../presentation/providers/user_provider.dart';
@@ -18,25 +19,30 @@ class FriendListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return const AppPageScaffold(
+      backgroundColor: VelvetNoir.surface,
+      appBar: _FriendsAppBar(),
+      body: FriendsPaneView(showHeader: false),
+    );
+  }
+}
+
+class FriendsPaneView extends ConsumerWidget {
+  const FriendsPaneView({
+    super.key,
+    this.showHeader = true,
+  });
+
+  final bool showHeader;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final rosterAsync = ref.watch(friendRosterProvider);
     final currentUser = ref.watch(userProvider);
     final myPresence = ref.watch(currentUserPresenceProvider).valueOrNull;
     final myRoomId = myPresence?.inRoom;
 
-    return AppPageScaffold(
-      backgroundColor: VelvetNoir.surface,
-      appBar: AppBar(
-        backgroundColor: VelvetNoir.surface,
-        surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Friends',
-          style: TextStyle(
-            color: VelvetNoir.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: rosterAsync.when(
+    return rosterAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: VelvetNoir.primary),
         ),
@@ -74,8 +80,32 @@ class FriendListScreen extends ConsumerWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              showHeader ? 24 : 16,
+              context.pageHorizontalPadding,
+              16,
+            ),
             children: [
+              if (showHeader) ...[
+                Text(
+                  'Friends',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: VelvetNoir.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Desktop uses a persistent roster plus embedded friend panes.',
+                  style: TextStyle(
+                    color: VelvetNoir.onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
               _SectionHeader(label: 'ONLINE'),
               const SizedBox(height: 12),
               _buildSection(
@@ -155,8 +185,7 @@ class FriendListScreen extends ConsumerWidget {
             ],
           );
         },
-      ),
-    );
+      );
   }
 
   Widget _buildSection(
@@ -276,6 +305,28 @@ class _SectionHeader extends StatelessWidget {
         fontSize: 12,
         fontWeight: FontWeight.w800,
         letterSpacing: 1.2,
+      ),
+    );
+  }
+}
+
+class _FriendsAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _FriendsAppBar();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: VelvetNoir.surface,
+      surfaceTintColor: Colors.transparent,
+      title: const Text(
+        'Friends',
+        style: TextStyle(
+          color: VelvetNoir.onSurface,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

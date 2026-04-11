@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mixvy/core/utils/network_image_url.dart';
 
 class RoomModel {
   final String id;
@@ -114,7 +115,9 @@ class RoomModel {
       rules: json['rules'] is String ? json['rules'] as String : null,
       hostId: _asString(json['hostId']),
       isLive: _asBool(json['isLive']),
-      thumbnailUrl: json['thumbnailUrl'] is String ? json['thumbnailUrl'] as String : null,
+      thumbnailUrl: sanitizeNetworkImageUrl(
+        json['thumbnailUrl'] is String ? json['thumbnailUrl'] as String : null,
+      ),
       createdAt: _asTimestamp(json['createdAt']),
       updatedAt: _asTimestamp(json['updatedAt']),
       stageUserIds: _asStringList(json['stageUserIds']),

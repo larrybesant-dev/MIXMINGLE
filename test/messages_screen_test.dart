@@ -40,13 +40,13 @@ Widget _buildApp({
 
 void main() {
   group('MessagesScreen', () {
-    testWidgets('renders Messages AppBar and request action',
+    testWidgets('renders Inbox AppBar and request action',
         (tester) async {
       final firestore = FakeFirebaseFirestore();
       await tester.pumpWidget(_buildApp(firestore: firestore));
       await tester.pump();
 
-      expect(find.text('Messages'), findsOneWidget);
+      expect(find.text('Inbox'), findsOneWidget);
       expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
       expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
     });

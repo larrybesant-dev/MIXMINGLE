@@ -3,96 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/conversation_model.dart';
-import '../providers/messaging_provider.dart';
+
 import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
-import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
-
-class MessagesScreen extends ConsumerWidget {
-  final String userId;
-  final String username;
-
-  const MessagesScreen({
-    super.key,
-    required this.userId,
-    required this.username,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(requestsStreamProvider(userId));
-
-    return AppPageScaffold(
-      safeArea: false,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        title: Text(
-          'Inbox',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: VelvetNoir.onSurface,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline,
-                color: VelvetNoir.onSurface),
-            tooltip: 'New message',
-            onPressed: () => GoRouter.of(context).push('/messages/new'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_horiz_rounded,
-                color: VelvetNoir.onSurface),
-            tooltip: 'Message requests',
-            onPressed: () {
-              showModalBottomSheet<void>(
-                context: context,
-                backgroundColor: VelvetNoir.surface,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => _MessageRequestsSheet(
-                  requestsAsync: requestsAsync,
-                  userId: userId,
-                ),
-              );
-            },
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-              height: 1,
-              color: VelvetNoir.primary.withValues(alpha: 0.12)),
-        ),
-      ),
-      body: MessagesPaneView(
-        userId: userId,
-        username: username,
-        showHeader: false,
-      ),
-    );
-  }
-}
+import '../models/conversation_model.dart';
+import '../providers/messaging_provider.dart';
 
 class MessagesPaneView extends ConsumerStatefulWidget {
-  final String userId;
-  final String username;
-  final bool showHeader;
-
   const MessagesPaneView({
     super.key,
     required this.userId,
     required this.username,
     this.showHeader = true,
   });
+
+  final String userId;
+  final String username;
+  final bool showHeader;
 
   @override
   ConsumerState<MessagesPaneView> createState() => _MessagesPaneViewState();
@@ -147,7 +75,7 @@ class _MessagesPaneViewState extends ConsumerState<MessagesPaneView>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => _MessageRequestsSheet(
+      builder: (_) => MessageRequestsSheet(
         requestsAsync: requestsAsync,
         userId: widget.userId,
       ),
@@ -162,159 +90,101 @@ class _MessagesPaneViewState extends ConsumerState<MessagesPaneView>
     final requestCount = requestsAsync.valueOrNull?.length ?? 0;
 
     return Column(
-        children: [
-          if (widget.showHeader)
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                context.pageHorizontalPadding,
-                24,
-                context.pageHorizontalPadding,
-                16,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Inbox',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                            color: VelvetNoir.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Desktop keeps messages inside the center pane.',
-                          style: GoogleFonts.raleway(
-                            color: VelvetNoir.onSurfaceVariant,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  FilledButton.icon(
-                    onPressed: () => GoRouter.of(context).push('/messages/new'),
-                    icon: const Icon(Icons.add_comment_outlined),
-                    label: const Text('New message'),
-                  ),
-                ],
-              ),
-            ),
+      children: [
+        if (widget.showHeader)
           Padding(
             padding: EdgeInsets.fromLTRB(
               context.pageHorizontalPadding,
-              8,
+              24,
               context.pageHorizontalPadding,
-              8,
+              16,
             ),
-            child: Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: VelvetNoir.surfaceHigh.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: VelvetNoir.outlineVariant.withValues(alpha: 0.28),
-                ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                style: GoogleFonts.raleway(
-                  color: VelvetNoir.onSurface,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search conversations',
-                  hintStyle: GoogleFonts.raleway(
-                    color: VelvetNoir.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                    color: VelvetNoir.onSurfaceVariant,
-                    size: 20,
-                  ),
-                  suffixIcon: _query.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(
-                            Icons.close_rounded,
-                            size: 18,
-                            color: VelvetNoir.onSurfaceVariant,
-                          ),
-                          onPressed: _searchController.clear,
-                          padding: EdgeInsets.zero,
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-          ),
-
-          if (requestCount > 0)
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                context.pageHorizontalPadding,
-                0,
-                context.pageHorizontalPadding,
-                8,
-              ),
-              child: InkWell(
-                onTap: () => _showRequestsSheet(requestsAsync),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: VelvetNoir.secondary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: VelvetNoir.secondary.withValues(alpha: 0.22),
-                    ),
-                  ),
-                  child: Row(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.mark_email_unread_outlined,
-                          color: VelvetNoir.secondaryBright, size: 18),
-                      const SizedBox(width: 8),
                       Text(
-                        '$requestCount request${requestCount > 1 ? 's' : ''}',
-                        style: GoogleFonts.raleway(
-                          color: VelvetNoir.onSurface,
-                          fontSize: 13,
+                        'Inbox',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 32,
                           fontWeight: FontWeight.w700,
+                          color: VelvetNoir.onSurface,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Review pending conversations',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.raleway(
-                            color: VelvetNoir.onSurfaceVariant,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Desktop keeps messages inside the center pane.',
+                        style: GoogleFonts.raleway(
+                          color: VelvetNoir.onSurfaceVariant,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const Spacer(),
-                      const Icon(Icons.chevron_right_rounded,
-                          color: VelvetNoir.onSurfaceVariant, size: 18),
                     ],
                   ),
                 ),
+                FilledButton.icon(
+                  onPressed: () => GoRouter.of(context).push('/messages/new'),
+                  icon: const Icon(Icons.add_comment_outlined),
+                  label: const Text('New message'),
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            context.pageHorizontalPadding,
+            8,
+            context.pageHorizontalPadding,
+            8,
+          ),
+          child: Container(
+            height: 46,
+            decoration: BoxDecoration(
+              color: VelvetNoir.surfaceHigh.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: VelvetNoir.outlineVariant.withValues(alpha: 0.28),
               ),
             ),
-
+            child: TextField(
+              controller: _searchController,
+              style: GoogleFonts.raleway(
+                color: VelvetNoir.onSurface,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search conversations',
+                hintStyle: GoogleFonts.raleway(
+                  color: VelvetNoir.onSurfaceVariant,
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: VelvetNoir.onSurfaceVariant,
+                  size: 20,
+                ),
+                suffixIcon: _query.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: VelvetNoir.onSurfaceVariant,
+                        ),
+                        onPressed: _searchController.clear,
+                        padding: EdgeInsets.zero,
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ),
+        if (requestCount > 0)
           Padding(
             padding: EdgeInsets.fromLTRB(
               context.pageHorizontalPadding,
@@ -322,82 +192,138 @@ class _MessagesPaneViewState extends ConsumerState<MessagesPaneView>
               context.pageHorizontalPadding,
               8,
             ),
-            child: Container(
-              height: 42,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: VelvetNoir.surfaceHigh.withValues(alpha: 0.78),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: VelvetNoir.outlineVariant.withValues(alpha: 0.24),
+            child: InkWell(
+              onTap: () => _showRequestsSheet(requestsAsync),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
                 ),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  color: VelvetNoir.surfaceContainer,
-                  borderRadius: BorderRadius.circular(12),
+                decoration: BoxDecoration(
+                  color: VelvetNoir.secondary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: VelvetNoir.primary.withValues(alpha: 0.22),
+                    color: VelvetNoir.secondary.withValues(alpha: 0.22),
                   ),
                 ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                labelColor: VelvetNoir.onSurface,
-                unselectedLabelColor: VelvetNoir.onSurfaceVariant,
-                labelStyle: GoogleFonts.raleway(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                child: Row(
+                  children: [
+                    const Icon(Icons.mark_email_unread_outlined,
+                        color: VelvetNoir.secondaryBright, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$requestCount request${requestCount > 1 ? 's' : ''}',
+                      style: GoogleFonts.raleway(
+                        color: VelvetNoir.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Review pending conversations',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.raleway(
+                          color: VelvetNoir.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right_rounded,
+                        color: VelvetNoir.onSurfaceVariant, size: 18),
+                  ],
                 ),
-                unselectedLabelStyle: GoogleFonts.raleway(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                splashBorderRadius: BorderRadius.circular(12),
-                tabs: const [
-                  Tab(text: 'All'),
-                  Tab(text: 'Unread'),
-                  Tab(text: 'Groups'),
-                ],
               ),
             ),
           ),
-
-          Expanded(
-            child: AppAsyncValueView<List<Conversation>>(
-              value: conversationsAsync,
-              fallbackContext: 'conversations',
-              data: (conversations) => TabBarView(
-                controller: _tabController,
-                children: [
-                  _ConversationsList(
-                    conversations: _applySearch(_filterAll(conversations)),
-                    userId: widget.userId,
-                    emptyMessage: _query.isNotEmpty
-                        ? 'No results for "$_query"'
-                        : 'No conversations yet',
-                  ),
-                  _ConversationsList(
-                    conversations: _applySearch(_filterUnread(conversations)),
-                    userId: widget.userId,
-                    emptyMessage: 'No unread messages',
-                  ),
-                  _ConversationsList(
-                    conversations: _applySearch(_filterGroups(conversations)),
-                    userId: widget.userId,
-                    emptyMessage: 'No group chats yet',
-                  ),
-                ],
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            context.pageHorizontalPadding,
+            0,
+            context.pageHorizontalPadding,
+            8,
+          ),
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: VelvetNoir.surfaceHigh.withValues(alpha: 0.78),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: VelvetNoir.outlineVariant.withValues(alpha: 0.24),
               ),
             ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: VelvetNoir.surfaceContainer,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: VelvetNoir.primary.withValues(alpha: 0.22),
+                ),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: VelvetNoir.onSurface,
+              unselectedLabelColor: VelvetNoir.onSurfaceVariant,
+              labelStyle: GoogleFonts.raleway(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: GoogleFonts.raleway(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              splashBorderRadius: BorderRadius.circular(12),
+              tabs: const [
+                Tab(text: 'All'),
+                Tab(text: 'Unread'),
+                Tab(text: 'Groups'),
+              ],
+            ),
           ),
-        ],
-      );
+        ),
+        Expanded(
+          child: AppAsyncValueView<List<Conversation>>(
+            value: conversationsAsync,
+            fallbackContext: 'conversations',
+            data: (conversations) => TabBarView(
+              controller: _tabController,
+              children: [
+                _ConversationsList(
+                  conversations: _applySearch(_filterAll(conversations)),
+                  userId: widget.userId,
+                  emptyMessage: _query.isNotEmpty
+                      ? 'No results for "$_query"'
+                      : 'No conversations yet',
+                ),
+                _ConversationsList(
+                  conversations: _applySearch(_filterUnread(conversations)),
+                  userId: widget.userId,
+                  emptyMessage: 'No unread messages',
+                ),
+                _ConversationsList(
+                  conversations: _applySearch(_filterGroups(conversations)),
+                  userId: widget.userId,
+                  emptyMessage: 'No group chats yet',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
-class _MessageRequestsSheet extends ConsumerWidget {
-  const _MessageRequestsSheet({
+class MessageRequestsSheet extends ConsumerWidget {
+  const MessageRequestsSheet({
+    super.key,
     required this.requestsAsync,
     required this.userId,
   });
@@ -461,8 +387,7 @@ class _MessageRequestsSheet extends ConsumerWidget {
                       return ListTile(
                         onTap: () {
                           Navigator.of(context).pop();
-                          GoRouter.of(context)
-                              .push('/messages/${conversation.id}');
+                          GoRouter.of(context).push('/messages/${conversation.id}');
                         },
                         leading: CircleAvatar(
                           backgroundColor: VelvetNoir.surfaceHigh,
@@ -478,8 +403,7 @@ class _MessageRequestsSheet extends ConsumerWidget {
                           style: const TextStyle(color: VelvetNoir.onSurface),
                         ),
                         subtitle: Text(
-                          conversation.lastMessagePreview ??
-                              'New message request',
+                          conversation.lastMessagePreview ?? 'New message request',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -488,15 +412,12 @@ class _MessageRequestsSheet extends ConsumerWidget {
                         ),
                         trailing: TextButton(
                           onPressed: () async {
-                            await ref
-                                .read(messagingControllerProvider)
-                                .acceptMessageRequest(
+                            await ref.read(messagingControllerProvider).acceptMessageRequest(
                                   conversationId: conversation.id,
                                 );
                             if (context.mounted) {
                               Navigator.of(context).pop();
-                              GoRouter.of(context)
-                                  .push('/messages/${conversation.id}');
+                              GoRouter.of(context).push('/messages/${conversation.id}');
                             }
                           },
                           style: TextButton.styleFrom(
@@ -516,8 +437,6 @@ class _MessageRequestsSheet extends ConsumerWidget {
     );
   }
 }
-
-// ── Conversations list ─────────────────────────────────────────────────────
 
 class _ConversationsList extends StatelessWidget {
   const _ConversationsList({
@@ -593,8 +512,6 @@ class _ConversationsList extends StatelessWidget {
   }
 }
 
-// ── Conversation tile ──────────────────────────────────────────────────────
-
 class _ConversationTile extends StatelessWidget {
   const _ConversationTile({
     required this.conversation,
@@ -615,8 +532,7 @@ class _ConversationTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () =>
-            GoRouter.of(context).push('/messages/${conversation.id}'),
+        onTap: () => GoRouter.of(context).push('/messages/${conversation.id}'),
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -717,7 +633,8 @@ class _ConversationTile extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: VelvetNoir.secondary.withValues(alpha: 0.12),
+                              color:
+                                  VelvetNoir.secondary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(

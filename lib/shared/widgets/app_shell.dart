@@ -8,6 +8,7 @@ import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
+import 'desktop_messenger_shell.dart';
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
 /// bottom nav bar (Home / Rooms / Messages / Friends / Profile).
@@ -16,20 +17,27 @@ class AppShell extends ConsumerWidget {
   const AppShell({required this.child, super.key});
 
   static int _indexForLocation(String location) {
+    if (location == '/' || location.startsWith('/messages')) return 0;
     if (location.startsWith('/rooms'))    return 1;
-    if (location.startsWith('/messages')) return 2;
+    if (location.startsWith('/discover')) return 2;
     if (location.startsWith('/friends'))  return 3;
     if (location.startsWith('/profile'))  return 4;
     return 0;
   }
 
   static const List<String> _roots = [
-    '/',
-    '/rooms',
     '/messages',
+    '/rooms',
+    '/discover',
     '/friends',
     '/profile',
   ];
+
+  static bool _usesDesktopMessengerShell(String location) {
+    return location == '/' ||
+        location.startsWith('/messages') ||
+        location.startsWith('/friends');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,19 +45,25 @@ class AppShell extends ConsumerWidget {
     final selectedIndex = _indexForLocation(location);
     final unreadMsgs = ref.watch(unreadMessageCountProvider);
     final theme = Theme.of(context);
+    final isDesktopMessengerLayout =
+      context.isExpandedLayout && _usesDesktopMessengerShell(location);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      drawer: const MixVyDrawer(),
-      body: child,
-      bottomNavigationBar: Builder(
-        builder: (context) => _VelvetBottomNav(
-          selectedIndex: selectedIndex,
-          unreadMsgs: unreadMsgs,
-          compact: context.isCompactLayout,
-          onTap: (i) => context.go(_roots[i]),
-        ),
-      ),
+      drawer: isDesktopMessengerLayout ? null : const MixVyDrawer(),
+      body: isDesktopMessengerLayout
+          ? DesktopMessengerShell(location: location, child: child)
+          : child,
+      bottomNavigationBar: isDesktopMessengerLayout
+          ? null
+          : Builder(
+              builder: (context) => _VelvetBottomNav(
+                selectedIndex: selectedIndex,
+                unreadMsgs: unreadMsgs,
+                compact: context.isCompactLayout,
+                onTap: (i) => context.go(_roots[i]),
+              ),
+            ),
     );
   }
 }
@@ -106,9 +120,9 @@ class _VelvetBottomNav extends StatelessWidget {
               height: compact ? 64 : 72,
               child: Row(
                 children: [
-                  _navItem(context, 0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+                  _navItemBadge(context, 0, Icons.home_outlined, Icons.home_rounded, 'Inbox', unreadMsgs),
                   _navItem(context, 1, Icons.meeting_room_outlined, Icons.meeting_room_rounded, 'Rooms'),
-                  _navItemBadge(context, 2, Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
+                  _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
                   _navItem(context, 3, Icons.people_alt_outlined, Icons.people_alt_rounded, 'Friends'),
                   _navItem(context, 4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
                 ],

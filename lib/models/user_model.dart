@@ -1,7 +1,6 @@
 
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mixvy/core/utils/network_image_url.dart';
 
 class UserModel {
   final String id;
@@ -67,8 +66,8 @@ class UserModel {
         id: _stringOrEmpty(json['id'] ?? json['uid']),
         email: _stringOrEmpty(json['email']),
         username: _stringOrEmpty(json['username']),
-        avatarUrl: _stringOrNull(json['avatarUrl']),
-        coverPhotoUrl: _stringOrNull(json['coverPhotoUrl']),
+        avatarUrl: sanitizeNetworkImageUrl(_stringOrNull(json['avatarUrl'])),
+        coverPhotoUrl: sanitizeNetworkImageUrl(_stringOrNull(json['coverPhotoUrl'])),
         bio: _stringOrNull(json['bio']),
         aboutMe: _stringOrNull(json['aboutMe']),
         age: (json['age'] as num?)?.toInt(),
