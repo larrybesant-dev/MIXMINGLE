@@ -103,6 +103,50 @@ class MessageBubble extends StatelessWidget {
       );
     }
 
+    if (message.type == 'private') {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x223A2B10),
+          border: Border.all(color: const Color(0x55D4A853)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.lock_outline, size: 14, color: Color(0xFFD4A853)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    senderLabel?.trim().isNotEmpty == true ? senderLabel!.trim() : message.senderId,
+                    style: const TextStyle(
+                      color: Color(0xFFD4A853),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  _buildMessageBody(message.content),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _formatClock(message.sentAt),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final resolvedSenderLabel = senderLabel?.trim().isNotEmpty == true
         ? senderLabel!.trim()
         : (isMe ? 'You' : message.senderId);

@@ -38,6 +38,7 @@ String _asString(dynamic value, {String fallback = ''}) {
 
 final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageModel>, String>((ref, roomId) {
 	final firestore = ref.watch(roomFirestoreProvider);
+	final currentUserId = ref.watch(userProvider)?.id;
 	return traceFirestoreStream<List<MessageModel>>(
 		key: 'messages/$roomId',
 		query: 'rooms/$roomId/messages orderBy sentAt',
@@ -51,7 +52,20 @@ final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageMode
 				.snapshots()
 				.map(
 					(snapshot) {
-					final docs = snapshot.docs.toList(growable: false)
+					final visibleDocs = snapshot.docs.where((doc) {
+						final data = doc.data();
+						final recipientUserId = _asString(data['recipientUserId']);
+						if (recipientUserId.isEmpty) {
+							return true;
+						}
+						if (currentUserId == null || currentUserId.trim().isEmpty) {
+							return false;
+						}
+						final senderId = _asString(data['senderId']);
+						return senderId == currentUserId || recipientUserId == currentUserId;
+					}).toList(growable: false);
+
+					final docs = visibleDocs
 						..sort((a, b) {
 							final aData = a.data();
 							final bData = b.data();
@@ -79,11 +93,26 @@ final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageMode
 					return docs.map((doc) {
 						final data = doc.data();
 						final sentAt = data['sentAt'] ?? data['clientSentAt'];
+						final recipientUserId = _asString(data['recipientUserId']);
+						final recipientDisplayName = _asString(data['recipientDisplayName']);
+						final senderId = _asString(data['senderId']);
+						var content = _asString(data['content']);
+						if (recipientUserId.isNotEmpty) {
+							if (currentUserId != null && senderId == currentUserId) {
+								final targetLabel = recipientDisplayName.isEmpty
+									? recipientUserId
+									: recipientDisplayName;
+								content = '[Private to $targetLabel] $content';
+							} else if (currentUserId != null && recipientUserId == currentUserId) {
+								content = '[Private to you] $content';
+							}
+						}
 						return MessageModel(
 							id: doc.id,
-							senderId: _asString(data['senderId']),
+							senderId: senderId,
 							roomId: _asString(data['roomId'], fallback: roomId),
-							content: _asString(data['content']),						type: _asString(data['type'], fallback: 'normal'),
+							content: content,
+							type: _asString(data['type'], fallback: 'normal'),
 						richText: _asString(data['richText']),							sentAt: sentAt is Timestamp
 									? sentAt.toDate()
 									: DateTime.tryParse(sentAt?.toString() ?? '') ?? DateTime.now(),
@@ -156,6 +185,44 @@ final sendMessageProvider =
 			'senderId': user.id,
 			'roomId': roomId,
 			'content': normalizedMessage,
+			'sentAt': FieldValue.serverTimestamp(),
+			'clientSentAt': Timestamp.now(),
+		});
+	};
+});
+
+final sendPrivateMessageProvider =
+		Provider.autoDispose.family<Future<void> Function({required String content, required String recipientUserId, required String recipientDisplayName}), String>((ref, roomId) {
+	return ({required String content, required String recipientUserId, required String recipientDisplayName}) async {
+		final user = ref.read(userProvider);
+		if (user == null) {
+			throw StateError('User must be logged in to send messages');
+		}
+
+		final normalizedMessage = content.trim();
+		final normalizedRecipientId = recipientUserId.trim();
+		if (normalizedMessage.isEmpty || normalizedRecipientId.isEmpty) {
+			return;
+		}
+		if (normalizedRecipientId == user.id) {
+			throw StateError('Cannot send a private room message to yourself.');
+		}
+
+		final firestore = ref.read(roomFirestoreProvider);
+		final messageRef = firestore
+				.collection('rooms')
+				.doc(roomId)
+				.collection('messages')
+				.doc();
+
+		await messageRef.set({
+			'id': messageRef.id,
+			'senderId': user.id,
+			'roomId': roomId,
+			'content': normalizedMessage,
+			'type': 'private',
+			'recipientUserId': normalizedRecipientId,
+			'recipientDisplayName': recipientDisplayName.trim(),
 			'sentAt': FieldValue.serverTimestamp(),
 			'clientSentAt': Timestamp.now(),
 		});

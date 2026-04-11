@@ -2696,6 +2696,62 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
   }
 
+  Future<void> _sendPrivateRoomMessageToParticipant(
+    RoomParticipantModel target,
+  ) async {
+    final currentUser = ref.read(userProvider);
+    if (currentUser == null) return;
+
+    final targetName = _senderDisplayNameById[target.userId] ?? target.userId;
+    final controller = TextEditingController();
+
+    final message = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Private message to $targetName'),
+          content: TextField(
+            controller: controller,
+            maxLines: 4,
+            minLines: 2,
+            textInputAction: TextInputAction.send,
+            decoration: const InputDecoration(
+              hintText: 'Only this user will see this in room chat',
+            ),
+            onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+              child: const Text('Send'),
+            ),
+          ],
+        );
+      },
+    );
+
+    final trimmed = message?.trim() ?? '';
+    if (trimmed.isEmpty) return;
+
+    try {
+      final sendPrivate = ref.read(sendPrivateMessageProvider(widget.roomId));
+      await sendPrivate(
+        content: _buildOutgoingChatMessage(trimmed),
+        recipientUserId: target.userId,
+        recipientDisplayName: targetName,
+      );
+      if (!mounted) return;
+      _showSnackBar('Private room message sent to $targetName.');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar('Could not send private room message: $e');
+    }
+  }
+
   Future<void> _showPeopleSheet({
     required List<RoomParticipantModel> participants,
     required RoomParticipantModel? currentParticipant,
@@ -4568,8 +4624,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   // Play a soft ping for new incoming messages (not own).
                                   if (messages.length > _lastRenderedMessageCount) {
                                     final newest = messages.last;
-                                    if (newest.senderId != _joinedUserId && newest.type == 'normal') {
-                                      RoomAudioCues.instance.playNewMessage();
+                                    if (newest.senderId != _joinedUserId) {
+                                      if (newest.type == 'private') {
+                                        RoomAudioCues.instance.playPrivateMessage();
+                                      } else if (newest.type == 'normal') {
+                                        RoomAudioCues.instance.playNewMessage();
+                                      }
                                     }
                                     if (newest.type == 'normal') {
                                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -5083,6 +5143,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 _showSnackBar('Could not open whisper: $e');
                               }
                             },
+                            onSecretMessage: (p) =>
+                                _sendPrivateRoomMessageToParticipant(p),
                           ),
                         ),
                       ],
@@ -5322,6 +5384,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     this.onJoinQueue,
     this.onReleaseMic,
     this.onWhisper,
+    this.onSecretMessage,
     this.topPadding = kToolbarHeight,
     this.recentChatters = const {},
   });
@@ -5343,6 +5406,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final VoidCallback? onJoinQueue;
   final VoidCallback? onReleaseMic;
   final void Function(RoomParticipantModel participant)? onWhisper;
+  final void Function(RoomParticipantModel participant)? onSecretMessage;
   final double topPadding;
   final Set<String> recentChatters;
 
@@ -5493,6 +5557,10 @@ class _RoomRosterSidebar extends StatelessWidget {
               itemBuilder: (_, i) {
                 final p = sorted[i];
                 final vip = vipLevelById[p.userId] ?? 0;
+                final isSelf = p.userId == currentUserId;
+                final isCamOn = p.userId == currentUserId
+                    ? isLocalVideoEnabled
+                    : p.camOn;
                 return GestureDetector(
                   onTap: onWhisper == null || p.userId == currentUserId
                       ? null
@@ -5502,6 +5570,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     vipLevel: vip,
                     nameColor: _nameColor(vip),
                     gender: genderById[p.userId],
+                    camOn: isCamOn,
                     trailingIcon: p.role == 'host' || p.role == 'owner'
                         ? Icons.star
                         : p.role == 'cohost'
@@ -5509,6 +5578,12 @@ class _RoomRosterSidebar extends StatelessWidget {
                             : null,
                     trailingColor: const Color(0xFFFFD700),
                     hasRecentChat: recentChatters.contains(p.userId),
+                    onSecretMessage: isSelf || onSecretMessage == null
+                        ? null
+                        : () => onSecretMessage!(p),
+                    onDirectMessage: isSelf || onWhisper == null
+                        ? null
+                        : () => onWhisper!(p),
                   ),
                 );
               },
@@ -5564,18 +5639,24 @@ class _RosterRow extends StatelessWidget {
     required this.vipLevel,
     required this.nameColor,
     this.gender,
+    this.camOn = false,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
     this.hasRecentChat = false,
+    this.onSecretMessage,
+    this.onDirectMessage,
   });
 
   final String displayName;
   final int vipLevel;
   final Color nameColor;
   final String? gender;
+  final bool camOn;
   final IconData? trailingIcon;
   final Color trailingColor;
   final bool hasRecentChat;
+  final VoidCallback? onSecretMessage;
+  final VoidCallback? onDirectMessage;
 
   IconData? _genderIcon(String? g) {
     if (g == null) return null;
@@ -5643,9 +5724,53 @@ class _RosterRow extends StatelessWidget {
               ),
             ),
           ],
+          if (camOn) ...[
+            const SizedBox(width: 3),
+            const Icon(
+              Icons.videocam,
+              size: 11,
+              color: Color(0xFF4CAF50),
+            ),
+          ],
           if (trailingIcon != null) ...[
             const SizedBox(width: 3),
             Icon(trailingIcon, size: 11, color: trailingColor),
+          ],
+          if (onSecretMessage != null) ...[
+            const SizedBox(width: 3),
+            Tooltip(
+              message: 'Secret room message',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: onSecretMessage,
+                child: const Padding(
+                  padding: EdgeInsets.all(2),
+                  child: Icon(
+                    Icons.lock_outline,
+                    size: 11,
+                    color: Color(0xFFD4A853),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (onDirectMessage != null) ...[
+            const SizedBox(width: 3),
+            Tooltip(
+              message: 'Private DM',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: onDirectMessage,
+                child: const Padding(
+                  padding: EdgeInsets.all(2),
+                  child: Icon(
+                    Icons.mail_outline,
+                    size: 11,
+                    color: Color(0xFFB09080),
+                  ),
+                ),
+              ),
+            ),
           ],
         ],
       ),
