@@ -496,7 +496,6 @@ class AuthController extends Notifier<AuthState> {
     StackTrace stackTrace, {
     required String context,
   }) {
-    developer.log(
     AppTelemetry.logAction(
       level: 'error',
       domain: 'auth',
@@ -507,6 +506,7 @@ class AuthController extends Notifier<AuthState> {
       error: e,
       stackTrace: stackTrace,
     );
+    developer.log(
       'FirebaseAuthException in $context: ${e.code}',
       name: 'AuthController',
       error: e,
