@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/widgets/app_page_scaffold.dart';
+import '../../../shared/widgets/async_state_view.dart';
 import '../providers/after_dark_provider.dart';
 import '../theme/after_dark_theme.dart';
 import '../../../features/messaging/providers/messaging_provider.dart';
@@ -42,12 +44,11 @@ class AfterDarkShell extends ConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) context.go('/after-dark/unlock');
       });
-      // Render a blank dark screen while the redirect fires.
-      return const Scaffold(
+      return const AppPageScaffold(
         backgroundColor: EmberDark.surface,
-        body: Center(
-          child: CircularProgressIndicator(color: EmberDark.primary),
-        ),
+        safeArea: false,
+        maxContentWidth: double.infinity,
+        body: AppLoadingView(label: 'Locking After Dark...'),
       );
     }
 
@@ -55,8 +56,10 @@ class AfterDarkShell extends ConsumerWidget {
     final selectedIndex = _indexForLocation(location);
     final unreadMsgs    = ref.watch(unreadMessageCountProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: _edSurface,
+      safeArea: false,
+      maxContentWidth: double.infinity,
       appBar: _AfterDarkTopBar(onExit: () {
         ref.read(afterDarkControllerProvider).lock();
         context.go('/');

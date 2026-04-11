@@ -91,7 +91,11 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
             // Header row
             Row(
               children: [
-                const Text('🗓️', style: TextStyle(fontSize: 18)),
+                const Icon(
+                  Icons.calendar_month_rounded,
+                  size: 18,
+                  color: VelvetNoir.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Daily Check-in',
@@ -114,7 +118,7 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
                           color: VelvetNoir.primary.withAlpha(100), width: 0.6),
                     ),
                     child: Text(
-                      '🔥 $streak-day streak',
+                      '$streak-day streak',
                       style: const TextStyle(
                         color: VelvetNoir.primary,
                         fontSize: 11,
@@ -181,12 +185,24 @@ class _CheckinContentState extends ConsumerState<_CheckinContent> {
                             color: VelvetNoir.surface,
                           ),
                         )
-                      : Text(
-                          'Claim ${s.reward} Coins 🪙',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.monetization_on_rounded,
+                              size: 16,
+                              color: VelvetNoir.surface,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Claim ${s.reward} Coins',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                 ),
               ),

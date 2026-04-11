@@ -25,7 +25,11 @@ class LeaderboardStrip extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
               child: Row(
                 children: [
-                  const Text('🏆', style: TextStyle(fontSize: 16)),
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    size: 18,
+                    color: VelvetNoir.primary,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Hall of Fame',
@@ -146,13 +150,24 @@ class _LeaderCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              '🪙 ${_fmt(user.coinBalance)}',
-              style: TextStyle(
-                fontSize: 9,
-                color: rank <= 3 ? rankColor : VelvetNoir.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.monetization_on_rounded,
+                  size: 11,
+                  color: rank <= 3 ? rankColor : VelvetNoir.primary,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  _fmt(user.coinBalance),
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: rank <= 3 ? rankColor : VelvetNoir.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

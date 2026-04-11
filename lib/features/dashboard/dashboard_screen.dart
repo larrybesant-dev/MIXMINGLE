@@ -7,10 +7,10 @@ import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../feed/providers/feed_providers.dart';
-import '../feed/controllers/feed_controller.dart';
 import '../feed/widgets/post_card.dart';
 import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
+import 'leaderboard_provider.dart';
 import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
 import 'daily_checkin_card.dart';
@@ -61,6 +61,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (h < 12) return 'Good morning';
     if (h < 17) return 'Good afternoon';
     return 'Good evening';
+  }
+
+  Future<void> _refreshDashboard() async {
+    ref.invalidate(postsStreamProvider);
+    ref.invalidate(roomsStreamProvider);
+    ref.invalidate(onlineUsersCountProvider);
+    ref.invalidate(liveRoomsCountProvider);
+    ref.invalidate(newMembersStreamProvider);
+    ref.invalidate(trendingUsersStreamProvider);
+    ref.invalidate(leaderboardProvider);
+    ref.invalidate(dailyCheckinProvider);
+
+    await Future.wait([
+      ref.read(postsStreamProvider.future),
+      ref.read(roomsStreamProvider.future),
+      ref.read(onlineUsersCountProvider.future),
+      ref.read(liveRoomsCountProvider.future),
+      ref.read(newMembersStreamProvider.future),
+      ref.read(trendingUsersStreamProvider.future),
+      ref.read(leaderboardProvider.future),
+      ref.read(dailyCheckinProvider.future),
+    ]);
   }
 
   @override
@@ -130,7 +152,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${_greeting()}, ${currentUser?.username ?? 'there'} 👑',
+                        '${_greeting()}, ${currentUser?.username ?? 'there'}',
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -172,8 +194,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         body: RefreshIndicator(
           color: VelvetNoir.primary,
           backgroundColor: VelvetNoir.surfaceHigh,
-          onRefresh: () =>
-              ref.read(feedControllerProvider.notifier).loadFeed(),
+          onRefresh: _refreshDashboard,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [

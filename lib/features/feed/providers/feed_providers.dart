@@ -37,49 +37,46 @@ final eventsStreamProvider = StreamProvider<List<EventModel>>((ref) {
   return ref.read(feedRepositoryProvider).eventsStream();
 });
 
-/// Real-time count of users whose presence doc has isOnline == true.
-/// Capped at 500 reads to keep costs low; shows "500+" when saturated.
-final onlineUsersCountProvider = StreamProvider.autoDispose<int>((ref) {
-  return ref.watch(firestoreProvider)
+/// Dashboard metrics do not need live Firestore listeners on every page load.
+/// Fetch them once and refresh when the screen is re-entered or manually pulled.
+final onlineUsersCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final snapshot = await ref
+      .watch(firestoreProvider)
       .collection('presence')
       .where('isOnline', isEqualTo: true)
       .limit(501)
-      .snapshots()
-      .map((snap) => snap.size);
+      .get();
+  return snapshot.size;
 });
 
-/// Real-time count of currently live rooms.
-final liveRoomsCountProvider = StreamProvider.autoDispose<int>((ref) {
-  return ref
-      .read(roomServiceProvider)
-      .watchLiveRooms(limit: 501)
-      .map((rooms) => rooms.length);
+final liveRoomsCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final rooms = await ref.read(roomServiceProvider).getLiveRooms(limit: 501);
+  return rooms.length;
 });
 
-/// Stream of the 12 most recently joined users, ordered by createdAt desc.
-final newMembersStreamProvider = StreamProvider.autoDispose<List<UserModel>>((ref) {
+final newMembersStreamProvider = FutureProvider.autoDispose<List<UserModel>>((ref) async {
   final firestore = ref.watch(firestoreProvider);
-  return firestore
+  final snapshot = await firestore
       .collection('users')
       .orderBy('createdAt', descending: true)
       .limit(12)
-      .snapshots()
-      .map((snap) => snap.docs.map((d) {
-            final data = d.data();
-            data['id'] = d.id;
-            return UserModel.fromJson(data);
-          }).toList());
+      .get();
+  return snapshot.docs.map((d) {
+    final data = d.data();
+    data['id'] = d.id;
+    return UserModel.fromJson(data);
+  }).toList(growable: false);
 });
 
-/// Real-time top-10 users by coin balance — drives the "Top Creators" section.
 final trendingUsersStreamProvider =
-    StreamProvider.autoDispose<List<UserModel>>((ref) {
-  return ref.watch(firestoreProvider)
+    FutureProvider.autoDispose<List<UserModel>>((ref) async {
+  final snapshot = await ref
+      .watch(firestoreProvider)
       .collection('users')
       .orderBy('balance', descending: true)
       .limit(10)
-      .snapshots()
-      .map((snap) => snap.docs
-          .map((d) => UserModel.fromJson({'id': d.id, ...d.data()}))
-          .toList());
+      .get();
+  return snapshot.docs
+      .map((d) => UserModel.fromJson({'id': d.id, ...d.data()}))
+      .toList(growable: false);
 });

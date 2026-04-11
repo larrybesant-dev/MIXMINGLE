@@ -43,6 +43,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
   bool _queueJoining = false;
   String? _queueSessionId;
   StreamSubscription<SpeedDatingQueueResult?>? _queueSub;
+  StreamSubscription<Map<String, dynamic>?>? _sessionSub;
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     _timer?.cancel();
     _secondsLeftNotifier.dispose();
     _queueSub?.cancel();
+    _sessionSub?.cancel();
     super.dispose();
   }
 
@@ -103,10 +105,13 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
 
   void _watchSession(String sessionId, String uid) {
     setState(() => _queueSessionId = sessionId);
-    _service.watchSession(sessionId).listen((data) {
+    _sessionSub?.cancel();
+    _sessionSub = _service.watchSession(sessionId).listen((data) {
       if (!mounted || data == null) return;
       final roomId = data['roomId'] as String?;
       if (roomId != null) {
+        _sessionSub?.cancel();
+        _sessionSub = null;
         context.go('/room/$roomId');
       }
     });
@@ -114,6 +119,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
 
   void _leaveQueueMode() async {
     _queueSub?.cancel();
+    _sessionSub?.cancel();
+    _sessionSub = null;
     try {
       await _service.leaveQueue();
     } catch (_) {}
