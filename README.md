@@ -6,14 +6,16 @@ MixVy is a Flutter social/live-room app with Firebase, Riverpod, payments, moder
 - Flutter SDK (stable)
 - Dart SDK (bundled with Flutter)
 - Firebase project configured for Auth, Firestore, Functions, Storage
-- Node.js (for Firebase Functions)
+- Node.js 22 (for Firebase Functions)
 
 ## Local Setup
 1. Install dependencies:
 	- flutter pub get
 2. Install function dependencies:
 	- cd functions && npm install
-3. Ensure required environment values are available for runtime:
+3. Align the local Functions runtime version before using npm or Firebase Functions commands:
+	- use Node 22 in `functions/` (`.nvmrc` and `.node-version` are provided)
+4. Ensure required environment values are available for runtime:
 	- FIREBASE_API_KEY_WEB
 	- FIREBASE_API_KEY_WINDOWS
 	- AGORA_APP_ID (if using live A/V)
