@@ -61,14 +61,20 @@ class RoomService {
 			DateTime.now().subtract(_participantFreshnessWindow);
 
 	Future<bool> _hasFreshParticipants(String roomId) async {
-		final snapshot = await _participantsCollection(roomId)
-				.where(
-					'lastActiveAt',
-					isGreaterThanOrEqualTo: Timestamp.fromDate(_freshParticipantCutoff),
-				)
-				.limit(1)
-				.get();
-		return snapshot.docs.isNotEmpty;
+		try {
+			final snapshot = await _participantsCollection(roomId)
+					.where(
+						'lastActiveAt',
+						isGreaterThanOrEqualTo: Timestamp.fromDate(_freshParticipantCutoff),
+					)
+					.limit(1)
+					.get();
+			return snapshot.docs.isNotEmpty;
+		} on FirebaseException {
+			// Some production rule sets can restrict participant reads.
+			// Fail open here so discovery feed remains usable.
+			return true;
+		}
 	}
 
 	Future<void> _markRoomInactive(String roomId) {
@@ -87,12 +93,17 @@ class RoomService {
 		final activeRooms = <RoomModel>[];
 		for (final doc in docs) {
 			final room = RoomModel.fromJson(doc.data(), doc.id);
-			if (await _hasFreshParticipants(doc.id)) {
-				activeRooms.add(room);
-				continue;
-			}
+			try {
+				if (await _hasFreshParticipants(doc.id)) {
+					activeRooms.add(room);
+					continue;
+				}
 
-			await _markRoomInactive(doc.id);
+				await _markRoomInactive(doc.id);
+			} on FirebaseException {
+				// Keep the room visible instead of failing the entire feed.
+				activeRooms.add(room);
+			}
 		}
 		activeRooms.sort(_compareStableLiveRooms);
 		return activeRooms;
