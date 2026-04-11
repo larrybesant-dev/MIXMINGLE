@@ -159,7 +159,66 @@ class FriendService {
   }
 
   Stream<List<FriendshipModel>> watchAcceptedFriendships(String userId) {
-    return watchFriendships(userId, statuses: const <String>{'accepted'});
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      return Stream.value(const <FriendshipModel>[]);
+    }
+
+    return Stream.multi((controller) {
+      StreamSubscription<List<FriendshipModel>>? primarySub;
+      StreamSubscription<List<FriendshipModel>>? fallbackSub;
+
+      void startFallback() {
+        if (fallbackSub != null) return;
+        fallbackSub = _watchAcceptedFriendshipsFromUserDoc(normalizedUserId).listen(
+          controller.add,
+          onError: controller.addError,
+        );
+      }
+
+      primarySub = watchFriendships(
+        normalizedUserId,
+        statuses: const <String>{'accepted'},
+      ).listen(
+        controller.add,
+        onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            startFallback();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        },
+      );
+
+      controller.onCancel = () async {
+        await primarySub?.cancel();
+        await fallbackSub?.cancel();
+      };
+    });
+  }
+
+  Stream<List<FriendshipModel>> _watchAcceptedFriendshipsFromUserDoc(
+      String userId,
+      ) {
+    return _usersCollection.doc(userId).snapshots().map((doc) {
+      final data = doc.data();
+      if (!doc.exists || data == null) {
+        return const <FriendshipModel>[];
+      }
+
+      final friendIds = _asStringList(data['friends']);
+      final fallbackCreatedAt = DateTime.fromMillisecondsSinceEpoch(0);
+      return friendIds.map((friendId) {
+        final sorted = FriendshipModel.sortedPair(userId, friendId);
+        return FriendshipModel(
+          id: FriendshipModel.canonicalIdFor(userId, friendId),
+          userA: sorted.userA,
+          userB: sorted.userB,
+          status: 'accepted',
+          createdAt: fallbackCreatedAt,
+        );
+      }).toList(growable: false);
+    });
   }
 
   Stream<List<UserModel>> watchFriends(String userId) {

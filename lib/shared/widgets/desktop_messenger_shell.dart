@@ -59,6 +59,7 @@ class _DesktopMessengerShellState extends ConsumerState<DesktopMessengerShell> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
+    final isFriendsRoute = widget.routeState.kind == MessengerRouteKind.friends;
     final centerPane = buildMessengerRouteChild(
       routeState: widget.routeState,
       userId: widget.userId,
@@ -96,21 +97,23 @@ class _DesktopMessengerShellState extends ConsumerState<DesktopMessengerShell> {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           child: Row(
             children: [
-              SizedBox(
-                width: 320,
-                child: _ShellPanel(
-                  child: _MessengerSidebar(
-                    currentUser: currentUser,
-                    controller: controller,
-                    searchController: _searchController,
-                    routeState: widget.routeState,
-                    query: _query,
-                    showOffline: _showOffline,
-                    onToggleOffline: () => setState(() => _showOffline = !_showOffline),
+              if (!isFriendsRoute) ...[
+                SizedBox(
+                  width: 320,
+                  child: _ShellPanel(
+                    child: _MessengerSidebar(
+                      currentUser: currentUser,
+                      controller: controller,
+                      searchController: _searchController,
+                      routeState: widget.routeState,
+                      query: _query,
+                      showOffline: _showOffline,
+                      onToggleOffline: () => setState(() => _showOffline = !_showOffline),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: _ShellPanel(
                   child: DecoratedBox(
