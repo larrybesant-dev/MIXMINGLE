@@ -79,28 +79,95 @@ class _DesktopMessengerShellState extends ConsumerState<DesktopMessengerShell> {
     );
     final railWidth = context.screenWidth >= AppBreakpoints.expanded ? 288.0 : 256.0;
 
-    return Row(
-      children: [
-        SizedBox(
-          width: 320,
-          child: _MessengerSidebar(
-            currentUser: currentUser,
-            controller: controller,
-            searchController: _searchController,
-            routeState: widget.routeState,
-            query: _query,
-            showOffline: _showOffline,
-            onToggleOffline: () => setState(() => _showOffline = !_showOffline),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            VelvetNoir.surface,
+            VelvetNoir.surfaceLow,
+            VelvetNoir.surface,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 320,
+                child: _ShellPanel(
+                  child: _MessengerSidebar(
+                    currentUser: currentUser,
+                    controller: controller,
+                    searchController: _searchController,
+                    routeState: widget.routeState,
+                    query: _query,
+                    showOffline: _showOffline,
+                    onToggleOffline: () => setState(() => _showOffline = !_showOffline),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ShellPanel(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          VelvetNoir.surface.withValues(alpha: 0.95),
+                          VelvetNoir.surfaceLow.withValues(alpha: 0.94),
+                        ],
+                      ),
+                    ),
+                    child: centerPane,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: railWidth,
+                child: _ShellPanel(
+                  child: _DesktopSocialRail(currentUser: currentUser),
+                ),
+              ),
+            ],
           ),
         ),
-        Expanded(
-          child: DecoratedBox(
-            decoration: const BoxDecoration(color: VelvetNoir.surface),
-            child: SafeArea(child: centerPane),
+      ),
+    );
+  }
+}
+
+class _ShellPanel extends StatelessWidget {
+  const _ShellPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: VelvetNoir.surfaceHigh.withValues(alpha: 0.62),
+          border: Border.all(
+            color: VelvetNoir.outlineVariant.withValues(alpha: 0.32),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.24),
+              blurRadius: 22,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        SizedBox(width: railWidth, child: _DesktopSocialRail(currentUser: currentUser)),
-      ],
+        child: child,
+      ),
     );
   }
 }
@@ -199,6 +266,8 @@ class _MessengerSidebar extends ConsumerWidget {
                   Text('Messenger', style: GoogleFonts.playfairDisplay(color: VelvetNoir.primary, fontSize: 28, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   Text('See people. Click. Talk.', style: GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
+                  const SizedBox(height: 12),
+                  const _SidebarQuickNav(),
                   const SizedBox(height: 16),
                   _SearchField(controller: searchController),
                 ],
@@ -728,6 +797,57 @@ class _SidebarSection extends StatelessWidget {
           child,
         ],
       ),
+    );
+  }
+}
+
+class _SidebarQuickNav extends StatelessWidget {
+  const _SidebarQuickNav();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, IconData icon, String route) {
+      return Expanded(
+        child: InkWell(
+          onTap: () => context.go(route),
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
+            height: 38,
+            decoration: BoxDecoration(
+              color: VelvetNoir.surfaceContainer.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: VelvetNoir.outlineVariant.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 14, color: VelvetNoir.primary),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: GoogleFonts.raleway(
+                    color: VelvetNoir.onSurface,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        chip('Rooms', Icons.meeting_room_rounded, '/rooms'),
+        const SizedBox(width: 8),
+        chip('Discover', Icons.explore_rounded, '/discover'),
+        const SizedBox(width: 8),
+        chip('Friends', Icons.people_alt_rounded, '/friends'),
+      ],
     );
   }
 }

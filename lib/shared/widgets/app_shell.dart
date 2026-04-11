@@ -40,6 +40,16 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: isDesktopMessengerLayout
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(72),
+              child: _DesktopTopNav(
+                selectedIndex: selectedIndex,
+                unreadMsgs: unreadMsgs,
+                onTap: (i) => context.go(_roots[i]),
+              ),
+            )
+          : null,
       drawer: isDesktopMessengerLayout ? null : const MixVyDrawer(),
       body: child,
       bottomNavigationBar: isDesktopMessengerLayout
@@ -108,7 +118,7 @@ class _VelvetBottomNav extends StatelessWidget {
               height: compact ? 64 : 72,
               child: Row(
                 children: [
-                  _navItemBadge(context, 0, Icons.home_outlined, Icons.home_rounded, 'Inbox', unreadMsgs),
+                  _navItemBadge(context, 0, Icons.chat_bubble_outline_rounded, Icons.chat_rounded, 'Messages', unreadMsgs),
                   _navItem(context, 1, Icons.meeting_room_outlined, Icons.meeting_room_rounded, 'Rooms'),
                   _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
                   _navItem(context, 3, Icons.people_alt_outlined, Icons.people_alt_rounded, 'Friends'),
@@ -267,6 +277,131 @@ class _VelvetBottomNav extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopTopNav extends StatelessWidget {
+  const _DesktopTopNav({
+    required this.selectedIndex,
+    required this.unreadMsgs,
+    required this.onTap,
+  });
+
+  final int selectedIndex;
+  final int unreadMsgs;
+  final void Function(int) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <({String label, IconData icon})>[
+      (label: 'Messages', icon: Icons.chat_rounded),
+      (label: 'Rooms', icon: Icons.meeting_room_rounded),
+      (label: 'Discover', icon: Icons.explore_rounded),
+      (label: 'Friends', icon: Icons.people_alt_rounded),
+      (label: 'Profile', icon: Icons.person_rounded),
+    ];
+
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: VelvetNoir.outlineVariant.withValues(alpha: 0.35),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 22,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: List.generate(items.length, (index) {
+              final item = items[index];
+              final selected = selectedIndex == index;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(index),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    margin: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? VelvetNoir.primary.withValues(alpha: 0.18)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
+                      border: selected
+                          ? Border.all(
+                              color: VelvetNoir.primary.withValues(alpha: 0.35),
+                            )
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(
+                              item.icon,
+                              size: 18,
+                              color: selected
+                                  ? VelvetNoir.primary
+                                  : VelvetNoir.onSurfaceVariant,
+                            ),
+                            if (index == 0 && unreadMsgs > 0)
+                              Positioned(
+                                right: -8,
+                                top: -8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: VelvetNoir.error,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    unreadMsgs > 99 ? '99+' : '$unreadMsgs',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 7),
+                        Text(
+                          item.label,
+                          style: GoogleFonts.raleway(
+                            color: selected
+                                ? VelvetNoir.primary
+                                : VelvetNoir.onSurfaceVariant,
+                            fontSize: 12,
+                            fontWeight:
+                                selected ? FontWeight.w700 : FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
         ),
       ),
     );

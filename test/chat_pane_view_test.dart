@@ -155,7 +155,8 @@ void main() {
 
       expect(find.text('Instant hello'), findsOneWidget);
       expect(find.byTooltip('Sending'), findsOneWidget);
-      expect(find.text('Message…'), findsNothing);
+      final composer = tester.widget<TextField>(find.byType(TextField).last);
+      expect(composer.controller?.text ?? '', isEmpty);
 
       final pendingSnapshot = await firestore
           .collection('conversations')
