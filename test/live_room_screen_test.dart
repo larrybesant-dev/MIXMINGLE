@@ -132,6 +132,105 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('LiveRoomScreen shows online friends from legacy presence fields', (
+    WidgetTester tester,
+  ) async {
+    await configureViewport(tester);
+    final firestore = FakeFirebaseFirestore();
+    await firestore.collection('rooms').doc('room-a').set({
+      'hostId': 'host-1',
+      'isLocked': false,
+      'slowModeSeconds': 0,
+    });
+    await firestore.collection('users').doc('user-1').set({
+      'uid': 'user-1',
+      'email': 'user1@mixvy.com',
+      'username': 'User One',
+      'friends': ['user-2'],
+    });
+    await firestore.collection('users').doc('user-2').set({
+      'uid': 'user-2',
+      'email': 'user2@mixvy.com',
+      'username': 'Friend Two',
+    });
+    await firestore.collection('presence').doc('user-2').set({
+      'online': true,
+      'userStatus': 'online',
+      'roomId': 'room-b',
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          currentParticipantProvider.overrideWith(
+            (ref, args) => Stream.value(
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ]),
+          ),
+          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          hostProvider.overrideWith(
+            (ref, roomId) => Stream.value(Host('host-1')),
+          ),
+          coHostsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <Cohost>[]),
+          ),
+          roomPresenceStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomPresenceModel(
+                userId: 'user-1',
+                isOnline: true,
+                lastHeartbeatAt: null,
+                lastSeenAt: null,
+              ),
+            ]),
+          ),
+          userProvider.overrideWithValue(
+            UserModel(
+              id: 'user-1',
+              email: 'user1@mixvy.com',
+              username: 'User One',
+              createdAt: DateTime(2026, 1, 1),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    await tester.tap(find.text('Online friends'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Online friends'), findsWidgets);
+    expect(find.text('Friend Two'), findsOneWidget);
+    expect(find.text('In another room'), findsOneWidget);
+    expect(find.text('Go'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   testWidgets('LiveRoomScreen opens the people roster for room members', (
     WidgetTester tester,
   ) async {

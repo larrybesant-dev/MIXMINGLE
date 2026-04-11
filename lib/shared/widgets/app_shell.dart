@@ -80,7 +80,14 @@ class _VelvetBottomNav extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.94),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                theme.colorScheme.surface.withValues(alpha: 0.98),
+                VelvetNoir.surfaceLow.withValues(alpha: 0.96),
+              ],
+            ),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(
@@ -88,6 +95,13 @@ class _VelvetBottomNav extends StatelessWidget {
                 width: 1,
               ),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
+              ),
+            ],
           ),
           child: SafeArea(
             top: false,
@@ -130,17 +144,28 @@ class _VelvetBottomNav extends StatelessWidget {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 40,
-              height: 30,
+              curve: Curves.easeOutCubic,
+              width: isSelected ? 48 : 40,
+              height: isSelected ? 34 : 30,
               decoration: isSelected
                   ? BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          VelvetNoir.primary.withValues(alpha: 0.18),
-                          VelvetNoir.primary.withValues(alpha: 0.08),
+                          VelvetNoir.primary.withValues(alpha: 0.24),
+                          VelvetNoir.secondary.withValues(alpha: 0.12),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: VelvetNoir.primary.withValues(alpha: 0.22),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: VelvetNoir.primary.withValues(alpha: 0.10),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     )
                   : null,
               child: Icon(
@@ -155,6 +180,7 @@ class _VelvetBottomNav extends StatelessWidget {
               style: GoogleFonts.raleway(
                 fontSize: compact ? 10 : 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                letterSpacing: isSelected ? 0.2 : 0,
                 color: isSelected ? selectedColor : idleColor,
               ),
             ),
@@ -261,9 +287,13 @@ class _VelvetBottomNav extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
+            Container(
               width: 40,
               height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: VelvetNoir.surfaceHigh.withValues(alpha: 0.35),
+              ),
               child: Icon(
                 icon,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

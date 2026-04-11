@@ -375,6 +375,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             separatorBuilder: (_, _) =>
                                 const SizedBox(width: 16),
                             itemBuilder: (ctx, i) => _NewMemberChip(
+                              key: ValueKey(members[i].id),
                               user: members[i],
                               onTap: () => _openProfile(members[i].id),
                             ),
@@ -564,7 +565,7 @@ class _SectionHeader extends StatelessWidget {
 class _NewMemberChip extends StatelessWidget {
   final UserModel user;
   final VoidCallback onTap;
-  const _NewMemberChip({required this.user, required this.onTap});
+  const _NewMemberChip({required this.user, required this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {

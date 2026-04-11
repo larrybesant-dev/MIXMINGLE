@@ -110,7 +110,8 @@ final favoriteFriendIdsProvider = FutureProvider<Set<String>>((ref) async {
 /// and "In Room: X" subtitle.
 final friendPresenceProvider =
     StreamProvider.autoDispose.family<PresenceModel, String>((ref, friendId) {
-	return PresenceService().watchUserPresence(friendId);
+	return PresenceService(firestore: ref.watch(friendFirestoreProvider))
+			.watchUserPresence(friendId);
 });
 
 /// Current user's own presence — used to know if the user is in a room so they
@@ -118,7 +119,9 @@ final friendPresenceProvider =
 final currentUserPresenceProvider = StreamProvider.autoDispose<PresenceModel?>((ref) {
   final userId = ref.watch(currentFriendUserIdProvider);
   if (userId == null) return const Stream.empty();
-  return PresenceService().watchUserPresence(userId).map((p) => p);
+	return PresenceService(firestore: ref.watch(friendFirestoreProvider))
+			.watchUserPresence(userId)
+			.map((p) => p);
 });
 
 /// Friends-of-friends who are not yet friends with the current user.

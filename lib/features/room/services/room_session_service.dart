@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/firestore/firestore_debug_tracing.dart';
+import '../../../core/telemetry/app_telemetry.dart';
 import '../../../services/moderation_service.dart';
 import '../../../services/presence_service.dart';
 import '../providers/room_firestore_provider.dart';
@@ -98,9 +100,36 @@ class RoomSessionService {
       return const RoomJoinResult.failure('Could not join room. Please try again.');
     }
 
+    AppTelemetry.updateRoomState(
+      roomId: normalizedRoomId,
+      joinedUserId: normalizedUserId,
+      roomPhase: 'joining',
+      roomError: null,
+    );
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'join',
+      message: 'Attempting room join.',
+      roomId: normalizedRoomId,
+      userId: normalizedUserId,
+      result: 'start',
+    );
+
     final now = DateTime.now();
-    final roomDoc = await _firestore.collection('rooms').doc(normalizedRoomId).get();
+    final roomDoc = await traceFirestoreRead(
+      path: 'rooms/$normalizedRoomId',
+      operation: 'get_room_for_join',
+      roomId: normalizedRoomId,
+      userId: normalizedUserId,
+      action: () => _firestore.collection('rooms').doc(normalizedRoomId).get(),
+    );
     if (!roomDoc.exists) {
+      AppTelemetry.updateRoomState(
+        roomId: normalizedRoomId,
+        joinedUserId: null,
+        roomPhase: 'error',
+        roomError: 'This room no longer exists.',
+      );
       return const RoomJoinResult.failure('This room no longer exists.');
     }
 
@@ -123,11 +152,17 @@ class RoomSessionService {
     }
 
     if (excludedUserIds.isNotEmpty) {
-      final participantsSnapshot = await _firestore
+      final participantsRef = _firestore
           .collection('rooms')
           .doc(normalizedRoomId)
-          .collection('participants')
-          .get();
+          .collection('participants');
+      final participantsSnapshot = await traceFirestoreRead(
+        path: 'rooms/$normalizedRoomId/participants',
+        operation: 'get_room_participants_for_join',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: participantsRef.get,
+      );
       final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
         final participantData = doc.data();
         final participantId = _asString(
@@ -164,7 +199,13 @@ class RoomSessionService {
         .doc(normalizedRoomId)
         .collection('members')
         .doc(normalizedUserId);
-    final participantDoc = await participantRef.get();
+    final participantDoc = await traceFirestoreRead(
+      path: 'rooms/$normalizedRoomId/participants/$normalizedUserId',
+      operation: 'get_current_participant',
+      roomId: normalizedRoomId,
+      userId: normalizedUserId,
+      action: participantRef.get,
+    );
     if (participantDoc.exists) {
       final data = participantDoc.data() ?? <String, dynamic>{};
       if (data['isBanned'] == true) {
@@ -176,39 +217,78 @@ class RoomSessionService {
       final correctedRole = ownerId == normalizedUserId
           ? 'host'
           : (data['role'] as String? ?? 'audience');
-      await participantRef.update({
-        'lastActiveAt': now,
-        'role': correctedRole,
-        'camOn': false,
-        'userStatus': 'online',
-      });
-      await memberRef.set({
-        'userId': normalizedUserId,
-        'role': ownerId == normalizedUserId ? 'owner' : 'member',
-        'joinedAt': data['joinedAt'] ?? now,
-        'lastActiveAt': now,
-      }, SetOptions(merge: true));
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$normalizedRoomId/participants/$normalizedUserId',
+        operation: 'refresh_participant_join',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: () => participantRef.update({
+          'lastActiveAt': now,
+          'role': correctedRole,
+          'camOn': false,
+          'userStatus': 'online',
+        }),
+      );
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$normalizedRoomId/members/$normalizedUserId',
+        operation: 'refresh_member_join',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: () => memberRef.set({
+          'userId': normalizedUserId,
+          'role': ownerId == normalizedUserId ? 'owner' : 'member',
+          'joinedAt': data['joinedAt'] ?? now,
+          'lastActiveAt': now,
+        }, SetOptions(merge: true)),
+      );
     } else {
       final participantRole = ownerId == normalizedUserId ? 'host' : 'audience';
-      await participantRef.set({
-        'userId': normalizedUserId,
-        'role': participantRole,
-        'isMuted': false,
-        'isBanned': false,
-        'camOn': false,
-        'joinedAt': now,
-        'lastActiveAt': now,
-        'userStatus': 'online',
-      });
-      await memberRef.set({
-        'userId': normalizedUserId,
-        'role': ownerId == normalizedUserId ? 'owner' : 'member',
-        'joinedAt': now,
-        'lastActiveAt': now,
-      });
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$normalizedRoomId/participants/$normalizedUserId',
+        operation: 'create_participant_join',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: () => participantRef.set({
+          'userId': normalizedUserId,
+          'role': participantRole,
+          'isMuted': false,
+          'isBanned': false,
+          'camOn': false,
+          'joinedAt': now,
+          'lastActiveAt': now,
+          'userStatus': 'online',
+        }),
+      );
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$normalizedRoomId/members/$normalizedUserId',
+        operation: 'create_member_join',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: () => memberRef.set({
+          'userId': normalizedUserId,
+          'role': ownerId == normalizedUserId ? 'owner' : 'member',
+          'joinedAt': now,
+          'lastActiveAt': now,
+        }),
+      );
     }
 
     await _presenceService.setInRoom(normalizedUserId, normalizedRoomId);
+    AppTelemetry.updateRoomState(
+      roomId: normalizedRoomId,
+      joinedUserId: normalizedUserId,
+      roomPhase: 'joined',
+      roomError: null,
+      inRoom: normalizedRoomId,
+    );
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'join',
+      message: 'Room join completed.',
+      roomId: normalizedRoomId,
+      userId: normalizedUserId,
+      result: 'success',
+    );
     return RoomJoinResult.success(
       joinedAt: now,
       excludedUserIds: excludedUserIds,
@@ -237,10 +317,30 @@ class RoomSessionService {
         .doc(normalizedUserId);
 
     try {
-      await participantRef.delete();
-      await memberRef.delete();
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$normalizedRoomId/participants/$normalizedUserId',
+        operation: 'delete_participant_leave',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: participantRef.delete,
+      );
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$normalizedRoomId/members/$normalizedUserId',
+        operation: 'delete_member_leave',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        action: memberRef.delete,
+      );
     } finally {
       await _presenceService.clearRoom(normalizedUserId);
+      AppTelemetry.logAction(
+        domain: 'room',
+        action: 'leave',
+        message: 'Room leave cleanup completed.',
+        roomId: normalizedRoomId,
+        userId: normalizedUserId,
+        result: 'success',
+      );
     }
   }
 
@@ -251,17 +351,29 @@ class RoomSessionService {
     bool forceParticipantSync = false,
   }) async {
     final now = DateTime.now();
-    await _firestore
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants')
-        .doc(userId)
-        .set({
-      'userId': userId,
-      'lastActiveAt': FieldValue.serverTimestamp(),
-      'userStatus': 'online',
-    }, SetOptions(merge: true));
+    await traceFirestoreWrite<void>(
+      path: 'rooms/$roomId/participants/$userId',
+      operation: 'participant_heartbeat',
+      roomId: roomId,
+      userId: userId,
+      action: () => _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId)
+          .set({
+        'userId': userId,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'userStatus': 'online',
+      }, SetOptions(merge: true)),
+    );
     await _presenceService.setInRoom(userId, roomId);
+    AppTelemetry.updateRoomState(
+      roomId: roomId,
+      joinedUserId: userId,
+      roomPhase: 'joined',
+      inRoom: roomId,
+    );
     if (forceParticipantSync ||
         lastParticipantSyncAt == null ||
         now.difference(lastParticipantSyncAt) >= participantSyncInterval) {
@@ -276,32 +388,45 @@ class RoomSessionService {
     required String? status,
     String userStatus = 'online',
   }) {
-    return _firestore
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants')
-        .doc(userId)
-        .set({
-      'userId': userId,
-      'customStatus': status,
-      'userStatus': userStatus,
-      'lastActiveAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    return traceFirestoreWrite<void>(
+      path: 'rooms/$roomId/participants/$userId',
+      operation: 'set_custom_room_status',
+      roomId: roomId,
+      userId: userId,
+      metadata: <String, Object?>{'userStatus': userStatus},
+      action: () => _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId)
+          .set({
+        'userId': userId,
+        'customStatus': status,
+        'userStatus': userStatus,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)),
+    );
   }
 
   Future<void> postSystemEvent({
     required String roomId,
     required String content,
   }) {
-    return _firestore.collection('rooms').doc(roomId).collection('messages').add({
-      'senderId': 'system',
-      'roomId': roomId,
-      'content': content,
-      'type': 'system',
-      'richText': '',
-      'sentAt': FieldValue.serverTimestamp(),
-      'clientSentAt': DateTime.now().toIso8601String(),
-    });
+    return traceFirestoreWrite<DocumentReference<Map<String, dynamic>>>(
+      path: 'rooms/$roomId/messages',
+      operation: 'post_system_event',
+      roomId: roomId,
+      metadata: <String, Object?>{'content': content},
+      action: () => _firestore.collection('rooms').doc(roomId).collection('messages').add({
+        'senderId': 'system',
+        'roomId': roomId,
+        'content': content,
+        'type': 'system',
+        'richText': '',
+        'sentAt': FieldValue.serverTimestamp(),
+        'clientSentAt': DateTime.now().toIso8601String(),
+      }),
+    );
   }
 
   Future<void> setTyping({
@@ -315,23 +440,44 @@ class RoomSessionService {
         .collection('typing')
         .doc(userId);
     if (isTyping) {
-      await typingRef.set({
-        'isTyping': true,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$roomId/typing/$userId',
+        operation: 'set_typing_state',
+        roomId: roomId,
+        userId: userId,
+        metadata: const <String, Object?>{'isTyping': true},
+        action: () => typingRef.set({
+          'isTyping': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }),
+      );
       return;
     }
-    await typingRef.delete();
+    await traceFirestoreWrite<void>(
+      path: 'rooms/$roomId/typing/$userId',
+      operation: 'clear_typing_state',
+      roomId: roomId,
+      userId: userId,
+      metadata: const <String, Object?>{'isTyping': false},
+      action: typingRef.delete,
+    );
   }
 
   Future<void> setSpotlightUser({
     required String roomId,
     required String? userId,
   }) async {
-    await _firestore.collection('rooms').doc(roomId).update({
-      'spotlightUserId': userId == null || userId.trim().isEmpty
-          ? FieldValue.delete()
-          : userId.trim(),
-    });
+    await traceFirestoreWrite<void>(
+      path: 'rooms/$roomId',
+      operation: 'set_spotlight_user',
+      roomId: roomId,
+      userId: userId,
+      metadata: <String, Object?>{'spotlightUserId': userId},
+      action: () => _firestore.collection('rooms').doc(roomId).update({
+        'spotlightUserId': userId == null || userId.trim().isEmpty
+            ? FieldValue.delete()
+            : userId.trim(),
+      }),
+    );
   }
 }

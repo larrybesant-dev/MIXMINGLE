@@ -8,6 +8,7 @@ import '../theme/font_fallbacks.dart';
 import '../theme/app_theme.dart';
 import '../core/theme.dart';
 import '../shared/widgets/beta_feedback_overlay.dart';
+import '../shared/widgets/app_debug_overlay.dart';
 import '../shared/widgets/incoming_call_overlay.dart';
 import '../features/after_dark/providers/after_dark_provider.dart';
 import '../features/after_dark/theme/after_dark_theme.dart';
@@ -32,7 +33,9 @@ class MixVyApp extends ConsumerWidget {
           style: const TextStyle(fontFamilyFallback: mixvyFontFamilyFallback),
           child: IncomingCallOverlay(
             child: BetaFeedbackOverlay(
-              child: child ?? const SizedBox.shrink(),
+              child: AppDebugOverlay(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         );

@@ -83,6 +83,11 @@ void main() async {
               webExperimentalAutoDetectLongPolling: true,
             );
             _bootstrapLog('Firestore web transport auto-detect enabled');
+          } else {
+            FirebaseFirestore.instance.settings = const Settings(
+              persistenceEnabled: true,
+            );
+            _bootstrapLog('Firestore offline persistence enabled');
           }
 
           if (!kIsWeb) {

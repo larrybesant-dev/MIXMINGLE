@@ -101,6 +101,25 @@ final ThemeData midnightCreativeTheme = ThemeData(
       fontSize: 14,
     )),
   ),
+  tabBarTheme: TabBarThemeData(
+    labelColor: VelvetNoir.primary,
+    unselectedLabelColor: VelvetNoir.onSurfaceVariant,
+    indicatorColor: VelvetNoir.primary,
+    dividerColor: VelvetNoir.outlineVariant.withValues(alpha: 0.26),
+    labelStyle: _raleway(
+      GoogleFonts.raleway(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.4,
+      ),
+    ),
+    unselectedLabelStyle: _raleway(
+      GoogleFonts.raleway(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  ),
   cardTheme: CardThemeData(
     elevation: 0,
     color: VelvetNoir.surfaceHigh,
@@ -138,6 +157,21 @@ final ThemeData midnightCreativeTheme = ThemeData(
       elevation: 0,
     ),
   ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      backgroundColor: VelvetNoir.primary,
+      foregroundColor: VelvetNoir.surface,
+      minimumSize: const Size(double.infinity, 52),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      textStyle: _raleway(
+        GoogleFonts.raleway(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+          letterSpacing: 0.6,
+        ),
+      ),
+    ),
+  ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: VelvetNoir.primary,
@@ -150,6 +184,44 @@ final ThemeData midnightCreativeTheme = ThemeData(
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
       foregroundColor: VelvetNoir.primary,
+    ),
+  ),
+  listTileTheme: ListTileThemeData(
+    iconColor: VelvetNoir.onSurfaceVariant,
+    textColor: VelvetNoir.onSurface,
+    tileColor: Colors.transparent,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+  ),
+  drawerTheme: const DrawerThemeData(
+    backgroundColor: VelvetNoir.surfaceLow,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+  ),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: VelvetNoir.surfaceLow,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+  ),
+  dialogTheme: DialogThemeData(
+    backgroundColor: VelvetNoir.surfaceHigh,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    titleTextStyle: _playfair(
+      GoogleFonts.playfairDisplay(
+        color: VelvetNoir.onSurface,
+        fontWeight: FontWeight.w700,
+        fontSize: 22,
+      ),
+    ),
+    contentTextStyle: _raleway(
+      GoogleFonts.raleway(
+        color: VelvetNoir.onSurfaceVariant,
+        fontSize: 14,
+        height: 1.45,
+      ),
     ),
   ),
   iconTheme: const IconThemeData(color: VelvetNoir.onSurfaceVariant),

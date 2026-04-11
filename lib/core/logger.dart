@@ -19,10 +19,12 @@ class Logger {
 
   static void info(String message, {Object? error, StackTrace? stackTrace}) {
     _write('INFO', message, error: error, stackTrace: stackTrace);
+    _recordToCrashlytics(message);
   }
 
   static void warning(String message, {Object? error, StackTrace? stackTrace}) {
     _write('WARN', message, error: error, stackTrace: stackTrace);
+    _recordToCrashlytics(message, error: error, stackTrace: stackTrace);
   }
 
   static void error(String message, {Object? error, StackTrace? stackTrace, bool fatal = false}) {

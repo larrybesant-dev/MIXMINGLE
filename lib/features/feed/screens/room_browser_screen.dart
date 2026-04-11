@@ -469,11 +469,9 @@ class _CategoryCard extends StatelessWidget {
 
 final _roomsByCategoryProvider = StreamProvider.autoDispose
     .family<List<RoomModel>, String?>((ref, category) {
-  // ORDER BY createdAt — stable; never changes after room creation.
-  // Using participantCount/memberCount as the Firestore sort key would cause
-  // rooms to re-shuffle on every join/leave event. Instead we do a
-  // member-count sort on the client side with createdAt as a stable tiebreaker
-  // so rooms only move when their member counts actually differ.
+  // Keep browser ordering stable so cards do not jump around as people join
+  // or leave rooms. Newer rooms appear first and stay in place until the
+  // underlying set of live rooms changes.
   Query<Map<String, dynamic>> query = FirebaseFirestore.instance
       .collection('rooms')
       .where('isLive', isEqualTo: true)
@@ -488,16 +486,12 @@ final _roomsByCategoryProvider = StreamProvider.autoDispose
     final rooms = snap.docs
         .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
         .toList();
-    // Stable sort: most members first; within the same count keep the
-    // Firestore createdAt order (newer rooms first) so no position changes
-    // unless a room's memberCount actually passes another room's.
     rooms.sort((a, b) {
-      final byCount = b.memberCount.compareTo(a.memberCount);
-      if (byCount != 0) return byCount;
-      // Tiebreaker: newer room first (matches server orderBy)
       final aTs = a.createdAt?.seconds ?? 0;
       final bTs = b.createdAt?.seconds ?? 0;
-      return bTs.compareTo(aTs);
+      final byCreatedAt = bTs.compareTo(aTs);
+      if (byCreatedAt != 0) return byCreatedAt;
+      return a.id.compareTo(b.id);
     });
     return rooms;
   });
@@ -689,9 +683,7 @@ class _RoomListView extends ConsumerWidget {
               );
             });
           },
-          loading: () => const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator(color: VelvetNoir.primary)),
-          ),
+          loading: () => const _RoomBrowserLoadingSliver(),
           error: (e, _) => SliverFillRemaining(
             child: Center(
               child: Padding(
@@ -705,6 +697,125 @@ class _RoomListView extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RoomBrowserLoadingSliver extends StatelessWidget {
+  const _RoomBrowserLoadingSliver();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        0,
+        context.pageHorizontalPadding,
+        24,
+      ),
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final cols = constraints.crossAxisExtent > 900
+              ? 4
+              : constraints.crossAxisExtent > 600
+                  ? 3
+                  : 2;
+          return SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => Container(
+                decoration: BoxDecoration(
+                  color: VelvetNoir.surfaceHigh,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: VelvetNoir.outlineVariant),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _RoomBrowserSkeletonBlock(height: 68, radius: 16),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                      child: _RoomBrowserSkeletonLine(widthFactor: 0.64),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(10, 8, 10, 0),
+                      child: _RoomBrowserSkeletonLine(widthFactor: 0.48),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                      child: _RoomBrowserSkeletonPill(),
+                    ),
+                  ],
+                ),
+              ),
+              childCount: cols * 2,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cols,
+              childAspectRatio: 1.15,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RoomBrowserSkeletonBlock extends StatelessWidget {
+  const _RoomBrowserSkeletonBlock({required this.height, required this.radius});
+
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: VelvetNoir.surfaceBright.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
+      ),
+    );
+  }
+}
+
+class _RoomBrowserSkeletonLine extends StatelessWidget {
+  const _RoomBrowserSkeletonLine({required this.widthFactor});
+
+  final double widthFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      alignment: Alignment.centerLeft,
+      child: Container(
+        height: 10,
+        decoration: BoxDecoration(
+          color: VelvetNoir.surfaceBright.withValues(alpha: 0.42),
+          borderRadius: BorderRadius.circular(999),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoomBrowserSkeletonPill extends StatelessWidget {
+  const _RoomBrowserSkeletonPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        width: 42,
+        height: 18,
+        decoration: BoxDecoration(
+          color: VelvetNoir.surfaceBright.withValues(alpha: 0.34),
+          borderRadius: BorderRadius.circular(999),
+        ),
+      ),
     );
   }
 }

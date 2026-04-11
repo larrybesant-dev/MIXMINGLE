@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../presentation/providers/user_provider.dart';
 import '../../../models/message_model.dart';
 import '../../../services/moderation_service.dart';
@@ -37,14 +38,19 @@ String _asString(dynamic value, {String fallback = ''}) {
 
 final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageModel>, String>((ref, roomId) {
 	final firestore = ref.watch(roomFirestoreProvider);
-	return firestore
-			.collection('rooms')
-			.doc(roomId)
-			.collection('messages')
-			.orderBy('sentAt')
-			.snapshots()
-			.map(
-				(snapshot) {
+	return traceFirestoreStream<List<MessageModel>>(
+		key: 'messages/$roomId',
+		query: 'rooms/$roomId/messages orderBy sentAt',
+		roomId: roomId,
+		itemCount: (value) => value.length,
+		stream: firestore
+				.collection('rooms')
+				.doc(roomId)
+				.collection('messages')
+				.orderBy('sentAt')
+				.snapshots()
+				.map(
+					(snapshot) {
 					final docs = snapshot.docs.toList(growable: false)
 						..sort((a, b) {
 							final aData = a.data();
@@ -84,7 +90,8 @@ final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageMode
 						);
 					}).toList(growable: false);
 				},
-			);
+			),
+	);
 });
 
 final sendMessageProvider =

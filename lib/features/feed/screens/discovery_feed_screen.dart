@@ -308,6 +308,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                         (ctx, i) {
                           final room = filteredRooms[i + 3];
                           return _RoomGridCard(
+                            key: ValueKey(room.id),
                             room: room,
                             onTap: () => context.go('/room/${room.id}'),
                           );
@@ -398,6 +399,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   itemBuilder: (context, index) {
                     final user = feedState.trendingUsers[index];
                     return TrendingUserCard(
+                      key: ValueKey(user.id),
                       user: user,
                       onTap: () => context.go('/profile/${user.id}'),
                     );
@@ -440,7 +442,11 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 (ctx, i) {
                   final room = feedState.upcomingRooms[i];
                   final scheduledAt = room.scheduledAt?.toDate();
-                  return _UpcomingRoomTile(room: room, scheduledAt: scheduledAt);
+                  return _UpcomingRoomTile(
+                    key: ValueKey(room.id),
+                    room: room,
+                    scheduledAt: scheduledAt,
+                  );
                 },
                 childCount: feedState.upcomingRooms.length,
               ),
@@ -791,7 +797,7 @@ class _BentoSmallCard extends StatelessWidget {
 
 // ── Room grid card ────────────────────────────────────────────────────────────
 class _RoomGridCard extends StatelessWidget {
-  const _RoomGridCard({required this.room, required this.onTap});
+  const _RoomGridCard({required this.room, required this.onTap, super.key});
   final dynamic room;
   final VoidCallback onTap;
 
@@ -843,7 +849,7 @@ class _RoomGridCard extends StatelessWidget {
 
 // ── Upcoming room tile ────────────────────────────────────────────────────────
 class _UpcomingRoomTile extends StatelessWidget {
-  const _UpcomingRoomTile({required this.room, this.scheduledAt});
+  const _UpcomingRoomTile({required this.room, this.scheduledAt, super.key});
   final dynamic room;
   final DateTime? scheduledAt;
 

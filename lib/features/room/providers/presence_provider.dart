@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../models/room_participant_model.dart';
 import 'room_firestore_provider.dart';
 
@@ -123,22 +124,28 @@ final roomPresenceControllerProvider = Provider<RoomPresenceController>((ref) {
 final roomPresenceStreamProvider =
     StreamProvider.autoDispose.family<List<RoomPresenceModel>, String>((ref, roomId) {
   final firestore = ref.watch(roomFirestoreProvider);
-  return firestore
-      .collection('rooms')
-      .doc(roomId)
-      .collection('participants')
-      .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) {
-            final participant = RoomParticipantModel.fromMap(doc.data());
-            return RoomPresenceModel(
-              userId: participant.userId.isEmpty ? doc.id : participant.userId,
-              isOnline: participant.userStatus != 'offline',
-              lastHeartbeatAt: participant.lastActiveAt,
-              lastSeenAt: participant.lastActiveAt,
-              customStatus: participant.customStatus,
-              userStatus: participant.userStatus,
-            );
-          })
-          .toList(growable: false));
+  return traceFirestoreStream<List<RoomPresenceModel>>(
+    key: 'room_presence/$roomId',
+    query: 'rooms/$roomId/participants presence',
+    roomId: roomId,
+    itemCount: (value) => value.length,
+    stream: firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) {
+              final participant = RoomParticipantModel.fromMap(doc.data());
+              return RoomPresenceModel(
+                userId: participant.userId.isEmpty ? doc.id : participant.userId,
+                isOnline: participant.userStatus != 'offline',
+                lastHeartbeatAt: participant.lastActiveAt,
+                lastSeenAt: participant.lastActiveAt,
+                customStatus: participant.customStatus,
+                userStatus: participant.userStatus,
+              );
+            })
+            .toList(growable: false)),
+  );
 });

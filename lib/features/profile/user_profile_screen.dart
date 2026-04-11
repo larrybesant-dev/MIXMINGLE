@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/models/moderation_model.dart';
 import 'package:mixvy/services/follow_service.dart';
 import 'package:mixvy/services/friend_service.dart';
@@ -11,8 +12,10 @@ import 'package:mixvy/services/moderation_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/layout/app_layout.dart';
+import '../../core/theme.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
+import '../../widgets/brand_ui_kit.dart';
 import '../../widgets/follow_button.dart';
 import '../../widgets/gift_picker_sheet.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
@@ -347,7 +350,29 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final isRequestPending = pendingIds.contains(widget.userId);
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Profile',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: VelvetNoir.onSurface,
+              ),
+            ),
+            Text(
+              'Identity, chemistry, and receipts.',
+              style: GoogleFonts.raleway(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: VelvetNoir.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -431,11 +456,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           }
 
           return ListView(
-            padding: EdgeInsets.all(context.pageHorizontalPadding),
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              16,
+              context.pageHorizontalPadding,
+              32,
+            ),
             children: [
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(28),
                   gradient: LinearGradient(
                     colors: (profileBgGradientStart != null && profileBgGradientEnd != null)
                         ? [
@@ -445,84 +475,133 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                 Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
                           ]
                         : [
-                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.25), // gold dim
-                            const Color(0xFF781E2B).withValues(alpha: 0.6),  // wine red
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+                            const Color(0xFF781E2B).withValues(alpha: 0.6),
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
+                  border: Border.all(
+                    color: VelvetNoir.primary.withValues(alpha: 0.18),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Stack(
                   children: [
                     if (coverImageUrl.isNotEmpty)
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(28),
                         child: Opacity(
-                          opacity: 0.22,
+                          opacity: 0.26,
                           child: CachedNetworkImage(
                             imageUrl: coverImageUrl,
-                            height: 240,
+                            height: 320,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => const SizedBox(height: 240),
+                            errorWidget: (context, url, error) => const SizedBox(height: 320),
                           ),
                         ),
                       ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.08),
+                              Colors.black.withValues(alpha: 0.42),
+                              Colors.black.withValues(alpha: 0.72),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            radius: 44,
-                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            child: (avatarUrl != null && avatarUrl.isNotEmpty)
-                                ? ClipOval(
-                                    child: CachedNetworkImage(
-                                      imageUrl: avatarUrl,
-                                      width: 88,
-                                      height: 88,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Center(
-                                        child: SizedBox(
-                                          width: 44,
-                                          height: 44,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
-                                          ),
-                                        ),
-                                      ),
-                                      errorWidget: (context, url, error) => const Icon(Icons.person, size: 34),
-                                    ),
-                                  )
-                                : const Icon(Icons.person, size: 34),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            displayName,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: accentColor ?? Colors.white,
-                                ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            details.isEmpty ? 'Live social creator' : details.join(' • '),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            alignment: WrapAlignment.center,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if ((themeId ?? '').isNotEmpty)
-                                _MiniBadge(label: themeId!, icon: Icons.palette_outlined),
-                              if ((camViewPolicy ?? '').isNotEmpty)
-                                _MiniBadge(label: camViewPolicy!, icon: Icons.videocam_outlined),
-                              if (interests.isNotEmpty)
-                                _MiniBadge(label: interests.first, icon: Icons.local_fire_department_rounded),
+                              MixvyGoldAvatar(
+                                imageUrl: avatarUrl,
+                                fallbackInitial: displayName,
+                                radius: 42,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      displayName,
+                                      style: GoogleFonts.playfairDisplay(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w700,
+                                        color: accentColor ?? VelvetNoir.onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      details.isEmpty ? 'Live social creator' : details.join(' • '),
+                                      style: GoogleFonts.raleway(
+                                        color: Colors.white.withValues(alpha: 0.84),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        if ((themeId ?? '').isNotEmpty)
+                                          _MiniBadge(label: themeId!, icon: Icons.palette_outlined),
+                                        if ((camViewPolicy ?? '').isNotEmpty)
+                                          _MiniBadge(label: camViewPolicy!, icon: Icons.videocam_outlined),
+                                        if (interests.isNotEmpty)
+                                          _MiniBadge(label: interests.first, icon: Icons.local_fire_department_rounded),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if ((bio ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 18),
+                            Text(
+                              bio!,
+                              style: GoogleFonts.raleway(
+                                color: Colors.white.withValues(alpha: 0.90),
+                                fontSize: 15,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _PublicStatTile(label: 'Followers', value: '$followerCount'),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _PublicStatTile(label: 'Following', value: '$followingCount'),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _PublicStatTile(label: 'Interests', value: '${interests.length}'),
+                              ),
                             ],
                           ),
                         ],
@@ -531,7 +610,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               if (!isOwnProfile)
                 Row(
                   children: [
@@ -626,7 +705,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   ],
                 ),
               ],
-              if (isOwnProfile) ...[  
+              if (isOwnProfile) ...[
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -653,64 +732,49 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   ],
                 ),
               ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _PublicStatTile(label: 'Followers', value: '$followerCount'),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _PublicStatTile(label: 'Following', value: '$followingCount'),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _PublicStatTile(label: 'Interests', value: '${interests.length}'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              if (bio != null && bio.isNotEmpty) ...[
-                Text('Bio', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                Text(bio, style: Theme.of(context).textTheme.bodyMedium),
-                const SizedBox(height: 18),
-              ],
               if (aboutMe != null && aboutMe.isNotEmpty) ...[
-                Text('About Me', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                Text(aboutMe, style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 18),
+                const MixvySectionHeader(
+                  title: 'About',
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
+                _ProfileSectionCard(
+                  child: Text(aboutMe, style: Theme.of(context).textTheme.bodyMedium),
+                ),
               ],
               if ((profileMusicUrl ?? '').isNotEmpty) ...[
-                Text('Profile Music', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                ProfileMusicPlayer(
-                  musicUrl: profileMusicUrl!,
-                  musicTitle: profileMusicTitle,
-                ),
                 const SizedBox(height: 18),
+                const MixvySectionHeader(
+                  title: 'Profile Music',
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
+                _ProfileSectionCard(
+                  child: ProfileMusicPlayer(
+                    musicUrl: profileMusicUrl!,
+                    musicTitle: profileMusicTitle,
+                  ),
+                ),
               ],
               if ((vibePrompt ?? '').isNotEmpty || (firstDatePrompt ?? '').isNotEmpty || (musicTastePrompt ?? '').isNotEmpty) ...[
-                Text('Conversation Starters', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 18),
+                const MixvySectionHeader(
+                  title: 'Conversation Starters',
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
                 if ((vibePrompt ?? '').isNotEmpty)
                   _PromptCard(title: 'Tonight vibe', content: vibePrompt!),
                 if ((firstDatePrompt ?? '').isNotEmpty)
                   _PromptCard(title: 'First date move', content: firstDatePrompt!),
                 if ((musicTastePrompt ?? '').isNotEmpty)
                   _PromptCard(title: 'Music in rotation', content: musicTastePrompt!),
-                const SizedBox(height: 18),
               ],
               if (introVideoUrl != null && introVideoUrl.isNotEmpty) ...[
-                Text('Intro Video', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                const SizedBox(height: 18),
+                const MixvySectionHeader(
+                  title: 'Intro Video',
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
+                _ProfileSectionCard(
                   child: Row(
                     children: [
                       const Icon(Icons.play_circle_fill_rounded),
@@ -739,45 +803,70 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
               ],
               if (galleryUrls.isNotEmpty) ...[
-                Text('Photo Gallery', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 110,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: galleryUrls.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      final url = galleryUrls[index].trim();
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: 110,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: CachedNetworkImage(
-                            imageUrl: url,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => const Icon(Icons.broken_image),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
                 const SizedBox(height: 18),
+                const MixvySectionHeader(
+                  title: 'Photo Gallery',
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: galleryUrls.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: context.isExpandedLayout ? 4 : 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final url = galleryUrls[index].trim();
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        child: CachedNetworkImage(
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => const Icon(Icons.broken_image),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ],
               if (interests.isNotEmpty) ...[
-                Text('Interests', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 18),
+                const MixvySectionHeader(
+                  title: 'Interests',
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: interests
-                      .take(12)
-                      .map((interest) => Chip(label: Text(interest), side: BorderSide.none))
+                      .take(18)
+                      .map(
+                        (interest) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.76),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: VelvetNoir.primary.withValues(alpha: 0.14),
+                            ),
+                          ),
+                          child: Text(
+                            interest,
+                            style: GoogleFonts.raleway(
+                              color: VelvetNoir.onSurface,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ],
@@ -851,9 +940,9 @@ class _MiniBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -881,18 +970,13 @@ class _PromptCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return _ProfileSectionCard(
+      margin: const EdgeInsets.only(bottom: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(content),
         ],
       ),
@@ -909,18 +993,59 @@ class _PublicStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.black.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Column(
         children: [
-          Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            value,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: VelvetNoir.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.raleway(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.78),
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfileSectionCard extends StatelessWidget {
+  const _ProfileSectionCard({
+    required this.child,
+    this.margin,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? margin;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VelvetNoir.surfaceHigh.withValues(alpha: 0.76),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: VelvetNoir.primary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: child,
     );
   }
 }

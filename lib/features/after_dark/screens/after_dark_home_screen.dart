@@ -17,11 +17,20 @@ final _liveAdultRoomsProvider =
       .collection('rooms')
       .where('isLive', isEqualTo: true)
       .where('isAdult', isEqualTo: true)
-      .orderBy('memberCount', descending: true)
       .limit(20)
       .snapshots()
-      .map((s) =>
-          s.docs.map((d) => RoomModel.fromJson(d.data(), d.id)).toList());
+      .map((s) {
+        final rooms =
+            s.docs.map((d) => RoomModel.fromJson(d.data(), d.id)).toList();
+        rooms.sort((a, b) {
+          final aTs = a.createdAt?.seconds ?? 0;
+          final bTs = b.createdAt?.seconds ?? 0;
+          final byCreatedAt = bTs.compareTo(aTs);
+          if (byCreatedAt != 0) return byCreatedAt;
+          return a.id.compareTo(b.id);
+        });
+        return rooms;
+      });
 });
 
 /// After Dark home screen — moody, crimson-themed live feed.
@@ -87,14 +96,7 @@ class AfterDarkHomeScreen extends ConsumerWidget {
 
           // ── Live rooms grid ───────────────────────────────────────────────
           roomsAsync.when(
-            loading: () => const SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(color: EmberDark.primary),
-                ),
-              ),
-            ),
+            loading: () => const _AfterDarkRoomGridSkeleton(),
             error: (e, _) => SliverToBoxAdapter(
               child: Center(
                 child: Padding(
@@ -159,6 +161,83 @@ class AfterDarkHomeScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AfterDarkRoomGridSkeleton extends StatelessWidget {
+  const _AfterDarkRoomGridSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: context.pageHorizontalPadding),
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.crossAxisExtent;
+          final crossAxisCount = width >= 1100
+              ? 4
+              : width >= 760
+                  ? 3
+                  : 2;
+          return SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => Container(
+                decoration: BoxDecoration(
+                  color: EmberDark.surfaceHigh,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: EmberDark.outlineVariant.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 112,
+                      decoration: BoxDecoration(
+                        color: EmberDark.surfaceHighest.withValues(alpha: 0.55),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(18),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      child: Container(
+                        height: 12,
+                        width: 96,
+                        decoration: BoxDecoration(
+                          color: EmberDark.surfaceHighest.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                      child: Container(
+                        height: 10,
+                        width: 72,
+                        decoration: BoxDecoration(
+                          color: EmberDark.surfaceHighest.withValues(alpha: 0.32),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              childCount: crossAxisCount * 2,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: width >= 760 ? 0.92 : 0.85,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+          );
+        },
       ),
     );
   }

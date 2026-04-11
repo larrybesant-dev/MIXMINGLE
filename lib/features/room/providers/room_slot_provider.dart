@@ -3,6 +3,8 @@ import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/firestore/firestore_debug_tracing.dart';
+import '../../../core/telemetry/app_telemetry.dart';
 import '../../../models/room_slot_model.dart';
 import 'room_firestore_provider.dart';
 
@@ -12,16 +14,22 @@ final roomSlotsProvider =
     StreamProvider.autoDispose.family<List<RoomSlotModel>, String>(
   (ref, roomId) {
     final firestore = ref.watch(roomFirestoreProvider);
-    return firestore
-        .collection('rooms')
-        .doc(roomId)
-        .collection('slots')
-        .snapshots()
-        .map(
-          (snap) => snap.docs
-              .map((doc) => RoomSlotModel.fromMap(doc.id, doc.data()))
-              .toList(growable: false),
-        );
+    return traceFirestoreStream<List<RoomSlotModel>>(
+      key: 'room_slots/$roomId',
+      query: 'rooms/$roomId/slots',
+      roomId: roomId,
+      itemCount: (value) => value.length,
+      stream: firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('slots')
+          .snapshots()
+          .map(
+            (snap) => snap.docs
+                .map((doc) => RoomSlotModel.fromMap(doc.id, doc.data()))
+                .toList(growable: false),
+          ),
+    );
   },
 );
 
@@ -91,13 +99,27 @@ class RoomSlotService {
 
       if (claimedSlotId != null) {
         // Mirror camOn = true into the participant document.
-        await _participantRef(roomId, userId)
-            .set({'camOn': true}, SetOptions(merge: true));
+        await traceFirestoreWrite<void>(
+          path: 'rooms/$roomId/participants/$userId',
+          operation: 'mark_cam_on_after_slot_claim',
+          roomId: roomId,
+          userId: userId,
+          action: () => _participantRef(roomId, userId)
+              .set({'camOn': true}, SetOptions(merge: true)),
+        );
       }
 
       developer.log(
         'claimSlot: room=$roomId user=$userId result=$claimedSlotId',
         name: 'RoomSlotService',
+      );
+      AppTelemetry.logAction(
+        domain: 'room',
+        action: 'claim_slot',
+        message: 'Camera slot claim finished.',
+        roomId: roomId,
+        userId: userId,
+        result: claimedSlotId ?? 'full',
       );
       return claimedSlotId;
     } catch (error, stackTrace) {
@@ -131,11 +153,26 @@ class RoomSlotService {
         {'camOn': false},
         SetOptions(merge: true),
       );
-      await batch.commit();
+      await traceFirestoreWrite<void>(
+        path: 'rooms/$roomId/slots',
+        operation: 'release_slot_batch',
+        roomId: roomId,
+        userId: userId,
+        metadata: <String, Object?>{'releasedSlotCount': slotsSnap.docs.length},
+        action: batch.commit,
+      );
 
       developer.log(
         'releaseSlot: room=$roomId user=$userId released=${slotsSnap.docs.length} slots',
         name: 'RoomSlotService',
+      );
+      AppTelemetry.logAction(
+        domain: 'room',
+        action: 'release_slot',
+        message: 'Camera slot release finished.',
+        roomId: roomId,
+        userId: userId,
+        result: slotsSnap.docs.length.toString(),
       );
     } catch (error, stackTrace) {
       developer.log(

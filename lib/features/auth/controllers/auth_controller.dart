@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../core/firestore/firestore_debug_tracing.dart';
+import '../../../core/telemetry/app_telemetry.dart';
 import '../../../presentation/screens/google_sign_in_helper.dart';
 import '../../../presentation/screens/apple_sign_in_helper.dart';
 import '../../../services/push_messaging_service.dart';
@@ -47,14 +49,38 @@ class AuthController extends Notifier<AuthState> {
 
     Future<void> signInWithGoogle() async {
       state = state.copyWith(isLoading: true, error: null);
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: true, error: null);
+      AppTelemetry.logAction(
+        domain: 'auth',
+        action: 'google_sign_in',
+        message: 'Google sign-in started.',
+        userId: state.uid,
+        result: 'start',
+      );
       try {
         await _googleSignInHelper.signInWithGoogle();
         state = state.copyWith(isLoading: false, uid: _auth.currentUser?.uid);
+        AppTelemetry.updateAuthState(
+          userId: _auth.currentUser?.uid,
+          isLoading: false,
+          error: null,
+        );
       } on FirebaseAuthException catch (e, st) {
         _logAuthException(e, st, context: 'google-sign-in');
-        state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
+        final message = _getReadableError(e.code);
+        state = state.copyWith(isLoading: false, error: message);
+        AppTelemetry.updateAuthState(
+          userId: state.uid,
+          isLoading: false,
+          error: message,
+        );
       } catch (e) {
         state = state.copyWith(isLoading: false, error: e.toString());
+        AppTelemetry.updateAuthState(
+          userId: state.uid,
+          isLoading: false,
+          error: e.toString(),
+        );
       }
     }
   final FirebaseAuth _auth;
@@ -81,6 +107,18 @@ class AuthController extends Notifier<AuthState> {
     _authStateSubscription?.cancel();
     _authStateSubscription = _auth.authStateChanges().listen((user) {
       state = state.copyWith(uid: user?.uid, isLoading: false, error: null);
+      AppTelemetry.updateAuthState(
+        userId: user?.uid,
+        isLoading: false,
+        error: null,
+      );
+      AppTelemetry.logAction(
+        domain: 'auth',
+        action: 'auth_state_change',
+        message: 'Firebase auth state updated.',
+        userId: user?.uid,
+        result: user == null ? 'signed_out' : 'signed_in',
+      );
       // Update global presence on auth change.
       if (user != null) {
         (_presenceService ?? PresenceService()).setStatus(user.uid, UserStatus.online).ignore();
@@ -95,6 +133,11 @@ class AuthController extends Notifier<AuthState> {
       _authStateSubscription?.cancel();
     });
 
+    AppTelemetry.updateAuthState(
+      userId: _auth.currentUser?.uid,
+      isLoading: true,
+      error: null,
+    );
     return AuthState(isLoading: true, uid: _auth.currentUser?.uid);
   }
 
@@ -167,6 +210,7 @@ class AuthController extends Notifier<AuthState> {
       if (uid != null) {
         await _ensureUserDocument(_auth.currentUser!);
         state = state.copyWith(uid: uid, isLoading: false, error: null);
+        AppTelemetry.updateAuthState(userId: uid, isLoading: false, error: null);
       }
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'redirect-result');
@@ -181,6 +225,13 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> signup(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
+    AppTelemetry.updateAuthState(userId: state.uid, isLoading: true, error: null);
+    AppTelemetry.logAction(
+      domain: 'auth',
+      action: 'signup',
+      message: 'Email signup started.',
+      result: 'start',
+    );
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -190,17 +241,39 @@ class AuthController extends Notifier<AuthState> {
         await _ensureUserDocument(cred.user!);
       }
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
+      AppTelemetry.updateAuthState(
+        userId: cred.user?.uid,
+        isLoading: false,
+        error: null,
+      );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'signup');
       final errorMessage = _getReadableError(e.code);
       state = state.copyWith(isLoading: false, error: errorMessage);
+      AppTelemetry.updateAuthState(
+        userId: state.uid,
+        isLoading: false,
+        error: errorMessage,
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
+      AppTelemetry.updateAuthState(
+        userId: state.uid,
+        isLoading: false,
+        error: 'Unexpected error: $e',
+      );
     }
   }
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
+    AppTelemetry.updateAuthState(userId: state.uid, isLoading: true, error: null);
+    AppTelemetry.logAction(
+      domain: 'auth',
+      action: 'login',
+      message: 'Email login started.',
+      result: 'start',
+    );
     try {
       final normalizedEmail = email.trim();
 
@@ -212,11 +285,27 @@ class AuthController extends Notifier<AuthState> {
         await _ensureUserDocument(cred.user!);
       }
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
+      AppTelemetry.updateAuthState(
+        userId: cred.user?.uid,
+        isLoading: false,
+        error: null,
+      );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'login');
-      state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
+      final message = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: message);
+      AppTelemetry.updateAuthState(
+        userId: state.uid,
+        isLoading: false,
+        error: message,
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
+      AppTelemetry.updateAuthState(
+        userId: state.uid,
+        isLoading: false,
+        error: 'Unexpected error: $e',
+      );
     }
   }
 
@@ -254,6 +343,7 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> signInWithApple() async {
     state = state.copyWith(isLoading: true, error: null);
+    AppTelemetry.updateAuthState(userId: state.uid, isLoading: true, error: null);
     try {
       await _appleSignInHelper.signInWithApple();
       final user = _auth.currentUser;
@@ -261,16 +351,21 @@ class AuthController extends Notifier<AuthState> {
         await _ensureUserDocument(user);
       }
       state = state.copyWith(isLoading: false, uid: user?.uid);
+      AppTelemetry.updateAuthState(userId: user?.uid, isLoading: false, error: null);
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'apple-sign-in');
-      state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
+      final message = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: message);
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: false, error: message);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: false, error: e.toString());
     }
   }
 
   Future<void> signInAsGuest() async {
     state = state.copyWith(isLoading: true, error: null);
+    AppTelemetry.updateAuthState(userId: state.uid, isLoading: true, error: null);
     try {
       final result = await _auth.signInAnonymously();
       final user = result.user;
@@ -278,15 +373,26 @@ class AuthController extends Notifier<AuthState> {
         await _ensureUserDocument(user);
       }
       state = state.copyWith(isLoading: false, uid: user?.uid);
+      AppTelemetry.updateAuthState(userId: user?.uid, isLoading: false, error: null);
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'guest-sign-in');
-      state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
+      final message = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: message);
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: false, error: message);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: false, error: e.toString());
     }
   }
 
   Future<void> logout() async {
+    AppTelemetry.logAction(
+      domain: 'auth',
+      action: 'logout',
+      message: 'Logout cleanup started.',
+      userId: _auth.currentUser?.uid ?? state.uid,
+      result: 'start',
+    );
     await _cleanupSession();
   }
 
@@ -321,6 +427,7 @@ class AuthController extends Notifier<AuthState> {
     }
 
     state = state.copyWith(isLoading: false, uid: null, error: null);
+    AppTelemetry.updateAuthState(userId: null, isLoading: false, error: null);
   }
 
   Future<void> _ensureUserDocument(User user) async {
@@ -330,15 +437,20 @@ class AuthController extends Notifier<AuthState> {
     }
 
     try {
-      await firestore.collection('users').doc(user.uid).set({
-        'id': user.uid,
-        'username': user.displayName ?? '',
-        'usernameLower': (user.displayName ?? '').toLowerCase(),
-        'email': user.email ?? '',
-        'avatarUrl': user.photoURL,
-        'updatedAt': FieldValue.serverTimestamp(),
-        'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await traceFirestoreWrite<void>(
+        path: 'users/${user.uid}',
+        operation: 'ensure_user_document',
+        userId: user.uid,
+        action: () => firestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'username': user.displayName ?? '',
+          'usernameLower': (user.displayName ?? '').toLowerCase(),
+          'email': user.email ?? '',
+          'avatarUrl': user.photoURL,
+          'updatedAt': FieldValue.serverTimestamp(),
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)),
+      );
     } catch (e, st) {
       developer.log(
         'Failed to ensure user document for ${user.uid}',
@@ -359,15 +471,23 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> resetPassword(String email) async {
     state = state.copyWith(isLoading: true, error: null);
+    AppTelemetry.updateAuthState(userId: state.uid, isLoading: true, error: null);
     try {
       await _auth.sendPasswordResetEmail(email: email);
       state = state.copyWith(isLoading: false);
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: false, error: null);
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'reset-password');
       final errorMessage = _getReadableError(e.code);
       state = state.copyWith(isLoading: false, error: errorMessage);
+      AppTelemetry.updateAuthState(userId: state.uid, isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
+      AppTelemetry.updateAuthState(
+        userId: state.uid,
+        isLoading: false,
+        error: 'Unexpected error: $e',
+      );
     }
   }
 
@@ -377,6 +497,16 @@ class AuthController extends Notifier<AuthState> {
     required String context,
   }) {
     developer.log(
+    AppTelemetry.logAction(
+      level: 'error',
+      domain: 'auth',
+      action: context,
+      message: 'FirebaseAuthException occurred.',
+      userId: _auth.currentUser?.uid ?? state.uid,
+      result: e.code,
+      error: e,
+      stackTrace: stackTrace,
+    );
       'FirebaseAuthException in $context: ${e.code}',
       name: 'AuthController',
       error: e,

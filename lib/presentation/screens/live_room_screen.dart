@@ -10,9 +10,12 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../config/agora_constants.dart';
+import '../../core/telemetry/app_telemetry.dart';
 import '../../models/moderation_model.dart';
 import '../../models/message_model.dart';
+import '../../models/presence_model.dart';
 import '../../models/room_participant_model.dart';
+import '../providers/friend_provider.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/controllers/live_room_controller.dart';
 import '../../features/room/controllers/live_room_media_controller.dart';
@@ -410,6 +413,56 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return null;
   }
 
+  RoomPresenceModel? _roomPresenceForUser(
+    List<RoomPresenceModel> presenceList,
+    String userId,
+  ) {
+    for (final presence in presenceList) {
+      if (presence.userId == userId) {
+        return presence;
+      }
+    }
+    return null;
+  }
+
+  void _syncTelemetryForBuild({
+    required String currentUserId,
+    required LiveRoomState roomState,
+    required List<RoomParticipantModel> participantsInRoom,
+    required RoomParticipantModel? currentParticipant,
+    required List<RoomPresenceModel> presenceList,
+    required PresenceModel? globalPresence,
+  }) {
+    final currentRoomPresence = _roomPresenceForUser(presenceList, currentUserId);
+    final isJoined = _joinedUserId == currentUserId;
+    final globalPresenceMismatch = globalPresence != null &&
+        (((globalPresence.isOnline ?? false) == false) ||
+            globalPresence.inRoom != widget.roomId);
+    final roomPresenceMismatch =
+        currentRoomPresence != null && currentRoomPresence.userStatus == 'offline';
+    final cameraMismatch = isJoined && _isVideoEnabled && currentParticipant?.camOn != true;
+
+    AppTelemetry.updateRoomState(
+      roomId: widget.roomId,
+      joinedUserId: _joinedUserId,
+      roomPhase: roomState.phase.name,
+      roomError: _roomJoinError ?? roomState.errorMessage,
+      participantCount: participantsInRoom.length,
+      micMuted: _isMicMuted,
+      videoEnabled: _isVideoEnabled,
+      presenceStatus: globalPresence?.status.name,
+      roomPresenceStatus:
+          currentRoomPresence?.userStatus ?? currentParticipant?.userStatus,
+      globalPresenceOnline: globalPresence?.isOnline,
+      inRoom: globalPresence?.inRoom,
+      cameraStatus: _cameraStatus,
+      callError: _callError,
+      currentRtcUid: _currentRtcUid,
+      cameraMismatch: cameraMismatch,
+      presenceMismatch: isJoined && (globalPresenceMismatch || roomPresenceMismatch),
+    );
+  }
+
   void _logLiveRoom(
     String message, {
     Object? error,
@@ -417,6 +470,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }) {
     developer.log(message, name: 'LIVE_ROOM');
     debugPrint('[LIVE_ROOM] $message');
+    AppTelemetry.logAction(
+      level: error == null ? 'info' : 'error',
+      domain: 'room',
+      action: 'live_trace',
+      message: message,
+      roomId: widget.roomId,
+      userId: _joinedUserId,
+      result: error == null ? 'ok' : 'error',
+      error: error,
+      stackTrace: stackTrace,
+    );
     if (error != null) {
       developer.log(
         'error: $error',
@@ -826,6 +890,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final service = _agoraService;
     if (service == null || !_isCallReady || _isMicActionInFlight) return;
     final next = !_isMicMuted;
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'toggle_mic',
+      message: 'Mic toggle requested.',
+      roomId: widget.roomId,
+      userId: _joinedUserId,
+      result: next ? 'enable' : 'disable',
+    );
     _mediaController.beginMicAction();
     try {
       if (!next) {
@@ -844,7 +916,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       } else {
         _stopMicLevelPolling();
       }
+      AppTelemetry.logAction(
+        domain: 'room',
+        action: 'toggle_mic',
+        message: 'Mic toggle completed.',
+        roomId: widget.roomId,
+        userId: _joinedUserId,
+        result: next ? 'live' : 'muted',
+      );
     } catch (e) {
+      AppTelemetry.logAction(
+        level: 'error',
+        domain: 'room',
+        action: 'toggle_mic',
+        message: 'Mic toggle failed.',
+        roomId: widget.roomId,
+        userId: _joinedUserId,
+        result: 'error',
+        error: e,
+      );
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
     } finally {
       if (mounted) {
@@ -1582,13 +1672,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     for (var i = 0; i < friends.length; i++) {
       final data = presenceDocs[i].data();
       if (data == null) continue;
-      final isOnline = data['online'] as bool? ?? false;
-      if (!isOnline) continue;
+      final presence = PresenceModel.fromJson({
+        'userId': friends[i].id,
+        ...data,
+      });
+      if (presence.isOnline != true) continue;
       online.add((
         id: friends[i].id,
         username: friends[i].username,
         avatarUrl: friends[i].avatarUrl,
-        currentRoomId: data['roomId'] as String?,
+        currentRoomId: presence.inRoom,
       ));
     }
 
@@ -2817,6 +2910,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Future<void> _joinRoom(String userId) async {
     if (_isJoiningRoom) return;
 
+    AppTelemetry.updateRoomState(
+      roomId: widget.roomId,
+      joinedUserId: userId,
+      roomPhase: 'joining',
+      roomError: null,
+    );
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'join',
+      message: 'Live room join started.',
+      roomId: widget.roomId,
+      userId: userId,
+      result: 'start',
+    );
+
     setState(() {
       _isJoiningRoom = true;
       _roomJoinError = null;
@@ -2828,6 +2936,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           .joinRoom(userId);
       _excludedUserIds = joinResult.excludedUserIds;
       if (!joinResult.isSuccess) {
+        AppTelemetry.updateRoomState(
+          roomId: widget.roomId,
+          joinedUserId: null,
+          roomPhase: 'error',
+          roomError:
+              joinResult.errorMessage ?? 'Could not join room. Please try again.',
+        );
         if (mounted) {
           setState(() => _roomJoinError =
               joinResult.errorMessage ?? 'Could not join room. Please try again.');
@@ -2838,6 +2953,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
 
       _joinedUserId = userId;
+      AppTelemetry.updateRoomState(
+        roomId: widget.roomId,
+        joinedUserId: userId,
+        roomPhase: 'joined',
+        roomError: null,
+      );
 
       // Connect the media service automatically on both platforms.
       // On web this uses WebRTC which is instant (no WASM download).
@@ -2855,6 +2976,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName joined the room');
     } catch (_) {
+      AppTelemetry.updateRoomState(
+        roomId: widget.roomId,
+        joinedUserId: null,
+        roomPhase: 'error',
+        roomError: 'Could not join room. Please try again.',
+      );
       if (mounted) {
         setState(
           () => _roomJoinError = 'Could not join room. Please try again.',
@@ -2902,6 +3029,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final userId = _joinedUserId;
     if (userId == null) return;
 
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'leave',
+      message: 'Live room leave started.',
+      roomId: widget.roomId,
+      userId: userId,
+      result: 'start',
+    );
+
     // Release any camera slot this user holds before removing their presence.
     if (_claimedSlotId != null) {
       try {
@@ -2920,6 +3056,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       // Best-effort cleanup when users leave a room.
     } finally {
       _joinedUserId = null;
+      AppTelemetry.clearRoomState();
     }
   }
 
@@ -3238,6 +3375,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     unawaited(_clearTypingStatus());
     unawaited(_disconnectCall());
     unawaited(_leaveRoom());
+    AppTelemetry.clearRoomState();
     messageController.dispose();
     scrollController.dispose();
     super.dispose();
@@ -3287,6 +3425,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         CurrentParticipantParams(roomId: widget.roomId, userId: user.id),
       ),
     );
+    final currentUserPresenceAsync = ref.watch(friendPresenceProvider(user.id));
+    final liveRoomState = ref.watch(liveRoomControllerProvider(widget.roomId));
     final participantsAsync = ref.watch(
       participantsStreamProvider(widget.roomId),
     );
@@ -3453,6 +3593,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             final participantsInRoom =
                 participantsAsync.valueOrNull ?? const [];
+            _syncTelemetryForBuild(
+              currentUserId: user.id,
+              roomState: liveRoomState,
+              participantsInRoom: participantsInRoom,
+              currentParticipant: participant,
+              presenceList: presenceAsync.valueOrNull ?? const [],
+              globalPresence: currentUserPresenceAsync.valueOrNull,
+            );
             // Hydrate display names for all roster participants whenever the
             // list changes. _hydrateSenderDisplayNames skips already-cached IDs.
             if (participantsInRoom.isNotEmpty) {

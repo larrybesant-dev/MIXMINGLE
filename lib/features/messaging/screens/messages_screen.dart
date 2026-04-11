@@ -86,18 +86,36 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
         ref.watch(conversationsStreamProvider(widget.userId));
     final requestsAsync = ref.watch(requestsStreamProvider(widget.userId));
     final requestCount = requestsAsync.valueOrNull?.length ?? 0;
+    final conversations = conversationsAsync.valueOrNull ?? const <Conversation>[];
+    final unreadCount = _filterUnread(conversations).length;
+    final groupCount = _filterGroups(conversations).length;
 
     return AppPageScaffold(
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          'Messages',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: VelvetNoir.onSurface,
-          ),
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Messages',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: VelvetNoir.onSurface,
+              ),
+            ),
+            Text(
+              'Private chats, group energy, and request triage.',
+              style: GoogleFonts.raleway(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: VelvetNoir.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -121,6 +139,57 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
       ),
       body: Column(
         children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              context.pageHorizontalPadding,
+              12,
+              context.pageHorizontalPadding,
+              8,
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    VelvetNoir.surfaceHigh.withValues(alpha: 0.92),
+                    VelvetNoir.surfaceContainer.withValues(alpha: 0.88),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: VelvetNoir.primary.withValues(alpha: 0.16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _MailboxStat(
+                      label: 'Unread',
+                      value: '$unreadCount',
+                      accent: VelvetNoir.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _MailboxStat(
+                      label: 'Groups',
+                      value: '$groupCount',
+                      accent: VelvetNoir.secondaryBright,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _MailboxStat(
+                      label: 'Requests',
+                      value: '$requestCount',
+                      accent: VelvetNoir.liveGlow,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Padding(
             padding: EdgeInsets.fromLTRB(
               context.pageHorizontalPadding,
@@ -400,34 +469,41 @@ class _ConversationsList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (conversations.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat_bubble_outline,
-                size: 56,
-                color: VelvetNoir.primary.withValues(alpha: 0.35)),
-            const SizedBox(height: 14),
-            Text(emptyMessage,
-                style: const TextStyle(
-                    color: VelvetNoir.onSurfaceVariant, fontSize: 14)),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => GoRouter.of(context).push('/messages/new'),
-              child: const Text('Start a conversation',
-                  style: TextStyle(color: VelvetNoir.primary)),
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.74),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: VelvetNoir.primary.withValues(alpha: 0.12),
             ),
-          ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.chat_bubble_outline,
+                  size: 56,
+                  color: VelvetNoir.primary.withValues(alpha: 0.35)),
+              const SizedBox(height: 14),
+              Text(emptyMessage,
+                  style: const TextStyle(
+                      color: VelvetNoir.onSurfaceVariant, fontSize: 14)),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => GoRouter.of(context).push('/messages/new'),
+                child: const Text('Start a conversation',
+                    style: TextStyle(color: VelvetNoir.primary)),
+              ),
+            ],
+          ),
         ),
       );
     }
     return ListView.separated(
-      padding: const EdgeInsets.only(top: 8, bottom: 24),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: conversations.length,
-      separatorBuilder: (_, _) => Divider(
-        height: 1,
-        indent: 72,
-        color: VelvetNoir.outlineVariant.withValues(alpha: 0.2),
-      ),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) => _ConversationTile(
         conversation: conversations[index],
         userId: userId,
@@ -458,88 +534,147 @@ class _ConversationTile extends StatelessWidget {
       child: InkWell(
         onTap: () =>
             GoRouter.of(context).push('/messages/${conversation.id}'),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
+          padding: const EdgeInsets.all(1),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: unread
+                  ? LinearGradient(
+                      colors: [
+                        VelvetNoir.primary.withValues(alpha: 0.18),
+                        VelvetNoir.secondary.withValues(alpha: 0.10),
+                      ],
+                    )
+                  : null,
+              color: unread
+                  ? null
+                  : VelvetNoir.surfaceHigh.withValues(alpha: 0.78),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(19),
+                color: unread
+                    ? VelvetNoir.surfaceHigh.withValues(alpha: 0.92)
+                    : VelvetNoir.surfaceHigh.withValues(alpha: 0.82),
+                border: Border.all(
+                  color: unread
+                      ? VelvetNoir.primary.withValues(alpha: 0.20)
+                      : VelvetNoir.outlineVariant.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: VelvetNoir.primaryDim,
-                    backgroundImage: avatarUrl != null
-                        ? CachedNetworkImageProvider(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            displayName.isNotEmpty
-                                ? displayName[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          )
-                        : null,
-                  ),
-                  if (unread)
-                    Positioned(
-                      right: -2,
-                      top: -2,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: const BoxDecoration(
-                          color: VelvetNoir.secondary,
-                          shape: BoxShape.circle,
-                        ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: VelvetNoir.primaryDim,
+                        backgroundImage: avatarUrl != null
+                            ? CachedNetworkImageProvider(avatarUrl)
+                            : null,
+                        child: avatarUrl == null
+                            ? Text(
+                                displayName.isNotEmpty
+                                    ? displayName[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              )
+                            : null,
                       ),
+                      if (unread)
+                        Positioned(
+                          right: -1,
+                          top: -1,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: VelvetNoir.secondary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: VelvetNoir.surface,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                displayName,
+                                style: TextStyle(
+                                  fontWeight:
+                                      unread ? FontWeight.w700 : FontWeight.w600,
+                                  fontSize: 15,
+                                  color: VelvetNoir.onSurface,
+                                ),
+                              ),
+                            ),
+                            if (unread)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: VelvetNoir.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: const Text(
+                                  'NEW',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: VelvetNoir.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          conversation.lastMessagePreview ?? 'No messages yet',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: unread
+                                ? VelvetNoir.onSurface
+                                : VelvetNoir.onSurfaceVariant,
+                            fontWeight:
+                                unread ? FontWeight.w500 : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatTime(conversation.lastMessageAt),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: VelvetNoir.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: TextStyle(
-                        fontWeight:
-                            unread ? FontWeight.w700 : FontWeight.w500,
-                        fontSize: 15,
-                        color: VelvetNoir.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      conversation.lastMessagePreview ?? 'No messages yet',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: unread
-                            ? VelvetNoir.onSurface
-                            : VelvetNoir.onSurfaceVariant,
-                        fontWeight:
-                            unread ? FontWeight.w500 : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _formatTime(conversation.lastMessageAt),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: VelvetNoir.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -555,5 +690,50 @@ class _ConversationTile extends StatelessWidget {
     if (difference.inDays < 1) return '${difference.inHours}h ago';
     if (difference.inDays < 7) return '${difference.inDays}d ago';
     return '${dateTime.month}/${dateTime.day}';
+  }
+}
+
+class _MailboxStat extends StatelessWidget {
+  const _MailboxStat({
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  final String label;
+  final String value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: VelvetNoir.surface.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: VelvetNoir.onSurface,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.raleway(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

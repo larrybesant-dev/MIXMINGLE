@@ -27,7 +27,7 @@ class PresenceModel {
 		return null;
 	}
 
-	static bool _asBool(dynamic value, {bool fallback = true}) {
+	static bool? _asNullableBool(dynamic value) {
 		if (value is bool) {
 			return value;
 		}
@@ -43,7 +43,7 @@ class PresenceModel {
 				return false;
 			}
 		}
-		return fallback;
+		return null;
 	}
 
 	static UserStatus _parseStatus(dynamic value) {
@@ -58,14 +58,24 @@ class PresenceModel {
 		return UserStatus.offline;
 	}
 
-	factory PresenceModel.fromJson(Map<String, dynamic> json) => PresenceModel(
+	factory PresenceModel.fromJson(Map<String, dynamic> json) {
+		final status = _parseStatus(json['status'] ?? json['userStatus']);
+		final explicitOnline =
+				_asNullableBool(json['isOnline']) ?? _asNullableBool(json['online']);
+		final inRoom = _asNullableString(json['inRoom'] ?? json['roomId']);
+
+		return PresenceModel(
 			id: _asNullableString(json['id']),
 			userId: _asNullableString(json['userId']),
-			isOnline: _asBool(json['isOnline']),
-			lastSeen: _parseDateTime(json['lastSeen'] ?? json['lastActiveAt']),
-			status: _parseStatus(json['status']),
-			inRoom: _asNullableString(json['inRoom']),
-			);
+			isOnline: explicitOnline ??
+					(status != UserStatus.offline || inRoom != null),
+			lastSeen: _parseDateTime(
+				json['lastSeen'] ?? json['lastActiveAt'] ?? json['lastHeartbeatAt'],
+			),
+			status: status,
+			inRoom: inRoom,
+		);
+	}
 
 	static DateTime? _parseDateTime(dynamic value) {
 		if (value == null) {

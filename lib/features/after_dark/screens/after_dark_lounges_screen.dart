@@ -28,7 +28,6 @@ final _adultRoomsProvider = StreamProvider.autoDispose
       .collection('rooms')
       .where('isLive', isEqualTo: true)
       .where('isAdult', isEqualTo: true)
-      .orderBy('memberCount', descending: true)
       .limit(50);
 
   if (category != null) {
@@ -36,7 +35,18 @@ final _adultRoomsProvider = StreamProvider.autoDispose
   }
 
   return q.snapshots().map(
-        (s) => s.docs.map((d) => RoomModel.fromJson(d.data(), d.id)).toList(),
+        (s) {
+          final rooms =
+              s.docs.map((d) => RoomModel.fromJson(d.data(), d.id)).toList();
+          rooms.sort((a, b) {
+            final aTs = a.createdAt?.seconds ?? 0;
+            final bTs = b.createdAt?.seconds ?? 0;
+            final byCreatedAt = bTs.compareTo(aTs);
+            if (byCreatedAt != 0) return byCreatedAt;
+            return a.id.compareTo(b.id);
+          });
+          return rooms;
+        },
       );
 });
 
@@ -54,6 +64,7 @@ class _AfterDarkLoungesScreenState
   String? _selectedCategory;
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  List<RoomModel> _lastResolvedRooms = const <RoomModel>[];
 
   @override
   void initState() {
@@ -73,6 +84,10 @@ class _AfterDarkLoungesScreenState
   @override
   Widget build(BuildContext context) {
     final roomsAsync = ref.watch(_adultRoomsProvider(_selectedCategory));
+    if (roomsAsync.hasValue) {
+      _lastResolvedRooms = roomsAsync.value ?? const <RoomModel>[];
+    }
+    final visibleRooms = roomsAsync.valueOrNull ?? _lastResolvedRooms;
 
     return AppPageScaffold(
       backgroundColor: EmberDark.surface,
@@ -200,12 +215,12 @@ class _AfterDarkLoungesScreenState
 
           // Rooms grid
           roomsAsync.when(
-            loading: () => const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: AppLoadingView(label: 'Loading lounges'),
-              ),
-            ),
+            loading: () {
+              if (visibleRooms.isNotEmpty) {
+                return _buildRoomGrid(context, _filterRooms(visibleRooms), isRefreshing: true);
+              }
+              return const _AfterDarkLoungesLoadingSliver();
+            },
             error: (e, _) => SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -221,18 +236,7 @@ class _AfterDarkLoungesScreenState
               ),
             ),
             data: (allRooms) {
-              final rooms = _searchQuery.isEmpty
-                  ? allRooms
-                  : allRooms
-                      .where((r) =>
-                          r.name
-                              .toLowerCase()
-                              .contains(_searchQuery) ||
-                          (r.description
-                                  ?.toLowerCase()
-                                  .contains(_searchQuery) ??
-                              false))
-                      .toList();
+              final rooms = _filterRooms(allRooms);
 
               if (rooms.isEmpty) {
                 return SliverToBoxAdapter(
@@ -264,52 +268,170 @@ class _AfterDarkLoungesScreenState
                 );
               }
 
-              return SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  context.pageHorizontalPadding,
-                  12,
-                  context.pageHorizontalPadding,
-                  32,
-                ),
-                sliver: SliverLayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.crossAxisExtent;
-                    final crossAxisCount = width >= 980
-                        ? 4
-                        : width >= 720
-                            ? 3
-                            : 2;
-                    final aspectRatio = width >= 980
-                        ? 0.88
-                        : width >= 720
-                            ? 0.86
-                            : 0.85;
+              return _buildRoomGrid(context, rooms);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
-                    return SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                        (ctx, i) => _AfterDarkGridReveal(
-                          key: ValueKey(rooms[i].id),
-                          delay: i * 35,
-                          child: AfterDarkLiveRoomCard(
-                            room: rooms[i],
-                            onTap: () => context.go('/room/${rooms[i].id}'),
-                          ),
-                        ),
-                        childCount: rooms.length,
-                      ),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        childAspectRatio: aspectRatio,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                    );
-                  },
+  List<RoomModel> _filterRooms(List<RoomModel> rooms) {
+    return _searchQuery.isEmpty
+        ? rooms
+        : rooms
+            .where((room) =>
+                room.name.toLowerCase().contains(_searchQuery) ||
+                (room.description?.toLowerCase().contains(_searchQuery) ?? false))
+            .toList();
+  }
+
+  Widget _buildRoomGrid(
+    BuildContext context,
+    List<RoomModel> rooms, {
+    bool isRefreshing = false,
+  }) {
+    return SliverMainAxisGroup(
+      slivers: [
+        if (isRefreshing)
+          const SliverToBoxAdapter(
+            child: LinearProgressIndicator(
+              minHeight: 2,
+              backgroundColor: Colors.transparent,
+              color: EmberDark.primary,
+            ),
+          ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            context.pageHorizontalPadding,
+            12,
+            context.pageHorizontalPadding,
+            32,
+          ),
+          sliver: SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.crossAxisExtent;
+              final crossAxisCount = width >= 980
+                  ? 4
+                  : width >= 720
+                      ? 3
+                      : 2;
+              final aspectRatio = width >= 980
+                  ? 0.88
+                  : width >= 720
+                      ? 0.86
+                      : 0.85;
+
+              return SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (ctx, i) => _AfterDarkGridReveal(
+                    key: ValueKey(rooms[i].id),
+                    delay: i * 35,
+                    child: AfterDarkLiveRoomCard(
+                      room: rooms[i],
+                      onTap: () => context.go('/room/${rooms[i].id}'),
+                    ),
+                  ),
+                  childCount: rooms.length,
+                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  childAspectRatio: aspectRatio,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
               );
             },
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _AfterDarkLoungesLoadingSliver extends StatelessWidget {
+  const _AfterDarkLoungesLoadingSliver();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        12,
+        context.pageHorizontalPadding,
+        32,
+      ),
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.crossAxisExtent;
+          final crossAxisCount = width >= 980
+              ? 4
+              : width >= 720
+                  ? 3
+                  : 2;
+          final aspectRatio = width >= 980
+              ? 0.88
+              : width >= 720
+                  ? 0.86
+                  : 0.85;
+
+          return SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => Container(
+                decoration: BoxDecoration(
+                  color: EmberDark.surfaceHigh,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: EmberDark.outlineVariant.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 118,
+                      decoration: BoxDecoration(
+                        color: EmberDark.surfaceHighest.withValues(alpha: 0.55),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(18),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      child: Container(
+                        height: 12,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: EmberDark.surfaceHighest.withValues(alpha: 0.42),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                      child: Container(
+                        height: 10,
+                        width: 74,
+                        decoration: BoxDecoration(
+                          color: EmberDark.surfaceHighest.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              childCount: crossAxisCount * 2,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: aspectRatio,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+          );
+        },
       ),
     );
   }
