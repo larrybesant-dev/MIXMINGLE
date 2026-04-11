@@ -62,6 +62,7 @@ List<String> _asStringList(dynamic value) {
 
 class Message {
   final String id;
+  final String? clientMessageId;
   final String conversationId;
   final String senderId;
   final String senderName;
@@ -75,6 +76,7 @@ class Message {
 
   const Message({
     required this.id,
+    this.clientMessageId,
     required this.conversationId,
     required this.senderId,
     required this.senderName,
@@ -90,6 +92,7 @@ class Message {
   factory Message.fromJson(Map<String, dynamic> json, String docId) {
     return Message(
       id: docId,
+      clientMessageId: _asNullableString(json['clientMessageId']),
       conversationId: _asString(json['conversationId']),
       senderId: _asString(json['senderId']),
       senderName: _asString(json['senderName'], fallback: 'Unknown'),
@@ -110,6 +113,7 @@ class Message {
   Map<String, dynamic> toJson() {
     return {
       'conversationId': conversationId,
+      'clientMessageId': clientMessageId,
       'senderId': senderId,
       'senderName': senderName,
       'senderAvatarUrl': senderAvatarUrl,

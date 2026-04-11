@@ -3,19 +3,48 @@ import 'dart:math';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/core/telemetry/app_telemetry.dart';
+import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/features/room/providers/room_slot_provider.dart';
 import 'package:mixvy/features/room/services/room_session_service.dart';
-import 'package:mixvy/services/presence_service.dart';
+import 'package:mixvy/services/presence_controller.dart';
+
+class _FakePresenceController extends PresenceController {
+  final Map<String, PresenceControllerState> writesByUser =
+      <String, PresenceControllerState>{};
+
+  @override
+  PresenceControllerState build() => const PresenceControllerState();
+
+  @override
+  Future<void> setInRoom(String userId, String roomId) async {
+    writesByUser[userId] = PresenceControllerState(
+      userId: userId,
+      status: UserStatus.online,
+      appState: PresenceAppState.foreground,
+      inRoom: roomId,
+    );
+  }
+
+  @override
+  Future<void> clearInRoom(String userId) async {
+    writesByUser[userId] = PresenceControllerState(
+      userId: userId,
+      status: UserStatus.online,
+      appState: PresenceAppState.foreground,
+      inRoom: null,
+    );
+  }
+}
 
 void main() {
   test('stress simulates room churn without duplicates or presence drift', () async {
     AppTelemetry.reset();
 
     final firestore = FakeFirebaseFirestore();
-    final presenceService = PresenceService(firestore: firestore);
+    final presenceController = _FakePresenceController();
     final roomSessionService = RoomSessionService(
       firestore: firestore,
-      presenceService: presenceService,
+      presenceController: presenceController,
     );
     final slotService = RoomSlotService(firestore);
 
@@ -113,10 +142,7 @@ void main() {
       expect(slotUserIds.length, lessThanOrEqualTo(6));
 
       for (final activeUser in activeUsers) {
-        final presenceDoc =
-            await firestore.collection('presence').doc(activeUser).get();
-        expect(presenceDoc.exists, isTrue);
-        expect(presenceDoc.data()?['inRoom'], roomId);
+        expect(presenceController.writesByUser[activeUser]?.inRoom, roomId);
       }
     }
 

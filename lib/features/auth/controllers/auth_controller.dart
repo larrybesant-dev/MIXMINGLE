@@ -11,8 +11,6 @@ import '../../../core/telemetry/app_telemetry.dart';
 import '../../../presentation/screens/google_sign_in_helper.dart';
 import '../../../presentation/screens/apple_sign_in_helper.dart';
 import '../../../services/push_messaging_service.dart';
-import '../../../services/presence_service.dart';
-import '../../../models/presence_model.dart';
 
 class AuthState {
   final bool isLoading;
@@ -85,19 +83,16 @@ class AuthController extends Notifier<AuthState> {
     }
   final FirebaseAuth _auth;
   final FirebaseFirestore? _firestore;
-  final PresenceService? _presenceService;
   final Future<void> Function()? _unregisterToken;
 
   AuthController({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-    PresenceService? presenceService,
     Future<void> Function()? unregisterToken,
     GoogleSignInHelper? googleSignInHelper,
     AppleSignInHelper? appleSignInHelper,
   })  : _auth = auth ?? FirebaseAuth.instance,
         _firestore = firestore,
-        _presenceService = presenceService,
         _unregisterToken = unregisterToken,
         _googleSignInHelper = googleSignInHelper ?? getGoogleSignInHelper(),
         _appleSignInHelper = appleSignInHelper ?? getAppleSignInHelper();
@@ -119,10 +114,6 @@ class AuthController extends Notifier<AuthState> {
         userId: user?.uid,
         result: user == null ? 'signed_out' : 'signed_in',
       );
-      // Update global presence on auth change.
-      if (user != null) {
-        (_presenceService ?? PresenceService()).setStatus(user.uid, UserStatus.online).ignore();
-      }
     });
 
     unawaited(_configureWebPersistence());
@@ -404,17 +395,6 @@ class AuthController extends Notifier<AuthState> {
     bool signOut = true,
     String? uidOverride,
   }) async {
-    final uid = uidOverride ?? _auth.currentUser?.uid ?? state.uid;
-    final presenceService = _presenceService ?? PresenceService();
-
-    if (uid != null && uid.trim().isNotEmpty) {
-      try {
-        await presenceService.setStatus(uid, UserStatus.offline);
-      } catch (_) {
-        // Best-effort cleanup.
-      }
-    }
-
     try {
       await (_unregisterToken?.call() ??
           PushMessagingService.instance.unregisterCurrentToken());

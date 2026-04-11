@@ -63,6 +63,7 @@ import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
 import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/presence_repository.dart';
 import '../../services/room_audio_cues.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
@@ -77,8 +78,7 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveRoomScreen> createState() => _LiveRoomScreenState();
 }
 
-class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
-    with WidgetsBindingObserver {
+class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late TextEditingController messageController;
   late ScrollController scrollController;
   FirebaseFirestore? _firestore;
@@ -239,7 +239,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _liveRoomMediaNotifier =
         ref.read(liveRoomMediaControllerProvider(widget.roomId).notifier);
     _mediaStateSubscription = ref.listenManual<LiveRoomMediaState>(
@@ -1662,20 +1661,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return;
     }
 
-    // Fetch presence docs for all friends in one batch.
-    final presenceDocs = await Future.wait(
-      friends.map((f) =>
-          firestore.collection('presence').doc(f.id).get()),
-    );
+    final presenceByUserId = await ref
+        .read(presenceRepositoryProvider)
+        .getUsersPresence(friends.map((friend) => friend.id).toList(growable: false));
 
     final online = <({String id, String username, String? avatarUrl, String? currentRoomId})>[];
     for (var i = 0; i < friends.length; i++) {
-      final data = presenceDocs[i].data();
-      if (data == null) continue;
-      final presence = PresenceModel.fromJson({
-        'userId': friends[i].id,
-        ...data,
-      });
+      final presence = presenceByUserId[friends[i].id];
+      if (presence == null) continue;
       if (presence.isOnline != true) continue;
       online.add((
         id: friends[i].id,
@@ -1770,12 +1763,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           ],
         ),
       ),
-    );
-  }
-
-  void _startPresenceHeartbeat(String userId) {
-    unawaited(
-      ref.read(liveRoomControllerProvider(widget.roomId).notifier).resumePresence(),
     );
   }
 
@@ -3360,7 +3347,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _giftToastTimer?.cancel();
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
@@ -3379,22 +3365,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     messageController.dispose();
     scrollController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    final userId = _joinedUserId;
-    if (userId == null) {
-      return;
-    }
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached ||
-        state == AppLifecycleState.inactive) {
-      ref.read(liveRoomControllerProvider(widget.roomId).notifier).pausePresence();
-    } else if (state == AppLifecycleState.resumed) {
-      _startPresenceHeartbeat(userId);
-    }
   }
 
   @override

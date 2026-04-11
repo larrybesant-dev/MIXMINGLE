@@ -10,31 +10,33 @@ import '../models/presence_model.dart';
 import '../models/user_model.dart';
 import 'analytics_service.dart';
 import 'moderation_service.dart';
+import 'presence_repository.dart';
 
 class FriendService {
   FriendService({
     FirebaseFirestore? firestore,
     AnalyticsService? analyticsService,
     ModerationService? moderationService,
+    PresenceRepository? presenceRepository,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _analyticsService = analyticsService ?? AnalyticsService(),
         _moderationService = moderationService ??
-            ModerationService(firestore: firestore ?? FirebaseFirestore.instance);
+            ModerationService(firestore: firestore ?? FirebaseFirestore.instance),
+        _presenceRepository = presenceRepository ??
+            FirestorePresenceRepository(firestore ?? FirebaseFirestore.instance);
 
   static const int _firestoreWhereInLimit = 30;
 
   final FirebaseFirestore _firestore;
   final AnalyticsService _analyticsService;
   final ModerationService _moderationService;
+  final PresenceRepository _presenceRepository;
 
   CollectionReference<Map<String, dynamic>> get _friendshipsCollection =>
       _firestore.collection('friendships');
 
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _firestore.collection('users');
-
-  CollectionReference<Map<String, dynamic>> get _presenceCollection =>
-      _firestore.collection('presence');
 
   List<String> _asStringList(dynamic value) {
     if (value is! List) {
@@ -707,57 +709,7 @@ class FriendService {
   }
 
   Stream<Map<String, PresenceModel>> _watchPresenceByUserIds(List<String> userIds) {
-    final normalizedIds = userIds.toSet().toList(growable: false);
-    if (normalizedIds.isEmpty) {
-      return Stream.value(const <String, PresenceModel>{});
-    }
-
-    return Stream.multi((controller) {
-      final chunks = _chunksOf(normalizedIds, _firestoreWhereInLimit);
-      final chunkMaps = List<Map<String, PresenceModel>>.generate(
-        chunks.length,
-        (_) => <String, PresenceModel>{},
-      );
-      final subscriptions = <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
-
-      void emit() {
-        final merged = <String, PresenceModel>{};
-        for (final chunkMap in chunkMaps) {
-          merged.addAll(chunkMap);
-        }
-        final withDefaults = <String, PresenceModel>{
-          for (final userId in normalizedIds)
-            userId: merged[userId] ??
-                PresenceModel(
-                  userId: userId,
-                  isOnline: false,
-                  status: UserStatus.offline,
-                ),
-        };
-        controller.add(withDefaults);
-      }
-
-      for (var index = 0; index < chunks.length; index += 1) {
-        final chunk = chunks[index];
-        final sub = _presenceCollection
-            .where(FieldPath.documentId, whereIn: chunk)
-            .snapshots()
-            .listen((snapshot) {
-          chunkMaps[index] = {
-            for (final doc in snapshot.docs)
-              doc.id: PresenceModel.fromJson({'userId': doc.id, ...doc.data()}),
-          };
-          emit();
-        }, onError: controller.addError);
-        subscriptions.add(sub);
-      }
-
-      controller.onCancel = () async {
-        for (final sub in subscriptions) {
-          await sub.cancel();
-        }
-      };
-    });
+    return _presenceRepository.watchUsersPresence(userIds);
   }
 
   Future<List<FriendshipModel>> _getFriendships(

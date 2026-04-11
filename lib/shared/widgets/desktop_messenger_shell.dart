@@ -9,9 +9,9 @@ import '../../core/theme.dart';
 import '../../core/utils/network_image_url.dart';
 import '../../features/friends/models/friend_roster_entry.dart';
 import '../../features/friends/providers/friends_providers.dart';
-import '../../features/messaging/screens/new_message_screen.dart';
 import '../../features/messaging/models/conversation_model.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
+import 'messenger_shell_route.dart';
 import '../../models/presence_model.dart';
 import '../../models/user_model.dart';
 import '../../presentation/providers/user_provider.dart';
@@ -20,19 +20,17 @@ import '../../services/notification_service.dart';
 
 class DesktopMessengerShell extends ConsumerStatefulWidget {
   const DesktopMessengerShell({
-    required this.location,
-    required this.messagesPane,
-    required this.newMessagePane,
-    required this.friendsPane,
-    required this.chatPaneBuilder,
+    required this.routeState,
+    required this.userId,
+    required this.username,
+    required this.avatarUrl,
     super.key,
   });
 
-  final String location;
-  final Widget messagesPane;
-  final Widget newMessagePane;
-  final Widget friendsPane;
-  final Widget Function(String conversationId) chatPaneBuilder;
+  final MessengerRouteState routeState;
+  final String userId;
+  final String username;
+  final String? avatarUrl;
 
   @override
   ConsumerState<DesktopMessengerShell> createState() => _DesktopMessengerShellState();
@@ -58,26 +56,15 @@ class _DesktopMessengerShellState extends ConsumerState<DesktopMessengerShell> {
     super.dispose();
   }
 
-  Widget _buildCenterPane() {
-    final uri = Uri.parse(widget.location);
-    if (uri.path == '/friends') {
-      return widget.friendsPane;
-    }
-    if (uri.path == '/messages/new') {
-      return widget.newMessagePane;
-    }
-    if (uri.pathSegments.length == 2 &&
-        uri.pathSegments.first == 'messages' &&
-        uri.pathSegments[1] != 'new') {
-      return widget.chatPaneBuilder(uri.pathSegments[1]);
-    }
-    return widget.messagesPane;
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
-    final centerPane = _buildCenterPane();
+    final centerPane = buildMessengerRouteChild(
+      routeState: widget.routeState,
+      userId: widget.userId,
+      username: widget.username,
+      avatarUrl: widget.avatarUrl,
+    );
     if (currentUser == null) {
       return DecoratedBox(
         decoration: const BoxDecoration(color: VelvetNoir.surface),
@@ -100,6 +87,7 @@ class _DesktopMessengerShellState extends ConsumerState<DesktopMessengerShell> {
             currentUser: currentUser,
             controller: controller,
             searchController: _searchController,
+            routeState: widget.routeState,
             query: _query,
             showOffline: _showOffline,
             onToggleOffline: () => setState(() => _showOffline = !_showOffline),
@@ -122,6 +110,7 @@ class _MessengerSidebar extends ConsumerWidget {
     required this.currentUser,
     required this.controller,
     required this.searchController,
+    required this.routeState,
     required this.query,
     required this.showOffline,
     required this.onToggleOffline,
@@ -130,6 +119,7 @@ class _MessengerSidebar extends ConsumerWidget {
   final UserModel currentUser;
   final _MessengerSidebarController controller;
   final TextEditingController searchController;
+  final MessengerRouteState routeState;
   final String query;
   final bool showOffline;
   final VoidCallback onToggleOffline;
@@ -140,6 +130,7 @@ class _MessengerSidebar extends ConsumerWidget {
     final conversations = ref.watch(conversationsStreamProvider(currentUser.id)).valueOrNull ?? const <Conversation>[];
     final favoriteIds = ref.watch(favoriteFriendIdsProvider).valueOrNull ?? const <String>{};
     final currentRoomId = ref.watch(currentUserPresenceProvider).valueOrNull?.inRoom;
+    final selectedConversationId = routeState.conversationId;
 
     final recentConversations = conversations.where((conversation) {
       if (conversation.type != 'direct') return false;
@@ -221,6 +212,8 @@ class _MessengerSidebar extends ConsumerWidget {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: _RecentConversationRow(
+                                  isSelected: selectedConversationId == conversation.id,
+                                  isOnline: rosterEntry?.isOnline ?? false,
                                   displayName: conversation.getDisplayName(currentUser.id),
                                   avatarUrl: rosterEntry == null ? null : sanitizeNetworkImageUrl(rosterEntry.user.avatarUrl),
                                   preview: conversation.lastMessagePreview ?? 'No messages yet',
@@ -436,6 +429,11 @@ class _FriendRosterRow extends StatelessWidget {
                     ? Text(entry.user.username.isNotEmpty ? entry.user.username[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
                     : null,
               ),
+              if (entry.isOnline)
+                Transform.translate(
+                  offset: const Offset(-10, 16),
+                  child: const _PresenceDot(),
+                ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -485,6 +483,8 @@ class _FriendRosterRow extends StatelessWidget {
 
 class _RecentConversationRow extends StatelessWidget {
   const _RecentConversationRow({
+    required this.isSelected,
+    required this.isOnline,
     required this.displayName,
     required this.avatarUrl,
     required this.preview,
@@ -493,6 +493,8 @@ class _RecentConversationRow extends StatelessWidget {
     required this.onTap,
   });
 
+  final bool isSelected;
+  final bool isOnline;
   final String displayName;
   final String? avatarUrl;
   final String preview;
@@ -515,9 +517,17 @@ class _RecentConversationRow extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.95),
+            color: isSelected
+                ? VelvetNoir.primary.withValues(alpha: 0.12)
+                : VelvetNoir.surfaceHigh.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: unread ? VelvetNoir.primary.withValues(alpha: 0.42) : VelvetNoir.outlineVariant.withValues(alpha: 0.28)),
+            border: Border.all(
+              color: isSelected
+                  ? VelvetNoir.primary.withValues(alpha: 0.52)
+                  : unread
+                      ? VelvetNoir.primary.withValues(alpha: 0.42)
+                      : VelvetNoir.outlineVariant.withValues(alpha: 0.28),
+            ),
           ),
           child: Row(
             children: [
@@ -529,6 +539,11 @@ class _RecentConversationRow extends StatelessWidget {
                     ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
                     : null,
               ),
+              if (isOnline)
+                Transform.translate(
+                  offset: const Offset(-10, 16),
+                  child: const _PresenceDot(),
+                ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -568,7 +583,22 @@ class _SidebarSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [Expanded(child: Text('title (count)', style: GoogleFonts.raleway(color: VelvetNoir.primary, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0))), ...(trailing == null ? const <Widget>[] : <Widget>[trailing!])]),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$title (${count.toString()})',
+                  style: GoogleFonts.raleway(
+                    color: VelvetNoir.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+              ...(trailing == null ? const <Widget>[] : <Widget>[trailing!]),
+            ],
+          ),
           const SizedBox(height: 10),
           child,
         ],
@@ -613,6 +643,29 @@ class _SearchField extends StatelessWidget {
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),
+      ),
+    );
+  }
+}
+
+class _PresenceDot extends StatelessWidget {
+  const _PresenceDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        color: const Color(0xFF22C55E),
+        shape: BoxShape.circle,
+        border: Border.all(color: VelvetNoir.surfaceLow, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF22C55E).withValues(alpha: 0.35),
+            blurRadius: 8,
+          ),
+        ],
       ),
     );
   }

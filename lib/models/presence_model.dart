@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum UserStatus { online, away, dnd, offline }
+enum PresenceAppState { foreground, background, detached, unknown }
 
 class PresenceModel {
 	PresenceModel({
@@ -10,10 +11,13 @@ class PresenceModel {
 		this.lastSeen,
 		this.status = UserStatus.offline,
 		this.inRoom,
+		this.appState = PresenceAppState.unknown,
 		bool? online,
 		String? roomId,
 	})  : _online = online,
 				_roomId = roomId;
+
+	static const Duration staleThreshold = Duration(seconds: 90);
 
 	final String? id;
 	final String? userId;
@@ -21,6 +25,7 @@ class PresenceModel {
 	final DateTime? lastSeen;
 	final UserStatus status;
 	final String? inRoom;
+	final PresenceAppState appState;
 	final bool? _online;
 	final String? _roomId;
 
@@ -54,6 +59,22 @@ class PresenceModel {
 		return null;
 	}
 
+	static PresenceAppState _parseAppState(dynamic value) {
+		if (value is String) {
+			switch (value.trim().toLowerCase()) {
+				case 'foreground':
+					return PresenceAppState.foreground;
+				case 'background':
+					return PresenceAppState.background;
+				case 'detached':
+					return PresenceAppState.detached;
+				default:
+					return PresenceAppState.unknown;
+			}
+		}
+		return PresenceAppState.unknown;
+	}
+
 	static UserStatus _parseStatus(dynamic value) {
 		if (value is String) {
 			switch (value.trim().toLowerCase()) {
@@ -75,20 +96,67 @@ class PresenceModel {
 		final explicitOnline =
 				_asNullableBool(json['isOnline']) ?? _asNullableBool(json['online']);
 		final inRoom = _asNullableString(json['inRoom'] ?? json['roomId']);
+		final appState = _parseAppState(json['appState']);
+		final lastSeen = _parseDateTime(
+			json['lastSeen'] ?? json['lastActiveAt'] ?? json['lastHeartbeatAt'],
+		);
 
-		return PresenceModel(
+		final parsed = PresenceModel(
 			id: _asNullableString(json['id']),
 			userId: _asNullableString(json['userId']),
 			isOnline: explicitOnline ??
 					(status != UserStatus.offline || inRoom != null),
 			online: explicitOnline,
-			lastSeen: _parseDateTime(
-				json['lastSeen'] ?? json['lastActiveAt'] ?? json['lastHeartbeatAt'],
-			),
+			lastSeen: lastSeen,
 			status: status,
 			inRoom: inRoom,
 			roomId: inRoom,
+			appState: appState,
 		);
+
+		return parsed.isStale ? parsed.copyWith(
+			status: UserStatus.offline,
+			isOnline: false,
+			online: false,
+			inRoom: null,
+			roomId: null,
+		) : parsed;
+	}
+
+	PresenceModel copyWith({
+		String? id,
+		String? userId,
+		bool? isOnline,
+		DateTime? lastSeen,
+		UserStatus? status,
+		String? inRoom,
+		PresenceAppState? appState,
+		bool? online,
+		String? roomId,
+		bool clearInRoom = false,
+	}) {
+		return PresenceModel(
+			id: id ?? this.id,
+			userId: userId ?? this.userId,
+			isOnline: isOnline ?? this.isOnline,
+			lastSeen: lastSeen ?? this.lastSeen,
+			status: status ?? this.status,
+			inRoom: clearInRoom ? null : (inRoom ?? this.inRoom),
+			appState: appState ?? this.appState,
+			online: online ?? _online,
+			roomId: clearInRoom ? null : (roomId ?? this.roomId),
+		);
+	}
+
+	bool get isStale {
+		if (status == UserStatus.offline || online != true) {
+			return false;
+		}
+		final seenAt = lastSeen;
+		if (seenAt == null) {
+			return true;
+		}
+		return DateTime.now().difference(seenAt) > staleThreshold;
 	}
 
 	static DateTime? _parseDateTime(dynamic value) {
@@ -112,6 +180,7 @@ class PresenceModel {
 				'lastSeen': lastSeen?.toIso8601String(),
 				'status': status.name,
 				'inRoom': inRoom,
+				'appState': appState.name,
 				'roomId': roomId,
 			};
 }

@@ -1,7 +1,10 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mixvy/features/friends/models/friend_roster_entry.dart';
+import 'package:mixvy/features/friends/models/friendship_model.dart';
 import 'package:mixvy/features/friends/providers/friends_providers.dart';
+import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 
@@ -69,11 +72,6 @@ void main() {
         'requestedBy': 'user-1',
         'createdAt': DateTime(2026, 1, 4),
       });
-      await firestore.collection('presence').doc('user-2').set({
-        'online': true,
-        'roomId': null,
-        'lastSeen': DateTime(2026, 1, 5),
-      });
 
       container = ProviderContainer(
         overrides: [
@@ -121,7 +119,40 @@ void main() {
     });
 
     test('onlineFriendsProvider filters live online friends', () async {
-      final onlineFriends = await container.read(friendRosterProvider.future);
+      final rosterContainer = ProviderContainer(
+        overrides: [
+          friendRosterProvider.overrideWith(
+            (ref) => Stream.value([
+              FriendRosterEntry(
+                friendship: FriendshipModel(
+                  id: 'user-1_user-2',
+                  userA: 'user-1',
+                  userB: 'user-2',
+                  status: 'accepted',
+                  createdAt: DateTime(2026, 1, 2),
+                ),
+                user: UserModel(
+                  id: 'user-2',
+                  email: 'user2@mixvy.dev',
+                  username: 'User Two',
+                  createdAt: DateTime(2026, 1, 2),
+                ),
+                presence: PresenceModel(
+                  userId: 'user-2',
+                  isOnline: true,
+                  online: true,
+                  status: UserStatus.online,
+                  lastSeen: DateTime.now(),
+                ),
+              ),
+            ]),
+          ),
+        ],
+      );
+
+      addTearDown(rosterContainer.dispose);
+
+      final onlineFriends = await rosterContainer.read(onlineFriendsProvider.future);
 
       expect(onlineFriends, hasLength(1));
       expect(onlineFriends.single.user.id, 'user-2');

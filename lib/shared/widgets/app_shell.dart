@@ -4,31 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
-import '../../features/friends/panes/friends_pane_view.dart';
-import '../../features/messaging/panes/chat_pane_view.dart';
-import '../../features/messaging/panes/messages_pane_view.dart';
-import '../../features/messaging/screens/new_message_screen.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
-import '../../presentation/providers/user_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
-import 'desktop_messenger_shell.dart';
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
 /// bottom nav bar (Home / Rooms / Messages / Friends / Profile).
 class AppShell extends ConsumerWidget {
   final Widget child;
-  const AppShell({required this.child, super.key});
+  final int selectedIndex;
+  final bool useDesktopMessengerLayout;
 
-  static int _indexForLocation(String location) {
-    if (location == '/' || location.startsWith('/messages')) return 0;
-    if (location.startsWith('/rooms'))    return 1;
-    if (location.startsWith('/discover')) return 2;
-    if (location.startsWith('/friends'))  return 3;
-    if (location.startsWith('/profile'))  return 4;
-    return 0;
-  }
+  const AppShell({
+    required this.child,
+    required this.selectedIndex,
+    this.useDesktopMessengerLayout = false,
+    super.key,
+  });
 
   static const List<String> _roots = [
     '/messages',
@@ -38,61 +30,17 @@ class AppShell extends ConsumerWidget {
     '/profile',
   ];
 
-  static bool _usesDesktopMessengerShell(String location) {
-    final uri = Uri.parse(location);
-    final isMessagesRoute =
-        uri.path == '/' ||
-        uri.path == '/messages' ||
-        (uri.pathSegments.isNotEmpty && uri.pathSegments.first == 'messages');
-    return uri.path == '/friends' || isMessagesRoute;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = GoRouterState.of(context).uri.toString();
-    final selectedIndex = _indexForLocation(location);
-    final unreadMsgs = ref.watch(unreadMessageCountProvider);
     final theme = Theme.of(context);
-    final currentUser = ref.watch(userProvider);
     final isDesktopMessengerLayout =
-        context.isExpandedLayout && _usesDesktopMessengerShell(location);
+        context.isExpandedLayout && useDesktopMessengerLayout;
+    final unreadMsgs = ref.watch(unreadMessageCountProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       drawer: isDesktopMessengerLayout ? null : const MixVyDrawer(),
-      body: isDesktopMessengerLayout
-          ? DesktopMessengerShell(
-              location: location,
-              messagesPane: currentUser == null
-                  ? const SizedBox.shrink()
-                  : MessagesPaneView(
-                      userId: currentUser.id,
-                      username: currentUser.username,
-                      showHeader: true,
-                    ),
-              newMessagePane: currentUser == null
-                  ? const SizedBox.shrink()
-                  : NewMessagePaneView(
-                      userId: currentUser.id,
-                      username: currentUser.username,
-                      avatarUrl: currentUser.avatarUrl,
-                      showHeader: true,
-                    ),
-              friendsPane: const FriendsPaneView(showHeader: true),
-              chatPaneBuilder: (conversationId) {
-                if (currentUser == null) {
-                  return const SizedBox.shrink();
-                }
-                return ChatPaneView(
-                  conversationId: conversationId,
-                  userId: currentUser.id,
-                  username: currentUser.username,
-                  avatarUrl: currentUser.avatarUrl,
-                  showHeader: true,
-                );
-              },
-            )
-          : child,
+      body: child,
       bottomNavigationBar: isDesktopMessengerLayout
           ? null
           : Builder(

@@ -5,6 +5,9 @@ import '../models/conversation_model.dart';
 import '../../../services/moderation_service.dart';
 import '../../../presentation/providers/user_provider.dart';
 
+String _newClientMessageId() =>
+  '${DateTime.now().microsecondsSinceEpoch}-${DateTime.now().millisecondsSinceEpoch}';
+
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
@@ -191,9 +194,11 @@ class MessagingController {
     required String senderName,
     required String? senderAvatarUrl,
     required String content,
+    String? clientMessageId,
   }) async {
     final now = DateTime.now();
     final expiresAt = now.add(const Duration(days: messageRetentionDays));
+    final resolvedClientMessageId = clientMessageId ?? _newClientMessageId();
     final messageRef = _firestore
         .collection('conversations')
         .doc(conversationId)
@@ -207,6 +212,7 @@ class MessagingController {
       'senderName': senderName,
       'senderAvatarUrl': senderAvatarUrl,
       'content': content,
+      'clientMessageId': resolvedClientMessageId,
       'createdAt': Timestamp.fromDate(now),
       'expiresAt': Timestamp.fromDate(expiresAt),
       'isDeleted': false,
@@ -220,6 +226,7 @@ class MessagingController {
       'lastMessagePreview': content,
       'lastMessageSenderId': senderId,
       'lastMessageAt': Timestamp.fromDate(now),
+      'lastMessageClientMessageId': resolvedClientMessageId,
     });
   }
 

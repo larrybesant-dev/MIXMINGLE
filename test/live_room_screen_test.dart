@@ -132,62 +132,19 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('LiveRoomScreen shows online friends from legacy presence fields', (
-    WidgetTester tester,
-  ) async {
-    await configureViewport(tester);
-    final firestore = FakeFirebaseFirestore();
-    await firestore.collection('rooms').doc('room-a').set({
-      'hostId': 'host-1',
-      'isLocked': false,
-      'slowModeSeconds': 0,
-    });
-    await firestore.collection('users').doc('user-1').set({
-      'uid': 'user-1',
-      'email': 'user1@mixvy.com',
-      'username': 'User One',
-      'friends': ['user-2'],
-    });
-    await firestore.collection('users').doc('user-2').set({
-      'uid': 'user-2',
-      'email': 'user2@mixvy.com',
-      'username': 'Friend Two',
-    });
-    await firestore.collection('presence').doc('user-2').set({
+  test('PresenceModel reads legacy presence schema without Firestore writes', () {
+    final presence = PresenceModel.fromJson({
+      'userId': 'user-2',
       'online': true,
       'userStatus': 'online',
       'roomId': 'room-b',
     });
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith(
-            (ref, args) => Stream.value(
-              RoomParticipantModel(
-                userId: 'user-1',
-                role: 'audience',
-                joinedAt: DateTime(2026, 1, 1),
-                lastActiveAt: DateTime(2026, 1, 1),
-              ),
-            ),
-          ),
-          participantsStreamProvider.overrideWith(
-            (ref, roomId) => Stream.value([
-              RoomParticipantModel(
-                userId: 'user-1',
-                role: 'audience',
-                joinedAt: DateTime(2026, 1, 1),
-                lastActiveAt: DateTime(2026, 1, 1),
-              ),
-            ]),
-          ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
-          hostProvider.overrideWith(
-            (ref, roomId) => Stream.value(Host('host-1')),
-          ),
-          coHostsProvider.overrideWith(
+    expect(presence.userId, 'user-2');
+    expect(presence.isOnline, isTrue);
+    expect(presence.status, UserStatus.online);
+    expect(presence.inRoom, 'room-b');
+  });
             (ref, roomId) => Stream.value(const <Cohost>[]),
           ),
           roomPresenceStreamProvider.overrideWith(

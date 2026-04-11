@@ -6,7 +6,7 @@ import '../../../models/presence_model.dart';
 import '../../../models/user_model.dart';
 import '../../../presentation/providers/user_provider.dart';
 import '../../../services/friend_service.dart';
-import '../../../services/presence_service.dart';
+import '../../../services/presence_repository.dart';
 import '../models/friend_roster_entry.dart';
 import '../models/friendship_model.dart';
 
@@ -154,13 +154,13 @@ final favoriteFriendIdsProvider = FutureProvider.autoDispose<Set<String>>((ref) 
 
 final friendPresenceProvider =
     StreamProvider.autoDispose.family<PresenceModel, String>((ref, friendId) {
-  return PresenceService().watchUserPresence(friendId);
+  return ref.watch(presenceRepositoryProvider).watchUserPresence(friendId);
 });
 
 final currentUserPresenceProvider = StreamProvider.autoDispose<PresenceModel?>((ref) {
   final userId = ref.watch(currentFriendUserIdProvider);
   if (userId == null) return const Stream<PresenceModel?>.empty();
-  return PresenceService().watchUserPresence(userId).map((presence) => presence);
+  return ref.watch(presenceRepositoryProvider).watchUserPresence(userId).map((presence) => presence);
 });
 
 final friendSuggestionsProvider = FutureProvider.autoDispose<List<UserModel>>((ref) async {

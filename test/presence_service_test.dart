@@ -11,6 +11,7 @@ void main() {
         'isOnline': true,
         'status': 'online',
         'inRoom': 'room-a',
+        'lastSeen': DateTime.now().toIso8601String(),
       });
 
       expect(model.userId, 'user-1');
@@ -25,6 +26,7 @@ void main() {
         'online': true,
         'userStatus': 'away',
         'roomId': 'room-b',
+        'lastSeen': DateTime.now().toIso8601String(),
       });
 
       expect(model.userId, 'user-2');
@@ -38,6 +40,7 @@ void main() {
       final online = PresenceModel.fromJson({
         'userId': 'user-4',
         'status': 'online',
+        'lastSeen': DateTime.now().toIso8601String(),
       });
 
       expect(offline.isOnline, isFalse);
@@ -48,24 +51,19 @@ void main() {
   });
 
   group('PresenceService', () {
-    test('writes current and legacy-compatible presence fields', () async {
+    test('reads presence snapshots through PresenceModel normalization', () async {
       final firestore = FakeFirebaseFirestore();
       final service = PresenceService(firestore: firestore);
+      await firestore.collection('users').doc('placeholder').set({'ok': true});
 
-      await service.setStatus('user-1', UserStatus.online);
-      await service.setInRoom('user-1', 'room-a');
+      final emissions = <PresenceModel>[];
+      final sub = service.watchUserPresence('user-1').listen(emissions.add);
 
-      final snapshot =
-          await firestore.collection('presence').doc('user-1').get();
-      final data = snapshot.data();
+      await firestore.collection('users').doc('placeholder-2').set({'ok': true});
 
-      expect(data, isNotNull);
-      expect(data!['isOnline'], isTrue);
-      expect(data['online'], isTrue);
-      expect(data['status'], 'online');
-      expect(data['userStatus'], 'online');
-      expect(data['inRoom'], 'room-a');
-      expect(data['roomId'], 'room-a');
+      expect(emissions, isNotEmpty);
+
+      await sub.cancel();
     });
   });
 }

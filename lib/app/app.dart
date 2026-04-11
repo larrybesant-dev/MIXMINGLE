@@ -12,6 +12,7 @@ import '../shared/widgets/app_debug_overlay.dart';
 import '../shared/widgets/incoming_call_overlay.dart';
 import '../features/after_dark/providers/after_dark_provider.dart';
 import '../features/after_dark/theme/after_dark_theme.dart';
+import '../services/presence_controller.dart';
 
 class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
@@ -19,6 +20,7 @@ class MixVyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    ref.watch(presenceControllerProvider);
     final settings = ref.watch(appSettingsControllerProvider).valueOrNull ?? const AppSettings.defaults();
     final appLocale = Locale(settings.localeCode);
     final afterDarkActive = ref.watch(afterDarkSessionProvider);

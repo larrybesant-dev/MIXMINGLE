@@ -41,6 +41,8 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
   late ScrollController _scrollController;
   Timer? _typingTimer;
   bool _isTyping = false;
+  bool _didAutoScrollInitialLoad = false;
+  final List<_PendingMessage> _pendingMessages = <_PendingMessage>[];
 
   @override
   void initState() {
@@ -97,6 +99,33 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     }
   }
 
+  bool _isNearBottom() {
+    if (!_scrollController.hasClients ||
+        !_scrollController.position.hasContentDimensions) {
+      return true;
+    }
+
+    final distanceFromBottom =
+        _scrollController.position.maxScrollExtent - _scrollController.offset;
+    return distanceFromBottom <= 96;
+  }
+
+  void _scheduleScrollToBottom({
+    required Duration duration,
+    Curve curve = Curves.easeOut,
+    bool force = false,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      if (!force && !_isNearBottom()) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: duration,
+        curve: curve,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _clearTyping();
@@ -114,23 +143,49 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     _clearTyping();
     _messageController.clear();
 
-    await ref.read(messagingControllerProvider).sendMessage(
-          conversationId: widget.conversationId,
-          senderId: widget.userId,
-          senderName: widget.username,
-          senderAvatarUrl: widget.avatarUrl,
-          content: content,
-        );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+    final pendingMessage = _PendingMessage(
+      clientMessageId: '${DateTime.now().microsecondsSinceEpoch}-${widget.userId}',
+      content: content,
+      createdAt: DateTime.now(),
+      senderId: widget.userId,
+      senderName: widget.username,
+      senderAvatarUrl: widget.avatarUrl,
+    );
+    setState(() {
+      _pendingMessages.add(pendingMessage);
     });
+
+    _scheduleScrollToBottom(
+      duration: const Duration(milliseconds: 180),
+      force: true,
+    );
+
+    try {
+      await ref.read(messagingControllerProvider).sendMessage(
+            conversationId: widget.conversationId,
+            senderId: widget.userId,
+            senderName: widget.username,
+            senderAvatarUrl: widget.avatarUrl,
+            content: content,
+            clientMessageId: pendingMessage.clientMessageId,
+          );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _pendingMessages.removeWhere(
+          (message) => message.clientMessageId == pendingMessage.clientMessageId,
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not send message: $error')),
+      );
+      return;
+    }
+
+    _scheduleScrollToBottom(
+      duration: const Duration(milliseconds: 300),
+      force: true,
+    );
   }
 
   @override
@@ -221,18 +276,46 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
         Expanded(
           child: messagesAsync.when(
             data: (liveMessages) {
+              final pendingClientIds = _pendingMessages
+                  .map((message) => message.clientMessageId)
+                  .toSet();
+              final liveClientIds = liveMessages
+                  .map((message) => message.clientMessageId)
+                  .whereType<String>()
+                  .toSet();
+              final pendingMessages = _pendingMessages
+                  .where((message) => !liveClientIds.contains(message.clientMessageId))
+                  .toList(growable: false);
               final allMessages = [
                 ...paginatedState.olderMessages,
                 ...liveMessages,
+                ...pendingMessages.map((message) => message.toMessage(widget.conversationId)),
               ];
 
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_scrollController.hasClients) {
+              if (_pendingMessages.length != pendingMessages.length) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  setState(() {
+                    _pendingMessages
+                      ..clear()
+                      ..addAll(pendingMessages);
+                  });
+                });
+              }
+
+              if (!_didAutoScrollInitialLoad) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!_scrollController.hasClients) return;
                   _scrollController.jumpTo(
                     _scrollController.position.maxScrollExtent,
                   );
-                }
-              });
+                  _didAutoScrollInitialLoad = true;
+                });
+              } else {
+                _scheduleScrollToBottom(
+                  duration: const Duration(milliseconds: 160),
+                );
+              }
 
               if (allMessages.isEmpty) {
                 return const AppEmptyView(
@@ -270,6 +353,8 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                   final message =
                       allMessages[index - (paginatedState.hasMore ? 1 : 0)];
                   final isOwn = message.senderId == widget.userId;
+                    final isPending = message.clientMessageId != null &&
+                      pendingClientIds.contains(message.clientMessageId);
                   var isReadByOther = false;
                   if (isOwn && conversation != null) {
                     final otherIds =
@@ -427,14 +512,22 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                       ),
                                       if (isOwn) ...[
                                         const SizedBox(width: 4),
-                                        Icon(
-                                          isReadByOther
-                                              ? Icons.done_all
-                                              : Icons.done,
-                                          size: 13,
-                                          color: isReadByOther
-                                              ? VelvetNoir.secondary
-                                              : VelvetNoir.onSurfaceVariant,
+                                        Tooltip(
+                                          message: _deliveryStateLabel(
+                                            isPending: isPending,
+                                            isReadByOther: isReadByOther,
+                                          ),
+                                          child: Icon(
+                                            _deliveryStateIcon(
+                                              isPending: isPending,
+                                              isReadByOther: isReadByOther,
+                                            ),
+                                            size: 13,
+                                            color: _deliveryStateColor(
+                                              isPending: isPending,
+                                              isReadByOther: isReadByOther,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ],
@@ -452,6 +545,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
               );
             },
             loading: () => const AppLoadingView(label: 'Loading messages'),
+            skipLoadingOnRefresh: true,
             error: (error, stackTrace) => AppErrorView(
               error: friendlyFirestoreMessage(
                 error,
@@ -565,6 +659,45 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     } else {
       return '${dateTime.month}/${dateTime.day}';
     }
+  }
+
+  IconData _deliveryStateIcon({
+    required bool isPending,
+    required bool isReadByOther,
+  }) {
+    if (isPending) {
+      return Icons.schedule_rounded;
+    }
+    if (isReadByOther) {
+      return Icons.done_all;
+    }
+    return Icons.done;
+  }
+
+  Color _deliveryStateColor({
+    required bool isPending,
+    required bool isReadByOther,
+  }) {
+    if (isPending) {
+      return VelvetNoir.primary;
+    }
+    if (isReadByOther) {
+      return VelvetNoir.secondary;
+    }
+    return VelvetNoir.onSurfaceVariant;
+  }
+
+  String _deliveryStateLabel({
+    required bool isPending,
+    required bool isReadByOther,
+  }) {
+    if (isPending) {
+      return 'Sending';
+    }
+    if (isReadByOther) {
+      return 'Seen';
+    }
+    return 'Delivered';
   }
 
   void _showReactionPicker(BuildContext context, WidgetRef ref, String messageId) {
@@ -751,6 +884,39 @@ class _ReactionRow extends ConsumerWidget {
       },
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _PendingMessage {
+  const _PendingMessage({
+    required this.clientMessageId,
+    required this.content,
+    required this.createdAt,
+    required this.senderId,
+    required this.senderName,
+    required this.senderAvatarUrl,
+  });
+
+  final String clientMessageId;
+  final String content;
+  final DateTime createdAt;
+  final String senderId;
+  final String senderName;
+  final String? senderAvatarUrl;
+
+  Message toMessage(String conversationId) {
+    return Message(
+      id: clientMessageId,
+      clientMessageId: clientMessageId,
+      conversationId: conversationId,
+      senderId: senderId,
+      senderName: senderName,
+      senderAvatarUrl: senderAvatarUrl,
+      content: content,
+      createdAt: createdAt,
+      isDeleted: false,
+      readBy: [senderId],
     );
   }
 }

@@ -53,6 +53,7 @@ import '../features/after_dark/screens/after_dark_create_lounge_screen.dart';
 import '../features/after_dark/widgets/after_dark_shell.dart';
 
 import '../shared/widgets/app_shell.dart';
+import '../shared/widgets/messenger_shell_route.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -143,6 +144,29 @@ String _currentUsername(Ref ref) {
 String? _currentAvatarUrl(Ref ref) {
   return ref.read(userProvider)?.avatarUrl ??
       FirebaseAuth.instance.currentUser?.photoURL;
+}
+
+int _appShellIndexForLocation(String matchedLocation) {
+  switch (matchedLocation) {
+    case '/messages':
+    case '/messages/new':
+    case '/messages/:conversationId':
+      return 0;
+    case '/rooms':
+    case '/create-room':
+      return 1;
+    case '/discover':
+    case '/search':
+      return 2;
+    case '/friends':
+      return 3;
+    case '/profile':
+    case '/profile/:userId':
+    case '/edit-profile':
+      return 4;
+    default:
+      return 0;
+  }
 }
 
 final firstRunCheckProvider = Provider<FirstRunCheck>((ref) {
@@ -295,7 +319,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Shell — persistent bottom nav + drawer on every page ───────────
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) => AppShell(child: child),
+        builder: (context, state, child) => AppShell(
+          child: child,
+          selectedIndex: _appShellIndexForLocation(state.matchedLocation),
+          useDesktopMessengerLayout: MessengerRouteState.matches(state),
+        ),
         routes: [
           GoRoute(
             path: '/',
@@ -349,10 +377,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SpeedDatingScreen(),
           ),
           GoRoute(
-            path: '/friends',
-            builder: (context, state) => const FriendListScreen(),
-          ),
-          GoRoute(
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
           ),
@@ -396,46 +420,62 @@ final routerProvider = Provider<GoRouter>((ref) {
               return BookmarksScreen(userId: uid);
             },
           ),
-          GoRoute(
-            path: '/messages',
-            builder: (context, state) {
+          ShellRoute(
+            builder: (context, state, child) {
               final uid = _currentUid(ref);
               if (uid == null) return const LoginScreen();
-              return MessagesScreen(
-                userId: uid,
-                username: _currentUsername(ref),
-              );
-            },
-          ),
-          GoRoute(
-            path: '/messages/new',
-            builder: (context, state) {
-              final uid = _currentUid(ref);
-              if (uid == null) return const LoginScreen();
-              return NewMessageScreen(
+              return MessengerShellRouteView(
+                routeState: MessengerRouteState.fromGoRouterState(state),
                 userId: uid,
                 username: _currentUsername(ref),
                 avatarUrl: _currentAvatarUrl(ref),
+                child: child,
               );
             },
-          ),
-          GoRoute(
-            path: '/messages/:conversationId',
-            builder: (context, state) {
-              final conversationId =
-                  _pathParamOrNull(state, 'conversationId');
-              if (conversationId == null) {
-                return NotFoundScreen(path: state.uri.toString());
-              }
-              final uid = _currentUid(ref);
-              if (uid == null) return const LoginScreen();
-              return ChatScreen(
-                conversationId: conversationId,
-                userId: uid,
-                username: _currentUsername(ref),
-                avatarUrl: _currentAvatarUrl(ref),
-              );
-            },
+            routes: [
+              GoRoute(
+                path: '/friends',
+                builder: (context, state) => buildMessengerRouteChild(
+                  routeState: MessengerRouteState.fromGoRouterState(state),
+                  userId: _currentUid(ref) ?? '',
+                  username: _currentUsername(ref),
+                  avatarUrl: _currentAvatarUrl(ref),
+                ),
+              ),
+              GoRoute(
+                path: '/messages',
+                builder: (context, state) => buildMessengerRouteChild(
+                  routeState: MessengerRouteState.fromGoRouterState(state),
+                  userId: _currentUid(ref) ?? '',
+                  username: _currentUsername(ref),
+                  avatarUrl: _currentAvatarUrl(ref),
+                ),
+              ),
+              GoRoute(
+                path: '/messages/new',
+                builder: (context, state) => buildMessengerRouteChild(
+                  routeState: MessengerRouteState.fromGoRouterState(state),
+                  userId: _currentUid(ref) ?? '',
+                  username: _currentUsername(ref),
+                  avatarUrl: _currentAvatarUrl(ref),
+                ),
+              ),
+              GoRoute(
+                path: '/messages/:conversationId',
+                builder: (context, state) {
+                  final conversationId = _pathParamOrNull(state, 'conversationId');
+                  if (conversationId == null) {
+                    return NotFoundScreen(path: state.uri.toString());
+                  }
+                  return buildMessengerRouteChild(
+                    routeState: MessengerRouteState.fromGoRouterState(state),
+                    userId: _currentUid(ref) ?? '',
+                    username: _currentUsername(ref),
+                    avatarUrl: _currentAvatarUrl(ref),
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/followers/:userId',

@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../core/telemetry/app_telemetry.dart';
 import '../../../services/moderation_service.dart';
-import '../../../services/presence_service.dart';
+import '../../../services/presence_controller.dart';
 import '../providers/room_firestore_provider.dart';
 
 class RoomJoinResult {
@@ -44,22 +44,22 @@ class RoomJoinResult {
 final roomSessionServiceProvider = Provider<RoomSessionService>((ref) {
   return RoomSessionService(
     firestore: ref.watch(roomFirestoreProvider),
-    presenceService: PresenceService(firestore: ref.watch(roomFirestoreProvider)),
+    presenceController: ref.read(presenceControllerProvider.notifier),
   );
 });
 
 class RoomSessionService {
   RoomSessionService({
     required FirebaseFirestore firestore,
-    required PresenceService presenceService,
+    required PresenceController presenceController,
   })  : _firestore = firestore,
-        _presenceService = presenceService;
+        _presenceController = presenceController;
 
   static const Duration presenceHeartbeatInterval = Duration(seconds: 30);
   static const Duration participantSyncInterval = Duration(seconds: 60);
 
   final FirebaseFirestore _firestore;
-  final PresenceService _presenceService;
+  final PresenceController _presenceController;
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
@@ -273,7 +273,7 @@ class RoomSessionService {
       );
     }
 
-    await _presenceService.setInRoom(normalizedUserId, normalizedRoomId);
+    await _presenceController.setInRoom(normalizedUserId, normalizedRoomId);
     AppTelemetry.updateRoomState(
       roomId: normalizedRoomId,
       joinedUserId: normalizedUserId,
@@ -332,7 +332,7 @@ class RoomSessionService {
         action: memberRef.delete,
       );
     } finally {
-      await _presenceService.clearRoom(normalizedUserId);
+      await _presenceController.clearInRoom(normalizedUserId);
       AppTelemetry.logAction(
         domain: 'room',
         action: 'leave',
@@ -367,7 +367,6 @@ class RoomSessionService {
         'userStatus': 'online',
       }, SetOptions(merge: true)),
     );
-    await _presenceService.setInRoom(userId, roomId);
     AppTelemetry.updateRoomState(
       roomId: roomId,
       joinedUserId: userId,

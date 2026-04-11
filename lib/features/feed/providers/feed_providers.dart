@@ -7,6 +7,7 @@ import '../models/post_model.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user_model.dart';
 import 'package:mixvy/models/models.dart';
+import '../../../services/presence_repository.dart';
 
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
   return FeedRepository(ref.read(firestoreProvider));
@@ -40,13 +41,7 @@ final eventsStreamProvider = StreamProvider<List<EventModel>>((ref) {
 /// Dashboard metrics do not need live Firestore listeners on every page load.
 /// Fetch them once and refresh when the screen is re-entered or manually pulled.
 final onlineUsersCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final snapshot = await ref
-      .watch(firestoreProvider)
-      .collection('presence')
-      .where('isOnline', isEqualTo: true)
-      .limit(501)
-      .get();
-  return snapshot.size;
+  return ref.watch(presenceRepositoryProvider).countOnlineUsers(limit: 501);
 });
 
 final liveRoomsCountProvider = FutureProvider.autoDispose<int>((ref) async {
