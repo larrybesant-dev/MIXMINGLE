@@ -9,6 +9,7 @@ import '../core/providers/firebase_providers.dart';
 import '../core/telemetry/app_telemetry.dart';
 import '../features/auth/controllers/auth_controller.dart';
 import '../models/presence_model.dart';
+import 'rtdb_presence_service.dart';
 
 // DO NOT WRITE TO presence COLLECTION ANYWHERE ELSE.
 // THIS IS THE SINGLE SOURCE OF TRUTH FOR GLOBAL PRESENCE.
@@ -59,6 +60,8 @@ class PresenceController extends Notifier<PresenceControllerState>
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
 
   FirebaseFirestore get _firestore => ref.read(firestoreProvider);
+  RtdbPresenceService get _rtdb =>
+      RtdbPresenceService(ref.read(firebaseDatabaseProvider));
 
   DocumentReference<Map<String, dynamic>> _ref(String userId) =>
       _firestore.collection('presence').doc(userId);
@@ -92,6 +95,7 @@ class PresenceController extends Notifier<PresenceControllerState>
       Future.microtask(() async {
         _startHeartbeat();
         await _writePresence();
+        await _rtdb.connect(initialUid);
       });
     }
 
@@ -127,6 +131,7 @@ class PresenceController extends Notifier<PresenceControllerState>
     }
     state = state.copyWith(inRoom: roomId);
     await _writePresence();
+    unawaited(_rtdb.setInRoom(userId, roomId));
   }
 
   Future<void> clearInRoom(String userId) async {
@@ -135,6 +140,7 @@ class PresenceController extends Notifier<PresenceControllerState>
     }
     state = state.copyWith(inRoom: null);
     await _writePresence();
+    unawaited(_rtdb.clearInRoom(userId));
   }
 
   Future<void> heartbeat() async {
@@ -142,6 +148,8 @@ class PresenceController extends Notifier<PresenceControllerState>
       return;
     }
     await _writePresence();
+    final userId = state.userId;
+    if (userId != null) unawaited(_rtdb.heartbeat(userId));
   }
 
   Future<void> _handleAuthChange(String? previousUid, String? nextUid) async {
@@ -155,6 +163,7 @@ class PresenceController extends Notifier<PresenceControllerState>
         appState: PresenceAppState.detached,
         inRoom: null,
       );
+      unawaited(_rtdb.disconnect(previous));
     }
 
     if (next == null || next.isEmpty) {
@@ -175,6 +184,7 @@ class PresenceController extends Notifier<PresenceControllerState>
     );
     _startHeartbeat();
     await _writePresence();
+    unawaited(_rtdb.connect(next));
   }
 
   Future<void> _handleLifecycleChange(AppLifecycleState lifecycleState) async {
@@ -189,8 +199,12 @@ class PresenceController extends Notifier<PresenceControllerState>
     if (nextStatus == UserStatus.offline) {
       _heartbeatTimer?.cancel();
       _heartbeatTimer = null;
+      final userId = state.userId;
+      if (userId != null) unawaited(_rtdb.disconnect(userId));
     } else if (_heartbeatTimer == null) {
       _startHeartbeat();
+      final userId = state.userId;
+      if (userId != null) unawaited(_rtdb.connect(userId));
     }
 
     await _writePresence();

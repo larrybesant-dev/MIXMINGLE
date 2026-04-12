@@ -213,7 +213,7 @@ service cloud.firestore {
           || (
             participantId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['lastActiveAt', 'camOn', 'micOn'])
+                .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus'])
           )
           // Allow a participant to release the mic (self-demote back to member).
           // Grabbing / inviting to stage must go through the grabMic /

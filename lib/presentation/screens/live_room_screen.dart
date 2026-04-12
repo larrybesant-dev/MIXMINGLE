@@ -65,6 +65,7 @@ import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/presence_repository.dart';
 import '../../services/room_audio_cues.dart';
+import '../../core/providers/firebase_providers.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
@@ -913,6 +914,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         _mediaController.finishMicAction(isMuted: next);
       }
       _syncMediaUiFromService();
+      // Mirror mic state to RTDB so onDisconnect clears it automatically.
+      // next=true means muted, so mic_on = !next.
+      final micUserId = _joinedUserId;
+      if (micUserId != null) {
+        unawaited(
+          ref.read(rtdbPresenceServiceProvider).setMicOn(micUserId, micOn: !next),
+        );
+      }
       // Start or stop the timer that refreshes the mic level bar.
       if (!next) {
         _startMicLevelPolling();
@@ -1202,6 +1211,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           cameraStatus: next ? 'Camera active.' : 'Camera off.',
         );
         _syncMediaUiFromService();
+        // Mirror cam state into RTDB so onDisconnect clears it automatically.
+        final camUserId = _joinedUserId;
+        if (camUserId != null) {
+          unawaited(
+            ref.read(rtdbPresenceServiceProvider).setCamOn(camUserId, camOn: next),
+          );
+        }
         if (next) {
           Future<void>.delayed(const Duration(milliseconds: 450), () {
             if (mounted) setState(() {});
@@ -4725,9 +4741,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               ),
                             ),
                           if (_showEmojiTray)
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-                              child: _buildEmojiTray(),
+                            SizedBox(
+                              height: 68,
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                                child: _buildEmojiTray(),
+                              ),
                             ),
                           if (_firestore != null)
                             StreamBuilder<

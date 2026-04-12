@@ -23,6 +23,7 @@
     image: ^4.0.0
     collection: ^1.19.1
     firebase_auth: ^6.2.0
+    firebase_database: ^12.2.0
     connectivity_plus: ^7.0.0
     firebase_core: ^4.5.0
     firebase_messaging: ^16.0.3

@@ -27,6 +27,7 @@ class DefaultFirebaseOptions {
         messagingSenderId: '980846719834',
         appId: '1:980846719834:web:fbcdf5051c55d691077963',
         measurementId: 'G-BN784E6ZJY',
+        databaseURL: 'https://mix-and-mingle-v2-default-rtdb.firebaseio.com',
       );
 
   /// FirebaseOptions for Windows
@@ -38,5 +39,6 @@ class DefaultFirebaseOptions {
         messagingSenderId: '980846719834',
         appId: '1:980846719834:web:17c9f4f34a8fb666077963',
         measurementId: 'G-RE3FC9DMJE',
+        databaseURL: 'https://mix-and-mingle-v2-default-rtdb.firebaseio.com',
       );
 }

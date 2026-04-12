@@ -89,8 +89,9 @@ final currentParticipantProvider =
 
 /// Staleness window: a participant whose lastActiveAt has not been updated
 /// within this duration is considered offline (browser closed / crashed).
-const Duration _kParticipantStaleness = Duration(seconds: 90);
-const Duration _kParticipantWarningStaleness = Duration(seconds: 30);
+/// Heartbeat fires every 30 s so 5 min gives 10× headroom for slow writes.
+const Duration _kParticipantStaleness = Duration(minutes: 5);
+const Duration _kParticipantWarningStaleness = Duration(seconds: 90);
 
 bool _isParticipantFresh(RoomParticipantModel p) {
 	return DateTime.now().difference(p.lastActiveAt) < _kParticipantStaleness;

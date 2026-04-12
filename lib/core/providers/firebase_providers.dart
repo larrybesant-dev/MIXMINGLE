@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../services/rtdb_presence_service.dart';
 
 /// Canonical Firebase singleton providers.
 ///
@@ -13,4 +16,12 @@ final firestoreProvider = Provider<FirebaseFirestore>(
 
 final firebaseAuthProvider = Provider<FirebaseAuth>(
   (ref) => FirebaseAuth.instance,
+);
+
+final firebaseDatabaseProvider = Provider<FirebaseDatabase>(
+  (ref) => FirebaseDatabase.instance,
+);
+
+final rtdbPresenceServiceProvider = Provider<RtdbPresenceService>(
+  (ref) => RtdbPresenceService(ref.watch(firebaseDatabaseProvider)),
 );

@@ -356,16 +356,16 @@ class RoomSessionService {
       operation: 'participant_heartbeat',
       roomId: roomId,
       userId: userId,
+      // Only write lastActiveAt — rules allow self-update of this field.
+      // Writing extra fields (userId, userStatus) triggers the hasOnly guard
+      // → PERMISSION_DENIED → lastActiveAt never advances → participant goes
+      // stale in 90 s and vanishes from the roster.
       action: () => _firestore
           .collection('rooms')
           .doc(roomId)
           .collection('participants')
           .doc(userId)
-          .set({
-        'userId': userId,
-        'lastActiveAt': FieldValue.serverTimestamp(),
-        'userStatus': 'online',
-      }, SetOptions(merge: true)),
+          .update({'lastActiveAt': FieldValue.serverTimestamp()}),
     );
     AppTelemetry.updateRoomState(
       roomId: roomId,
