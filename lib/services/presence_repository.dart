@@ -26,6 +26,20 @@ class FirestorePresenceRepository implements PresenceRepository {
 
   final FirebaseFirestore _firestore;
 
+  bool _isPermissionDenied(Object error) {
+    if (error is FirebaseException) {
+      final code = error.code.trim().toLowerCase();
+      return code == 'permission-denied' ||
+          code == 'unauthenticated' ||
+          code == 'unauthorized';
+    }
+    final normalized = error.toString().toLowerCase();
+    return normalized.contains('permission-denied') ||
+        normalized.contains('insufficient permissions') ||
+        normalized.contains('unauthenticated') ||
+        normalized.contains('unauthorized');
+  }
+
   DocumentReference<Map<String, dynamic>> _ref(String userId) =>
       _firestore.collection('presence').doc(userId);
 
@@ -77,22 +91,63 @@ class FirestorePresenceRepository implements PresenceRepository {
     }
 
     return Stream.multi((controller) {
+      final subscriptions = <StreamSubscription>[];
+      var usingDocumentFallback = false;
+
+      void emitFrom(Map<String, PresenceModel> source) {
+        controller.add({
+          for (final userId in normalizedIds)
+            userId: source[userId] ?? _parsePresence(userId, null),
+        });
+      }
+
+      Future<void> switchToDocumentFallback() async {
+        if (usingDocumentFallback) {
+          return;
+        }
+        usingDocumentFallback = true;
+
+        for (final sub in subscriptions) {
+          await sub.cancel();
+        }
+        subscriptions.clear();
+
+        final presenceById = <String, PresenceModel>{};
+        void emit() => emitFrom(presenceById);
+
+        for (final userId in normalizedIds) {
+          final sub = _ref(userId).snapshots().listen((doc) {
+            presenceById[userId] = _parsePresence(userId, doc.data());
+            emit();
+          }, onError: (error, stackTrace) {
+            if (_isPermissionDenied(error)) {
+              presenceById[userId] = _parsePresence(userId, null);
+              emit();
+              return;
+            }
+            controller.addError(error, stackTrace);
+          });
+          subscriptions.add(sub);
+        }
+
+        emit();
+      }
+
       final chunks = _chunksOf(normalizedIds, _firestoreWhereInLimit);
       final chunkMaps = List<Map<String, PresenceModel>>.generate(
         chunks.length,
         (_) => <String, PresenceModel>{},
       );
-      final subscriptions = <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
 
       void emit() {
+        if (usingDocumentFallback) {
+          return;
+        }
         final merged = <String, PresenceModel>{};
         for (final chunkMap in chunkMaps) {
           merged.addAll(chunkMap);
         }
-        controller.add({
-          for (final userId in normalizedIds)
-            userId: merged[userId] ?? _parsePresence(userId, null),
-        });
+        emitFrom(merged);
       }
 
       for (var index = 0; index < chunks.length; index += 1) {
@@ -106,7 +161,13 @@ class FirestorePresenceRepository implements PresenceRepository {
             for (final doc in snapshot.docs) doc.id: _parsePresence(doc.id, doc.data()),
           };
           emit();
-        }, onError: controller.addError);
+        }, onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            unawaited(switchToDocumentFallback());
+            return;
+          }
+          controller.addError(error, stackTrace);
+        });
         subscriptions.add(sub);
       }
 
@@ -128,13 +189,24 @@ class FirestorePresenceRepository implements PresenceRepository {
     final result = <String, PresenceModel>{};
     final chunks = _chunksOf(normalizedIds, _firestoreWhereInLimit);
 
-    for (final chunk in chunks) {
-      final snapshot = await _firestore
-          .collection('presence')
-          .where(FieldPath.documentId, whereIn: chunk)
-          .get();
-      for (final doc in snapshot.docs) {
-        result[doc.id] = _parsePresence(doc.id, doc.data());
+    try {
+      for (final chunk in chunks) {
+        final snapshot = await _firestore
+            .collection('presence')
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+        for (final doc in snapshot.docs) {
+          result[doc.id] = _parsePresence(doc.id, doc.data());
+        }
+      }
+    } catch (error) {
+      if (!_isPermissionDenied(error)) {
+        rethrow;
+      }
+
+      for (final userId in normalizedIds) {
+        final doc = await _ref(userId).get();
+        result[userId] = _parsePresence(userId, doc.data());
       }
     }
 

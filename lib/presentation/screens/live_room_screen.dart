@@ -80,6 +80,7 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late TextEditingController messageController;
+  late TextEditingController _secretMessageController;
   late ScrollController scrollController;
   FirebaseFirestore? _firestore;
   String? _joinedUserId;
@@ -95,7 +96,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   /// Order of the three desktop columns. Valid values: 'cams', 'chat', 'users'.
   List<String> _columnOrder = const ['cams', 'chat', 'users'];
   double _chatColW = 280.0;
-  static const double _kUsersColW = 200.0;
+  static const double _kUsersColW = 260.0;
   /// Mobile tab: 0=Camera, 1=Chat, 2=People  (only used when width < 640)
   int _mobileTab = 0;
 
@@ -175,6 +176,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
   final Map<String, String?> _senderGenderById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
+  RoomParticipantModel? _secretComposerTarget;
+  bool _isSendingSecretMessage = false;
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
@@ -249,6 +252,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       fireImmediately: true,
     );
     messageController = TextEditingController();
+    _secretMessageController = TextEditingController();
     scrollController = ScrollController();
 
     final user = ref.read(userProvider);
@@ -2696,6 +2700,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
   }
 
+  void _openSecretComposerForParticipant(RoomParticipantModel target) {
+    if (!mounted) return;
+    setState(() {
+      _secretComposerTarget = target;
+      _secretMessageController.clear();
+    });
+  }
+
+  void _closeSecretComposer() {
+    if (!mounted) return;
+    setState(() {
+      _secretComposerTarget = null;
+      _isSendingSecretMessage = false;
+      _secretMessageController.clear();
+    });
+  }
+
   Future<void> _sendPrivateRoomMessageToParticipant(
     RoomParticipantModel target,
   ) async {
@@ -2703,41 +2724,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (currentUser == null) return;
 
     final targetName = _senderDisplayNameById[target.userId] ?? target.userId;
-    final controller = TextEditingController();
 
-    final message = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text('Private message to $targetName'),
-          content: TextField(
-            controller: controller,
-            maxLines: 4,
-            minLines: 2,
-            textInputAction: TextInputAction.send,
-            decoration: const InputDecoration(
-              hintText: 'Only this user will see this in room chat',
-            ),
-            onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-              child: const Text('Send'),
-            ),
-          ],
-        );
-      },
-    );
-
-    final trimmed = message?.trim() ?? '';
+    final trimmed = _secretMessageController.text.trim();
     if (trimmed.isEmpty) return;
 
     try {
+      setState(() => _isSendingSecretMessage = true);
       final sendPrivate = ref.read(sendPrivateMessageProvider(widget.roomId));
       await sendPrivate(
         content: _buildOutgoingChatMessage(trimmed),
@@ -2745,9 +2737,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         recipientDisplayName: targetName,
       );
       if (!mounted) return;
+      _closeSecretComposer();
       _showSnackBar('Private room message sent to $targetName.');
     } catch (e) {
       if (!mounted) return;
+      setState(() => _isSendingSecretMessage = false);
       _showSnackBar('Could not send private room message: $e');
     }
   }
@@ -3419,6 +3413,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     unawaited(_leaveRoom());
     AppTelemetry.clearRoomState();
     messageController.dispose();
+    _secretMessageController.dispose();
     scrollController.dispose();
     super.dispose();
   }
@@ -5144,7 +5139,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               }
                             },
                             onSecretMessage: (p) =>
-                                _sendPrivateRoomMessageToParticipant(p),
+                                _openSecretComposerForParticipant(p),
+                            secretComposerTarget: _secretComposerTarget,
+                            secretComposerTextController:
+                                _secretMessageController,
+                            isSendingSecretMessage: _isSendingSecretMessage,
+                            onSendSecretMessage: _secretComposerTarget == null
+                                ? null
+                                : () => _sendPrivateRoomMessageToParticipant(
+                                    _secretComposerTarget!,
+                                  ),
+                            onCancelSecretMessage: _closeSecretComposer,
                           ),
                         ),
                       ],
@@ -5385,6 +5390,11 @@ class _RoomRosterSidebar extends StatelessWidget {
     this.onReleaseMic,
     this.onWhisper,
     this.onSecretMessage,
+    this.secretComposerTarget,
+    this.secretComposerTextController,
+    this.isSendingSecretMessage = false,
+    this.onSendSecretMessage,
+    this.onCancelSecretMessage,
     this.topPadding = kToolbarHeight,
     this.recentChatters = const {},
   });
@@ -5407,6 +5417,11 @@ class _RoomRosterSidebar extends StatelessWidget {
   final VoidCallback? onReleaseMic;
   final void Function(RoomParticipantModel participant)? onWhisper;
   final void Function(RoomParticipantModel participant)? onSecretMessage;
+  final RoomParticipantModel? secretComposerTarget;
+  final TextEditingController? secretComposerTextController;
+  final bool isSendingSecretMessage;
+  final VoidCallback? onSendSecretMessage;
+  final VoidCallback? onCancelSecretMessage;
   final double topPadding;
   final Set<String> recentChatters;
 
@@ -5419,6 +5434,23 @@ class _RoomRosterSidebar extends StatelessWidget {
     if (level >= 10) return const Color(0xFFC45E7A);
     if (level >= 5) return const Color(0xFF4CAF50);
     return Colors.white.withValues(alpha: 0.85);
+  }
+
+  String? _roleLabel(RoomParticipantModel? participant) {
+    final role = participant?.role ?? '';
+    switch (role) {
+      case 'host':
+      case 'owner':
+        return 'Host';
+      case 'cohost':
+        return 'Co-host';
+      case 'moderator':
+        return 'Mod';
+      case 'stage':
+        return 'On mic';
+      default:
+        return null;
+    }
   }
 
   @override
@@ -5441,6 +5473,9 @@ class _RoomRosterSidebar extends StatelessWidget {
             ? isLocalVideoEnabled
             : p.camOn)
         .toList(growable: false);
+    final participantByUserId = <String, RoomParticipantModel>{
+      for (final participant in participants) participant.userId: participant,
+    };
 
     // ── Sort: host → cohost → mod → audience ─────────────────
     final sorted = [...participants]..sort((a, b) {
@@ -5478,8 +5513,19 @@ class _RoomRosterSidebar extends StatelessWidget {
                     displayName: displayNameById[uid] ?? uid,
                     vipLevel: vipLevelById[uid] ?? 0,
                     nameColor: _nameColor(vipLevelById[uid] ?? 0),
+                    roleLabel: _roleLabel(participantByUserId[uid]),
+                    isSelf: uid == currentUserId,
+                    camOn: uid == currentUserId
+                        ? isLocalVideoEnabled
+                        : (participantByUserId[uid]?.camOn ?? false),
                     trailingIcon: Icons.mic,
                     trailingColor: const Color(0xFFC45E7A),
+                    onSecretMessage: uid == currentUserId || onSecretMessage == null
+                        ? null
+                        : () => onSecretMessage!(participantByUserId[uid]!),
+                    onDirectMessage: uid == currentUserId || onWhisper == null
+                        ? null
+                        : () => onWhisper!(participantByUserId[uid]!),
                   ),
                 ),
           const Divider(height: 1, thickness: 1, color: _kDivider),
@@ -5538,9 +5584,18 @@ class _RoomRosterSidebar extends StatelessWidget {
                     vipLevel: vipLevelById[p.userId] ?? 0,
                     nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
                     gender: genderById[p.userId],
+                    roleLabel: _roleLabel(p),
+                    isSelf: p.userId == currentUserId,
                     trailingIcon: Icons.videocam,
                     trailingColor: Colors.white38,
+                    camOn: true,
                     hasRecentChat: recentChatters.contains(p.userId),
+                    onSecretMessage: p.userId == currentUserId || onSecretMessage == null
+                        ? null
+                        : () => onSecretMessage!(p),
+                    onDirectMessage: p.userId == currentUserId || onWhisper == null
+                        ? null
+                        : () => onWhisper!(p),
                   ),
                 ),
           const Divider(height: 1, thickness: 1, color: _kDivider),
@@ -5570,6 +5625,8 @@ class _RoomRosterSidebar extends StatelessWidget {
                     vipLevel: vip,
                     nameColor: _nameColor(vip),
                     gender: genderById[p.userId],
+                    roleLabel: _roleLabel(p),
+                    isSelf: isSelf,
                     camOn: isCamOn,
                     trailingIcon: p.role == 'host' || p.role == 'owner'
                         ? Icons.star
@@ -5589,6 +5646,17 @@ class _RoomRosterSidebar extends StatelessWidget {
               },
             ),
           ),
+          if (secretComposerTarget != null &&
+              secretComposerTextController != null)
+            _InlineSecretComposer(
+              targetDisplayName:
+                  displayNameById[secretComposerTarget!.userId] ??
+                  secretComposerTarget!.userId,
+              controller: secretComposerTextController!,
+              isSending: isSendingSecretMessage,
+              onCancel: onCancelSecretMessage,
+              onSend: onSendSecretMessage,
+            ),
         ],
       ),
     );
@@ -5639,6 +5707,8 @@ class _RosterRow extends StatelessWidget {
     required this.vipLevel,
     required this.nameColor,
     this.gender,
+    this.roleLabel,
+    this.isSelf = false,
     this.camOn = false,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
@@ -5651,6 +5721,8 @@ class _RosterRow extends StatelessWidget {
   final int vipLevel;
   final Color nameColor;
   final String? gender;
+  final String? roleLabel;
+  final bool isSelf;
   final bool camOn;
   final IconData? trailingIcon;
   final Color trailingColor;
@@ -5679,99 +5751,341 @@ class _RosterRow extends StatelessWidget {
     final gIcon = _genderIcon(gender);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (gIcon != null) ...[
-            Icon(gIcon, size: 11, color: _genderColor(gender)),
-            const SizedBox(width: 3),
-          ],
-          Expanded(
-            child: Text(
-              displayName,
-              style: TextStyle(
-                color: nameColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+          Row(
+            children: [
+              if (gIcon != null) ...[
+                Icon(gIcon, size: 11, color: _genderColor(gender)),
+                const SizedBox(width: 3),
+              ],
+              Expanded(
+                child: Text(
+                  displayName,
+                  style: TextStyle(
+                    color: nameColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
+              if (vipLevel > 0) ...[
+                const SizedBox(width: 3),
+                Text(
+                  '💎$vipLevel',
+                  style: const TextStyle(
+                      fontSize: 9, color: Color(0xFF7777BB)),
+                ),
+              ],
+              if (trailingIcon != null) ...[
+                const SizedBox(width: 3),
+                Icon(trailingIcon, size: 11, color: trailingColor),
+              ],
+            ],
+          ),
+          const SizedBox(height: 3),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              if (isSelf)
+                _RosterChip(
+                  label: 'You',
+                  icon: Icons.person,
+                  color: const Color(0xFF5A5E6B),
+                ),
+              if (roleLabel != null)
+                _RosterChip(
+                  label: roleLabel!,
+                  icon: Icons.label_outline,
+                  color: const Color(0xFFC45E7A),
+                ),
+              if (camOn)
+                const _RosterChip(
+                  label: 'Cam On',
+                  icon: Icons.videocam,
+                  color: Color(0xFF4CAF50),
+                ),
+              if (hasRecentChat)
+                _RosterChip(
+                  label: 'Chatting',
+                  icon: Icons.chat_bubble_outline,
+                  color: VelvetNoir.primary,
+                ),
+              if (onSecretMessage != null)
+                _RosterActionChip(
+                  label: 'Secret',
+                  icon: Icons.lock_outline,
+                  color: const Color(0xFFD4A853),
+                  onTap: onSecretMessage!,
+                ),
+              if (onDirectMessage != null)
+                _RosterActionChip(
+                  label: 'DM',
+                  icon: Icons.mail_outline,
+                  color: const Color(0xFFB09080),
+                  onTap: onDirectMessage!,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RosterChip extends StatelessWidget {
+  const _RosterChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelColor = Color.alphaBlend(
+      color.withValues(alpha: 0.18),
+      Colors.white,
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.26),
+            color.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.18),
+            blurRadius: 8,
+            spreadRadius: 0.2,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: labelColor.withValues(alpha: 0.95),
+              fontSize: 9.4,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
             ),
           ),
-          if (vipLevel > 0) ...[
-            const SizedBox(width: 3),
-            Text(
-              '💎$vipLevel',
-              style: const TextStyle(
-                  fontSize: 9, color: Color(0xFF7777BB)),
+        ],
+      ),
+    );
+  }
+}
+
+class _RosterActionChip extends StatelessWidget {
+  const _RosterActionChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelColor = Color.alphaBlend(
+      color.withValues(alpha: 0.2),
+      Colors.white,
+    );
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.3),
+                color.withValues(alpha: 0.12),
+              ],
             ),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: color.withValues(alpha: 0.52)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.24),
+                blurRadius: 10,
+                spreadRadius: 0.2,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 10, color: color),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  color: labelColor.withValues(alpha: 0.98),
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.25,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineSecretComposer extends StatelessWidget {
+  const _InlineSecretComposer({
+    required this.targetDisplayName,
+    required this.controller,
+    required this.isSending,
+    this.onCancel,
+    this.onSend,
+  });
+
+  final String targetDisplayName;
+  final TextEditingController controller;
+  final bool isSending;
+  final VoidCallback? onCancel;
+  final VoidCallback? onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF241820),
+            Color(0xFF1A141B),
           ],
-          if (hasRecentChat) ...[
-            const SizedBox(width: 3),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                boxShadow: [
-                  BoxShadow(
-                    color: VelvetNoir.secondary.withValues(alpha: 0.75),
-                    blurRadius: 6,
-                    spreadRadius: 1,
+        ),
+        border: Border(
+          top: BorderSide(color: const Color(0xFFD4A853).withValues(alpha: 0.24)),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.lock, size: 12, color: Color(0xFFD4A853)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Secret to $targetDisplayName',
+                  style: const TextStyle(
+                    color: Color(0xFFE7D7B5),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
                   ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              child: const Icon(
-                Icons.mail,
-                size: 11,
-                color: VelvetNoir.primary,
-              ),
-            ),
-          ],
-          if (camOn) ...[
-            const SizedBox(width: 3),
-            const Icon(
-              Icons.videocam,
-              size: 11,
-              color: Color(0xFF4CAF50),
-            ),
-          ],
-          if (trailingIcon != null) ...[
-            const SizedBox(width: 3),
-            Icon(trailingIcon, size: 11, color: trailingColor),
-          ],
-          if (onSecretMessage != null) ...[
-            const SizedBox(width: 3),
-            Tooltip(
-              message: 'Secret room message',
-              child: InkWell(
-                borderRadius: BorderRadius.circular(999),
-                onTap: onSecretMessage,
-                child: const Padding(
-                  padding: EdgeInsets.all(2),
-                  child: Icon(
-                    Icons.lock_outline,
-                    size: 11,
-                    color: Color(0xFFD4A853),
+              if (onCancel != null)
+                InkWell(
+                  borderRadius: BorderRadius.circular(999),
+                  onTap: isSending ? null : onCancel,
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.close, size: 14, color: Colors.white54),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  enabled: !isSending,
+                  maxLines: 1,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) {
+                    if (isSending || onSend == null) return;
+                    onSend!();
+                  },
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: 'Type secret message... ',
+                    hintStyle: const TextStyle(color: Colors.white38),
+                    filled: true,
+                    fillColor: const Color(0xFF0F0D11),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0x33D4A853)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0x44D4A853)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFFD4A853)),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-          if (onDirectMessage != null) ...[
-            const SizedBox(width: 3),
-            Tooltip(
-              message: 'Private DM',
-              child: InkWell(
-                borderRadius: BorderRadius.circular(999),
-                onTap: onDirectMessage,
-                child: const Padding(
-                  padding: EdgeInsets.all(2),
-                  child: Icon(
-                    Icons.mail_outline,
-                    size: 11,
-                    color: Color(0xFFB09080),
+              const SizedBox(width: 6),
+              SizedBox(
+                height: 34,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFD4A853),
+                    foregroundColor: const Color(0xFF1A141B),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    textStyle: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                  onPressed: isSending ? null : onSend,
+                  icon: isSending
+                      ? const SizedBox(
+                          width: 11,
+                          height: 11,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_rounded, size: 13),
+                  label: Text(isSending ? '...' : 'Send'),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ],
       ),
     );
