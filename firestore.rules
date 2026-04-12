@@ -390,7 +390,10 @@ service cloud.firestore {
           'isOnline',
           'online',
           'status',
+          'userStatus',
+          'appState',
           'lastSeen',
+          'lastActiveAt',
           'inRoom',
           'roomId',
           'lastOnlineNotifiedAt'
@@ -401,12 +404,18 @@ service cloud.firestore {
           || request.resource.data.online is bool)
         && (!('status' in request.resource.data)
           || request.resource.data.status is string)
+        && (!('userStatus' in request.resource.data)
+          || request.resource.data.userStatus is string)
+        && (!('appState' in request.resource.data)
+          || request.resource.data.appState is string)
         && (!('inRoom' in request.resource.data)
           || request.resource.data.inRoom == null
           || request.resource.data.inRoom is string)
         && (!('roomId' in request.resource.data)
           || request.resource.data.roomId == null
-          || request.resource.data.roomId is string);
+          || request.resource.data.roomId is string)
+        && (!('lastActiveAt' in request.resource.data)
+          || request.resource.data.lastActiveAt is timestamp);
       allow delete: if isSelf(userId);
     }
 
