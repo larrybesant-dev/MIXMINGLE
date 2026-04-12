@@ -5455,30 +5455,27 @@ class _RoomRosterSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ── Compute speaking user IDs ──────────────────────────────
+    // ── Compute speaking user IDs (others only) ───────────────
     final speakingUserIds = <String>{};
-    if (localSpeaking) speakingUserIds.add(currentUserId);
     for (final uid in remoteUids) {
       if (isSpeakingFn(uid)) {
         final userId = uidToUserId(uid);
-        if (userId != null) speakingUserIds.add(userId);
+        if (userId != null && userId != currentUserId) speakingUserIds.add(userId);
       }
     }
 
     // ── On-cam participants ───────────────────────────────────
-    // For the local user, trust the live _isVideoEnabled state rather than
-    // the Firestore camOn flag (which may be stale from a previous session).
+    // Exclude the current user from all roster display sections — users
+    // should only see others in the list, never themselves.
     final onCamParticipants = participants
-        .where((p) => p.userId == currentUserId
-            ? isLocalVideoEnabled
-            : p.camOn)
+        .where((p) => p.userId != currentUserId && p.camOn)
         .toList(growable: false);
     final participantByUserId = <String, RoomParticipantModel>{
       for (final participant in participants) participant.userId: participant,
     };
 
-    // ── Sort: host → cohost → mod → audience ─────────────────
-    final sorted = [...participants]..sort((a, b) {
+    // ── Sort: host → cohost → mod → audience (self excluded) ──
+    final sorted = [...participants.where((p) => p.userId != currentUserId)]..sort((a, b) {
         int rank(String r) => switch (r) {
               'host' || 'owner' => 0,
               'cohost' => 1,
@@ -5514,16 +5511,13 @@ class _RoomRosterSidebar extends StatelessWidget {
                     vipLevel: vipLevelById[uid] ?? 0,
                     nameColor: _nameColor(vipLevelById[uid] ?? 0),
                     roleLabel: _roleLabel(participantByUserId[uid]),
-                    isSelf: uid == currentUserId,
-                    camOn: uid == currentUserId
-                        ? isLocalVideoEnabled
-                        : (participantByUserId[uid]?.camOn ?? false),
+                    camOn: participantByUserId[uid]?.camOn ?? false,
                     trailingIcon: Icons.mic,
                     trailingColor: const Color(0xFFC45E7A),
-                    onSecretMessage: uid == currentUserId || onSecretMessage == null
+                    onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(participantByUserId[uid]!),
-                    onDirectMessage: uid == currentUserId || onWhisper == null
+                    onDirectMessage: onWhisper == null
                         ? null
                         : () => onWhisper!(participantByUserId[uid]!),
                   ),
@@ -5585,15 +5579,14 @@ class _RoomRosterSidebar extends StatelessWidget {
                     nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
                     gender: genderById[p.userId],
                     roleLabel: _roleLabel(p),
-                    isSelf: p.userId == currentUserId,
                     trailingIcon: Icons.videocam,
                     trailingColor: Colors.white38,
                     camOn: true,
                     hasRecentChat: recentChatters.contains(p.userId),
-                    onSecretMessage: p.userId == currentUserId || onSecretMessage == null
+                    onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(p),
-                    onDirectMessage: p.userId == currentUserId || onWhisper == null
+                    onDirectMessage: onWhisper == null
                         ? null
                         : () => onWhisper!(p),
                   ),
@@ -5612,22 +5605,15 @@ class _RoomRosterSidebar extends StatelessWidget {
               itemBuilder: (_, i) {
                 final p = sorted[i];
                 final vip = vipLevelById[p.userId] ?? 0;
-                final isSelf = p.userId == currentUserId;
-                final isCamOn = p.userId == currentUserId
-                    ? isLocalVideoEnabled
-                    : p.camOn;
                 return GestureDetector(
-                  onTap: onWhisper == null || p.userId == currentUserId
-                      ? null
-                      : () => onWhisper!(p),
+                  onTap: onWhisper == null ? null : () => onWhisper!(p),
                   child: _RosterRow(
                     displayName: displayNameById[p.userId] ?? p.userId,
                     vipLevel: vip,
                     nameColor: _nameColor(vip),
                     gender: genderById[p.userId],
                     roleLabel: _roleLabel(p),
-                    isSelf: isSelf,
-                    camOn: isCamOn,
+                    camOn: p.camOn,
                     trailingIcon: p.role == 'host' || p.role == 'owner'
                         ? Icons.star
                         : p.role == 'cohost'
@@ -5635,10 +5621,10 @@ class _RoomRosterSidebar extends StatelessWidget {
                             : null,
                     trailingColor: const Color(0xFFFFD700),
                     hasRecentChat: recentChatters.contains(p.userId),
-                    onSecretMessage: isSelf || onSecretMessage == null
+                    onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(p),
-                    onDirectMessage: isSelf || onWhisper == null
+                    onDirectMessage: onWhisper == null
                         ? null
                         : () => onWhisper!(p),
                   ),
