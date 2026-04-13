@@ -1,6 +1,6 @@
-# Release Candidate Verdict
+﻿# Release Candidate Verdict
 
-- GeneratedAtUtc: 2026-04-13T13:09:45.4486018Z
+- GeneratedAtUtc: 2026-04-13T18:40:43.3184601Z
 - GitRef: 
 - GitSha: 
 - Verdict: PASS
@@ -19,16 +19,16 @@
 ### Tier 0
 | Case | MinMs | AvgMs | MaxMs | Variability |
 |---|---:|---:|---:|---:|
-| PS-4 | 12881 | 12881 | 12881 | 0 |
-| MC-3 | 4794 | 4794 | 4794 | 0 |
-| PS-3 | 4862 | 4862 | 4862 | 0 |
+| PS-2 | 4600 | 4600 | 4600 | 0 |
+| MC-2 | 7914 | 7914 | 7914 | 0 |
+| MC-4 | 6488 | 6488 | 6488 | 0 |
 
 ### Tier 1
 | Case | MinMs | AvgMs | MaxMs | Variability |
 |---|---:|---:|---:|---:|
-| NR-2 | 9971 | 9971 | 9971 | 0 |
-| NR-3 | 7313 | 7313 | 7313 | 0 |
 | NR-4 | 6249 | 6249 | 6249 | 0 |
+| NR-1 | 6066 | 6066 | 6066 | 0 |
+| NR-2 | 9971 | 9971 | 9971 | 0 |
 
 ## Notes
 - Decision policy: releaseCandidateVerdict must be PASS to release.

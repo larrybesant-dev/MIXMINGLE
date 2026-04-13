@@ -83,6 +83,32 @@ The governance layer is considered stable when:
 
 All verification criteria must be evaluated under a single immutable `governance-v1-lock` configuration (no schema, tuner, or policy changes during evaluation window).
 
+The governance configuration is considered immutable during evaluation if the combined hash of the following files remains unchanged across the evaluation window:
+- `tools/release_governor_policy.json` (tuner + divergence config)
+- `tools/release_governor_safety_floors.json` (immutable floors)
+- `tools/policy_drift_contract.schema.json` (contract schema)
+
+### Baseline Hashes (captured at tag `governance-v1-lock`, 2026-04-13)
+
+These are the canonical identity anchors for this lock. Any RC evaluation window must compare against these exact hashes to confirm the governance configuration is unchanged.
+
+```json
+{
+  "algorithm": "SHA-256",
+  "captured_at_tag": "governance-v1-lock",
+  "captured_at_commit": "8de1d52",
+  "files": {
+    "tools/release_governor_policy.json":       "8D51CC44340D884542F6F7F75AE579CB153380F0E7B8ECBDD9F1E9B9842FAF6B",
+    "tools/release_governor_safety_floors.json": "421153B8306A72F7A9F4B0D3C80E52287F5959C952B92FD76D9441D9A7A8D8D1",
+    "tools/policy_drift_contract.schema.json":   "FC76FA2C11CFBD663C9AB4DA38FEB0F49FBCB4450B6B5217258AC7A00FE2D842"
+  }
+}
+```
+
+These hashes are a one-time capture tied to the tag. They must never be silently updated. Any change requires a new version tag (e.g., `governance-v1.1`).
+
+**Hash mismatch behavior**: a mismatch does NOT fail CI. It fails **stability eligibility only** — the RC run is flagged as non-comparable and does not count toward the 5-run verification gate. CI diagnostics and artifact emission continue normally.
+
 ## Next Phase
 - Observe 3–5 RC runs
 - Validate contract stability

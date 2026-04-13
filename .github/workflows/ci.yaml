@@ -197,13 +197,21 @@ jobs:
           name: tier1-burnin-report
           path: tools/reports
 
+      - name: Restore verdict history cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tools/reports/history
+          key: rc-verdict-history-${{ github.run_id }}
+          restore-keys: |
+            rc-verdict-history-
+
       - name: Build formal release verdict
         shell: pwsh
-        run: ./tools/build_release_verdict.ps1 -ReportsDir tools/reports -OutputPath tools/reports/release_candidate_verdict.json -MarkdownOutputPath tools/reports/release_candidate_verdict.md
+        run: ./tools/build_release_verdict.ps1 -ReportsDir tools/reports -OutputPath tools/reports/release_candidate_verdict.json -MarkdownOutputPath tools/reports/release_candidate_verdict.md -HistoryDir tools/reports/history -HistoryIndexPath tools/reports/history/verdict_index.json
 
       - name: Build confidence drift dashboard
         shell: pwsh
-        run: ./tools/build_confidence_drift_dashboard.ps1 -ReportsDir tools/reports -VerdictPattern release_candidate_verdict*.json -OutputJson tools/reports/confidence_drift_dashboard.json -OutputMarkdown tools/reports/confidence_drift_dashboard.md
+        run: ./tools/build_confidence_drift_dashboard.ps1 -ReportsDir tools/reports -HistoryDir tools/reports/history -PreferHistory -VerdictPattern release_candidate_verdict*.json -OutputJson tools/reports/confidence_drift_dashboard.json -OutputMarkdown tools/reports/confidence_drift_dashboard.md
 
       - name: Evaluate release governor policy
         shell: pwsh
@@ -299,6 +307,38 @@ jobs:
         shell: pwsh
         run: ./tools/validate_policy_drift_contract.ps1 -ValidationMode observe -ContractPath tools/policy_drift_contract.schema.json -ProposedPath tools/reports/proposed_thresholds.json -SnapshotPath tools/reports/rc_policy_snapshot_v1.json -ApprovalRequestPath tools/reports/policy_approval_request.json -StatusPath tools/reports/policy_tuner_status.json -OutputValidationStatusPath tools/reports/policy_contract_validation_status.json
 
+      - name: Replay governance timeline (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/replay_governance_timeline.ps1 -IndexPath tools/reports/history/verdict_index.json -SweepBurnInFrom 1 -SweepBurnInTo 10 -OutputPath tools/reports/replay_timeline.json
+
+      - name: Analyze policy boundary drift (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/analyze_policy_boundary_drift.ps1 -IndexPath tools/reports/history/verdict_index.json -SweepBurnInFrom 1 -SweepBurnInTo 10 -OutputPath tools/reports/boundary_drift_analysis.json
+
+      - name: Compare policy surfaces (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/compare_policy_surfaces.ps1 -IndexPathA tools/reports/history/verdict_index.json -IndexPathB tools/reports/history/verdict_index.json -LabelA current -LabelB current -SweepBurnInFrom 1 -SweepBurnInTo 10 -OutputPath tools/reports/policy_surface_diff.json
+
+      - name: Compute policy drift score (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/compute_policy_drift_score.ps1 -ReplayPath tools/reports/replay_timeline.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -OutputPath tools/reports/policy_drift_score.json -DriftScoreThreshold 45
+
+      - name: Validate policy analysis contract (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/validate_policy_analysis_contract.ps1 -ContractPath tools/policy_analysis_contract.schema.json -ReplayPath tools/reports/replay_timeline.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -PolicyDriftScorePath tools/reports/policy_drift_score.json -ValidationMode observe -OutputValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
+
+      - name: Save verdict history cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: tools/reports/history
+          key: rc-verdict-history-${{ github.run_id }}
+
       - name: Upload release verdict artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -307,6 +347,8 @@ jobs:
           path: |
             tools/reports/release_candidate_verdict.json
             tools/reports/release_candidate_verdict.md
+            tools/reports/history/release_candidate_verdict*.json
+            tools/reports/history/verdict_index.json
             tools/reports/confidence_drift_dashboard.json
             tools/reports/confidence_drift_dashboard.md
             tools/reports/release_governor_decision.json
@@ -317,5 +359,11 @@ jobs:
             tools/reports/policy_tuner_status.json
             tools/reports/policy_history_index.json
             tools/reports/policy_contract_validation_status.json
+            tools/reports/replay_timeline.json
+            tools/reports/boundary_drift_analysis.json
+            tools/reports/policy_surface_diff.json
+            tools/reports/policy_drift_score.json
+            tools/reports/policy_analysis_contract_validation_status.json
             tools/policy_drift_contract.schema.json
+            tools/policy_analysis_contract.schema.json
           if-no-files-found: error

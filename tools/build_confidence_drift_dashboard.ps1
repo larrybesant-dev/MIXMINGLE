@@ -1,8 +1,10 @@
 param(
   [string]$ReportsDir = 'tools/reports',
+  [string]$HistoryDir = 'tools/reports/history',
   [string]$VerdictPattern = 'release_candidate_verdict*.json',
   [string]$OutputJson = 'tools/reports/confidence_drift_dashboard.json',
-  [string]$OutputMarkdown = 'tools/reports/confidence_drift_dashboard.md'
+  [string]$OutputMarkdown = 'tools/reports/confidence_drift_dashboard.md',
+  [switch]$PreferHistory
 )
 
 Set-StrictMode -Version Latest
@@ -99,9 +101,21 @@ if (-not (Test-Path $ReportsDir)) {
   throw "Reports directory not found: $ReportsDir"
 }
 
-$files = @(Get-ChildItem -Path $ReportsDir -Filter $VerdictPattern -File | Where-Object { $_.Name -notlike '*.md' })
+$files = @()
+
+if ($PreferHistory.IsPresent -and (Test-Path $HistoryDir)) {
+  $historyFiles = @(Get-ChildItem -Path $HistoryDir -Filter $VerdictPattern -File | Where-Object { $_.Name -notlike '*.md' })
+  if ($historyFiles.Count -gt 0) {
+    $files = $historyFiles
+  }
+}
+
 if ($files.Count -eq 0) {
-  throw "No verdict files found in $ReportsDir matching pattern: $VerdictPattern"
+  $files = @(Get-ChildItem -Path $ReportsDir -Filter $VerdictPattern -File | Where-Object { $_.Name -notlike '*.md' })
+}
+
+if ($files.Count -eq 0) {
+  throw "No verdict files found in $ReportsDir or $HistoryDir matching pattern: $VerdictPattern"
 }
 
 $runs = @()
@@ -166,6 +180,8 @@ $dashboard = [ordered]@{
   modelVersion = 'confidence_drift_dashboard_v1'
   source = [ordered]@{
     reportsDirectory = $ReportsDir
+    historyDirectory = $HistoryDir
+    preferHistory = $PreferHistory.IsPresent
     verdictPattern = $VerdictPattern
     verdictCount = $runs.Count
   }

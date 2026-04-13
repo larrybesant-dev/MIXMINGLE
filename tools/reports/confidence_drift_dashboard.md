@@ -1,7 +1,7 @@
-# Confidence Drift Dashboard
+﻿# Confidence Drift Dashboard
 
-- GeneratedAtUtc: 2026-04-13T13:22:34.4444340Z
-- VerdictCount: 1
+- GeneratedAtUtc: 2026-04-13T18:40:43.9444221Z
+- VerdictCount: 2
 - LatestScore: 100
 - LatestBand: very_high
 - LatestVerdict: PASS
@@ -18,7 +18,7 @@
 
 | Band | Count |
 |---|---:|
-| very_high | 1 |
+| very_high | 2 |
 | high | 0 |
 | moderate | 0 |
 | low | 0 |
@@ -27,4 +27,5 @@
 
 | Time (UTC) | Verdict | Score | Band | Tier0 | Tier1 | Tier0 AvgVar | Tier1 AvgVar | Source |
 |---|---|---:|---|---:|---:|---:|---:|---|
-| 2026-04-13T13:09:45.4486018Z | PASS | 100 | very_high | True | True | 0 | 0 | release_candidate_verdict.local.json |
+| 2026-04-13T18:37:07.8732167Z | PASS | 100 | very_high | True | True | 0 | 0 | release_candidate_verdict_local_20260413T183707897Z.json |
+| 2026-04-13T18:40:43.3184601Z | PASS | 100 | very_high | True | True | 0 | 0 | release_candidate_verdict_local_20260413T184043338Z.json |

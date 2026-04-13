@@ -1,7 +1,9 @@
 param(
   [string]$ReportsDir = 'tools/reports',
   [string]$OutputPath = 'tools/reports/release_candidate_verdict.json',
-  [string]$MarkdownOutputPath = 'tools/reports/release_candidate_verdict.md'
+  [string]$MarkdownOutputPath = 'tools/reports/release_candidate_verdict.md',
+  [string]$HistoryDir = 'tools/reports/history',
+  [string]$HistoryIndexPath = 'tools/reports/history/verdict_index.json'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -223,6 +225,56 @@ if (-not (Test-Path $outputDir)) {
 
 $verdict | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding utf8
 
+if (-not (Test-Path $HistoryDir)) {
+  New-Item -Path $HistoryDir -ItemType Directory | Out-Null
+}
+
+$refName = if ([string]::IsNullOrWhiteSpace($env:GITHUB_REF_NAME)) { 'local' } else { $env:GITHUB_REF_NAME }
+$safeRefName = ($refName -replace '[^A-Za-z0-9._-]', '_')
+$runIdentity = if ([string]::IsNullOrWhiteSpace($env:GITHUB_RUN_ID)) {
+  (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ')
+} else {
+  $env:GITHUB_RUN_ID
+}
+
+$historyFileName = "release_candidate_verdict_${safeRefName}_${runIdentity}.json"
+$historyFilePath = Join-Path $HistoryDir $historyFileName
+$duplicateCounter = 1
+while (Test-Path $historyFilePath) {
+  $historyFileName = "release_candidate_verdict_${safeRefName}_${runIdentity}_$duplicateCounter.json"
+  $historyFilePath = Join-Path $HistoryDir $historyFileName
+  $duplicateCounter += 1
+}
+
+$verdict | ConvertTo-Json -Depth 10 | Out-File -FilePath $historyFilePath -Encoding utf8
+
+$indexDir = Split-Path -Path $HistoryIndexPath -Parent
+if (-not (Test-Path $indexDir)) {
+  New-Item -Path $indexDir -ItemType Directory | Out-Null
+}
+
+$index = @()
+if (Test-Path $HistoryIndexPath) {
+  $rawIndex = Get-Content -Path $HistoryIndexPath -Raw
+  if (-not [string]::IsNullOrWhiteSpace($rawIndex)) {
+    $parsedIndex = $rawIndex | ConvertFrom-Json
+    $index = @($parsedIndex)
+  }
+}
+
+$index += [PSCustomObject]@{
+  generatedAtUtc = $verdict.generatedAtUtc
+  file = $historyFileName
+  gitRef = $verdict.gitRef
+  gitSha = $verdict.gitSha
+  runId = $verdict.runId
+  runNumber = $verdict.runNumber
+  releaseCandidateVerdict = $verdict.releaseCandidateVerdict
+  releaseConfidenceScore = $verdict.releaseConfidenceScore
+}
+
+$index | ConvertTo-Json -Depth 10 | Out-File -FilePath $HistoryIndexPath -Encoding utf8
+
 $mdLines = @(
   '# Release Candidate Verdict',
   '',
@@ -278,6 +330,8 @@ if (-not (Test-Path $mdDir)) {
 $mdLines -join "`n" | Out-File -FilePath $MarkdownOutputPath -Encoding utf8
 
 Write-Host "Release verdict written: $OutputPath"
+Write-Host "Immutable verdict event written: $historyFilePath"
+Write-Host "Verdict history index updated: $HistoryIndexPath"
 Write-Host "Release markdown summary written: $MarkdownOutputPath"
 Write-Host "Verdict: $($verdict.releaseCandidateVerdict)"
 
