@@ -7,6 +7,8 @@ Date: 2026-04-13
 ## Summary
 First schema-enforced governance control plane with non-invasive adaptive tuning.
 
+This document represents the exact operational state of the governance control plane at the time of tag `governance-v1-lock`. All behavior described here is verifiable via emitted artifacts and CI outputs.
+
 ## Capabilities Frozen
 
 ### 1. Policy Tuning (Sidecar, Recommend-Only)
@@ -52,10 +54,34 @@ Fallback artifacts included when tuner fails.
 - No enforcement from tuner
 - No adaptive mutation of live thresholds
 
-## Known Risks
-- Divergence classification not yet battle-tested across multiple RC cycles
-- Policy stability score requires 5–10 RC runs to reach meaningful values
-- Policy history index populated from synthetic seed only — no real RC history yet
+## Known Risks (Post-Lock Reality)
+
+1. **Limited Real-World RC Coverage**
+   - Current behavior validated on synthetic + initial local runs only
+   - Unknown: divergence sensitivity under real regression patterns
+
+2. **Policy Stability Score Immaturity**
+   - Score logic implemented but lacks sufficient RC history
+   - Risk: misleading confidence until ≥10–15 real RC samples
+
+3. **Policy History Index Bootstrap State**
+   - Index initialized from synthetic run
+   - Risk: early trend analysis may be skewed until real data dominates
+
+4. **Divergence Classification Confidence**
+   - Classification logic exists (transient / spike / structural)
+   - Unknown: accuracy under mixed-signal RC behavior
+
+## Verification Criteria for Next Phase
+
+The governance layer is considered stable when:
+
+- ≥5 consecutive RC runs produce zero contract violations
+- No unexpected fallback artifacts are emitted
+- Divergence stalls are explainable and <20% of RC runs
+- Policy stability score shows consistent trend (no oscillation)
+
+All verification criteria must be evaluated under a single immutable `governance-v1-lock` configuration (no schema, tuner, or policy changes during evaluation window).
 
 ## Next Phase
 - Observe 3–5 RC runs
