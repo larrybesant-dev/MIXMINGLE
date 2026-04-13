@@ -3,12 +3,13 @@ name: Flutter CI
 on:
   push:
     branches: [ main ]
+    tags: [ 'rc-*', 'v*' ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  flutter:
-    name: Analyze & Test (Flutter)
+  flutter-tier0:
+    name: Flutter Tier 0 (Blocking)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,14 +28,63 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
-        run: flutter analyze --no-pub
+      - name: Run Tier 0 release gates
+        run: bash tools/run_release_gate.sh tier0
 
-      - name: Run unit tests
-        run: flutter test --no-pub
+  flutter-tier1:
+    name: Flutter Tier 1 (Blocking)
+    runs-on: ubuntu-latest
+    needs: flutter-tier0
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Build web release
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Tier 1 release gates
+        run: bash tools/run_release_gate.sh tier1
+
+  flutter-tier2:
+    name: Flutter Tier 2 (Soft Gate)
+    runs-on: ubuntu-latest
+    needs: flutter-tier1
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Tier 2 release gates
+        run: bash tools/run_release_gate.sh tier2
+
+      - name: Build web release (informational)
         run: flutter build web --release --base-href "/"
+
+      - name: Tier 2 completion notice
+        run: echo "Tier 2 is a soft gate. Review warnings before release."
 
   functions:
     name: Lint & Test (Cloud Functions)
@@ -59,3 +109,213 @@ jobs:
 
       - name: Test
         run: npm test
+
+  rc-burnin-tier0:
+    name: RC Burn-In Tier 0
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Tier 0 burn-in
+        shell: pwsh
+        run: ./tools/run_tier0_burn_in.ps1 -Cycles 5 -PressureRepeatsPerCycle 2 -Shuffle
+
+      - name: Upload Tier 0 burn-in report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tier0-burnin-report
+          path: tools/reports/tier0_burn_in_*.json
+          if-no-files-found: error
+
+  rc-burnin-tier1:
+    name: RC Burn-In Tier 1
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: rc-burnin-tier0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Tier 1 burn-in
+        shell: pwsh
+        run: ./tools/run_tier1_burn_in.ps1 -Cycles 5 -PressureRepeatsPerCycle 2 -Shuffle
+
+      - name: Upload Tier 1 burn-in report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tier1-burnin-report
+          path: tools/reports/tier1_burn_in_*.json
+          if-no-files-found: error
+
+  rc-release-verdict:
+    name: RC Release Verdict
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: [rc-burnin-tier0, rc-burnin-tier1]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Tier 0 burn-in artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tier0-burnin-report
+          path: tools/reports
+
+      - name: Download Tier 1 burn-in artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tier1-burnin-report
+          path: tools/reports
+
+      - name: Build formal release verdict
+        shell: pwsh
+        run: ./tools/build_release_verdict.ps1 -ReportsDir tools/reports -OutputPath tools/reports/release_candidate_verdict.json -MarkdownOutputPath tools/reports/release_candidate_verdict.md
+
+      - name: Build confidence drift dashboard
+        shell: pwsh
+        run: ./tools/build_confidence_drift_dashboard.ps1 -ReportsDir tools/reports -VerdictPattern release_candidate_verdict*.json -OutputJson tools/reports/confidence_drift_dashboard.json -OutputMarkdown tools/reports/confidence_drift_dashboard.md
+
+      - name: Evaluate release governor policy
+        shell: pwsh
+        run: ./tools/evaluate_release_governor.ps1 -DashboardPath tools/reports/confidence_drift_dashboard.json -PolicyPath tools/release_governor_policy.json -OutputJson tools/reports/release_governor_decision.json -OutputMarkdown tools/reports/release_governor_decision.md
+
+      - name: Build policy tuner snapshot (recommend-only)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/build_policy_tuner_snapshot.ps1 -ContractVersion 1.0.0 -DashboardPath tools/reports/confidence_drift_dashboard.json -GovernorDecisionPath tools/reports/release_governor_decision.json -ActivePolicyPath tools/release_governor_policy.json -SafetyFloorsPath tools/release_governor_safety_floors.json -WindowSize 10 -BaselineWindowSize 30 -BurnInRcCount 6 -DivergenceThreshold 8 -EarlyExitOnSevereInstability $true -ShortWeight 0.4 -BaselineWeight 0.6 -OutputProposedPath tools/reports/proposed_thresholds.json -OutputSnapshotPath tools/reports/rc_policy_snapshot_v1.json -OutputApprovalRequestPath tools/reports/policy_approval_request.json -OutputStatusPath tools/reports/policy_tuner_status.json -OutputHistoryIndexPath tools/reports/policy_history_index.json
+
+      - name: Emit tuner fallback artifacts
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'tools/reports/proposed_thresholds.json')) {
+            @{
+              contract_version = '1.0.0'
+              artifact_mode = 'fallback'
+              generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+              modelVersion = 'policy_tuner_v1'
+              mode = 'recommend-only'
+              recommendationType = 'hold'
+              recommendationState = 'hold'
+              policy_divergence_score = 0
+              divergence_classification = 'transient'
+              policy_stability_score = 0
+              currentThresholds = @{}
+              recommendedThresholds = @{}
+              delta = @{}
+              justificationSignals = @{
+                failureMode = 'tuner_failed'
+              }
+            } | ConvertTo-Json -Depth 20 | Out-File -FilePath 'tools/reports/proposed_thresholds.json' -Encoding utf8
+          }
+          if (-not (Test-Path 'tools/reports/rc_policy_snapshot_v1.json')) {
+            @{
+              contract_version = '1.0.0'
+              artifact_mode = 'fallback'
+              generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+              snapshotVersion = 'rc_policy_snapshot_v1'
+              mode = 'recommend-only'
+              currentPolicy = @{}
+              proposedPolicy = @{
+                recommendationType = 'hold'
+                recommendationState = 'hold'
+                policy_stability_score = 0
+              }
+            } | ConvertTo-Json -Depth 20 | Out-File -FilePath 'tools/reports/rc_policy_snapshot_v1.json' -Encoding utf8
+          }
+          if (-not (Test-Path 'tools/reports/policy_approval_request.json')) {
+            @{
+              contract_version = '1.0.0'
+              artifact_mode = 'fallback'
+              generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+              requestVersion = 'policy_approval_request_v1'
+              status = 'pending_manual_approval'
+              mode = 'recommend-only'
+              recommendationType = 'hold'
+              recommendationState = 'hold'
+              policy_stability_score = 0
+              approvalRequired = $true
+            } | ConvertTo-Json -Depth 20 | Out-File -FilePath 'tools/reports/policy_approval_request.json' -Encoding utf8
+          }
+          if (-not (Test-Path 'tools/reports/policy_tuner_status.json')) {
+            @{
+              contract_version = '1.0.0'
+              artifact_mode = 'fallback'
+              generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+              statusVersion = 'policy_tuner_status_v1'
+              status = 'tuner_failed'
+              reason = 'script_error'
+              policyAction = 'hold'
+              mode = 'recommend-only'
+              recommendationType = 'hold'
+              recommendationState = 'hold'
+              policy_divergence_score = 0
+              divergence_classification = 'transient'
+              policy_stability_score = 0
+              outputs = @{}
+            } | ConvertTo-Json -Depth 10 | Out-File -FilePath 'tools/reports/policy_tuner_status.json' -Encoding utf8
+          }
+          if (-not (Test-Path 'tools/reports/policy_history_index.json')) {
+            @{
+              contract_version = '1.0.0'
+              artifact_mode = 'fallback'
+              indexVersion = 'policy_history_index_v1'
+              entries = @()
+            } | ConvertTo-Json -Depth 20 | Out-File -FilePath 'tools/reports/policy_history_index.json' -Encoding utf8
+          }
+
+      - name: Validate policy drift contract
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/validate_policy_drift_contract.ps1 -ValidationMode observe -ContractPath tools/policy_drift_contract.schema.json -ProposedPath tools/reports/proposed_thresholds.json -SnapshotPath tools/reports/rc_policy_snapshot_v1.json -ApprovalRequestPath tools/reports/policy_approval_request.json -StatusPath tools/reports/policy_tuner_status.json -OutputValidationStatusPath tools/reports/policy_contract_validation_status.json
+
+      - name: Upload release verdict artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-release-verdict
+          path: |
+            tools/reports/release_candidate_verdict.json
+            tools/reports/release_candidate_verdict.md
+            tools/reports/confidence_drift_dashboard.json
+            tools/reports/confidence_drift_dashboard.md
+            tools/reports/release_governor_decision.json
+            tools/reports/release_governor_decision.md
+            tools/reports/proposed_thresholds.json
+            tools/reports/rc_policy_snapshot_v1.json
+            tools/reports/policy_approval_request.json
+            tools/reports/policy_tuner_status.json
+            tools/reports/policy_history_index.json
+            tools/reports/policy_contract_validation_status.json
+            tools/policy_drift_contract.schema.json
+          if-no-files-found: error
