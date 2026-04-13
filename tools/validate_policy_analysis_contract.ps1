@@ -4,6 +4,7 @@ param(
   [string]$BoundaryDriftPath = 'tools/reports/boundary_drift_analysis.json',
   [string]$PolicySurfaceDiffPath = '',
   [string]$PolicyDriftScorePath = '',
+  [string]$PolicyAnalysisDeltaPath = '',
   [string]$ValidationMode = 'observe',
   [string]$OutputValidationStatusPath = 'tools/reports/policy_analysis_contract_validation_status.json'
 )
@@ -228,6 +229,42 @@ try {
 
     if ([string]$driftScore.schemaVersion -ne $expectedSchemaVersion) {
       throw "Contract violation in policy drift score artifact: schemaVersion mismatch (expected $expectedSchemaVersion)."
+    }
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($PolicyAnalysisDeltaPath)) {
+    Test-ContractFile -Path $PolicyAnalysisDeltaPath
+    $delta = Get-Content -Raw -Path $PolicyAnalysisDeltaPath | ConvertFrom-Json
+    $deltaContract = $contract.analysisArtifacts.policyAnalysisDelta
+
+    Test-RequiredFields -Object $delta -Fields @($deltaContract.requiredTopLevel) -ArtifactName 'policy_analysis_delta'
+    Test-ObjectField -Value $delta.source -ArtifactName 'policy_analysis_delta' -FieldName 'source'
+    Test-ObjectField -Value $delta.current -ArtifactName 'policy_analysis_delta' -FieldName 'current'
+    Test-ObjectField -Value $delta.summary -ArtifactName 'policy_analysis_delta' -FieldName 'summary'
+
+    Test-RequiredFields -Object $delta.source -Fields @($deltaContract.requiredSourceFields) -ArtifactName 'policy_analysis_delta.source'
+    Test-RequiredFields -Object $delta.current -Fields @($deltaContract.requiredCurrentFields) -ArtifactName 'policy_analysis_delta.current'
+    Test-RequiredFields -Object $delta.summary -Fields @($deltaContract.requiredSummaryFields) -ArtifactName 'policy_analysis_delta.summary'
+
+    if ($null -ne $delta.previous) {
+      Test-ObjectField -Value $delta.previous -ArtifactName 'policy_analysis_delta' -FieldName 'previous'
+      Test-RequiredFields -Object $delta.previous -Fields @($deltaContract.requiredPreviousFields) -ArtifactName 'policy_analysis_delta.previous'
+    }
+
+    if (@($deltaContract.allowedModes) -notcontains [string]$delta.summary.mode) {
+      throw "Contract violation in policy_analysis_delta.summary: invalid mode '$($delta.summary.mode)'."
+    }
+
+    if (@($deltaContract.allowedChangeClassification) -notcontains [string]$delta.summary.changeClassification) {
+      throw "Contract violation in policy_analysis_delta.summary: invalid changeClassification '$($delta.summary.changeClassification)'."
+    }
+
+    if (@($deltaContract.allowedConfidence) -notcontains [string]$delta.summary.confidence) {
+      throw "Contract violation in policy_analysis_delta.summary: invalid confidence '$($delta.summary.confidence)'."
+    }
+
+    if ([string]$delta.schemaVersion -ne $expectedSchemaVersion) {
+      throw "Contract violation in policy analysis delta artifact: schemaVersion mismatch (expected $expectedSchemaVersion)."
     }
   }
 

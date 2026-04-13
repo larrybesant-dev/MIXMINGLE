@@ -2,6 +2,7 @@ param(
   [string]$PolicyDriftScorePath = 'tools/reports/policy_drift_score.json',
   [string]$PolicySurfaceDiffPath = 'tools/reports/policy_surface_diff.json',
   [string]$BoundaryDriftPath = 'tools/reports/boundary_drift_analysis.json',
+  [string]$PolicyAnalysisDeltaPath = 'tools/reports/policy_analysis_delta.json',
   [string]$ValidationStatusPath = 'tools/reports/policy_analysis_contract_validation_status.json',
   [string]$SummaryPath = ''
 )
@@ -33,6 +34,7 @@ if ([string]::IsNullOrWhiteSpace($summaryTarget)) {
 $driftScore = Read-OptionalJson -Path $PolicyDriftScorePath
 $surfaceDiff = Read-OptionalJson -Path $PolicySurfaceDiffPath
 $boundaryDrift = Read-OptionalJson -Path $BoundaryDriftPath
+$deltaArtifact = Read-OptionalJson -Path $PolicyAnalysisDeltaPath
 $validationStatus = Read-OptionalJson -Path $ValidationStatusPath
 
 $scoreValue = if ($null -ne $driftScore) { $driftScore.summary.driftScore } else { 'unavailable' }
@@ -40,7 +42,8 @@ $tierValue = if ($null -ne $driftScore) { $driftScore.summary.tier } else { 'una
 $actionValue = if ($null -ne $driftScore) { $driftScore.summary.recommendation.action } else { 'unavailable' }
 $jaccardValue = if ($null -ne $surfaceDiff) { $surfaceDiff.summary.exitSetJaccard } else { 'unavailable' }
 $thresholdDiffCount = if ($null -ne $surfaceDiff) { $surfaceDiff.summary.differingThresholdCount } else { 'unavailable' }
-$boundaryBehavior = if ($null -ne $boundaryDrift) { $boundaryDrift.summary.boundaryBehavior } else { 'unavailable' }
+$boundaryBehaviorRaw = if ($null -ne $boundaryDrift) { [string]$boundaryDrift.summary.boundaryBehavior } else { 'unavailable' }
+$boundaryBehavior = if ($boundaryBehaviorRaw -eq 'insufficient_history') { 'insufficient_history (low confidence)' } else { $boundaryBehaviorRaw }
 $validationValue = if ($null -ne $validationStatus) { $validationStatus.status } else { 'unavailable' }
 $hardFailReason = if ($null -ne $driftScore) { $driftScore.summary.hardFailReason } else { $null }
 $softFailReason = if ($null -ne $driftScore) { $driftScore.summary.softFailReason } else { $null }
@@ -77,6 +80,36 @@ if ($null -ne $driftScore) {
   $lines += "- T (boundary fragmentation): $($driftScore.components.boundaryFragmentation.normalizedValue)"
   $lines += "- E (temporal drift): $($driftScore.components.temporalDrift.normalizedValue)"
   $lines += ''
+}
+
+if ($null -ne $deltaArtifact) {
+  $lines += 'Change vs Previous Run:'
+  $lines += ''
+
+  if ([string]$deltaArtifact.summary.mode -eq 'baseline') {
+    $lines += '- Baseline run: no previous snapshot available.'
+    $lines += "- Confidence: $($deltaArtifact.summary.confidence)"
+    $lines += ''
+  } else {
+    $prevScore = $deltaArtifact.previous.driftScore
+    $currScore = $deltaArtifact.current.driftScore
+    $prevJaccard = $deltaArtifact.previous.jaccard
+    $currJaccard = $deltaArtifact.current.jaccard
+    $prevBoundary = $deltaArtifact.previous.boundaryBehavior
+    $currBoundary = $deltaArtifact.current.boundaryBehavior
+    $deltaScore = $deltaArtifact.summary.driftScoreDelta
+    $deltaJaccard = $deltaArtifact.summary.jaccardDelta
+
+    $scoreSign = if ($deltaScore -gt 0) { '+' } else { '' }
+    $jaccardSign = if ($deltaJaccard -gt 0) { '+' } else { '' }
+
+    $lines += "- DriftScore: $prevScore -> $currScore ($scoreSign$deltaScore)"
+    $lines += "- Jaccard: $prevJaccard -> $currJaccard ($jaccardSign$deltaJaccard)"
+    $lines += "- Boundary Behavior: $prevBoundary -> $currBoundary"
+    $lines += "- Classification: $($deltaArtifact.summary.changeClassification)"
+    $lines += "- Confidence: $($deltaArtifact.summary.confidence)"
+    $lines += ''
+  }
 }
 
 $lines -join "`n" | Out-File -FilePath $summaryTarget -Encoding utf8 -Append

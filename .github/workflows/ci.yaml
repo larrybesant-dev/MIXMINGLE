@@ -327,16 +327,26 @@ jobs:
         shell: pwsh
         run: ./tools/compute_policy_drift_score.ps1 -ReplayPath tools/reports/replay_timeline.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -OutputPath tools/reports/policy_drift_score.json -DriftScoreThreshold 45
 
+      - name: Build policy analysis snapshot (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/build_policy_analysis_snapshot.ps1 -PolicyDriftScorePath tools/reports/policy_drift_score.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -HistoryDir tools/reports/history -SnapshotIndexPath tools/reports/history/policy_analysis_snapshot_index.json
+
+      - name: Compute policy analysis delta (observe)
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/compute_policy_analysis_delta.ps1 -HistoryDir tools/reports/history -SnapshotIndexPath tools/reports/history/policy_analysis_snapshot_index.json -OutputPath tools/reports/policy_analysis_delta.json
+
       - name: Validate policy analysis contract (observe)
         continue-on-error: true
         shell: pwsh
-        run: ./tools/validate_policy_analysis_contract.ps1 -ContractPath tools/policy_analysis_contract.schema.json -ReplayPath tools/reports/replay_timeline.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -PolicyDriftScorePath tools/reports/policy_drift_score.json -ValidationMode observe -OutputValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
+        run: ./tools/validate_policy_analysis_contract.ps1 -ContractPath tools/policy_analysis_contract.schema.json -ReplayPath tools/reports/replay_timeline.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -PolicyDriftScorePath tools/reports/policy_drift_score.json -PolicyAnalysisDeltaPath tools/reports/policy_analysis_delta.json -ValidationMode observe -OutputValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
 
       - name: Write policy analysis summary (observe)
         if: always()
         continue-on-error: true
         shell: pwsh
-        run: ./tools/write_policy_analysis_summary.ps1 -PolicyDriftScorePath tools/reports/policy_drift_score.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -ValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
+        run: ./tools/write_policy_analysis_summary.ps1 -PolicyDriftScorePath tools/reports/policy_drift_score.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicyAnalysisDeltaPath tools/reports/policy_analysis_delta.json -ValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
 
       - name: Save verdict history cache
         if: always()
@@ -369,7 +379,10 @@ jobs:
             tools/reports/boundary_drift_analysis.json
             tools/reports/policy_surface_diff.json
             tools/reports/policy_drift_score.json
+            tools/reports/policy_analysis_delta.json
             tools/reports/policy_analysis_contract_validation_status.json
+            tools/reports/history/policy_analysis_snapshot*.json
+            tools/reports/history/policy_analysis_snapshot_index.json
             tools/policy_drift_contract.schema.json
             tools/policy_analysis_contract.schema.json
           if-no-files-found: error

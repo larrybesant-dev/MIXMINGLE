@@ -207,6 +207,56 @@
         "temporalTerm",
         "total"
       ]
+    },
+    "policyAnalysisDelta": {
+      "optionalDerivedArtifact": true,
+      "requiredTopLevel": [
+        "generatedAtUtc",
+        "deltaVersion",
+        "schemaVersion",
+        "source",
+        "current",
+        "summary"
+      ],
+      "requiredSourceFields": [
+        "snapshotIndexPath",
+        "snapshotCount",
+        "currentSnapshotPath",
+        "previousSnapshotPath"
+      ],
+      "requiredCurrentFields": [
+        "generatedAtUtc",
+        "driftScore",
+        "jaccard",
+        "differingThresholdCount",
+        "boundaryBehavior",
+        "tier",
+        "action"
+      ],
+      "requiredPreviousFields": [
+        "generatedAtUtc",
+        "driftScore",
+        "jaccard",
+        "differingThresholdCount",
+        "boundaryBehavior",
+        "tier",
+        "action"
+      ],
+      "requiredSummaryFields": [
+        "mode",
+        "driftScoreDelta",
+        "jaccardDelta",
+        "differingThresholdCountDelta",
+        "entryCountDelta",
+        "boundaryBehaviorChanged",
+        "tierChanged",
+        "changeClassification",
+        "confidence",
+        "notes"
+      ],
+      "allowedModes": ["baseline", "delta"],
+      "allowedChangeClassification": ["baseline", "stable", "drifting", "improving", "mixed"],
+      "allowedConfidence": ["low", "normal"]
     }
   }
 }
