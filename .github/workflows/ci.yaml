@@ -332,6 +332,12 @@ jobs:
         shell: pwsh
         run: ./tools/validate_policy_analysis_contract.ps1 -ContractPath tools/policy_analysis_contract.schema.json -ReplayPath tools/reports/replay_timeline.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -PolicyDriftScorePath tools/reports/policy_drift_score.json -ValidationMode observe -OutputValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
 
+      - name: Write policy analysis summary (observe)
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        run: ./tools/write_policy_analysis_summary.ps1 -PolicyDriftScorePath tools/reports/policy_drift_score.json -PolicySurfaceDiffPath tools/reports/policy_surface_diff.json -BoundaryDriftPath tools/reports/boundary_drift_analysis.json -ValidationStatusPath tools/reports/policy_analysis_contract_validation_status.json
+
       - name: Save verdict history cache
         if: always()
         uses: actions/cache/save@v4
