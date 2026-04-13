@@ -12,7 +12,7 @@ import '../models/friend_roster_entry.dart';
 import '../providers/friends_providers.dart';
 import '../widgets/friend_tile.dart';
 
-class FriendsPaneView extends ConsumerWidget {
+class FriendsPaneView extends ConsumerStatefulWidget {
   const FriendsPaneView({
     super.key,
     this.showHeader = true,
@@ -21,7 +21,24 @@ class FriendsPaneView extends ConsumerWidget {
   final bool showHeader;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FriendsPaneView> createState() => _FriendsPaneViewState();
+}
+
+class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
+  final _searchController = TextEditingController();
+  String _query = '';
+  bool _onlineExpanded = true;
+  bool _inRoomsExpanded = true;
+  bool _offlineExpanded = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final rosterAsync = ref.watch(friendRosterProvider);
     final currentUser = ref.watch(userProvider);
     final myPresence = ref.watch(currentUserPresenceProvider).valueOrNull;
@@ -42,16 +59,6 @@ class FriendsPaneView extends ConsumerWidget {
         ),
       ),
       data: (entries) {
-        final inRoomEntries = entries
-            .where((entry) => (entry.roomId ?? '').isNotEmpty)
-            .toList(growable: false);
-        final onlineEntries = entries
-            .where((entry) => entry.isOnline && (entry.roomId ?? '').isEmpty)
-            .toList(growable: false);
-        final offlineEntries = entries
-            .where((entry) => !entry.isOnline)
-            .toList(growable: false);
-
         if (entries.isEmpty) {
           return const Center(
             child: Padding(
@@ -64,162 +71,211 @@ class FriendsPaneView extends ConsumerWidget {
           );
         }
 
+        final q = _query.toLowerCase();
+        final filtered = q.isEmpty
+            ? entries
+            : entries
+                .where((e) => e.user.username.toLowerCase().contains(q))
+                .toList(growable: false);
+
+        final inRoomEntries = filtered
+            .where((e) => (e.roomId ?? '').isNotEmpty)
+            .toList(growable: false);
+        final onlineEntries = filtered
+            .where((e) => e.isOnline && (e.roomId ?? '').isEmpty)
+            .toList(growable: false);
+        final offlineEntries = filtered
+            .where((e) => !e.isOnline)
+            .toList(growable: false);
+
         return ListView(
-          padding: EdgeInsets.fromLTRB(
-            context.pageHorizontalPadding,
-            showHeader ? 24 : 16,
-            context.pageHorizontalPadding,
-            16,
-          ),
+          padding: const EdgeInsets.only(bottom: 24),
           children: [
-            if (showHeader) ...[
-              Text(
-                'Friends',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: VelvetNoir.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Desktop uses a persistent roster plus embedded friend panes.',
-                style: TextStyle(
-                  color: VelvetNoir.onSurfaceVariant,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+            // ── Optional header ───────────────────────────────────────────
+            if (widget.showHeader) ...[
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding,
+                  24,
+                  context.pageHorizontalPadding,
+                  0,
+                ),
+                child: Text(
+                  'Friends',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: VelvetNoir.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
             ],
-            const _SectionHeader(label: 'ONLINE'),
-            const SizedBox(height: 12),
-            _buildSection(
-              context,
-              entries: onlineEntries,
-              emptyLabel: 'No friends online right now.',
-              itemBuilder: (entry) => FriendTile(
-                key: ValueKey('online-${entry.friendId}'),
-                user: entry.user,
-                statusLabel: 'Online',
-                statusColor: const Color(0xFF22C55E),
-                actions: [
-                  FriendTileAction(
-                    label: 'Message',
-                    icon: Icons.chat_bubble_outline_rounded,
-                    onPressed: () => _openConversation(context, ref, currentUser, entry.user),
-                  ),
-                  if ((myRoomId ?? '').isNotEmpty)
-                    FriendTileAction(
-                      label: 'Invite',
-                      icon: Icons.mail_outline_rounded,
-                      onPressed: () => _inviteFriend(
-                        context,
-                        currentUser: currentUser,
-                        friend: entry.user,
-                        roomId: myRoomId!,
-                      ),
+
+            // ── Search bar ────────────────────────────────────────────────
+            _FriendSearchBar(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _query = v),
+            ),
+
+            if (filtered.isEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Text(
+                  'No matches.',
+                  style: TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 13),
+                ),
+              ),
+            ] else ...[
+              // ── ONLINE ────────────────────────────────────────────────
+              _RichSectionHeader(
+                label: 'ONLINE',
+                count: onlineEntries.length,
+                accentColor: const Color(0xFF22C55E),
+                isExpanded: _onlineExpanded,
+                onToggle: () =>
+                    setState(() => _onlineExpanded = !_onlineExpanded),
+              ),
+              if (_onlineExpanded) ...[
+                if (onlineEntries.isEmpty)
+                  const _EmptySectionLabel(label: 'No friends online right now.')
+                else
+                  for (var i = 0; i < onlineEntries.length; i++) ...[
+                    FriendTile(
+                      key: ValueKey('online-${onlineEntries[i].friendId}'),
+                      user: onlineEntries[i].user,
+                      statusLabel: 'Online',
+                      statusColor: const Color(0xFF22C55E),
+                      actions: [
+                        FriendTileAction(
+                          label: 'Message',
+                          icon: Icons.chat_bubble_outline_rounded,
+                          onPressed: () => _openConversation(
+                              context, currentUser, onlineEntries[i].user),
+                        ),
+                        if ((myRoomId ?? '').isNotEmpty)
+                          FriendTileAction(
+                            label: 'Invite',
+                            icon: Icons.mail_outline_rounded,
+                            onPressed: () => _inviteFriend(
+                              context,
+                              currentUser: currentUser,
+                              friend: onlineEntries[i].user,
+                              roomId: myRoomId!,
+                            ),
+                          ),
+                      ],
+                      onTap: () => _openConversation(
+                          context, currentUser, onlineEntries[i].user),
                     ),
-                ],
-                onTap: () => context.go('/profile/${entry.friendId}'),
+                    if (i < onlineEntries.length - 1)
+                      const Divider(
+                        indent: 72,
+                        height: 1,
+                        color: Color(0x18F7EDE2),
+                      ),
+                  ],
+              ],
+
+              const SizedBox(height: 4),
+
+              // ── IN ROOMS ──────────────────────────────────────────────
+              _RichSectionHeader(
+                label: 'IN ROOMS',
+                count: inRoomEntries.length,
+                accentColor: VelvetNoir.secondaryBright,
+                isExpanded: _inRoomsExpanded,
+                onToggle: () =>
+                    setState(() => _inRoomsExpanded = !_inRoomsExpanded),
               ),
-            ),
-            const SizedBox(height: 16),
-            const _SectionHeader(label: 'IN ROOMS'),
-            const SizedBox(height: 12),
-            _buildSection(
-              context,
-              entries: inRoomEntries,
-              emptyLabel: 'No friends are in rooms right now.',
-              itemBuilder: (entry) => FriendTile(
-                key: ValueKey('room-${entry.friendId}'),
-                user: entry.user,
-                statusLabel: 'In room ${entry.roomId}',
-                statusColor: VelvetNoir.primary,
-                statusIcon: Icons.mic_rounded,
-                actions: [
-                  FriendTileAction(
-                    label: 'Join Room',
-                    icon: Icons.meeting_room_rounded,
-                    onPressed: () => context.go('/room/${entry.roomId}'),
-                  ),
-                  FriendTileAction(
-                    label: 'Message',
-                    icon: Icons.chat_bubble_outline_rounded,
-                    onPressed: () => _openConversation(context, ref, currentUser, entry.user),
-                  ),
-                ],
-                onTap: () => context.go('/profile/${entry.friendId}'),
+              if (_inRoomsExpanded) ...[
+                if (inRoomEntries.isEmpty)
+                  const _EmptySectionLabel(
+                      label: 'No friends in rooms right now.')
+                else
+                  for (var i = 0; i < inRoomEntries.length; i++) ...[
+                    FriendTile(
+                      key: ValueKey('room-${inRoomEntries[i].friendId}'),
+                      user: inRoomEntries[i].user,
+                      statusLabel: 'In room ${inRoomEntries[i].roomId}',
+                      statusColor: VelvetNoir.secondaryBright,
+                      statusIcon: Icons.mic_rounded,
+                      actions: [
+                        FriendTileAction(
+                          label: 'Join Room',
+                          icon: Icons.meeting_room_rounded,
+                          onPressed: () =>
+                              context.go('/room/${inRoomEntries[i].roomId}'),
+                        ),
+                        FriendTileAction(
+                          label: 'Message',
+                          icon: Icons.chat_bubble_outline_rounded,
+                          onPressed: () => _openConversation(
+                              context, currentUser, inRoomEntries[i].user),
+                        ),
+                      ],
+                      onTap: () =>
+                          context.go('/room/${inRoomEntries[i].roomId}'),
+                    ),
+                    if (i < inRoomEntries.length - 1)
+                      const Divider(
+                        indent: 72,
+                        height: 1,
+                        color: Color(0x18F7EDE2),
+                      ),
+                  ],
+              ],
+
+              const SizedBox(height: 4),
+
+              // ── OFFLINE ───────────────────────────────────────────────
+              _RichSectionHeader(
+                label: 'OFFLINE',
+                count: offlineEntries.length,
+                accentColor: VelvetNoir.onSurfaceVariant,
+                isExpanded: _offlineExpanded,
+                onToggle: () =>
+                    setState(() => _offlineExpanded = !_offlineExpanded),
               ),
-            ),
-            const SizedBox(height: 16),
-            const _SectionHeader(label: 'OFFLINE'),
-            const SizedBox(height: 12),
-            _buildSection(
-              context,
-              entries: offlineEntries,
-              emptyLabel: 'No friends are offline.',
-              itemBuilder: (entry) => FriendTile(
-                key: ValueKey('offline-${entry.friendId}'),
-                user: entry.user,
-                statusLabel: _lastSeenLabel(entry),
-                statusColor: VelvetNoir.onSurfaceVariant,
-                actions: const [],
-                onTap: () => context.go('/profile/${entry.friendId}'),
-              ),
-            ),
+              if (_offlineExpanded) ...[
+                if (offlineEntries.isEmpty)
+                  const _EmptySectionLabel(label: 'No friends are offline.')
+                else
+                  for (var i = 0; i < offlineEntries.length; i++) ...[
+                    FriendTile(
+                      key: ValueKey('offline-${offlineEntries[i].friendId}'),
+                      user: offlineEntries[i].user,
+                      statusLabel: _lastSeenLabel(offlineEntries[i]),
+                      statusColor: VelvetNoir.onSurfaceVariant,
+                      actions: const [],
+                      onTap: () => _openConversation(
+                          context, currentUser, offlineEntries[i].user),
+                    ),
+                    if (i < offlineEntries.length - 1)
+                      const Divider(
+                        indent: 72,
+                        height: 1,
+                        color: Color(0x18F7EDE2),
+                      ),
+                  ],
+              ],
+            ],
           ],
         );
       },
     );
   }
 
-  Widget _buildSection(
-    BuildContext context, {
-    required List<FriendRosterEntry> entries,
-    required String emptyLabel,
-    required Widget Function(FriendRosterEntry entry) itemBuilder,
-  }) {
-    if (entries.isEmpty) {
-      return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: VelvetNoir.surfaceHigh,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: VelvetNoir.outlineVariant.withValues(alpha: 0.4),
-          ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          emptyLabel,
-          style: const TextStyle(
-            color: VelvetNoir.onSurfaceVariant,
-            fontSize: 13,
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        for (var index = 0; index < entries.length; index += 1) ...[
-          itemBuilder(entries[index]),
-          if (index != entries.length - 1) const SizedBox(height: 12),
-        ],
-      ],
-    );
-  }
-
   Future<void> _openConversation(
     BuildContext context,
-    WidgetRef ref,
     UserModel? currentUser,
     UserModel friend,
   ) async {
     if (currentUser == null) return;
 
     try {
-      final conversationId = await ref.read(messagingControllerProvider).createDirectConversation(
+      final conversationId = await ref
+          .read(messagingControllerProvider)
+          .createDirectConversation(
             userId1: currentUser.id,
             user1Name: currentUser.username,
             user1AvatarUrl: currentUser.avatarUrl,
@@ -276,20 +332,148 @@ class FriendsPaneView extends ConsumerWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label});
+// ── Supporting widgets ────────────────────────────────────────────────────────
+
+class _FriendSearchBar extends StatelessWidget {
+  const _FriendSearchBar({
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        style: const TextStyle(color: VelvetNoir.onSurface, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'Search friends...',
+          hintStyle:
+              const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: VelvetNoir.onSurfaceVariant,
+            size: 20,
+          ),
+          suffixIcon: controller.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear_rounded, size: 18),
+                  color: VelvetNoir.onSurfaceVariant,
+                  onPressed: () {
+                    controller.clear();
+                    onChanged('');
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: VelvetNoir.surfaceHigh,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(
+                color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(
+                color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(
+                color: VelvetNoir.primary.withValues(alpha: 0.7)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Section header with count badge and expand/collapse chevron.
+class _RichSectionHeader extends StatelessWidget {
+  const _RichSectionHeader({
+    required this.label,
+    required this.count,
+    required this.accentColor,
+    required this.isExpanded,
+    required this.onToggle,
+  });
+
+  final String label;
+  final int count;
+  final Color accentColor;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onToggle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.4,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              isExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptySectionLabel extends StatelessWidget {
+  const _EmptySectionLabel({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: const TextStyle(
-        color: VelvetNoir.primary,
-        fontSize: 12,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.2,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: VelvetNoir.onSurfaceVariant,
+          fontSize: 13,
+        ),
       ),
     );
   }

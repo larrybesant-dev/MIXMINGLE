@@ -17,6 +17,11 @@ class FriendTileAction {
   final VoidCallback onPressed;
 }
 
+/// Dense messenger-style contact row.
+///
+/// Layout: [presence-ring avatar] | [username + status dot] | [compact chips]
+/// Tap = primary action (open chat / join room).
+/// Long press = full action sheet.
 class FriendTile extends StatelessWidget {
   const FriendTile({
     required this.user,
@@ -38,136 +43,271 @@ class FriendTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarUrl = sanitizeNetworkImageUrl(user.avatarUrl);
+    final isActive = statusColor != VelvetNoir.onSurfaceVariant;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: VelvetNoir.surfaceHigh,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: VelvetNoir.outlineVariant.withValues(alpha: 0.45),
-            ),
-          ),
-          padding: const EdgeInsets.all(12),
-          child: Column(
+        onLongPress: actions.isNotEmpty ? () => _showActionSheet(context) : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: VelvetNoir.surfaceHighest,
-                        backgroundImage: avatarUrl == null
-                            ? null
-                            : CachedNetworkImageProvider(avatarUrl),
-                        child: avatarUrl == null
-                            ? Text(
-                                user.username.isNotEmpty
-                                    ? user.username[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: VelvetNoir.primary,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              )
-                            : null,
+              _PresenceRingAvatar(
+                avatarUrl: avatarUrl,
+                username: user.username,
+                ringColor: isActive ? statusColor : Colors.transparent,
+                glowActive: isActive && statusIcon != null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      user.username,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: VelvetNoir.onSurface,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
                       ),
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: VelvetNoir.surface,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: VelvetNoir.surface,
-                              width: 2,
-                            ),
-                          ),
-                          child: statusIcon == null
-                              ? Container(
-                                  margin: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: statusColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                )
-                              : Icon(statusIcon, size: 10, color: statusColor),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: VelvetNoir.onSurface,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          statusLabel,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    _StatusRow(
+                      statusLabel: statusLabel,
+                      statusColor: statusColor,
+                      statusIcon: statusIcon,
+                    ),
+                  ],
+                ),
               ),
               if (actions.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: actions
-                      .map(
-                        (action) => OutlinedButton.icon(
-                          onPressed: action.onPressed,
-                          icon: Icon(action.icon, size: 16),
-                          label: Text(action.label),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: VelvetNoir.onSurface,
-                            side: BorderSide(
-                              color: VelvetNoir.outlineVariant.withValues(alpha: 0.6),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(growable: false),
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (var i = 0; i < actions.length && i < 2; i++) ...[
+                      if (i > 0) const SizedBox(height: 4),
+                      _CompactChip(action: actions[i]),
+                    ],
+                  ],
                 ),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showActionSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: VelvetNoir.surfaceHigh,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ActionSheet(username: user.username, actions: actions),
+    );
+  }
+}
+
+// ── Supporting widgets ────────────────────────────────────────────────────────
+
+/// Avatar surrounded by a colored presence ring with optional glow.
+class _PresenceRingAvatar extends StatelessWidget {
+  const _PresenceRingAvatar({
+    required this.avatarUrl,
+    required this.username,
+    required this.ringColor,
+    required this.glowActive,
+  });
+
+  final String? avatarUrl;
+  final String username;
+  final Color ringColor;
+  final bool glowActive;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: ringColor, width: 2.0),
+        boxShadow: glowActive
+            ? [
+                BoxShadow(
+                  color: ringColor.withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: CircleAvatar(
+          backgroundColor: VelvetNoir.surfaceHighest,
+          backgroundImage:
+              avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
+          child: avatarUrl == null
+              ? Text(
+                  username.isNotEmpty ? username[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    color: VelvetNoir.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+}
+
+/// Inline status dot + label row.
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({
+    required this.statusLabel,
+    required this.statusColor,
+    this.statusIcon,
+  });
+
+  final String statusLabel;
+  final Color statusColor;
+  final IconData? statusIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (statusIcon != null) ...[
+          Icon(statusIcon, size: 10, color: statusColor),
+          const SizedBox(width: 4),
+        ] else ...[
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(right: 4, top: 1),
+            decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
+          ),
+        ],
+        Flexible(
+          child: Text(
+            statusLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: statusColor.withValues(alpha: 0.9),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Small labeled chip used as a trailing action affordance on a friend tile.
+class _CompactChip extends StatelessWidget {
+  const _CompactChip({required this.action});
+
+  final FriendTileAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: VelvetNoir.surfaceBright,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: action.onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: VelvetNoir.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Text(
+            action.label,
+            style: const TextStyle(
+              color: VelvetNoir.onSurface,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet shown on long-press with the full list of friend actions.
+class _ActionSheet extends StatelessWidget {
+  const _ActionSheet({
+    required this.username,
+    required this.actions,
+  });
+
+  final String username;
+  final List<FriendTileAction> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: VelvetNoir.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            child: Text(
+              username,
+              style: const TextStyle(
+                color: VelvetNoir.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const Divider(color: VelvetNoir.outlineVariant, height: 1),
+          ...actions.map(
+            (action) => ListTile(
+              leading: Icon(action.icon, color: VelvetNoir.primary),
+              title: Text(
+                action.label,
+                style: const TextStyle(color: VelvetNoir.onSurface, fontSize: 15),
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                action.onPressed();
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }

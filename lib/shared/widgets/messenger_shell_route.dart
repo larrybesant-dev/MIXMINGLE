@@ -6,7 +6,8 @@ import '../../core/layout/app_layout.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../core/theme.dart';
-import '../../features/friends/panes/friends_pane_view.dart';
+import '../../features/schema_messenger/friends/views/friends_schema_bridge_view.dart';
+import '../../features/schema_messenger/messages/views/messages_schema_bridge_view.dart';
 import '../../features/messaging/panes/chat_pane_view.dart';
 import '../../features/messaging/panes/messages_pane_view.dart';
 import '../../features/messaging/screens/new_message_screen.dart';
@@ -163,10 +164,9 @@ Widget buildMessengerRouteChild({
 }) {
   switch (routeState.kind) {
     case MessengerRouteKind.inbox:
-      return MessagesPaneView(
+      return MessagesSchemaBridgeView(
         userId: userId,
         username: username,
-        showHeader: false,
       );
     case MessengerRouteKind.compose:
       return NewMessagePaneView(
@@ -188,6 +188,6 @@ Widget buildMessengerRouteChild({
         showHeader: false,
       );
     case MessengerRouteKind.friends:
-      return const FriendsPaneView(showHeader: false);
+      return const FriendsSchemaBridgeView();
   }
 }

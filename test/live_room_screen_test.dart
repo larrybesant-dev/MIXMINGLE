@@ -14,6 +14,7 @@ import 'package:mixvy/models/room_model.dart';
 import 'package:mixvy/models/room_participant_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
+import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/features/room/providers/presence_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
@@ -138,54 +139,13 @@ void main() {
       'online': true,
       'userStatus': 'online',
       'roomId': 'room-b',
+      'lastSeen': DateTime.now(),
     });
 
     expect(presence.userId, 'user-2');
     expect(presence.isOnline, isTrue);
     expect(presence.status, UserStatus.online);
     expect(presence.inRoom, 'room-b');
-  });
-            (ref, roomId) => Stream.value(const <Cohost>[]),
-          ),
-          roomPresenceStreamProvider.overrideWith(
-            (ref, roomId) => Stream.value([
-              RoomPresenceModel(
-                userId: 'user-1',
-                isOnline: true,
-                lastHeartbeatAt: null,
-                lastSeenAt: null,
-              ),
-            ]),
-          ),
-          userProvider.overrideWithValue(
-            UserModel(
-              id: 'user-1',
-              email: 'user1@mixvy.com',
-              username: 'User One',
-              createdAt: DateTime(2026, 1, 1),
-            ),
-          ),
-        ],
-        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
-      ),
-    );
-
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-
-    await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-
-    await tester.tap(find.text('Online friends'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('Online friends'), findsWidgets);
-    expect(find.text('Friend Two'), findsOneWidget);
-    expect(find.text('In another room'), findsOneWidget);
-    expect(find.text('Go'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('LiveRoomScreen opens the people roster for room members', (

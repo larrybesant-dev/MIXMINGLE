@@ -1,0 +1,44 @@
+{
+  "generatedAtUtc": "2026-04-13T13:22:34.4444340Z",
+  "modelVersion": "confidence_drift_dashboard_v1",
+  "source": {
+    "reportsDirectory": "tools/reports",
+    "verdictPattern": "release_candidate_verdict*.json",
+    "verdictCount": 1
+  },
+  "summary": {
+    "latestScore": 100.0,
+    "latestBand": "very_high",
+    "latestVerdict": "PASS",
+    "scoreDeltaFromPrevious": 0,
+    "averageScore": 100.0,
+    "minScore": 100.0,
+    "maxScore": 100.0,
+    "scoreStdDev": 0,
+    "trendSlopePerRun": 0,
+    "volatilityBand": "stable"
+  },
+  "gateStability": {
+    "failedTier0Runs": 0,
+    "failedTier1Runs": 0
+  },
+  "confidenceBandDistribution": {
+    "very_high": 1,
+    "high": 0,
+    "moderate": 0,
+    "low": 0
+  },
+  "runs": [
+    {
+      "file": "release_candidate_verdict.local.json",
+      "generatedAtUtc": "2026-04-13T13:09:45.4486018Z",
+      "releaseVerdict": "PASS",
+      "releaseConfidenceScore": 100.0,
+      "releaseConfidenceBand": "very_high",
+      "tier0Pass": true,
+      "tier1Pass": true,
+      "tier0AvgVariability": 0.0,
+      "tier1AvgVariability": 0.0
+    }
+  ]
+}

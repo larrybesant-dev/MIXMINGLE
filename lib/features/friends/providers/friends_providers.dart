@@ -68,11 +68,21 @@ final offlineFriendsProvider = Provider.autoDispose<AsyncValue<List<FriendRoster
 });
 
 final currentFriendIdsProvider = FutureProvider.autoDispose<List<String>>((ref) async {
-  final friendships = await ref.watch(friendsProvider.future);
+  var disposed = false;
+  ref.onDispose(() {
+    disposed = true;
+  });
+
   final userId = ref.watch(currentFriendUserIdProvider);
   if (userId == null) {
     return const <String>[];
   }
+
+  final friendships = await ref.watch(friendsProvider.future);
+  if (disposed) {
+    return const <String>[];
+  }
+
   return friendships
       .map((friendship) => friendship.otherUserId(userId))
       .where((friendId) => friendId.isNotEmpty)
@@ -128,6 +138,11 @@ final pendingOutgoingFriendRequestIdsProvider = StreamProvider<Set<String>>((ref
 });
 
 final friendCandidateSearchProvider = FutureProvider.autoDispose<List<UserModel>>((ref) async {
+  var disposed = false;
+  ref.onDispose(() {
+    disposed = true;
+  });
+
   final userId = ref.watch(currentFriendUserIdProvider);
   if (userId == null) {
     return const <UserModel>[];
@@ -136,8 +151,13 @@ final friendCandidateSearchProvider = FutureProvider.autoDispose<List<UserModel>
   final query = ref.watch(friendSearchQueryProvider);
   final service = ref.watch(friendServiceProvider);
   final friendIds = await ref.watch(currentFriendIdsProvider.future);
+  if (disposed) return const <UserModel>[];
+
   final incomingRequesterIds = await service.getIncomingRequesterIds(userId);
+  if (disposed) return const <UserModel>[];
+
   final outgoingPendingIds = await service.getOutgoingPendingRequestIds(userId);
+  if (disposed) return const <UserModel>[];
 
   return service.searchUsers(
     query,

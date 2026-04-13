@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firestore/firestore_debug_tracing.dart';
-import '../../../core/telemetry/app_telemetry.dart';
 import '../../../models/room_participant_model.dart';
 import 'room_firestore_provider.dart';
 
@@ -87,42 +86,12 @@ final currentParticipantProvider =
 	);
 });
 
-/// Staleness window: a participant whose lastActiveAt has not been updated
-/// within this duration is considered offline (browser closed / crashed).
-/// Heartbeat fires every 30 s so 5 min gives 10× headroom for slow writes.
-const Duration _kParticipantStaleness = Duration(minutes: 5);
-const Duration _kParticipantWarningStaleness = Duration(seconds: 90);
-
-bool _isParticipantFresh(RoomParticipantModel p) {
-	return DateTime.now().difference(p.lastActiveAt) < _kParticipantStaleness;
-}
-
-List<RoomParticipantModel> _mapFreshParticipants(
-	QuerySnapshot<Map<String, dynamic>> snapshot,
-	String roomId,
+List<RoomParticipantModel> _mapParticipants(
+  QuerySnapshot<Map<String, dynamic>> snapshot,
 ) {
-	final now = DateTime.now();
-	final participants = <RoomParticipantModel>[];
-	final staleParticipantIds = <String>{};
-
-	for (final doc in snapshot.docs) {
-		final participant = RoomParticipantModel.fromMap(doc.data());
-		final participantId = participant.userId.isEmpty ? doc.id : participant.userId;
-		final age = now.difference(participant.lastActiveAt);
-		if (age >= _kParticipantWarningStaleness) {
-			staleParticipantIds.add(participantId);
-		}
-		if (_isParticipantFresh(participant)) {
-			participants.add(participant);
-		}
-	}
-
-	AppTelemetry.updateRoomState(
-		roomId: roomId,
-		staleParticipantIds: staleParticipantIds,
-	);
-
-	return participants;
+	return snapshot.docs
+			.map((doc) => RoomParticipantModel.fromMap(doc.data()))
+			.toList(growable: false);
 }
 
 final participantsStreamProvider =
@@ -139,7 +108,7 @@ final participantsStreamProvider =
 				.collection('participants')
 				.orderBy('joinedAt')
 				.snapshots()
-				.map((snapshot) => _mapFreshParticipants(snapshot, roomId)),
+				.map(_mapParticipants),
 	);
 });
 
@@ -155,7 +124,7 @@ final participantCountProvider = StreamProvider.autoDispose.family<int, String>(
 				.doc(roomId)
 				.collection('participants')
 				.snapshots()
-				.map((snapshot) => _mapFreshParticipants(snapshot, roomId).length),
+				.map((snapshot) => _mapParticipants(snapshot).length),
 	);
 });
 

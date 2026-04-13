@@ -1,4 +1,3 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

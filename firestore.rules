@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helper Functions
+    // ─────────────────────────────────────────────────────────────────────────
+
     function signedIn() {
       return request.auth != null;
     }
@@ -17,8 +22,6 @@ service cloud.firestore {
     }
 
     function isFriendLinkUpdate() {
-      // Allow updating 'friends' (required) and optionally 'updatedAt'.
-      // This covers acceptFriendRequest and removeFriend which write both fields.
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'updatedAt'])
         && request.resource.data.diff(resource.data).affectedKeys().hasAny(['friends'])
         && (
@@ -27,16 +30,19 @@ service cloud.firestore {
         );
     }
 
-    function isAllowedUserProfileUpdate() {
+    function onlyIdentityFieldsAllowed() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         'username',
+        'usernameLower',
         'email',
-        'avatarUrl',
-        'coverPhotoUrl',
-        'galleryUrls',
-        'introVideoUrl',
         'bio',
-        'aboutMe',
+        'isPrivate',
+        'updatedAt'
+      ]);
+    }
+
+    function onlyProfilePublicFieldsAllowed() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         'age',
         'gender',
         'location',
@@ -45,23 +51,22 @@ service cloud.firestore {
         'firstDatePrompt',
         'musicTastePrompt',
         'interests',
-        'themeId',
-        'camViewPolicy',
-        'adultModeEnabled',
-        'adultConsentAccepted',
-        'adultModeEnabledAt',
-        'adultStageName',
-        'adultBio',
-        'adultLookingFor',
-        'adultProfilePrivate',
-        'isPrivate',
         'profileAccentColor',
-        'profileBgGradientStart',
-        'profileBgGradientEnd',
+        'galleryUrls',
+        'introVideoUrl',
+        'updatedAt'
+      ]);
+    }
+
+    function onlyPreferencesFieldsAllowed() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'themeId',
+        'backgroundColor',
         'profileMusicUrl',
         'profileMusicTitle',
-        'favoriteFriendIds',
-        'usernameLower',
+        'profileBgGradientStart',
+        'profileBgGradientEnd',
+        'camViewPolicy',
         'updatedAt'
       ]);
     }
@@ -112,21 +117,94 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Private profiles are only readable by the owner or their followers.
+      // Private profiles only readable by owner or followers.
       allow read: if signedIn()
         && (
           isSelf(userId)
           || !resource.data.get('isPrivate', false)
           || request.auth.uid in resource.data.get('followers', [])
         );
-      // On create, membership level must be the default 'basic' (or absent).
-      // Upgrades must go through Cloud Functions / admin writes.
+
+      // Create: isSelf + membershipLevel guard.
       allow create: if isSelf(userId)
         && (!('membershipLevel' in request.resource.data)
           || request.resource.data.membershipLevel == 'basic');
-      allow update: if (isSelf(userId) && isAllowedUserProfileUpdate())
+
+      // Update: isSelf + strict field whitelist.
+      allow update: if (isSelf(userId) && onlyIdentityFieldsAllowed())
         || (signedIn() && isFriendLinkUpdate());
+
+      // Delete: isSelf only.
       allow delete: if isSelf(userId);
+
+      // ───────────────────────────────────────────────────────────────────────
+      // DOMAIN 2: Profile Public (users/<uid>/profile_public)
+      // ───────────────────────────────────────────────────────────────────────
+
+      match /profile_public/{document=**} {
+        allow read: if signedIn();
+        allow create: if isSelf(userId);
+        allow update: if isSelf(userId) && onlyProfilePublicFieldsAllowed();
+        allow delete: if false; // Maintain history.
+      }
+
+      // ───────────────────────────────────────────────────────────────────────
+      // DOMAIN 3: Wallet (users/<uid>/wallet) — Server Only
+      // ───────────────────────────────────────────────────────────────────────
+
+      match /wallet/{document=**} {
+        allow read: if isSelf(userId);
+        // All writes server-only. Client cannot write coins/streaks.
+        allow create, update, delete: if false;
+      }
+
+      // ───────────────────────────────────────────────────────────────────────
+      // DOMAIN 4: Preferences (users/<uid>/preferences)
+      // ───────────────────────────────────────────────────────────────────────
+
+      match /preferences/{document=**} {
+        allow read: if isSelf(userId);
+        allow create: if isSelf(userId);
+        allow update: if isSelf(userId) && onlyPreferencesFieldsAllowed();
+        allow delete: if false; // Maintain history.
+      }
+
+      // ───────────────────────────────────────────────────────────────────────
+      // DOMAIN 5: Verification (users/<uid>/verification) — Server Only
+      // ───────────────────────────────────────────────────────────────────────
+
+      match /verification/{document=**} {
+        // Only owner can read their own verification status.
+        allow read: if isSelf(userId);
+        // All writes server-only. Client cannot set verified status.
+        allow create, update, delete: if false;
+      }
+
+      // ───────────────────────────────────────────────────────────────────────
+      // DOMAIN 6: Security (users/<uid>/security) — Server Only
+      // ───────────────────────────────────────────────────────────────────────
+
+      match /security/{document=**} {
+        // Only owner can read (not even friends).
+        allow read: if isSelf(userId);
+        // All writes server-only. Client cannot manipulate security state.
+        allow create, update, delete: if false;
+      }
+
+      // ───────────────────────────────────────────────────────────────────────
+      // DOMAIN 7: Adult Content (users/<uid>/adult_content) — Keep Existing
+      // ───────────────────────────────────────────────────────────────────────
+
+      match /adult_content/{documentId} {
+        allow read: if isSelf(userId)
+          || (canReadSharedAdultProfile(userId)
+            && resource.data.visibility == 'optedInAdultsOnly');
+        allow create, update, delete: if isSelf(userId);
+      }
+
+      // ───────────────────────────────────────────────────────────────────────
+      // Independent Subcollections (Unchanged)
+      // ───────────────────────────────────────────────────────────────────────
 
       match /stories/{storyId} {
         allow read: if signedIn();
@@ -134,13 +212,6 @@ service cloud.firestore {
           && request.resource.data.userId == request.auth.uid;
         allow update, delete: if isSelf(userId)
           && resource.data.userId == request.auth.uid;
-      }
-
-      match /adult_profile/{documentId} {
-        allow read: if isSelf(userId)
-          || (canReadSharedAdultProfile(userId)
-            && resource.data.visibility == 'optedInAdultsOnly');
-        allow create, update, delete: if isSelf(userId);
       }
 
       match /privacy/{documentId} {

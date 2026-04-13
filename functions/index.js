@@ -2119,6 +2119,82 @@ exports.cleanupExpiredMessages = onSchedule("every 6 hours", async () => {
   );
 });
 
+// ── RTDB presence -> Firestore aggregate sync ───────────────────────────────
+// Keeps Firestore `presence/{userId}` truthful using RTDB onDisconnect-driven
+// session state. This is the canonical bridge from transport truth to UI truth.
+exports.syncPresenceFromRtdbSessions = functionsV1.database
+  .ref("/status/{userId}/sessions/{sessionId}")
+  .onWrite(async (_change, context) => {
+    const userId = context.params && context.params.userId;
+    if (!userId) return;
+
+    const sessionsSnap = await admin
+      .database()
+      .ref(`/status/${userId}/sessions`)
+      .get();
+
+    const sessions = sessionsSnap.val() || {};
+    const nowMs = Date.now();
+    const staleMs = 60 * 1000;
+
+    let isOnline = false;
+    let inRoom = null;
+    let camOn = false;
+    let micOn = false;
+    let latestSeenMs = 0;
+    let activeSessionCount = 0;
+
+    for (const value of Object.values(sessions)) {
+      if (!value || typeof value !== "object") continue;
+
+      const online = value.online === true;
+      const lastSeenRaw = value.last_seen;
+      const lastSeenMs = typeof lastSeenRaw === "number" ? lastSeenRaw : 0;
+      const fresh = lastSeenMs > 0 && (nowMs - lastSeenMs) <= staleMs;
+      const active = online && fresh;
+
+      if (lastSeenMs > latestSeenMs) {
+        latestSeenMs = lastSeenMs;
+      }
+
+      if (!active) continue;
+
+      activeSessionCount += 1;
+      isOnline = true;
+
+      if (!inRoom && typeof value.in_room === "string" && value.in_room.trim()) {
+        inRoom = value.in_room.trim();
+      }
+      if (value.cam_on === true) {
+        camOn = true;
+      }
+      if (value.mic_on === true) {
+        micOn = true;
+      }
+    }
+
+    await db.collection("presence").doc(userId).set(
+      {
+        isOnline,
+        online: isOnline,
+        status: isOnline ? "online" : "offline",
+        userStatus: isOnline ? "online" : "offline",
+        appState: isOnline ? "foreground" : "detached",
+        inRoom,
+        roomId: inRoom,
+        camOn,
+        micOn,
+        rtdbActiveSessionCount: activeSessionCount,
+        rtdbUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastSeen: latestSeenMs > 0
+          ? admin.firestore.Timestamp.fromMillis(latestSeenMs)
+          : admin.firestore.FieldValue.serverTimestamp(),
+        lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+  });
+
 // ── Friend-online notification ────────────────────────────────────────────────
 // Triggers whenever a presence document is written.  When ``isOnline`` flips
 // from falsy → true we notify the user's friends (capped at 50, throttled to

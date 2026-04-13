@@ -2773,7 +2773,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required Map<String, RoomUserPresentation> presentationByUserId,
     required List<RoomPresenceModel> presenceList,
   }) async {
-    // Build userId → isOnline map with 90-second heartbeat staleness window.
+    // Build userId → isOnline map with 60-second heartbeat staleness window.
     final onlineMap = <String, bool>{
       for (final p in presenceList)
         if (p.isOnline &&
@@ -2781,7 +2781,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 DateTime.now()
                         .difference(p.lastHeartbeatAt!)
                         .inSeconds <
-                    90))
+              60))
           p.userId: true,
     };
     await showModalBottomSheet<void>(
@@ -3891,7 +3891,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                   .difference(
                                                       p.lastHeartbeatAt!)
                                                   .inSeconds <
-                                              90))
+                                          60))
                                     p.userId: true,
                               };
                               final floatingIds = ref
@@ -5713,7 +5713,6 @@ class _RosterRow extends StatelessWidget {
     required this.nameColor,
     this.gender,
     this.roleLabel,
-    this.isSelf = false,
     this.camOn = false,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
@@ -5727,7 +5726,6 @@ class _RosterRow extends StatelessWidget {
   final Color nameColor;
   final String? gender;
   final String? roleLabel;
-  final bool isSelf;
   final bool camOn;
   final IconData? trailingIcon;
   final Color trailingColor;
@@ -5795,12 +5793,6 @@ class _RosterRow extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: [
-              if (isSelf)
-                _RosterChip(
-                  label: 'You',
-                  icon: Icons.person,
-                  color: const Color(0xFF5A5E6B),
-                ),
               if (roleLabel != null)
                 _RosterChip(
                   label: roleLabel!,

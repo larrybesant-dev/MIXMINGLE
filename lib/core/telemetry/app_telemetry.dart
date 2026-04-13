@@ -533,6 +533,92 @@ class AppTelemetry {
     }
   }
 
+  static void logEnforcementEvent({
+    String level = 'info',
+    required String action,
+    required String message,
+    String? userId,
+    String? roomId,
+    String? result,
+    Map<String, Object?> metadata = const <String, Object?>{},
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    logAction(
+      level: level,
+      domain: 'schema',
+      action: action,
+      message: message,
+      userId: userId,
+      roomId: roomId,
+      result: result,
+      metadata: <String, Object?>{
+        'eventCategory': 'enforcement',
+        ...metadata,
+      },
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  static void logMigrationEvent({
+    String level = 'info',
+    required String domain,
+    required String action,
+    required String message,
+    String? userId,
+    String? roomId,
+    String? result,
+    Map<String, Object?> metadata = const <String, Object?>{},
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    logAction(
+      level: level,
+      domain: domain,
+      action: action,
+      message: message,
+      userId: userId,
+      roomId: roomId,
+      result: result,
+      metadata: <String, Object?>{
+        'eventCategory': 'migration',
+        ...metadata,
+      },
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  static void logParityEvent({
+    String level = 'info',
+    required String domain,
+    required String action,
+    required String message,
+    String? userId,
+    String? roomId,
+    String? result,
+    Map<String, Object?> metadata = const <String, Object?>{},
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    logAction(
+      level: level,
+      domain: domain,
+      action: action,
+      message: message,
+      userId: userId,
+      roomId: roomId,
+      result: result,
+      metadata: <String, Object?>{
+        'eventCategory': 'parity',
+        ...metadata,
+      },
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
   static void _emitIfChanged(
     AppTelemetryState current,
     AppTelemetryState next,

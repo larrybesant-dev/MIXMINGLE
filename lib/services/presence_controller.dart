@@ -1,18 +1,18 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/firestore/firestore_debug_tracing.dart';
 import '../core/providers/firebase_providers.dart';
 import '../core/telemetry/app_telemetry.dart';
 import '../features/auth/controllers/auth_controller.dart';
 import '../models/presence_model.dart';
 import 'rtdb_presence_service.dart';
 
-// DO NOT WRITE TO presence COLLECTION ANYWHERE ELSE.
-// THIS IS THE SINGLE SOURCE OF TRUTH FOR GLOBAL PRESENCE.
+// Presence write authority:
+// - RTDB sessions are the only writer for live presence truth.
+// - Cloud Function projects RTDB session truth into Firestore presence docs.
+// - Client code must not write to global presence documents directly.
 
 class PresenceControllerState {
   const PresenceControllerState({
@@ -59,17 +59,16 @@ class PresenceController extends Notifier<PresenceControllerState>
   Timer? _heartbeatTimer;
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
 
-  FirebaseFirestore get _firestore => ref.read(firestoreProvider);
-  RtdbPresenceService get _rtdb =>
-      RtdbPresenceService(ref.read(firebaseDatabaseProvider));
-
-  DocumentReference<Map<String, dynamic>> _ref(String userId) =>
-      _firestore.collection('presence').doc(userId);
+    RtdbPresenceService get _rtdb => ref.read(rtdbPresenceServiceProvider);
 
   @override
   PresenceControllerState build() {
     WidgetsBinding.instance.addObserver(this);
     ref.onDispose(() {
+      final disposingUserId = state.userId;
+      if (disposingUserId != null && disposingUserId.trim().isNotEmpty) {
+        unawaited(_rtdb.disconnect(disposingUserId));
+      }
       WidgetsBinding.instance.removeObserver(this);
       _heartbeatTimer?.cancel();
       _heartbeatTimer = null;
@@ -157,11 +156,12 @@ class PresenceController extends Notifier<PresenceControllerState>
     final next = nextUid?.trim();
 
     if (previous != null && previous.isNotEmpty && previous != next) {
-      await _writePresenceFor(
-        userId: previous,
-        status: UserStatus.offline,
-        appState: PresenceAppState.detached,
+      AppTelemetry.updateRoomState(
+        roomId: null,
+        joinedUserId: previous,
         inRoom: null,
+        presenceStatus: UserStatus.offline.name,
+        globalPresenceOnline: false,
       );
       unawaited(_rtdb.disconnect(previous));
     }
@@ -230,48 +230,12 @@ class PresenceController extends Notifier<PresenceControllerState>
     if (userId == null || userId.trim().isEmpty) {
       return;
     }
-    await _writePresenceFor(
-      userId: userId,
-      status: state.status,
-      appState: state.appState,
-      inRoom: state.isOnline ? state.inRoom : null,
-    );
-  }
-
-  Future<void> _writePresenceFor({
-    required String userId,
-    required UserStatus status,
-    required PresenceAppState appState,
-    required String? inRoom,
-  }) async {
-    final isOnline = status != UserStatus.offline;
-    await traceFirestoreWrite<void>(
-      path: 'presence/$userId',
-      operation: 'write_presence',
-      roomId: inRoom,
-      userId: userId,
-      metadata: <String, Object?>{
-        'status': status.name,
-        'appState': appState.name,
-        'inRoom': inRoom,
-      },
-      action: () => _ref(userId).set({
-        'isOnline': isOnline,
-        'online': isOnline,
-        'status': status.name,
-        'userStatus': status.name,
-        'appState': appState.name,
-        'inRoom': inRoom,
-        'roomId': inRoom,
-        'lastSeen': FieldValue.serverTimestamp(),
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)),
-    );
+    final isOnline = state.status != UserStatus.offline;
     AppTelemetry.updateRoomState(
-      roomId: inRoom,
+      roomId: state.isOnline ? state.inRoom : null,
       joinedUserId: userId,
-      inRoom: inRoom,
-      presenceStatus: status.name,
+      inRoom: state.isOnline ? state.inRoom : null,
+      presenceStatus: state.status.name,
       globalPresenceOnline: isOnline,
     );
   }

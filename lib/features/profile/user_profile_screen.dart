@@ -13,16 +13,20 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
+import '../../models/presence_model.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../../widgets/brand_ui_kit.dart';
 import '../../widgets/follow_button.dart';
 import '../../widgets/gift_picker_sheet.dart';
+import '../../features/friends/providers/friends_providers.dart';
+import '../../features/messaging/models/conversation_model.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/feed/models/post_model.dart';
 import '../../features/feed/widgets/post_card.dart';
 import '../../presentation/providers/friend_provider.dart';
 import '../../presentation/providers/user_provider.dart';
+import 'widgets/profile_card.dart';
 import 'widgets/profile_music_player_stub.dart'
     if (dart.library.html) 'widgets/profile_music_player_web.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,15 +48,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   late Future<Map<String, dynamic>> _profileFuture;
   late TabController _tabController;
   bool _sendingFriendRequest = false;
-
-  Color? _hexColorOrNull(String hex) {
-    final clean = hex.replaceFirst('#', '');
-    try {
-      return Color(int.parse(clean.length == 6 ? 'FF$clean' : clean, radix: 16));
-    } catch (_) {
-      return null;
-    }
-  }
 
   String? _stringOrNull(dynamic value) {
     if (value == null) return null;
@@ -85,16 +80,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       if (normalized == 'false' || normalized == '0' || normalized == 'no') {
         return false;
       }
-    }
-    return fallback;
-  }
-
-  int _asInt(dynamic value, {required int fallback}) {
-    if (value is num) {
-      return value.toInt();
-    }
-    if (value is String) {
-      return int.tryParse(value) ?? fallback;
     }
     return fallback;
   }
@@ -338,6 +323,29 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     }
   }
 
+  ProfilePresenceState _presenceState(PresenceModel? presence) {
+    if ((presence?.inRoom ?? '').isNotEmpty) return ProfilePresenceState.inRoom;
+    if (presence?.isOnline == true) return ProfilePresenceState.online;
+    final lastSeen = presence?.lastSeen;
+    if (lastSeen != null && DateTime.now().difference(lastSeen).inMinutes < 10) {
+      return ProfilePresenceState.recentlyActive;
+    }
+    return ProfilePresenceState.offline;
+  }
+
+  String _presenceStatus(PresenceModel? presence) {
+    final roomId = presence?.inRoom;
+    if ((roomId ?? '').isNotEmpty) return 'In room: $roomId';
+    if (presence?.isOnline == true) return 'Online';
+    final lastSeen = presence?.lastSeen;
+    if (lastSeen == null) return 'Offline';
+    final delta = DateTime.now().difference(lastSeen);
+    if (delta.inMinutes < 1) return 'Last seen just now';
+    if (delta.inMinutes < 60) return 'Last seen ${delta.inMinutes}m ago';
+    if (delta.inHours < 24) return 'Last seen ${delta.inHours}h ago';
+    return 'Last seen ${delta.inDays}d ago';
+  }
+
   @override
   Widget build(BuildContext context) {
     final friendIds =
@@ -405,15 +413,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           final privacy = Map<String, dynamic>.from(payload['privacy'] as Map<String, dynamic>? ?? const <String, dynamic>{});
           final isBlocked = _asBool(payload['isBlocked'], fallback: false);
           final isFollowing = _asBool(payload['isFollowing'], fallback: false);
-          final followerCount = _asInt(payload['followerCount'], fallback: 0);
-          final followingCount = _asInt(payload['followingCount'], fallback: 0);
           final viewerId = FirebaseAuth.instance.currentUser?.uid;
           final isOwnProfile = viewerId == widget.userId;
+          final presence = isOwnProfile
+              ? ref.watch(currentUserPresenceProvider).valueOrNull
+              : ref.watch(friendPresenceProvider(widget.userId)).valueOrNull;
+          final roomId = presence?.inRoom;
+          String? directPreview;
+          if (!isOwnProfile && viewerId != null) {
+            final conversations =
+                ref.watch(conversationsStreamProvider(viewerId)).valueOrNull ??
+                    const <Conversation>[];
+            for (final conversation in conversations) {
+              if (conversation.type == 'direct' &&
+                  conversation.participantIds.contains(widget.userId)) {
+                directPreview = conversation.lastMessagePreview;
+                break;
+              }
+            }
+          }
 
           final username = _stringOrNull(data['username']);
           final avatarUrl = _stringOrNull(data['avatarUrl']);
-          final coverPhotoUrl = _stringOrNull(data['coverPhotoUrl']);
-          final bio = _stringOrNull(data['bio']);
           final aboutMe = _stringOrNull(data['aboutMe']);
           final introVideoUrl = _stringOrNull(data['introVideoUrl']);
           final galleryUrls = _stringList(data['galleryUrls']);
@@ -425,20 +446,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           final gender = _stringOrNull(data['gender']);
           final location = _stringOrNull(data['location']);
           final relationshipStatus = _stringOrNull(data['relationshipStatus']);
-          final camViewPolicy = _stringOrNull(data['camViewPolicy']);
-          final themeId = _stringOrNull(data['themeId']);
-          // Profile personalisation
-          final profileAccentColor = _stringOrNull(data['profileAccentColor']);
-          final profileBgGradientStart = _stringOrNull(data['profileBgGradientStart']);
-          final profileBgGradientEnd = _stringOrNull(data['profileBgGradientEnd']);
           final profileMusicUrl = _stringOrNull(data['profileMusicUrl']);
           final profileMusicTitle = _stringOrNull(data['profileMusicTitle']) ?? '';
-          final accentColor = profileAccentColor != null
-              ? _hexColorOrNull(profileAccentColor)
-              : null;
-          final coverImageUrl = (coverPhotoUrl ?? '').isNotEmpty
-              ? coverPhotoUrl!.trim()
-              : (galleryUrls.isNotEmpty ? galleryUrls.first.trim() : (avatarUrl ?? '').trim());
           final displayName = (username == null || username.isEmpty) ? 'MixVy user' : username;
 
           final details = <String>[];
@@ -463,155 +472,31 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               32,
             ),
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: LinearGradient(
-                    colors: (profileBgGradientStart != null && profileBgGradientEnd != null)
-                        ? [
-                            _hexColorOrNull(profileBgGradientStart) ??
-                                Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
-                            _hexColorOrNull(profileBgGradientEnd) ??
-                                Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
-                          ]
-                        : [
-                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
-                            const Color(0xFF781E2B).withValues(alpha: 0.6),
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: VelvetNoir.primary.withValues(alpha: 0.18),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.22),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    if (coverImageUrl.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: Opacity(
-                          opacity: 0.26,
-                          child: CachedNetworkImage(
-                            imageUrl: coverImageUrl,
-                            height: 320,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => const SizedBox(height: 320),
-                          ),
-                        ),
-                      ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withValues(alpha: 0.08),
-                              Colors.black.withValues(alpha: 0.42),
-                              Colors.black.withValues(alpha: 0.72),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MixvyGoldAvatar(
-                                imageUrl: avatarUrl,
-                                fallbackInitial: displayName,
-                                radius: 42,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      displayName,
-                                      style: GoogleFonts.playfairDisplay(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w700,
-                                        color: accentColor ?? VelvetNoir.onSurface,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      details.isEmpty ? 'Live social creator' : details.join(' • '),
-                                      style: GoogleFonts.raleway(
-                                        color: Colors.white.withValues(alpha: 0.84),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        if ((themeId ?? '').isNotEmpty)
-                                          _MiniBadge(label: themeId!, icon: Icons.palette_outlined),
-                                        if ((camViewPolicy ?? '').isNotEmpty)
-                                          _MiniBadge(label: camViewPolicy!, icon: Icons.videocam_outlined),
-                                        if (interests.isNotEmpty)
-                                          _MiniBadge(label: interests.first, icon: Icons.local_fire_department_rounded),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          if ((bio ?? '').isNotEmpty) ...[
-                            const SizedBox(height: 18),
-                            Text(
-                              bio!,
-                              style: GoogleFonts.raleway(
-                                color: Colors.white.withValues(alpha: 0.90),
-                                fontSize: 15,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _PublicStatTile(label: 'Followers', value: '$followerCount'),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _PublicStatTile(label: 'Following', value: '$followingCount'),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _PublicStatTile(label: 'Interests', value: '${interests.length}'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
               if (!isOwnProfile)
+                ProfileCard(
+                  displayName: displayName,
+                  avatarUrl: avatarUrl,
+                  statusText: _presenceStatus(presence),
+                  presenceState: _presenceState(presence),
+                  onMessage: () => _startConversation(displayName, avatarUrl),
+                  onInvite: _inviteToLiveRoom,
+                  onJoin: (roomId ?? '').isNotEmpty
+                      ? () => context.go('/room/$roomId')
+                      : null,
+                  currentRoom: (roomId ?? '').isNotEmpty ? roomId : null,
+                  lastMessagePreview: directPreview,
+                  mutualFriendsCount: null,
+                  onMute: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User muted for this session.')),
+                    );
+                  },
+                  onBlock: () => _toggleBlock(isBlocked),
+                  onReport: _reportUser,
+                  blockLabel: isBlocked ? 'Unblock' : 'Block',
+                ),
+              if (!isOwnProfile) ...[
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
@@ -640,27 +525,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _startConversation(displayName, avatarUrl),
-                        icon: const Icon(Icons.message_outlined),
-                        label: const Text('Message'),
-                      ),
-                    ),
-                  ],
-                ),
-              if (!isOwnProfile) ...[
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: _inviteToLiveRoom,
-                        icon: const Icon(Icons.mic),
-                        label: const Text('Invite'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
                       child: FollowButton(
                         isFollowing: isFollowing,
                         onPressed: () => _toggleFollow(isFollowing),
@@ -683,26 +547,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       label: const Text('Send Gift'),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _toggleBlock(isBlocked),
-                        icon: Icon(isBlocked ? Icons.lock_open_rounded : Icons.block_outlined),
-                        label: Text(isBlocked ? 'Unblock' : 'Block'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _reportUser,
-                        icon: const Icon(Icons.flag_outlined),
-                        label: const Text('Report'),
-                      ),
-                    ),
-                  ],
                 ),
               ],
               if (isOwnProfile) ...[
@@ -929,39 +773,6 @@ class _UserPostsTab extends ConsumerWidget {
   }
 }
 
-class _MiniBadge extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _MiniBadge({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PromptCard extends StatelessWidget {
   final String title;
   final String content;
@@ -978,46 +789,6 @@ class _PromptCard extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           Text(content),
-        ],
-      ),
-    );
-  }
-}
-
-class _PublicStatTile extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _PublicStatTile({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: VelvetNoir.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.raleway(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.78),
-            ),
-          ),
         ],
       ),
     );

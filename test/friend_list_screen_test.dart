@@ -3,14 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/friends/models/friend_roster_entry.dart';
 import 'package:mixvy/features/friends/models/friendship_model.dart';
+import 'package:mixvy/features/friends/panes/friends_pane_view.dart';
 import 'package:mixvy/features/friends/providers/friends_providers.dart';
+import 'package:mixvy/features/schema_messenger/core/schema_engine/schema_module_health_provider.dart';
 import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
-import 'package:mixvy/presentation/screens/friend_list_screen.dart';
+import 'test_helpers.dart';
 
 void main() {
-  testWidgets('FriendListScreen renders online, in-room, and offline sections', (tester) async {
+  setUpAll(() async {
+    await testSetup();
+  });
+
+  testWidgets('FriendListScreen renders online, in-room, and offline sections',
+      (tester) async {
     final now = DateTime.now();
     final roster = <FriendRosterEntry>[
       FriendRosterEntry(
@@ -84,36 +91,68 @@ void main() {
       ),
     ];
 
+    final container = ProviderContainer(
+      overrides: [
+        schemaModuleHealthProvider('friends').overrideWith(
+          (ref) => const SchemaModuleHealth(
+            moduleId: 'friends',
+            compositeScore: 100,
+            structuralScore: 100,
+            parityScore: 100,
+            enforcementScore: 100,
+            trend: MigrationHealthTrend.stable,
+            comparable: false,
+            parityMatch: true,
+            mismatchCount: 0,
+            reasons: [],
+          ),
+        ),
+        schemaModuleHealthProvider('messages').overrideWith(
+          (ref) => const SchemaModuleHealth(
+            moduleId: 'messages',
+            compositeScore: 100,
+            structuralScore: 100,
+            parityScore: 100,
+            enforcementScore: 100,
+            trend: MigrationHealthTrend.stable,
+            comparable: false,
+            parityMatch: true,
+            mismatchCount: 0,
+            reasons: [],
+          ),
+        ),
+        friendRosterProvider.overrideWith((ref) => Stream.value(roster)),
+        currentUserPresenceProvider.overrideWith(
+          (ref) => Stream.value(
+            PresenceModel(
+              userId: 'user-1',
+              isOnline: true,
+              inRoom: 'my-room',
+              lastSeen: now,
+              status: UserStatus.online,
+            ),
+          ),
+        ),
+        userProvider.overrideWithValue(
+          UserModel(
+            id: 'user-1',
+            email: 'user1@mixvy.dev',
+            username: 'User One',
+            createdAt: DateTime(2026, 1, 1),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          friendRosterProvider.overrideWith((ref) => Stream.value(roster)),
-          currentUserPresenceProvider.overrideWith(
-            (ref) => Stream.value(
-              PresenceModel(
-                userId: 'user-1',
-                isOnline: true,
-                inRoom: 'my-room',
-                lastSeen: now,
-                status: UserStatus.online,
-              ),
-            ),
-          ),
-          userProvider.overrideWithValue(
-            UserModel(
-              id: 'user-1',
-              email: 'user1@mixvy.dev',
-              username: 'User One',
-              createdAt: DateTime(2026, 1, 1),
-            ),
-          ),
-        ],
-        child: const MaterialApp(home: FriendListScreen()),
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: Scaffold(body: FriendsPaneView())),
       ),
     );
 
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
 
     expect(find.text('ONLINE'), findsOneWidget);
     expect(find.text('IN ROOMS'), findsOneWidget);
@@ -126,3 +165,6 @@ void main() {
     expect(find.textContaining('Last seen'), findsOneWidget);
   });
 }
+
+
+

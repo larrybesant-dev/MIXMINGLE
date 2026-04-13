@@ -6,7 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
+import '../../../models/presence_model.dart';
 import '../../../shared/widgets/async_state_view.dart';
+import '../../friends/providers/friends_providers.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
 
@@ -496,14 +498,28 @@ class _ConversationsList extends StatelessWidget {
       );
     }
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+      padding: const EdgeInsets.only(bottom: 24),
       itemCount: conversations.length,
-      separatorBuilder: (_, _) => Divider(
-        height: 1,
-        indent: 84,
-        endIndent: 16,
-        color: VelvetNoir.outlineVariant.withValues(alpha: 0.22),
-      ),
+      separatorBuilder: (_, index) {
+        final currentPinned = conversations[index].isPinnedFor(userId);
+        final nextPinned = conversations[index + 1].isPinnedFor(userId);
+        if (currentPinned && !nextPinned) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Divider(
+              indent: 16,
+              endIndent: 16,
+              height: 1,
+              color: VelvetNoir.primary.withValues(alpha: 0.28),
+            ),
+          );
+        }
+        return const Divider(
+          indent: 52,
+          height: 1,
+          color: Color(0x18F7EDE2),
+        );
+      },
       itemBuilder: (context, index) => _ConversationTile(
         conversation: conversations[index],
         userId: userId,
@@ -529,60 +545,94 @@ class _ConversationTile extends ConsumerWidget {
     final avatarUrl = conversation.groupAvatarUrl;
     final previewText = conversation.lastMessagePreview ?? 'No messages yet';
     final isGroup = conversation.type == 'group';
+    final peerUserId = _otherParticipantId();
+    final typingUsers = ref.watch(typingUsersProvider(conversation.id)).valueOrNull ??
+        const <String>{};
+    final isPeerTyping = peerUserId != null && typingUsers.contains(peerUserId);
+    final peerPresence = isGroup || peerUserId == null
+        ? null
+      : ref.watch(friendPresenceProvider(peerUserId)).valueOrNull;
+    final presenceColor = _presenceColor(peerPresence);
+    final hasPresenceSignal = presenceColor != null;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => GoRouter.of(context).push('/messages/${conversation.id}'),
-        borderRadius: BorderRadius.circular(18),
+        onLongPress: () => _showActionSheet(context, ref),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: unread
-                ? VelvetNoir.surfaceHigh.withValues(alpha: 0.94)
-                : Colors.transparent,
-          ),
+          color: unread ? VelvetNoir.secondary.withValues(alpha: 0.08) : Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // ── Avatar with presence ring + unread badge ──────────────
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: isGroup
-                        ? VelvetNoir.secondary.withValues(alpha: 0.18)
-                        : VelvetNoir.primaryDim,
-                    backgroundImage: avatarUrl != null
-                        ? CachedNetworkImageProvider(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            displayName.isNotEmpty
-                                ? displayName[0].toUpperCase()
-                                : '?',
-                            style: GoogleFonts.raleway(
-                              color: VelvetNoir.onSurface,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          )
-                        : null,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: hasPresenceSignal
+                            ? presenceColor
+                            : Colors.transparent,
+                        width: 1.8,
+                      ),
+                      boxShadow: hasPresenceSignal
+                          ? [
+                              BoxShadow(
+                                color: presenceColor.withValues(alpha: 0.28),
+                                blurRadius: 8,
+                                spreadRadius: 0,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: isGroup
+                          ? VelvetNoir.secondary.withValues(alpha: 0.18)
+                          : VelvetNoir.primaryDim,
+                      backgroundImage: avatarUrl != null
+                          ? CachedNetworkImageProvider(avatarUrl)
+                          : null,
+                      child: avatarUrl == null
+                          ? Text(
+                              displayName.isNotEmpty
+                                  ? displayName[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                color: VelvetNoir.onSurface,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
                   if (unread)
                     Positioned(
-                      right: -1,
-                      top: -1,
+                      right: -4,
+                      top: -4,
                       child: Container(
-                        width: 14,
-                        height: 14,
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
                           color: VelvetNoir.primary,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: VelvetNoir.surface,
                             width: 2,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.notifications_active_rounded,
+                            size: 9,
+                            color: VelvetNoir.surface,
                           ),
                         ),
                       ),
@@ -592,32 +642,44 @@ class _ConversationTile extends ConsumerWidget {
                       left: -2,
                       bottom: -2,
                       child: Container(
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         decoration: BoxDecoration(
                           color: VelvetNoir.secondary,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: VelvetNoir.surface,
-                            width: 2,
+                            width: 1.5,
                           ),
                         ),
                         child: const Icon(
                           Icons.push_pin_rounded,
-                          size: 10,
+                          size: 8,
                           color: Colors.white,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
+                        if (hasPresenceSignal) ...[
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: presenceColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
                         Expanded(
                           child: Text(
                             displayName,
@@ -626,12 +688,13 @@ class _ConversationTile extends ConsumerWidget {
                             style: GoogleFonts.raleway(
                               fontWeight:
                                   unread ? FontWeight.w800 : FontWeight.w700,
-                              fontSize: 15,
+                              fontSize: 14,
                               color: VelvetNoir.onSurface,
+                              letterSpacing: 0.1,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
                         Text(
                           _formatTime(conversation.lastMessageAt),
                           style: GoogleFonts.raleway(
@@ -643,73 +706,62 @@ class _ConversationTile extends ConsumerWidget {
                                 : VelvetNoir.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          tooltip: pinned ? 'Unpin conversation' : 'Pin conversation',
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 28,
-                            minHeight: 28,
-                          ),
-                          onPressed: () => ref
-                              .read(messagingControllerProvider)
-                              .setConversationPinned(
-                                conversationId: conversation.id,
-                                userId: userId,
-                                pinned: !pinned,
-                              ),
-                          icon: Icon(
-                            pinned
-                                ? Icons.push_pin_rounded
-                                : Icons.push_pin_outlined,
-                            size: 18,
-                            color: pinned
-                                ? VelvetNoir.secondaryBright
-                                : VelvetNoir.onSurfaceVariant,
-                          ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Row(
                       children: [
                         if (isGroup)
                           Container(
-                            margin: const EdgeInsets.only(right: 8),
+                            margin: const EdgeInsets.only(right: 6),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
+                              horizontal: 5,
+                              vertical: 2,
                             ),
                             decoration: BoxDecoration(
                               color:
-                                  VelvetNoir.secondary.withValues(alpha: 0.12),
+                                  VelvetNoir.secondary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'Group',
+                              'G',
                               style: GoogleFonts.raleway(
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: VelvetNoir.secondaryBright,
                               ),
                             ),
                           ),
                         Expanded(
-                          child: Text(
-                            previewText,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.raleway(
-                              fontSize: 13,
-                              height: 1.25,
-                              color: unread
-                                  ? VelvetNoir.onSurface
-                                  : VelvetNoir.onSurfaceVariant,
-                              fontWeight:
-                                  unread ? FontWeight.w700 : FontWeight.w500,
-                            ),
-                          ),
+                          child: isPeerTyping
+                              ? Row(
+                                  children: [
+                                    Text(
+                                      'Typing',
+                                      style: GoogleFonts.raleway(
+                                        fontSize: 12,
+                                        color: const Color(0xFF22C55E),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    const _TypingDots(),
+                                  ],
+                                )
+                              : Text(
+                                  previewText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.raleway(
+                                    fontSize: 12,
+                                    height: 1.2,
+                                    color: unread
+                                        ? VelvetNoir.onSurface
+                                        : VelvetNoir.onSurfaceVariant,
+                                    fontWeight:
+                                        unread ? FontWeight.w600 : FontWeight.w400,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -723,6 +775,39 @@ class _ConversationTile extends ConsumerWidget {
     );
   }
 
+  void _showActionSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: VelvetNoir.surfaceHigh,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ConversationActionSheet(
+        conversation: conversation,
+        userId: userId,
+      ),
+    );
+  }
+
+  String? _otherParticipantId() {
+    for (final id in conversation.participantIds) {
+      if (id != userId) return id;
+    }
+    return null;
+  }
+
+  Color? _presenceColor(PresenceModel? presence) {
+    if (presence == null) return null;
+    if ((presence.inRoom ?? '').isNotEmpty) return VelvetNoir.secondaryBright;
+    if (presence.isOnline == true) return const Color(0xFF22C55E);
+    final lastSeen = presence.lastSeen;
+    if (lastSeen == null) return null;
+    final isRecentlyActive = DateTime.now().difference(lastSeen).inMinutes < 10;
+    return isRecentlyActive
+        ? const Color(0xFF86EFAC)
+        : null;
+  }
+
   String _formatTime(DateTime? dateTime) {
     if (dateTime == null) return '';
     final now = DateTime.now();
@@ -732,5 +817,137 @@ class _ConversationTile extends ConsumerWidget {
     if (difference.inDays < 1) return '${difference.inHours}h ago';
     if (difference.inDays < 7) return '${difference.inDays}d ago';
     return '${dateTime.month}/${dateTime.day}';
+  }
+}
+
+class _ConversationActionSheet extends ConsumerWidget {
+  const _ConversationActionSheet({
+    required this.conversation,
+    required this.userId,
+  });
+
+  final Conversation conversation;
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pinned = conversation.isPinnedFor(userId);
+    final displayName = conversation.getDisplayName(userId);
+
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: VelvetNoir.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            child: Text(
+              displayName,
+              style: const TextStyle(
+                color: VelvetNoir.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const Divider(color: VelvetNoir.outlineVariant, height: 1),
+          ListTile(
+            leading: Icon(
+              pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+              color: VelvetNoir.primary,
+            ),
+            title: Text(
+              pinned ? 'Unpin conversation' : 'Pin conversation',
+              style: const TextStyle(color: VelvetNoir.onSurface, fontSize: 15),
+            ),
+            onTap: () {
+              ref.read(messagingControllerProvider).setConversationPinned(
+                    conversationId: conversation.id,
+                    userId: userId,
+                    pinned: !pinned,
+                  );
+              Navigator.of(context).pop();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.archive_outlined, color: VelvetNoir.primary),
+            title: const Text(
+              'Archive conversation',
+              style: TextStyle(color: VelvetNoir.onSurface, fontSize: 15),
+            ),
+            onTap: () {
+              // Archive action
+              Navigator.of(context).pop();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: VelvetNoir.error),
+            title: const Text(
+              'Delete conversation',
+              style: TextStyle(color: VelvetNoir.error, fontSize: 15),
+            ),
+            onTap: () {
+              // Delete with confirmation
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final phase = (_controller.value * 3).floor() % 3;
+        final dots = '.' * (phase + 1);
+        return Text(
+          dots,
+          style: GoogleFonts.raleway(
+            fontSize: 12,
+            color: const Color(0xFF22C55E),
+            fontWeight: FontWeight.w700,
+          ),
+        );
+      },
+    );
   }
 }

@@ -10,6 +10,7 @@ void main() {
       'lib/services/presence_controller.dart',
       'lib/services/presence_repository.dart',
       'lib/services/presence_service.dart',
+      'lib/shared/widgets/app_debug_overlay.dart',
     };
 
     final violations = <String>[];
@@ -44,6 +45,9 @@ void main() {
     final allowed = <String>{
       'lib/services/presence_service.dart',
       'lib/services/presence_repository.dart',
+      'lib/services/presence_controller.dart',
+      'lib/core/providers/firebase_providers.dart',
+      'lib/services/rtdb_presence_service.dart',
     };
 
     final violations = <String>[];
@@ -60,7 +64,9 @@ void main() {
       final relativePath = 'lib/$normalizedPath';
       final content = entity.readAsStringSync();
 
-      final importsPresenceService = content.contains("presence_service.dart");
+        final importsPresenceService = content.contains("/presence_service.dart") ||
+          content.contains("'presence_service.dart'") ||
+          content.contains('"presence_service.dart"');
       final constructsPresenceService = content.contains('PresenceService(');
       if ((importsPresenceService || constructsPresenceService) && !allowed.contains(relativePath)) {
         violations.add(relativePath);

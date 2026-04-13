@@ -80,6 +80,19 @@
 			],
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Audit Dart File Integrity",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"tools/audit_dart_file_integrity.ps1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }

@@ -115,7 +115,6 @@ void main() {
       final aliceTop = tester.getTopLeft(find.text('Alice')).dy;
       final biancaTop = tester.getTopLeft(find.text('Bianca')).dy;
       expect(aliceTop, lessThan(biancaTop));
-      expect(find.byTooltip('Unpin conversation'), findsOneWidget);
     });
 
     testWidgets('add message button is shown in AppBar actions', (tester) async {

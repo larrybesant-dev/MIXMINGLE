@@ -11,6 +11,7 @@ import '../models/user_model.dart';
 import 'analytics_service.dart';
 import 'moderation_service.dart';
 import 'presence_repository.dart';
+import 'schema_mutation_service.dart';
 
 class FriendService {
   FriendService({
@@ -18,12 +19,15 @@ class FriendService {
     AnalyticsService? analyticsService,
     ModerationService? moderationService,
     PresenceRepository? presenceRepository,
+    SchemaMutationService? mutationService,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _analyticsService = analyticsService ?? AnalyticsService(),
         _moderationService = moderationService ??
             ModerationService(firestore: firestore ?? FirebaseFirestore.instance),
         _presenceRepository = presenceRepository ??
-            FirestorePresenceRepository(firestore ?? FirebaseFirestore.instance);
+        FirestorePresenceRepository(firestore ?? FirebaseFirestore.instance),
+      _mutationService =
+        mutationService ?? SchemaMutationService(firestore: firestore);
 
   static const int _firestoreWhereInLimit = 30;
 
@@ -31,6 +35,7 @@ class FriendService {
   final AnalyticsService _analyticsService;
   final ModerationService _moderationService;
   final PresenceRepository _presenceRepository;
+  final SchemaMutationService _mutationService;
 
   bool _isPermissionDenied(Object error) {
     if (error is FirebaseException) {
@@ -496,14 +501,13 @@ class FriendService {
       }
     }
 
-    await friendshipRef.set({
-      'userA': sortedPair.userA,
-      'userB': sortedPair.userB,
-      'status': 'pending',
-      'requestedBy': normalizedFromUserId,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _mutationService.syncFriendLinks(
+      firstUserId: sortedPair.userA,
+      secondUserId: sortedPair.userB,
+      status: 'pending',
+      requestedBy: normalizedFromUserId,
+      collectionName: 'friendships',
+    );
 
     final fromUser = await getUserById(normalizedFromUserId);
     await _createNotification(
@@ -545,10 +549,13 @@ class FriendService {
       return;
     }
 
-    await friendshipRef.set({
-      'status': 'accepted',
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _mutationService.syncFriendLinks(
+      firstUserId: friendship.userA,
+      secondUserId: friendship.userB,
+      status: 'accepted',
+      requestedBy: friendship.requestedBy ?? friendship.userA,
+      collectionName: 'friendships',
+    );
 
     final accepterId =
         friendship.requestedBy == friendship.userA ? friendship.userB : friendship.userA;
@@ -671,12 +678,11 @@ class FriendService {
 
   Future<void> setFavorite(String userId, String friendId, {required bool isFavorite}) async {
     if (userId.trim().isEmpty || friendId.trim().isEmpty) return;
-    await _usersCollection.doc(userId).set({
-      'favoriteFriendIds': isFavorite
-          ? FieldValue.arrayUnion([friendId])
-          : FieldValue.arrayRemove([friendId]),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _mutationService.setLegacyFavoriteFriend(
+      userId: userId,
+      friendId: friendId,
+      isFavorite: isFavorite,
+    );
     if (isFavorite) {
       await _createNotification(
         friendId,

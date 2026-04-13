@@ -152,10 +152,11 @@ void main() {
 
       addTearDown(rosterContainer.dispose);
 
-      final onlineFriends = await rosterContainer.read(onlineFriendsProvider.future);
+      await rosterContainer.read(friendRosterProvider.future);
+      final onlineFriends = rosterContainer.read(onlineFriendsProvider).value;
 
       expect(onlineFriends, hasLength(1));
-      expect(onlineFriends.single.user.id, 'user-2');
+      expect(onlineFriends!.single.user.id, 'user-2');
       expect(onlineFriends.single.isOnline, isTrue);
     });
 

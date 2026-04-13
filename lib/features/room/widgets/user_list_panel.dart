@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
 import '../../../features/room/providers/presence_provider.dart';
+import 'room_user_tile.dart';
 
 /// A Paltalk-style always-visible user list panel for the room.
 /// Shows role icons (crown/star/shield), online status, mic/cam indicators.
@@ -52,16 +53,28 @@ class UserListPanel extends StatelessWidget {
       for (final p in presenceList)
         if (p.isOnline &&
             (p.lastHeartbeatAt == null ||
-                DateTime.now().difference(p.lastHeartbeatAt!).inSeconds < 90))
+                DateTime.now().difference(p.lastHeartbeatAt!).inSeconds < 60))
           p.userId,
     };
 
-    // Sort: host first, then cohost, then moderators, then others
-    final sorted = [...participants]..sort((a, b) {
-        return _roleOrder(a.role).compareTo(_roleOrder(b.role));
-      });
+    // ── Role groups ────────────────────────────────────────────────────────
+    final hosts = participants
+        .where((p) => p.role == 'host' || p.role == 'owner')
+        .toList();
+    final onStage = participants
+        .where((p) => p.role == 'cohost' || p.role == 'stage')
+        .toList()
+      ..sort((a, b) => _roleOrder(a.role).compareTo(_roleOrder(b.role)));
+    final audience = participants
+        .where((p) =>
+            p.role != 'host' &&
+            p.role != 'owner' &&
+            p.role != 'cohost' &&
+            p.role != 'stage')
+        .toList()
+      ..sort((a, b) => _roleOrder(a.role).compareTo(_roleOrder(b.role)));
 
-    if (sorted.isEmpty) {
+    if (hosts.isEmpty && onStage.isEmpty && audience.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(16),
@@ -75,43 +88,201 @@ class UserListPanel extends StatelessWidget {
 
     return ColoredBox(
       color: npSurfaceContainer,
-      child: ListView.builder(
-        padding: EdgeInsets.zero,
-        itemCount: sorted.length,
-        itemBuilder: (context, index) {
-          final p = sorted[index];
-          final isOnline = onlineIds.contains(p.userId);
-          final displayName =
-              displayNameById[p.userId] ?? p.userId;
-          final avatarUrl = avatarUrlById[p.userId];
-          final isMe = p.userId == currentUserId;
+      child: CustomScrollView(
+        slivers: [
+          // ── HOST FEATURED SLOT ─────────────────────────────────────────
+          if (hosts.isNotEmpty) ...
+            [
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  'HOST',
+                  hosts.length,
+                  const Color(0xFFD4AF37),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _buildHostFeaturedSlot(hosts.first),
+              ),
+            ],
 
-          return _UserListTile(
-            participant: p,
-            displayName: displayName,
-            avatarUrl: avatarUrl,
-            isOnline: isOnline,
-            isMe: isMe,
-            customStatus: presenceList
-                .firstWhere((pr) => pr.userId == p.userId,
-                    orElse: () => RoomPresenceModel(
-                          userId: p.userId,
-                          isOnline: false,
-                          lastHeartbeatAt: null,
-                          lastSeenAt: null,
-                        ))
-                .customStatus,
-            onTap: onTapUser == null ? null : () => onTapUser!(p),
-            onWhisper: (onWhisper == null || isMe)
-                ? null
-                : () => onWhisper!(p),
-            onKick: (onKick == null || isMe) ? null : () => onKick!(p),
-            onMute: (onMute == null || isMe) ? null : () => onMute!(p),
-            onBan: (onBan == null || isMe) ? null : () => onBan!(p),
-            onBuzz: (onBuzz == null || isMe) ? null : () => onBuzz!(p),
-            showModMenu: isCurrentUserHost && !isMe,
-          );
-        },
+          // ── ON MIC — speakers grid ─────────────────────────────────────
+          if (onStage.isNotEmpty) ...
+            [
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  'ON MIC',
+                  onStage.length,
+                  const Color(0xFF9B2535),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                sliver: SliverGrid(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 0.72,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final p = onStage[index];
+                      return RoomUserTile(
+                        displayName:
+                            displayNameById[p.userId] ?? p.userId,
+                        avatarUrl: avatarUrlById[p.userId],
+                        role: p.role,
+                        isMicOn: p.micOn,
+                        isMuted: p.isMuted,
+                        isMe: p.userId == currentUserId,
+                        micExpiresAt: p.micExpiresAt,
+                        layout: RoomUserTileLayout.grid,
+                        onTap:
+                            onTapUser == null ? null : () => onTapUser!(p),
+                      );
+                    },
+                    childCount: onStage.length,
+                  ),
+                ),
+              ),
+            ],
+
+          // ── AUDIENCE ──────────────────────────────────────────────────
+          if (audience.isNotEmpty) ...
+            [
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  'AUDIENCE',
+                  audience.length,
+                  npOnVariant,
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final p = audience[index];
+                    final isOnline = onlineIds.contains(p.userId);
+                    final displayName =
+                        displayNameById[p.userId] ?? p.userId;
+                    final avatarUrl = avatarUrlById[p.userId];
+                    final isMe = p.userId == currentUserId;
+                    final customStatus = presenceList
+                        .firstWhere(
+                          (pr) => pr.userId == p.userId,
+                          orElse: () => RoomPresenceModel(
+                            userId: p.userId,
+                            isOnline: false,
+                            lastHeartbeatAt: null,
+                            lastSeenAt: null,
+                          ),
+                        )
+                        .customStatus;
+                    return _UserListTile(
+                      participant: p,
+                      displayName: displayName,
+                      avatarUrl: avatarUrl,
+                      isOnline: isOnline,
+                      isMe: isMe,
+                      customStatus: customStatus,
+                      onTap:
+                          onTapUser == null ? null : () => onTapUser!(p),
+                      onWhisper: (onWhisper == null || isMe)
+                          ? null
+                          : () => onWhisper!(p),
+                      onKick:
+                          (onKick == null || isMe) ? null : () => onKick!(p),
+                      onMute:
+                          (onMute == null || isMe) ? null : () => onMute!(p),
+                      onBan:
+                          (onBan == null || isMe) ? null : () => onBan!(p),
+                      onBuzz:
+                          (onBuzz == null || isMe) ? null : () => onBuzz!(p),
+                      showModMenu: isCurrentUserHost && !isMe,
+                    );
+                  },
+                  childCount: audience.length,
+                ),
+              ),
+            ],
+
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+        ],
+      ),
+    );
+  }
+
+  // ── Section header ────────────────────────────────────────────────────────
+  Widget _buildSectionHeader(String label, int count, Color color) {
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111519),
+        border: Border(
+          top: BorderSide(color: color.withValues(alpha: 0.18)),
+          bottom: BorderSide(color: color.withValues(alpha: 0.10)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                color: color,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Host featured slot ────────────────────────────────────────────────────
+  Widget _buildHostFeaturedSlot(RoomParticipantModel host) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFFD4AF37).withValues(alpha: 0.06),
+            const Color(0xFF161A21).withValues(alpha: 0),
+          ],
+        ),
+      ),
+      child: Center(
+        child: RoomUserTile(
+          displayName: displayNameById[host.userId] ?? host.userId,
+          avatarUrl: avatarUrlById[host.userId],
+          role: host.role,
+          isMicOn: host.micOn,
+          isMuted: host.isMuted,
+          isMe: host.userId == currentUserId,
+          micExpiresAt: host.micExpiresAt,
+          layout: RoomUserTileLayout.grid,
+          onTap: onTapUser == null ? null : () => onTapUser!(host),
+        ),
       ),
     );
   }

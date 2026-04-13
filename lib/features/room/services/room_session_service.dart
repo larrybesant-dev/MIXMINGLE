@@ -55,7 +55,6 @@ class RoomSessionService {
   })  : _firestore = firestore,
         _presenceController = presenceController;
 
-  static const Duration presenceHeartbeatInterval = Duration(seconds: 30);
   static const Duration participantSyncInterval = Duration(seconds: 60);
 
   final FirebaseFirestore _firestore;
@@ -223,10 +222,8 @@ class RoomSessionService {
         roomId: normalizedRoomId,
         userId: normalizedUserId,
         action: () => participantRef.update({
-          'lastActiveAt': now,
           'role': correctedRole,
           'camOn': false,
-          'userStatus': 'online',
         }),
       );
       await traceFirestoreWrite<void>(
@@ -255,8 +252,6 @@ class RoomSessionService {
           'isBanned': false,
           'camOn': false,
           'joinedAt': now,
-          'lastActiveAt': now,
-          'userStatus': 'online',
         }),
       );
       await traceFirestoreWrite<void>(
@@ -350,59 +345,28 @@ class RoomSessionService {
     DateTime? lastParticipantSyncAt,
     bool forceParticipantSync = false,
   }) async {
-    final now = DateTime.now();
-    await traceFirestoreWrite<void>(
-      path: 'rooms/$roomId/participants/$userId',
-      operation: 'participant_heartbeat',
-      roomId: roomId,
-      userId: userId,
-      // Only write lastActiveAt — rules allow self-update of this field.
-      // Writing extra fields (userId, userStatus) triggers the hasOnly guard
-      // → PERMISSION_DENIED → lastActiveAt never advances → participant goes
-      // stale in 90 s and vanishes from the roster.
-      action: () => _firestore
-          .collection('rooms')
-          .doc(roomId)
-          .collection('participants')
-          .doc(userId)
-          .update({'lastActiveAt': FieldValue.serverTimestamp()}),
-    );
-    AppTelemetry.updateRoomState(
-      roomId: roomId,
-      joinedUserId: userId,
-      roomPhase: 'joined',
-      inRoom: roomId,
-    );
-    if (forceParticipantSync ||
-        lastParticipantSyncAt == null ||
-        now.difference(lastParticipantSyncAt) >= participantSyncInterval) {
-      return now;
-    }
-    return lastParticipantSyncAt;
+    // Room participant presence authority is intentionally disabled.
+    // Global presence is derived from RTDB session truth.
+    return lastParticipantSyncAt ?? DateTime.now();
   }
 
   Future<void> setCustomStatus({
     required String roomId,
     required String userId,
     required String? status,
-    String userStatus = 'online',
   }) {
     return traceFirestoreWrite<void>(
       path: 'rooms/$roomId/participants/$userId',
       operation: 'set_custom_room_status',
       roomId: roomId,
       userId: userId,
-      metadata: <String, Object?>{'userStatus': userStatus},
       action: () => _firestore
           .collection('rooms')
           .doc(roomId)
           .collection('participants')
           .doc(userId)
           .set({
-        'userId': userId,
         'customStatus': status,
-        'userStatus': userStatus,
-        'lastActiveAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true)),
     );
   }

@@ -58,17 +58,10 @@ final liveRoomControllerProvider = NotifierProvider.family
 );
 
 class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String> {
-  Timer? _heartbeatTimer;
-  DateTime? _lastParticipantSyncAt;
-
   RoomSessionService get _service => ref.read(roomSessionServiceProvider);
 
   @override
   LiveRoomState build(String roomId) {
-    ref.onDispose(() {
-      _heartbeatTimer?.cancel();
-      _heartbeatTimer = null;
-    });
     return const LiveRoomState();
   }
 
@@ -89,8 +82,6 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
 
     final result = await _service.joinRoom(roomId: arg, userId: userId);
     if (!result.isSuccess) {
-      _heartbeatTimer?.cancel();
-      _heartbeatTimer = null;
       state = state.copyWith(
         phase: LiveRoomPhase.error,
         userId: null,
@@ -101,7 +92,6 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
       return result;
     }
 
-    _startHeartbeat(userId);
     state = state.copyWith(
       phase: LiveRoomPhase.joined,
       userId: userId,
@@ -115,22 +105,16 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
   Future<void> leaveRoom() async {
     final userId = state.userId;
     if (userId == null) {
-      _heartbeatTimer?.cancel();
-      _heartbeatTimer = null;
       state = const LiveRoomState();
       return;
     }
 
     state = state.copyWith(phase: LiveRoomPhase.leaving, errorMessage: null);
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
     await _service.leaveRoom(roomId: arg, userId: userId);
     state = const LiveRoomState();
   }
 
   Future<void> pausePresence() async {
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
     final userId = state.userId;
     if (userId == null) {
       return;
@@ -139,7 +123,6 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
       roomId: arg,
       userId: userId,
       status: null,
-      userStatus: 'away',
     );
   }
 
@@ -148,7 +131,6 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
     if (userId == null) {
       return;
     }
-    _startHeartbeat(userId);
     state = state.copyWith(phase: LiveRoomPhase.joined, errorMessage: null);
   }
 
@@ -159,13 +141,11 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
   Future<void> setCustomStatus({
     required String userId,
     required String? status,
-    String userStatus = 'online',
   }) {
     return _service.setCustomStatus(
       roomId: arg,
       userId: userId,
       status: status,
-      userStatus: userStatus,
     );
   }
 
@@ -182,23 +162,5 @@ class LiveRoomController extends AutoDisposeFamilyNotifier<LiveRoomState, String
 
   Future<void> setSpotlightUser(String? userId) {
     return _service.setSpotlightUser(roomId: arg, userId: userId);
-  }
-
-  void _startHeartbeat(String userId) {
-    _heartbeatTimer?.cancel();
-    _lastParticipantSyncAt = null;
-    unawaited(_service.heartbeat(roomId: arg, userId: userId, forceParticipantSync: true));
-    _heartbeatTimer = Timer.periodic(
-      RoomSessionService.presenceHeartbeatInterval,
-      (_) {
-        unawaited(_service.heartbeat(
-          roomId: arg,
-          userId: userId,
-          lastParticipantSyncAt: _lastParticipantSyncAt,
-        ).then((syncAt) {
-          _lastParticipantSyncAt = syncAt;
-        }));
-      },
-    );
   }
 }

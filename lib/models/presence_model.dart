@@ -17,7 +17,7 @@ class PresenceModel {
 	})  : _online = online,
 				_roomId = roomId;
 
-	static const Duration staleThreshold = Duration(seconds: 90);
+	static const Duration staleThreshold = Duration(seconds: 60);
 
 	final String? id;
 	final String? userId;

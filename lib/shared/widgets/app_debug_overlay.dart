@@ -1,6 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/telemetry/app_telemetry.dart';
 
@@ -17,15 +22,304 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
   bool _isVisible = false;
   int _secretTapCount = 0;
   Timer? _secretTapTimer;
+  Timer? _lastSeenTicker;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _firestorePresenceSub;
+  StreamSubscription<DatabaseEvent>? _rtdbSessionsSub;
+
+  String? _watchedUserId;
+  Map<String, dynamic>? _firestorePresence;
+
+  int _rtdbSessionCount = 0;
+  bool _rtdbAnyOnline = false;
+  bool _rtdbAnyCamOn = false;
+  bool _rtdbAnyMicOn = false;
+  String? _rtdbAnyInRoom;
+  int? _latestRtdbLastSeenMs;
+
+  DateTime? _lastRtdbObservedAt;
+  DateTime? _lastFirestoreObservedAt;
+  int? _lastFirestoreRtdbUpdatedAtMs;
+  int? _rtdbToFirestoreDelayMs;
+  int? _firestoreToUiDelayMs;
 
   @override
   void dispose() {
     _secretTapTimer?.cancel();
+    _stopPresenceDebugWatch(resetData: false);
     super.dispose();
   }
 
   void _toggleOverlay() {
-    setState(() => _isVisible = !_isVisible);
+    final nextVisible = !_isVisible;
+    setState(() => _isVisible = nextVisible);
+    if (nextVisible) {
+      _startPresenceDebugWatch();
+    } else {
+      _stopPresenceDebugWatch(resetData: false);
+    }
+  }
+
+  void _startPresenceDebugWatch() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.trim().isEmpty) {
+      _stopPresenceDebugWatch(resetData: true);
+      return;
+    }
+    if (_watchedUserId == uid &&
+        (_firestorePresenceSub != null || _rtdbSessionsSub != null)) {
+      return;
+    }
+
+    _stopPresenceDebugWatch(resetData: true);
+    _watchedUserId = uid;
+
+    _lastSeenTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+
+    _firestorePresenceSub = FirebaseFirestore.instance
+        .collection('presence')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      final observedAt = DateTime.now();
+      final data = doc.data();
+      final currentUpdatedAtMs = _asEpochMillis(data?['rtdbUpdatedAt']);
+      final shouldUpdateRtdbDelay = currentUpdatedAtMs != null &&
+          currentUpdatedAtMs != _lastFirestoreRtdbUpdatedAtMs;
+      final rtdbDelay = shouldUpdateRtdbDelay && _lastRtdbObservedAt != null
+          ? observedAt.difference(_lastRtdbObservedAt!).inMilliseconds
+          : _rtdbToFirestoreDelayMs;
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _firestorePresence = data;
+        _lastFirestoreObservedAt = observedAt;
+        _lastFirestoreRtdbUpdatedAtMs = currentUpdatedAtMs;
+        _rtdbToFirestoreDelayMs = rtdbDelay;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        final base = _lastFirestoreObservedAt;
+        if (base == null) {
+          return;
+        }
+        setState(() {
+          _firestoreToUiDelayMs = DateTime.now().difference(base).inMilliseconds;
+        });
+      });
+    });
+
+    _rtdbSessionsSub = FirebaseDatabase.instance
+        .ref('status/$uid/sessions')
+        .onValue
+        .listen((event) {
+      final observedAt = DateTime.now();
+      final raw = event.snapshot.value;
+      var sessionCount = 0;
+      var anyOnline = false;
+      var anyCamOn = false;
+      var anyMicOn = false;
+      String? anyInRoom;
+      int? latestSeen;
+
+      if (raw is Map) {
+        for (final entry in raw.entries) {
+          final value = entry.value;
+          if (value is! Map) {
+            continue;
+          }
+          sessionCount += 1;
+          final online = value['online'] == true;
+          if (online) {
+            anyOnline = true;
+          }
+          if (value['cam_on'] == true) {
+            anyCamOn = true;
+          }
+          if (value['mic_on'] == true) {
+            anyMicOn = true;
+          }
+          final inRoomValue = value['in_room'];
+          if (anyInRoom == null && inRoomValue is String && inRoomValue.trim().isNotEmpty) {
+            anyInRoom = inRoomValue.trim();
+          }
+          final lastSeenRaw = value['last_seen'];
+          if (lastSeenRaw is int) {
+            if (latestSeen == null || lastSeenRaw > latestSeen) {
+              latestSeen = lastSeenRaw;
+            }
+          }
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _lastRtdbObservedAt = observedAt;
+        _rtdbSessionCount = sessionCount;
+        _rtdbAnyOnline = anyOnline;
+        _rtdbAnyCamOn = anyCamOn;
+        _rtdbAnyMicOn = anyMicOn;
+        _rtdbAnyInRoom = anyInRoom;
+        _latestRtdbLastSeenMs = latestSeen;
+      });
+    });
+  }
+
+  void _stopPresenceDebugWatch({required bool resetData}) {
+    _lastSeenTicker?.cancel();
+    _lastSeenTicker = null;
+    _firestorePresenceSub?.cancel();
+    _firestorePresenceSub = null;
+    _rtdbSessionsSub?.cancel();
+    _rtdbSessionsSub = null;
+    _watchedUserId = null;
+    if (!resetData) {
+      return;
+    }
+    _firestorePresence = null;
+    _rtdbSessionCount = 0;
+    _rtdbAnyOnline = false;
+    _rtdbAnyCamOn = false;
+    _rtdbAnyMicOn = false;
+    _rtdbAnyInRoom = null;
+    _latestRtdbLastSeenMs = null;
+    _lastRtdbObservedAt = null;
+    _lastFirestoreObservedAt = null;
+    _lastFirestoreRtdbUpdatedAtMs = null;
+    _rtdbToFirestoreDelayMs = null;
+    _firestoreToUiDelayMs = null;
+  }
+
+  String _formatLastSeenAge() {
+    final millis = _latestRtdbLastSeenMs;
+    if (millis == null || millis <= 0) {
+      return '-';
+    }
+    final diff = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(millis),
+    );
+    if (diff.inSeconds < 60) {
+      return '${diff.inSeconds}s ago';
+    }
+    return '${diff.inMinutes}m ${diff.inSeconds % 60}s ago';
+  }
+
+  bool _asBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
+  }
+
+  String _asTrimmedString(dynamic value) {
+    if (value is String) {
+      return value.trim();
+    }
+    return '';
+  }
+
+  int? _asEpochMillis(dynamic value) {
+    if (value is Timestamp) {
+      return value.millisecondsSinceEpoch;
+    }
+    if (value is DateTime) {
+      return value.millisecondsSinceEpoch;
+    }
+    if (value is int) {
+      return value;
+    }
+    return null;
+  }
+
+  String _formatLatency(int? valueMs) {
+    if (valueMs == null || valueMs < 0) {
+      return '-';
+    }
+    return '${valueMs}ms';
+  }
+
+  Future<void> _copySnapshot({
+    required AppTelemetryState telemetry,
+    required bool onlineMismatch,
+    required bool camMismatch,
+    required bool micMismatch,
+    required bool roomMismatch,
+    required bool stalePresence,
+    required bool firestoreOnline,
+    required bool firestoreCamOn,
+    required bool firestoreMicOn,
+    required String firestoreInRoom,
+    required bool uiOnline,
+    required bool uiCamOn,
+    required bool uiMicOn,
+    required String uiInRoom,
+  }) async {
+    final payload = <String, Object?>{
+      'timestamp': DateTime.now().toIso8601String(),
+      'userId': _watchedUserId ?? telemetry.authUserId,
+      'rtdb': <String, Object?>{
+        'session_count': _rtdbSessionCount,
+        'online': _rtdbAnyOnline,
+        'cam_on': _rtdbAnyCamOn,
+        'mic_on': _rtdbAnyMicOn,
+        'in_room': _rtdbAnyInRoom,
+        'last_seen_ms': _latestRtdbLastSeenMs,
+      },
+      'firestore': <String, Object?>{
+        'online': firestoreOnline,
+        'camOn': firestoreCamOn,
+        'micOn': firestoreMicOn,
+        'inRoom': firestoreInRoom,
+      },
+      'ui': <String, Object?>{
+        'online': uiOnline,
+        'cam': uiCamOn,
+        'mic': uiMicOn,
+        'inRoom': uiInRoom,
+      },
+      'mismatch': <String, Object?>{
+        'online': onlineMismatch,
+        'cam': camMismatch,
+        'mic': micMismatch,
+        'room': roomMismatch,
+        'stale_presence': stalePresence,
+      },
+      'latency': <String, Object?>{
+        'rtdb_to_firestore_ms': _rtdbToFirestoreDelayMs,
+        'firestore_to_ui_ms': _firestoreToUiDelayMs,
+      },
+    };
+
+    await Clipboard.setData(
+      ClipboardData(text: const JsonEncoder.withIndent('  ').convert(payload)),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Presence snapshot copied to clipboard.')),
+    );
   }
 
   void _registerSecretTap() {
@@ -86,7 +380,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                 borderRadius: BorderRadius.circular(18),
                 child: Container(
                   width: 360,
-                  constraints: const BoxConstraints(maxHeight: 520),
+                  constraints: const BoxConstraints(maxHeight: 560),
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
@@ -103,6 +397,35 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                     valueListenable: AppTelemetry.notifier,
                     builder: (context, state, _) {
                       final duplicateListeners = state.duplicateListenerKeys;
+                      final firestore = _firestorePresence ?? const <String, dynamic>{};
+                      final firestoreOnline =
+                          _asBool(firestore['isOnline']) || _asBool(firestore['online']);
+                      final firestoreCamOn = _asBool(firestore['camOn']);
+                      final firestoreMicOn = _asBool(firestore['micOn']);
+                      final firestoreInRoom = _asTrimmedString(
+                        firestore['inRoom'] ?? firestore['roomId'],
+                      );
+
+                      final uiOnline = state.globalPresenceOnline ??
+                          (state.presenceStatus != null &&
+                              state.presenceStatus!.toLowerCase() != 'offline');
+                      final uiCamOn = state.videoEnabled;
+                      final uiMicOn = !state.micMuted;
+                      final uiInRoom = (state.inRoom ?? '').trim();
+
+                      final onlineMismatch =
+                          (_rtdbAnyOnline != firestoreOnline) || (firestoreOnline != uiOnline);
+                      final camMismatch =
+                          (_rtdbAnyCamOn != firestoreCamOn) || (firestoreCamOn != uiCamOn);
+                      final micMismatch =
+                          (_rtdbAnyMicOn != firestoreMicOn) || (firestoreMicOn != uiMicOn);
+                      final roomMismatch =
+                          (_rtdbAnyInRoom ?? '') != firestoreInRoom || firestoreInRoom != uiInRoom;
+                      final stalePresence = _latestRtdbLastSeenMs != null &&
+                          DateTime.now().difference(
+                            DateTime.fromMillisecondsSinceEpoch(_latestRtdbLastSeenMs!),
+                          ).inSeconds > 60;
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -152,6 +475,83 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             value: state.presenceStatus ?? state.roomPresenceStatus ?? '-',
                           ),
                           _DebugLine(label: 'In room', value: state.inRoom ?? '-'),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Presence Debug',
+                            style: TextStyle(
+                              color: Color(0xFFD4AF37),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _copySnapshot(
+                                telemetry: state,
+                                onlineMismatch: onlineMismatch,
+                                camMismatch: camMismatch,
+                                micMismatch: micMismatch,
+                                roomMismatch: roomMismatch,
+                                stalePresence: stalePresence,
+                                firestoreOnline: firestoreOnline,
+                                firestoreCamOn: firestoreCamOn,
+                                firestoreMicOn: firestoreMicOn,
+                                firestoreInRoom: firestoreInRoom,
+                                uiOnline: uiOnline,
+                                uiCamOn: uiCamOn,
+                                uiMicOn: uiMicOn,
+                                uiInRoom: uiInRoom,
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFF7EDE2),
+                                side: BorderSide(
+                                  color: const Color(0xFFD4AF37).withValues(alpha: 0.65),
+                                ),
+                              ),
+                              icon: const Icon(Icons.copy_all_rounded, size: 14),
+                              label: const Text('Copy Snapshot'),
+                            ),
+                          ),
+                          _DebugLine(
+                            label: 'RTDB sessions',
+                            value: _rtdbSessionCount.toString(),
+                          ),
+                          _DebugLine(label: 'RTDB online', value: _rtdbAnyOnline ? 'true' : 'false'),
+                          _DebugLine(label: 'RTDB cam_on', value: _rtdbAnyCamOn ? 'true' : 'false'),
+                          _DebugLine(label: 'RTDB mic_on', value: _rtdbAnyMicOn ? 'true' : 'false'),
+                          _DebugLine(label: 'RTDB in_room', value: _rtdbAnyInRoom ?? '-'),
+                          _DebugLine(label: 'RTDB last_seen', value: _formatLastSeenAge()),
+                          _DebugLine(
+                            label: 'RTDB -> Firestore',
+                            value: _formatLatency(_rtdbToFirestoreDelayMs),
+                          ),
+                          _DebugLine(
+                            label: 'Firestore -> UI',
+                            value: _formatLatency(_firestoreToUiDelayMs),
+                          ),
+                          const SizedBox(height: 4),
+                          _DebugLine(
+                            label: 'Firestore online',
+                            value: firestoreOnline ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'Firestore camOn',
+                            value: firestoreCamOn ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'Firestore micOn',
+                            value: firestoreMicOn ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'Firestore inRoom',
+                            value: firestoreInRoom.isEmpty ? '-' : firestoreInRoom,
+                          ),
+                          const SizedBox(height: 4),
+                          _DebugLine(label: 'UI online', value: uiOnline ? 'true' : 'false'),
+                          _DebugLine(label: 'UI cam', value: uiCamOn ? 'true' : 'false'),
+                          _DebugLine(label: 'UI mic', value: uiMicOn ? 'true' : 'false'),
+                          _DebugLine(label: 'UI inRoom', value: uiInRoom.isEmpty ? '-' : uiInRoom),
                           _DebugLine(
                             label: 'Listeners',
                             value: state.activeListenerCount.toString(),
@@ -173,15 +573,33 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             const _AlertLine(text: 'Camera mismatch: UI on, Firestore off'),
                           if (state.presenceMismatch)
                             const _AlertLine(text: 'Presence mismatch: offline or wrong room'),
+                          if (onlineMismatch)
+                            const _AlertLine(
+                              text: 'ONLINE mismatch: RTDB / Firestore / UI disagree',
+                            ),
+                          if (camMismatch)
+                            const _AlertLine(
+                              text: 'CAM mismatch: RTDB / Firestore / UI disagree',
+                            ),
+                          if (micMismatch)
+                            const _AlertLine(
+                              text: 'MIC mismatch: RTDB / Firestore / UI disagree',
+                            ),
+                          if (roomMismatch)
+                            const _AlertLine(
+                              text: 'ROOM mismatch: RTDB / Firestore / UI disagree',
+                            ),
+                          if (stalePresence)
+                            const _AlertLine(
+                              text: 'STALE PRESENCE: last_seen is older than 60s',
+                            ),
                           if (state.staleParticipantIds.isNotEmpty)
                             _AlertLine(
-                              text:
-                                  'Stale users: ${state.staleParticipantIds.join(', ')}',
+                              text: 'Stale users: ${state.staleParticipantIds.join(', ')}',
                             ),
                           if (duplicateListeners.isNotEmpty)
                             _AlertLine(
-                              text:
-                                  'Duplicate listeners: ${duplicateListeners.join(', ')}',
+                              text: 'Duplicate listeners: ${duplicateListeners.join(', ')}',
                             ),
                           const SizedBox(height: 10),
                           const Text(

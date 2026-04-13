@@ -11,6 +11,7 @@ import '../../../core/telemetry/app_telemetry.dart';
 import '../../../presentation/screens/google_sign_in_helper.dart';
 import '../../../presentation/screens/apple_sign_in_helper.dart';
 import '../../../services/push_messaging_service.dart';
+import '../../../services/schema_mutation_service.dart';
 
 class AuthState {
   final bool isLoading;
@@ -42,6 +43,7 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(
 class AuthController extends Notifier<AuthState> {
   final GoogleSignInHelper _googleSignInHelper;
   final AppleSignInHelper _appleSignInHelper;
+  final SchemaMutationService? _schemaMutationService;
 
   StreamSubscription<User?>? _authStateSubscription;
 
@@ -91,11 +93,13 @@ class AuthController extends Notifier<AuthState> {
     Future<void> Function()? unregisterToken,
     GoogleSignInHelper? googleSignInHelper,
     AppleSignInHelper? appleSignInHelper,
+    SchemaMutationService? schemaMutationService,
   })  : _auth = auth ?? FirebaseAuth.instance,
         _firestore = firestore,
         _unregisterToken = unregisterToken,
         _googleSignInHelper = googleSignInHelper ?? getGoogleSignInHelper(),
-        _appleSignInHelper = appleSignInHelper ?? getAppleSignInHelper();
+        _appleSignInHelper = appleSignInHelper ?? getAppleSignInHelper(),
+        _schemaMutationService = schemaMutationService;
 
   @override
   AuthState build() {
@@ -417,19 +421,13 @@ class AuthController extends Notifier<AuthState> {
     }
 
     try {
+      final mutationService =
+          _schemaMutationService ?? SchemaMutationService(firestore: firestore);
       await traceFirestoreWrite<void>(
         path: 'users/${user.uid}',
         operation: 'ensure_user_document',
         userId: user.uid,
-        action: () => firestore.collection('users').doc(user.uid).set({
-          'id': user.uid,
-          'username': user.displayName ?? '',
-          'usernameLower': (user.displayName ?? '').toLowerCase(),
-          'email': user.email ?? '',
-          'avatarUrl': user.photoURL,
-          'updatedAt': FieldValue.serverTimestamp(),
-          'createdAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true)),
+        action: () => mutationService.createUserProfile(user: user),
       );
     } catch (e, st) {
       developer.log(

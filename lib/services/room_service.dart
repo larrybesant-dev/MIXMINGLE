@@ -9,7 +9,7 @@ final roomServiceProvider = Provider<RoomService>((ref) {
 });
 
 class RoomService {
-	static const Duration _participantFreshnessWindow = Duration(seconds: 90);
+	static const Duration _participantFreshnessWindow = Duration(seconds: 60);
 
 	RoomService({FirebaseFirestore? firestore})
 			: _firestore = firestore ?? FirebaseFirestore.instance;

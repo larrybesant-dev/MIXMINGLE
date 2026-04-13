@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../models/room_participant_model.dart';
+import '../../../services/presence_repository.dart';
 import 'room_firestore_provider.dart';
 
 class RoomPresenceModel {
@@ -61,72 +62,15 @@ class RoomPresenceModel {
     );
   }
 }
-class RoomPresenceController {
-  RoomPresenceController(this._db);
-
-  final FirebaseFirestore _db;
-
-  DocumentReference<Map<String, dynamic>> _presenceRef(String roomId, String userId) {
-    return _db.collection('rooms').doc(roomId).collection('participants').doc(userId);
-  }
-
-  Future<void> setOnline({
-    required String roomId,
-    required String userId,
-  }) {
-    return _presenceRef(roomId, userId).set({
-      'userId': userId,
-      'userStatus': 'online',
-      'lastActiveAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> heartbeat({
-    required String roomId,
-    required String userId,
-  }) {
-    return _presenceRef(roomId, userId).set({
-      'userId': userId,
-      'userStatus': 'online',
-      'lastActiveAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> setOffline({
-    required String roomId,
-    required String userId,
-  }) {
-    return _presenceRef(roomId, userId).set({
-      'userId': userId,
-      'userStatus': 'offline',
-      'lastActiveAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> setCustomStatus({
-    required String roomId,
-    required String userId,
-    required String? status,
-    String userStatus = 'online',
-  }) {
-    return _presenceRef(roomId, userId).set({
-      'customStatus': status,
-      'userStatus': userStatus,
-      'lastActiveAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-}
-
-final roomPresenceControllerProvider = Provider<RoomPresenceController>((ref) {
-  return RoomPresenceController(ref.watch(roomFirestoreProvider));
-});
 
 final roomPresenceStreamProvider =
     StreamProvider.autoDispose.family<List<RoomPresenceModel>, String>((ref, roomId) {
   final firestore = ref.watch(roomFirestoreProvider);
+  final presenceRepo = ref.watch(presenceRepositoryProvider);
+
   return traceFirestoreStream<List<RoomPresenceModel>>(
     key: 'room_presence/$roomId',
-    query: 'rooms/$roomId/participants presence',
+    query: 'rooms/$roomId/participants + global presence',
     roomId: roomId,
     itemCount: (value) => value.length,
     stream: firestore
@@ -134,18 +78,45 @@ final roomPresenceStreamProvider =
         .doc(roomId)
         .collection('participants')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) {
-              final participant = RoomParticipantModel.fromMap(doc.data());
+        .asyncExpand((snapshot) {
+          final participants = snapshot.docs
+              .map((doc) {
+                final participant = RoomParticipantModel.fromMap(doc.data());
+                final userId = participant.userId.isEmpty ? doc.id : participant.userId;
+                return (participant: participant, userId: userId);
+              })
+              .toList(growable: false);
+
+          final userIds = participants
+              .map((entry) => entry.userId)
+              .where((id) => id.trim().isNotEmpty)
+              .toSet()
+              .toList(growable: false);
+
+          if (userIds.isEmpty) {
+            return Stream.value(const <RoomPresenceModel>[]);
+          }
+
+          return presenceRepo.watchUsersPresence(userIds).map((presenceById) {
+            return participants.map((entry) {
+              final participant = entry.participant;
+              final userId = entry.userId;
+              final globalPresence = presenceById[userId];
+              final globalInRoom = (globalPresence?.roomId ?? globalPresence?.inRoom)?.trim();
+              final isOnline = globalPresence != null &&
+                  globalPresence.isOnline == true &&
+                  globalInRoom == roomId;
+
               return RoomPresenceModel(
-                userId: participant.userId.isEmpty ? doc.id : participant.userId,
-                isOnline: participant.userStatus != 'offline',
-                lastHeartbeatAt: participant.lastActiveAt,
-                lastSeenAt: participant.lastActiveAt,
+                userId: userId,
+                isOnline: isOnline,
+                lastHeartbeatAt: globalPresence?.lastSeen,
+                lastSeenAt: globalPresence?.lastSeen,
                 customStatus: participant.customStatus,
-                userStatus: participant.userStatus,
+                userStatus: globalPresence?.status.name,
               );
-            })
-            .toList(growable: false)),
+            }).toList(growable: false);
+          });
+        }),
   );
 });

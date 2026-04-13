@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../panes/friends_pane_view.dart';
+import '../../schema_messenger/friends/views/friends_schema_bridge_view.dart';
 
 class FriendListScreen extends StatelessWidget {
   const FriendListScreen({super.key});
@@ -9,7 +9,7 @@ class FriendListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       appBar: _FriendsAppBar(),
-      body: FriendsPaneView(showHeader: false),
+      body: FriendsSchemaBridgeView(),
     );
   }
 }

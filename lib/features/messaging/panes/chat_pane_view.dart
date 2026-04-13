@@ -324,7 +324,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                   if (!_scrollController.hasClients) return;
                   final targetOffset = _savedScrollOffset == null
                       ? _scrollController.position.maxScrollExtent
-                      : _savedScrollOffset!.clamp(
+                      : _savedScrollOffset.clamp(
                           _scrollController.position.minScrollExtent,
                           _scrollController.position.maxScrollExtent,
                         );
