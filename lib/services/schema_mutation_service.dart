@@ -71,10 +71,22 @@ class SchemaMutationService {
 
     final userSnapshot = await userRef.get();
     final now = FieldValue.serverTimestamp();
+    final existingData = userSnapshot.data() ?? const <String, dynamic>{};
+    final existingUsername =
+        (existingData['username'] as String?)?.trim() ?? '';
+    final authDisplayName = user.displayName?.trim() ?? '';
+    final shouldReplaceAutofilledName =
+        existingUsername.isEmpty ||
+        _looksLikePersonalName(existingUsername) ||
+        (authDisplayName.isNotEmpty &&
+            existingUsername.toLowerCase() == authDisplayName.toLowerCase());
+    final publicUsername = shouldReplaceAutofilledName
+        ? _fallbackPublicUsername(user.uid)
+        : existingUsername;
 
     final identityPayload = <String, dynamic>{
-      'username': user.displayName ?? '',
-      'usernameLower': (user.displayName ?? '').toLowerCase(),
+      'username': publicUsername,
+      'usernameLower': publicUsername.toLowerCase(),
       'email': user.email ?? '',
       'updatedAt': now,
     };
@@ -297,6 +309,38 @@ class SchemaMutationService {
     }
 
     await batch.commit();
+  }
+
+  bool _looksLikePersonalName(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      return false;
+    }
+
+    if (normalized.contains('@')) {
+      return true;
+    }
+
+    final parts = normalized
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList(growable: false);
+    final wordPattern = RegExp(r"^[A-Za-z][A-Za-z'’-]*$");
+    return parts.length >= 2 && parts.every(wordPattern.hasMatch);
+  }
+
+  String _fallbackPublicUsername(String uid) {
+    final compactUid = uid
+        .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
+        .toUpperCase();
+    if (compactUid.isEmpty) {
+      return 'MixVy User';
+    }
+    final suffix = compactUid.substring(
+      0,
+      compactUid.length < 4 ? compactUid.length : 4,
+    );
+    return 'Guest $suffix';
   }
 
   Map<String, dynamic> _pickAllowedFields({

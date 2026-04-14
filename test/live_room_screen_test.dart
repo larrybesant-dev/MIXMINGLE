@@ -21,34 +21,61 @@ import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
 void main() {
-  test('roomParticipantCanBeShownAsTalking only allows active mic holders', () {
-    final audience = RoomParticipantModel(
-      userId: 'user-1',
-      role: 'member',
-      micOn: true,
-      joinedAt: DateTime(2026, 1, 1),
-      lastActiveAt: DateTime(2026, 1, 1),
-    );
-    final mutedStage = RoomParticipantModel(
-      userId: 'user-2',
-      role: 'stage',
-      micOn: false,
-      joinedAt: DateTime(2026, 1, 1),
-      lastActiveAt: DateTime(2026, 1, 1),
-    );
-    final liveStage = RoomParticipantModel(
-      userId: 'user-3',
-      role: 'stage',
-      micOn: true,
-      joinedAt: DateTime(2026, 1, 1),
-      lastActiveAt: DateTime(2026, 1, 1),
+  test('resolvePublicUsername avoids leaking auth display names', () {
+    expect(
+      resolvePublicUsername(
+        uid: 'user-1',
+        profileUsername: 'Larry Besant',
+        authDisplayName: 'Larry Besant',
+      ),
+      isNot('Larry Besant'),
     );
 
-    expect(roomParticipantCanBeShownAsTalking(audience), isFalse);
-    expect(roomParticipantCanBeShownAsTalking(mutedStage), isFalse);
-    expect(roomParticipantCanBeShownAsTalking(liveStage), isTrue);
+    expect(
+      resolvePublicUsername(uid: 'user-1', profileUsername: 'Larry Besant'),
+      isNot('Larry Besant'),
+    );
+
+    expect(
+      resolvePublicUsername(
+        uid: 'user-1',
+        profileUsername: 'VelvetHandle',
+        authDisplayName: 'Larry Besant',
+      ),
+      'VelvetHandle',
+    );
   });
 
+  test(
+    'roomParticipantCanBeShownAsTalking keeps active local mic users visible',
+    () {
+      final activeMember = RoomParticipantModel(
+        userId: 'user-1',
+        role: 'member',
+        micOn: true,
+        joinedAt: DateTime(2026, 1, 1),
+        lastActiveAt: DateTime(2026, 1, 1),
+      );
+      final mutedStage = RoomParticipantModel(
+        userId: 'user-2',
+        role: 'stage',
+        micOn: false,
+        joinedAt: DateTime(2026, 1, 1),
+        lastActiveAt: DateTime(2026, 1, 1),
+      );
+      final liveStage = RoomParticipantModel(
+        userId: 'user-3',
+        role: 'stage',
+        micOn: true,
+        joinedAt: DateTime(2026, 1, 1),
+        lastActiveAt: DateTime(2026, 1, 1),
+      );
+
+      expect(roomParticipantCanBeShownAsTalking(activeMember), isTrue);
+      expect(roomParticipantCanBeShownAsTalking(mutedStage), isFalse);
+      expect(roomParticipantCanBeShownAsTalking(liveStage), isTrue);
+    },
+  );
   Future<void> configureViewport(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 2200);
     tester.view.devicePixelRatio = 1.0;
@@ -155,190 +182,232 @@ void main() {
 
     expect(find.text('No messages yet'), findsOneWidget);
     expect(find.textContaining('1 online'), findsOneWidget);
-    expect(find.text('Send'), findsOneWidget);
+    expect(find.byTooltip('Send message'), findsOneWidget);
     expect(find.byTooltip('Leave Room'), findsOneWidget);
     // Drain the _preWarmAgora Future.delayed(2s) timer so the test ends cleanly.
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('LiveRoomScreen shows the current user in the sidebar when live', (
-    WidgetTester tester,
-  ) async {
-    await configureViewport(tester);
-    final firestore = FakeFirebaseFirestore();
-    await firestore.collection('rooms').doc('room-a').set({
-      'hostId': 'host-1',
-      'isLocked': false,
-      'slowModeSeconds': 0,
-    });
+  testWidgets(
+    'LiveRoomScreen shows the current user in the sidebar when live',
+    (WidgetTester tester) async {
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
 
-    final me = RoomParticipantModel(
-      userId: 'user-1',
-      role: 'stage',
-      camOn: true,
-      micOn: true,
-      joinedAt: DateTime(2026, 1, 1),
-      lastActiveAt: DateTime(2026, 1, 1),
-    );
+      final me = RoomParticipantModel(
+        userId: 'user-1',
+        role: 'stage',
+        camOn: true,
+        micOn: true,
+        joinedAt: DateTime(2026, 1, 1),
+        lastActiveAt: DateTime(2026, 1, 1),
+      );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith((ref, args) => Stream.value(me)),
-          participantsStreamProvider.overrideWith((ref, roomId) => Stream.value([me])),
-          participantCountProvider.overrideWith((ref, roomId) => Stream.value(1)),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
-          hostProvider.overrideWith((ref, roomId) => Stream.value(Host('host-1'))),
-          coHostsProvider.overrideWith((ref, roomId) => Stream.value(const <Cohost>[])),
-          roomPresenceStreamProvider.overrideWith(
-            (ref, roomId) => Stream.value([
-              RoomPresenceModel(
-                userId: 'user-1',
-                isOnline: true,
-                lastHeartbeatAt: null,
-                lastSeenAt: null,
-              ),
-            ]),
-          ),
-          userProvider.overrideWithValue(
-            UserModel(
-              id: 'user-1',
-              email: 'user1@mixvy.com',
-              username: 'User One',
-              createdAt: DateTime(2026, 1, 1),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(me),
             ),
-          ),
-        ],
-        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
-      ),
-    );
-
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.text('On Cam 1'), findsOneWidget);
-    expect(find.text('Chatting 1'), findsOneWidget);
-    expect(find.text('No one else is here yet. Invite people to join the room.'), findsNothing);
-
-    await tester.pump(const Duration(seconds: 3));
-  });
-
-  testWidgets('LiveRoomScreen keeps the current user visible when the roster stream lags', (
-    WidgetTester tester,
-  ) async {
-    await configureViewport(tester);
-    final firestore = FakeFirebaseFirestore();
-    await firestore.collection('rooms').doc('room-a').set({
-      'hostId': 'host-1',
-      'isLocked': false,
-      'slowModeSeconds': 0,
-    });
-
-    final me = RoomParticipantModel(
-      userId: 'user-1',
-      role: 'stage',
-      camOn: true,
-      micOn: true,
-      joinedAt: DateTime(2026, 1, 1),
-      lastActiveAt: DateTime(2026, 1, 1),
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith((ref, args) => Stream.value(me)),
-          participantsStreamProvider.overrideWith((ref, roomId) => Stream.value(const <RoomParticipantModel>[])),
-          participantCountProvider.overrideWith((ref, roomId) => Stream.value(1)),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
-          hostProvider.overrideWith((ref, roomId) => Stream.value(Host('host-1'))),
-          coHostsProvider.overrideWith((ref, roomId) => Stream.value(const <Cohost>[])),
-          roomPresenceStreamProvider.overrideWith(
-            (ref, roomId) => Stream.value([
-              RoomPresenceModel(
-                userId: 'user-1',
-                isOnline: true,
-                lastHeartbeatAt: null,
-                lastSeenAt: null,
-              ),
-            ]),
-          ),
-          userProvider.overrideWithValue(
-            UserModel(
-              id: 'user-1',
-              email: 'user1@mixvy.com',
-              username: 'User One',
-              createdAt: DateTime(2026, 1, 1),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([me]),
             ),
-          ),
-        ],
-        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
-      ),
-    );
-
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.text('On Cam 1'), findsOneWidget);
-    expect(find.text('Chatting 1'), findsOneWidget);
-    expect(find.textContaining('(You)'), findsWidgets);
-
-    await tester.pump(const Duration(seconds: 3));
-  });
-
-  testWidgets('LiveRoomScreen shows my username in Chatting even before the participant doc arrives', (
-    WidgetTester tester,
-  ) async {
-    await configureViewport(tester);
-    final firestore = FakeFirebaseFirestore();
-    await firestore.collection('rooms').doc('room-a').set({
-      'hostId': 'host-1',
-      'isLocked': false,
-      'slowModeSeconds': 0,
-    });
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith((ref, args) => Stream.value(null)),
-          participantsStreamProvider.overrideWith((ref, roomId) => Stream.value(const <RoomParticipantModel>[])),
-          participantCountProvider.overrideWith((ref, roomId) => Stream.value(1)),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
-          hostProvider.overrideWith((ref, roomId) => Stream.value(Host('host-1'))),
-          coHostsProvider.overrideWith((ref, roomId) => Stream.value(const <Cohost>[])),
-          roomPresenceStreamProvider.overrideWith(
-            (ref, roomId) => Stream.value([
-              RoomPresenceModel(
-                userId: 'user-1',
-                isOnline: true,
-                lastHeartbeatAt: null,
-                lastSeenAt: null,
-              ),
-            ]),
-          ),
-          userProvider.overrideWithValue(
-            UserModel(
-              id: 'user-1',
-              email: 'user1@mixvy.com',
-              username: 'VelvetHandle',
-              createdAt: DateTime(2026, 1, 1),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
             ),
-          ),
-        ],
-        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
-      ),
-    );
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('host-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            roomPresenceStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomPresenceModel(
+                  userId: 'user-1',
+                  isOnline: true,
+                  lastHeartbeatAt: null,
+                  lastSeenAt: null,
+                ),
+              ]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
 
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Chatting 1'), findsOneWidget);
-    expect(find.textContaining('VelvetHandle'), findsWidgets);
+      expect(find.text('On Cam 1'), findsOneWidget);
+      expect(find.text('Chatting 1'), findsOneWidget);
+      expect(
+        find.text('No one else is here yet. Invite people to join the room.'),
+        findsNothing,
+      );
 
-    await tester.pump(const Duration(seconds: 3));
-  });
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets(
+    'LiveRoomScreen keeps the current user visible when the roster stream lags',
+    (WidgetTester tester) async {
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
+
+      final me = RoomParticipantModel(
+        userId: 'user-1',
+        role: 'stage',
+        camOn: true,
+        micOn: true,
+        joinedAt: DateTime(2026, 1, 1),
+        lastActiveAt: DateTime(2026, 1, 1),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(me),
+            ),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <RoomParticipantModel>[]),
+            ),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
+            ),
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('host-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            roomPresenceStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomPresenceModel(
+                  userId: 'user-1',
+                  isOnline: true,
+                  lastHeartbeatAt: null,
+                  lastSeenAt: null,
+                ),
+              ]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('On Cam 1'), findsOneWidget);
+      expect(find.text('Chatting 1'), findsOneWidget);
+      expect(find.textContaining('(You)'), findsWidgets);
+
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets(
+    'LiveRoomScreen shows my username in Chatting even before the participant doc arrives',
+    (WidgetTester tester) async {
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(null),
+            ),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <RoomParticipantModel>[]),
+            ),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
+            ),
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('host-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            roomPresenceStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomPresenceModel(
+                  userId: 'user-1',
+                  isOnline: true,
+                  lastHeartbeatAt: null,
+                  lastSeenAt: null,
+                ),
+              ]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'VelvetHandle',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('Chatting 1'), findsOneWidget);
+      expect(find.textContaining('VelvetHandle'), findsWidgets);
+
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
 
   testWidgets('LiveRoomScreen chat and secret inputs stay focusable', (
     WidgetTester tester,
@@ -364,12 +433,22 @@ void main() {
       ProviderScope(
         overrides: [
           roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith((ref, args) => Stream.value(me)),
-          participantsStreamProvider.overrideWith((ref, roomId) => Stream.value([me])),
-          participantCountProvider.overrideWith((ref, roomId) => Stream.value(1)),
+          currentParticipantProvider.overrideWith(
+            (ref, args) => Stream.value(me),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([me]),
+          ),
+          participantCountProvider.overrideWith(
+            (ref, roomId) => Stream.value(1),
+          ),
           messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
-          hostProvider.overrideWith((ref, roomId) => Stream.value(Host('host-1'))),
-          coHostsProvider.overrideWith((ref, roomId) => Stream.value(const <Cohost>[])),
+          hostProvider.overrideWith(
+            (ref, roomId) => Stream.value(Host('host-1')),
+          ),
+          coHostsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <Cohost>[]),
+          ),
           roomPresenceStreamProvider.overrideWith(
             (ref, roomId) => Stream.value([
               RoomPresenceModel(
@@ -398,6 +477,7 @@ void main() {
 
     final chatField = tester.widget<TextField>(find.byType(TextField).first);
     expect(chatField.enabled, isTrue);
+    expect(find.byIcon(Icons.send_rounded), findsOneWidget);
 
     await tester.tap(find.byType(TextField).first);
     await tester.pump(const Duration(milliseconds: 100));
@@ -412,20 +492,23 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  test('PresenceModel reads legacy presence schema without Firestore writes', () {
-    final presence = PresenceModel.fromJson({
-      'userId': 'user-2',
-      'online': true,
-      'userStatus': 'online',
-      'roomId': 'room-b',
-      'lastSeen': DateTime.now(),
-    });
+  test(
+    'PresenceModel reads legacy presence schema without Firestore writes',
+    () {
+      final presence = PresenceModel.fromJson({
+        'userId': 'user-2',
+        'online': true,
+        'userStatus': 'online',
+        'roomId': 'room-b',
+        'lastSeen': DateTime.now(),
+      });
 
-    expect(presence.userId, 'user-2');
-    expect(presence.isOnline, isTrue);
-    expect(presence.status, UserStatus.online);
-    expect(presence.inRoom, 'room-b');
-  });
+      expect(presence.userId, 'user-2');
+      expect(presence.isOnline, isTrue);
+      expect(presence.status, UserStatus.online);
+      expect(presence.inRoom, 'room-b');
+    },
+  );
 
   testWidgets('LiveRoomScreen opens the people roster for room members', (
     WidgetTester tester,
@@ -498,7 +581,9 @@ void main() {
 
     await tester.tap(find.byTooltip('People in room').first);
     await tester.pump(); // trigger tap
-    await tester.pump(const Duration(milliseconds: 500)); // let bottom sheet open
+    await tester.pump(
+      const Duration(milliseconds: 500),
+    ); // let bottom sheet open
 
     expect(find.text('People in room'), findsOneWidget);
     expect(find.text('host-1'), findsWidgets);
@@ -519,12 +604,14 @@ void main() {
         overrides: [
           roomFirestoreProvider.overrideWithValue(firestore),
           roomStreamProvider.overrideWith(
-            (ref, roomId) => Stream.value(RoomModel(
-              id: roomId,
-              name: 'Test Room',
-              hostId: 'host-1',
-              isLive: true,
-            )),
+            (ref, roomId) => Stream.value(
+              RoomModel(
+                id: roomId,
+                name: 'Test Room',
+                hostId: 'host-1',
+                isLive: true,
+              ),
+            ),
           ),
           roomPolicyProvider.overrideWith(
             (ref, roomId) => Stream.value(RoomPolicyModel(roomId: roomId)),
@@ -565,7 +652,9 @@ void main() {
 
     await tester.tap(find.text('Open Panel'));
     await tester.pump(); // trigger tap
-    await tester.pump(const Duration(milliseconds: 500)); // let bottom sheet open
+    await tester.pump(
+      const Duration(milliseconds: 500),
+    ); // let bottom sheet open
 
     // Panel opened — verify tab bar labels are present.
     expect(find.text('Room Control Panel'), findsOneWidget);
@@ -732,81 +821,78 @@ void main() {
     },
   );
 
-  testWidgets(
-    'LiveRoomScreen renders member-role participant without crash',
-    (WidgetTester tester) async {
-      await configureViewport(tester);
-      final firestore = FakeFirebaseFirestore();
-      await firestore.collection('rooms').doc('room-a').set({
-        'hostId': 'host-1',
-        'isLocked': false,
-        'slowModeSeconds': 0,
-      });
+  testWidgets('LiveRoomScreen renders member-role participant without crash', (
+    WidgetTester tester,
+  ) async {
+    await configureViewport(tester);
+    final firestore = FakeFirebaseFirestore();
+    await firestore.collection('rooms').doc('room-a').set({
+      'hostId': 'host-1',
+      'isLocked': false,
+      'slowModeSeconds': 0,
+    });
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            roomFirestoreProvider.overrideWithValue(firestore),
-            currentParticipantProvider.overrideWith(
-              (ref, args) => Stream.value(
-                RoomParticipantModel(
-                  userId: 'user-1',
-                  role: 'member',
-                  joinedAt: DateTime(2026, 1, 1),
-                  lastActiveAt: DateTime(2026, 1, 1),
-                ),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          currentParticipantProvider.overrideWith(
+            (ref, args) => Stream.value(
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'member',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
               ),
             ),
-            participantsStreamProvider.overrideWith(
-              (ref, roomId) => Stream.value([
-                RoomParticipantModel(
-                  userId: 'user-1',
-                  role: 'member',
-                  joinedAt: DateTime(2026, 1, 1),
-                  lastActiveAt: DateTime(2026, 1, 1),
-                ),
-              ]),
-            ),
-            participantCountProvider.overrideWith(
-              (ref, roomId) => Stream.value(1),
-            ),
-            messageStreamProvider.overrideWith(
-              (ref, roomId) => Stream.value([]),
-            ),
-            hostProvider.overrideWith(
-              (ref, roomId) => Stream.value(Host('host-1')),
-            ),
-            coHostsProvider.overrideWith(
-              (ref, roomId) => Stream.value(const <Cohost>[]),
-            ),
-            userProvider.overrideWithValue(
-              UserModel(
-                id: 'user-1',
-                email: 'user1@mixvy.com',
-                username: 'User One',
-                createdAt: DateTime(2026, 1, 1),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'member',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
               ),
+            ]),
+          ),
+          participantCountProvider.overrideWith(
+            (ref, roomId) => Stream.value(1),
+          ),
+          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          hostProvider.overrideWith(
+            (ref, roomId) => Stream.value(Host('host-1')),
+          ),
+          coHostsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <Cohost>[]),
+          ),
+          userProvider.overrideWithValue(
+            UserModel(
+              id: 'user-1',
+              email: 'user1@mixvy.com',
+              username: 'User One',
+              createdAt: DateTime(2026, 1, 1),
             ),
-          ],
-          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
-        ),
-      );
+          ),
+        ],
+        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+      ),
+    );
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
-      // A member-role user sees the standard audience UI (no host controls,
-      // no stage-access panel) and the room stays open (no login prompt).
-      expect(find.text('Please log in.'), findsNothing);
-      expect(find.text('Host Controls'), findsNothing);
-      expect(find.byTooltip('Leave Room'), findsOneWidget);
-      // Camera wall is NOT visible before Agora connects, even for members
-      // who have camera permission — this guards against the black AgoraVideoView
-      // regression fixed in acfb943.
-      expect(find.text('Camera Wall'), findsNothing);
-      await tester.pump(const Duration(seconds: 3));
-    },
-  );
+    // A member-role user sees the standard audience UI (no host controls,
+    // no stage-access panel) and the room stays open (no login prompt).
+    expect(find.text('Please log in.'), findsNothing);
+    expect(find.text('Host Controls'), findsNothing);
+    expect(find.byTooltip('Leave Room'), findsOneWidget);
+    // Camera wall is NOT visible before Agora connects, even for members
+    // who have camera permission — this guards against the black AgoraVideoView
+    // regression fixed in acfb943.
+    expect(find.text('Camera Wall'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+  });
 
   testWidgets(
     'LiveRoomScreen shows broadcaster controls for owner-role participant (hostId match)',

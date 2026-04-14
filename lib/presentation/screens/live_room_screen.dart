@@ -19,6 +19,7 @@ import '../providers/friend_provider.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/controllers/live_room_controller.dart';
 import '../../features/room/controllers/live_room_media_controller.dart';
+import '../../features/room/controllers/webrtc_controller.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
@@ -88,9 +89,11 @@ bool roomParticipantHasMicAccess(RoomParticipantModel? participant) {
 }
 
 bool roomParticipantCanBeShownAsTalking(RoomParticipantModel? participant) {
-  return roomParticipantHasMicAccess(participant) &&
-      (participant?.micOn ?? false) &&
-      !(participant?.isMuted ?? false);
+  if (participant == null) {
+    return false;
+  }
+
+  return (participant.micOn) && !participant.isMuted && !participant.isBanned;
 }
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
@@ -763,6 +766,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _logLiveRoom('connect:start user=$userId room=${widget.roomId}');
       final rtcUid = _buildRtcUid(userId);
 
+      final transportController = ref.read(webrtcControllerProvider);
+
       if (kIsWeb) {
         // ── WebRTC path (web only) ────────────────────────────────────────
         // Browser-native WebRTC. No WASM to download → initialises instantly.
@@ -772,9 +777,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           _mediaController.setCameraStatus('Connecting to live room…');
         }
         final iceServers = await _fetchIceServers();
-        final service = WebRtcRoomService(
-          firestore: _firestore!,
-          localUserId: userId,
+        final service = await transportController.createTransport(
+          userId: userId,
           iceServers: iceServers,
         );
         _attachServiceCallbacks(service);
@@ -818,7 +822,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
         const maxConnectAttempts = 2;
         for (var attempt = 1; attempt <= maxConnectAttempts; attempt++) {
-          final service = AgoraService();
+          final service = await transportController.createTransport(
+            userId: userId,
+          );
           _attachServiceCallbacks(service);
 
           try {
@@ -1108,8 +1114,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   Future<void> _toggleSystemAudio() async {
     final service = _agoraService;
-    if (service == null || !_isCallReady || _isSystemAudioActionInFlight)
+    if (service == null || !_isCallReady || _isSystemAudioActionInFlight) {
       return;
+    }
 
     // When starting (not stopping), show the guide so the user knows to check
     // "Share system audio" in Chrome's picker before clicking Share.
@@ -1279,14 +1286,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           final myName =
               _senderDisplayNameById[_joinedUserId ?? ''] ??
               (_joinedUserId ?? '');
-          if (myName.isNotEmpty)
+          if (myName.isNotEmpty) {
             _sendSystemEvent('$myName turned on their camera 📷');
+          }
         } else {
           final myName =
               _senderDisplayNameById[_joinedUserId ?? ''] ??
               (_joinedUserId ?? '');
-          if (myName.isNotEmpty)
+          if (myName.isNotEmpty) {
             _sendSystemEvent('$myName turned off their camera');
+          }
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
         _logLiveRoom('toggle_video:success_message $msg');
@@ -2260,7 +2269,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         for (final doc in snapshot.docs) {
           final data = doc.data();
           final username = _asString(data['username']);
-          resolved[doc.id] = username.isEmpty ? doc.id : username;
+          resolved[doc.id] = resolvePublicUsername(
+            uid: doc.id,
+            profileUsername: username,
+          );
           final vip = data['vipLevel'];
           resolvedVip[doc.id] = vip is int
               ? vip
@@ -2712,16 +2724,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               onTap: () => runAction(() async {
                 try {
                   if (target.role == 'stage') {
-                    await hostControls.forceReleaseMic(
-                      widget.roomId,
-                      target.userId,
-                    );
+                    await ref
+                        .read(
+                          liveRoomControllerProvider(widget.roomId).notifier,
+                        )
+                        .demoteSpeaker(target.userId);
                     _showSnackBar('${target.userId} removed from mic.');
                   } else {
-                    await hostControls.inviteToMic(
-                      widget.roomId,
-                      target.userId,
-                    );
+                    await ref
+                        .read(
+                          liveRoomControllerProvider(widget.roomId).notifier,
+                        )
+                        .promoteSpeaker(
+                          actorUserId: currentUserId,
+                          targetUserId: target.userId,
+                        );
                     _showSnackBar('${target.userId} invited to the mic!');
                   }
                 } catch (e) {
@@ -2987,7 +3004,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final username = _asString(data['username']);
         final avatarUrl = _asString(data['avatarUrl']);
         presentationByUserId[userDoc.id] = RoomUserPresentation(
-          displayName: username.isEmpty ? userDoc.id : username,
+          displayName: resolvePublicUsername(
+            uid: userDoc.id,
+            profileUsername: username,
+          ),
           avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
         );
       }
@@ -3307,7 +3327,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               .get();
           for (final doc in snap.docs) {
             final username = _asString(doc.data()['username']);
-            resolved[doc.id] = username.isEmpty ? doc.id : username;
+            resolved[doc.id] = resolvePublicUsername(
+              uid: doc.id,
+              profileUsername: username,
+            );
           }
         }
         for (final id in missingIds) {
@@ -3653,7 +3676,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       roomMicAccessRequestsProvider(widget.roomId),
     );
     final hostControls = ref.read(hostControlsProvider);
-    final micAccessController = ref.read(micAccessControllerProvider);
     final walletAsync = ref.watch(walletDetailsProvider);
     final topGifters = ref.watch(topGiftersProvider(widget.roomId));
 
@@ -3780,6 +3802,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               );
             }
             if (participant == null &&
+                !liveRoomState.isUserInRoom(user.id) &&
                 _hasTrackedRoomJoin &&
                 !_isJoiningRoom &&
                 _joinedUserId == user.id) {
@@ -3808,24 +3831,95 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             final rosterParticipants =
                 participantsAsync.valueOrNull ?? const <RoomParticipantModel>[];
-            final synthesizedSelfParticipant = (participant ??
+            final rosterSelfParticipant = rosterParticipants
+                .cast<RoomParticipantModel?>()
+                .firstWhere((p) => p?.userId == user.id, orElse: () => null);
+            final effectiveSelfParticipant =
+                (participant ?? rosterSelfParticipant)?.copyWith(
+                  role:
+                      _appliedMediaRole ??
+                      participant?.role ??
+                      rosterSelfParticipant?.role ??
+                      (liveRoomState.isSpeaker(user.id)
+                          ? 'stage'
+                          : (liveRoomState.hostId == user.id
+                                ? 'host'
+                                : 'audience')),
+                  isMuted: participant?.isMuted ?? _isMicMuted,
+                  isBanned:
+                      participant?.isBanned ??
+                      rosterSelfParticipant?.isBanned ??
+                      false,
+                  camOn:
+                      _isVideoEnabled ||
+                      (participant?.camOn ?? false) ||
+                      (rosterSelfParticipant?.camOn ?? false),
+                  micOn:
+                      liveRoomState.isSpeaker(user.id) ||
+                      (!_isMicMuted) ||
+                      (participant?.micOn ?? false) ||
+                      (rosterSelfParticipant?.micOn ?? false),
+                  userStatus:
+                      participant?.userStatus ??
+                      rosterSelfParticipant?.userStatus ??
+                      'online',
+                  lastActiveAt: DateTime.now(),
+                ) ??
                 RoomParticipantModel(
                   userId: user.id,
-                  role: 'member',
+                  role: liveRoomState.isSpeaker(user.id)
+                      ? 'stage'
+                      : (liveRoomState.hostId == user.id ? 'host' : 'audience'),
                   isMuted: _isMicMuted,
+                  isBanned: false,
                   camOn: _isVideoEnabled,
-                  micOn: false,
+                  micOn: !_isMicMuted || liveRoomState.isSpeaker(user.id),
                   userStatus: 'online',
-                  joinedAt: DateTime.now(),
+                  joinedAt: liveRoomState.joinedAt ?? DateTime.now(),
                   lastActiveAt: DateTime.now(),
-                ));
-            final participantsInRoom =
-                rosterParticipants.any((p) => p.userId == user.id)
-                ? rosterParticipants
-                : <RoomParticipantModel>[
-                    ...rosterParticipants,
-                    synthesizedSelfParticipant,
-                  ];
+                );
+            final participantById = <String, RoomParticipantModel>{
+              for (final participantItem in rosterParticipants)
+                participantItem.userId: participantItem,
+            };
+            participantById[user.id] = effectiveSelfParticipant;
+            final stateBackedUserIds = <String>{
+              ...liveRoomState.userIds,
+              ...rosterParticipants.map((p) => p.userId),
+              user.id,
+            };
+            final participantsInRoom = stateBackedUserIds
+                .map((userId) {
+                  final existing = participantById[userId];
+                  if (existing != null) {
+                    return existing.copyWith(
+                      role: userId == liveRoomState.hostId
+                          ? 'host'
+                          : (liveRoomState.isSpeaker(userId)
+                                ? (existing.role == 'cohost'
+                                      ? 'cohost'
+                                      : 'stage')
+                                : existing.role),
+                      micOn: liveRoomState.isSpeaker(userId) || existing.micOn,
+                    );
+                  }
+                  return RoomParticipantModel(
+                    userId: userId,
+                    role: userId == liveRoomState.hostId
+                        ? 'host'
+                        : (liveRoomState.isSpeaker(userId)
+                              ? 'stage'
+                              : 'audience'),
+                    isMuted: false,
+                    isBanned: false,
+                    camOn: false,
+                    micOn: liveRoomState.isSpeaker(userId),
+                    userStatus: 'online',
+                    joinedAt: liveRoomState.joinedAt ?? DateTime.now(),
+                    lastActiveAt: DateTime.now(),
+                  );
+                })
+                .toList(growable: false);
             _syncTelemetryForBuild(
               currentUserId: user.id,
               roomState: liveRoomState,
@@ -3855,7 +3949,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               }
               return _excludedUserIds.contains(participantId);
             });
-            final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
+            final allowChat =
+                liveRoomState.canChat(user.id) &&
+                (roomPolicyAsync.valueOrNull?.allowChat ?? true);
             if (isLocked && !isHost && !isCohost && !isModerator) {
               return const AppPageScaffold(
                 safeArea: false,
@@ -4115,17 +4211,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               final localIsFloating = floatingIds.contains(
                                 '${user.id}_local',
                               );
-                              final participantByUserId = <String, RoomParticipantModel>{
-                                for (final participant in participantsInRoom)
-                                  participant.userId: participant,
-                              };
+                              final participantByUserId =
+                                  <String, RoomParticipantModel>{
+                                    for (final participant
+                                        in participantsInRoom)
+                                      participant.userId: participant,
+                                  };
                               final remoteTiles = _agoraService!.remoteUids
                                   .where((remoteUid) {
                                     // Hide from grid if already popped out.
                                     if (floatingIds.contains(
                                       '${remoteUid}_remote',
-                                    ))
+                                    )) {
                                       return false;
+                                    }
                                     final remoteUserId = _userIdForRtcUid(
                                       remoteUid,
                                       participantsInRoom,
@@ -4141,40 +4240,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                       remoteUid,
                                       participantsInRoom,
                                     );
-                                    final allowedViewers = remoteUserId == null
-                                        ? const <String>[]
-                                        : ref
-                                                  .watch(
-                                                    userCamAllowedViewersProvider(
-                                                      remoteUserId,
-                                                    ),
-                                                  )
-                                                  .valueOrNull ??
-                                              const <String>[];
                                     final canViewRemote =
                                         remoteUserId != null &&
-                                        (allowedViewers.isEmpty ||
-                                            allowedViewers.contains(user.id));
+                                        liveRoomState.canViewCamera(
+                                          targetUserId: remoteUserId,
+                                          viewerUserId: user.id,
+                                        );
                                     final tileLabel = remoteUserId != null
                                         ? (_senderDisplayNameById[remoteUserId] ??
                                               remoteUserId)
                                         : 'Guest $remoteUid';
-                                    final remoteParticipant = remoteUserId == null
-                                        ? null
-                                        : participantByUserId[remoteUserId];
                                     return CameraWallRemoteTileData(
                                       uid: remoteUid,
                                       userId: remoteUserId,
                                       label: tileLabel,
                                       canView: canViewRemote,
                                       isSpeaking:
-                                          roomParticipantCanBeShownAsTalking(
-                                            remoteParticipant,
-                                          ) &&
-                                          _agoraService!.isRemoteSpeaking(remoteUid),
-                                      hasMic: roomParticipantHasMicAccess(
-                                        remoteParticipant,
-                                      ),
+                                          remoteUserId != null &&
+                                          liveRoomState.isSpeaker(remoteUserId),
+                                      hasMic:
+                                          remoteUserId != null &&
+                                          liveRoomState.isSpeaker(remoteUserId),
+                                      viewerCount: remoteUserId == null
+                                          ? 0
+                                          : liveRoomState.viewerCountFor(
+                                              remoteUserId,
+                                            ),
                                       avatarUrl: remoteUserId != null
                                           ? _senderAvatarUrlById[remoteUserId]
                                           : null,
@@ -4190,17 +4281,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     (_agoraService?.isLocalVideoCapturing ??
                                         false) &&
                                     !localIsFloating,
-                                localHasMic: roomParticipantHasMicAccess(
-                                  participantByUserId[user.id],
+                                localHasMic: liveRoomState.isSpeaker(user.id),
+                                localSpeaking: liveRoomState.isSpeaker(user.id),
+                                localViewerCount: liveRoomState.viewerCountFor(
+                                  user.id,
                                 ),
-                                // Only show the speaking indicator for users who
-                                // actually hold the mic in the room.
-                                localSpeaking:
-                                    roomParticipantCanBeShownAsTalking(
-                                      participantByUserId[user.id],
-                                    ) &&
-                                    _agoraService!.localSpeaking &&
-                                    !_isMicMuted,
                                 localTile: _buildLocalCamContent(
                                   avatarUrl: _senderAvatarUrlById[user.id],
                                 ),
@@ -4890,8 +4975,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                             pid != user.id &&
                                             _excludedUserIds.contains(pid);
                                       });
-                                      if (!hasBlocked)
+                                      if (!hasBlocked) {
                                         return const SizedBox.shrink();
+                                      }
                                       return Container(
                                         width: double.infinity,
                                         margin: const EdgeInsets.fromLTRB(
@@ -4939,20 +5025,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     displayNameById: _senderDisplayNameById,
                                     onApprove: (request) {
                                       ref
-                                          .read(micAccessControllerProvider)
-                                          .approveRequest(
-                                            widget.roomId,
-                                            request,
+                                          .read(
+                                            liveRoomControllerProvider(
+                                              widget.roomId,
+                                            ).notifier,
                                           )
+                                          .approveMicRequest(request)
                                           .ignore();
                                     },
                                     onDeny: (request) {
                                       ref
-                                          .read(micAccessControllerProvider)
-                                          .denyRequest(
-                                            widget.roomId,
-                                            request.id,
+                                          .read(
+                                            liveRoomControllerProvider(
+                                              widget.roomId,
+                                            ).notifier,
                                           )
+                                          .denyMicRequest(request.id)
                                           .ignore();
                                     },
                                   ),
@@ -5207,6 +5295,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                       children: [
                                         IconButton(
                                           tooltip: 'Emojis',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
+                                          ),
+                                          padding: const EdgeInsets.all(6),
                                           icon: Icon(
                                             _showEmojiTray
                                                 ? Icons.emoji_emotions
@@ -5225,6 +5319,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                               ? 'Hide formatting'
                                               : 'Rich text formatting',
                                           child: IconButton(
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            constraints: const BoxConstraints(
+                                              minWidth: 36,
+                                              minHeight: 36,
+                                            ),
+                                            padding: const EdgeInsets.all(6),
                                             icon: Icon(
                                               Icons.text_format,
                                               color: _showRichToolbar
@@ -5242,7 +5343,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                           child: TextField(
                                             controller: messageController,
                                             focusNode: _chatInputFocusNode,
-                                            onTap: () => _chatInputFocusNode.requestFocus(),
+                                            onTap: () => _chatInputFocusNode
+                                                .requestFocus(),
                                             onChanged: (_) => _onTypingInput(),
                                             enabled:
                                                 !isSending &&
@@ -5253,7 +5355,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                               color: Colors.white,
                                               fontSize: 13,
                                             ),
-                                            cursorColor: const Color(0xFFD4A853),
+                                            cursorColor: const Color(
+                                              0xFFD4A853,
+                                            ),
                                             textInputAction:
                                                 TextInputAction.send,
                                             onSubmitted:
@@ -5340,7 +5444,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                 color: Colors.white38,
                                               ),
                                               filled: true,
-                                              fillColor: const Color(0xFF0F0D11),
+                                              fillColor: const Color(
+                                                0xFF18131D,
+                                              ),
                                               isDense: true,
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
@@ -5351,14 +5457,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                 borderRadius:
                                                     BorderRadius.circular(10),
                                                 borderSide: const BorderSide(
-                                                  color: Color(0x33D4A853),
+                                                  color: Color(0x66D4A853),
+                                                  width: 1.1,
                                                 ),
                                               ),
                                               enabledBorder: OutlineInputBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(10),
                                                 borderSide: const BorderSide(
-                                                  color: Color(0x44D4A853),
+                                                  color: Color(0x88D4A853),
+                                                  width: 1.1,
                                                 ),
                                               ),
                                               focusedBorder: OutlineInputBorder(
@@ -5366,106 +5474,125 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                     BorderRadius.circular(10),
                                                 borderSide: const BorderSide(
                                                   color: Color(0xFFD4A853),
+                                                  width: 1.4,
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
                                         const SizedBox(width: 6),
-                                        FilledButton(
-                                          onPressed:
-                                              isSending ||
-                                                  participant?.isMuted ==
-                                                      true ||
-                                                  participant?.isBanned ==
-                                                      true ||
-                                                  !allowChat ||
-                                                  hasBlockedParticipantInRoom
-                                              ? null
-                                              : () async {
-                                                  final trimmed =
-                                                      messageController.text
-                                                          .trim();
-                                                  if (trimmed.isEmpty) {
-                                                    return;
-                                                  }
-                                                  final outgoingMessage =
-                                                      _buildOutgoingChatMessage(
-                                                        trimmed,
-                                                      );
-                                                  if (slowModeSeconds > 0 &&
-                                                      lastMessageTime != null) {
-                                                    final secs = DateTime.now()
-                                                        .difference(
-                                                          lastMessageTime!,
-                                                        )
-                                                        .inSeconds;
-                                                    if (secs <
-                                                        slowModeSeconds) {
-                                                      setState(() {
-                                                        cooldownMessage =
-                                                            'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                                      });
+                                        Tooltip(
+                                          message: 'Send message',
+                                          child: FilledButton(
+                                            style: FilledButton.styleFrom(
+                                              minimumSize: const Size(40, 40),
+                                              padding: const EdgeInsets.all(10),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            onPressed:
+                                                isSending ||
+                                                    participant?.isMuted ==
+                                                        true ||
+                                                    participant?.isBanned ==
+                                                        true ||
+                                                    !allowChat ||
+                                                    hasBlockedParticipantInRoom
+                                                ? null
+                                                : () async {
+                                                    final trimmed =
+                                                        messageController.text
+                                                            .trim();
+                                                    if (trimmed.isEmpty) {
                                                       return;
                                                     }
-                                                  }
-                                                  setState(
-                                                    () => isSending = true,
-                                                  );
-                                                  try {
-                                                    await sendMessage(
-                                                      outgoingMessage,
+                                                    final outgoingMessage =
+                                                        _buildOutgoingChatMessage(
+                                                          trimmed,
+                                                        );
+                                                    if (slowModeSeconds > 0 &&
+                                                        lastMessageTime !=
+                                                            null) {
+                                                      final secs = DateTime.now()
+                                                          .difference(
+                                                            lastMessageTime!,
+                                                          )
+                                                          .inSeconds;
+                                                      if (secs <
+                                                          slowModeSeconds) {
+                                                        setState(() {
+                                                          cooldownMessage =
+                                                              'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                                        });
+                                                        return;
+                                                      }
+                                                    }
+                                                    setState(
+                                                      () => isSending = true,
                                                     );
-                                                    lastMessageTime =
-                                                        DateTime.now();
-                                                    cooldownMessage = '';
-                                                    messageController.clear();
-                                                    _pendingRichColorHex = null;
-                                                    _showEmojiTray = false;
-                                                    if (!_hasTrackedFirstMessage) {
-                                                      _hasTrackedFirstMessage =
-                                                          true;
-                                                      await AnalyticsService()
-                                                          .logEvent(
-                                                            'first_message_sent',
-                                                            params: {
-                                                              'room_id':
-                                                                  widget.roomId,
-                                                              'user_id':
-                                                                  user.id,
-                                                            },
-                                                          );
-                                                    }
-                                                  } catch (e) {
-                                                    if (context.mounted) {
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(
-                                                            e.toString(),
+                                                    try {
+                                                      await sendMessage(
+                                                        outgoingMessage,
+                                                      );
+                                                      lastMessageTime =
+                                                          DateTime.now();
+                                                      cooldownMessage = '';
+                                                      messageController.clear();
+                                                      _pendingRichColorHex =
+                                                          null;
+                                                      _showEmojiTray = false;
+                                                      if (!_hasTrackedFirstMessage) {
+                                                        _hasTrackedFirstMessage =
+                                                            true;
+                                                        await AnalyticsService()
+                                                            .logEvent(
+                                                              'first_message_sent',
+                                                              params: {
+                                                                'room_id':
+                                                                    widget
+                                                                        .roomId,
+                                                                'user_id':
+                                                                    user.id,
+                                                              },
+                                                            );
+                                                      }
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              e.toString(),
+                                                            ),
                                                           ),
+                                                        );
+                                                      }
+                                                    } finally {
+                                                      if (context.mounted) {
+                                                        setState(
+                                                          () =>
+                                                              isSending = false,
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                            child: isSending
+                                                ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
                                                         ),
-                                                      );
-                                                    }
-                                                  } finally {
-                                                    if (context.mounted) {
-                                                      setState(
-                                                        () => isSending = false,
-                                                      );
-                                                    }
-                                                  }
-                                                },
-                                          child: isSending
-                                              ? const SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
-                                                )
-                                              : const Text('Send'),
+                                                  )
+                                                : const Icon(
+                                                    Icons.send_rounded,
+                                                    size: 18,
+                                                  ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -5544,6 +5671,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           Expanded(
                             child: _RoomRosterSidebar(
                               topPadding: 0,
+                              roomState: liveRoomState,
                               participants: participantsInRoom,
                               displayNameById: Map.unmodifiable(
                                 _senderDisplayNameById,
@@ -5561,27 +5689,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                       ?.where((r) => r.status == 'pending')
                                       .length ??
                                   0,
-                              currentUserRole: participantsInRoom
-                                  .firstWhere(
-                                    (p) => p.userId == user.id,
-                                    orElse: () => RoomParticipantModel(
-                                      userId: user.id,
-                                      role: 'member',
-                                      joinedAt: DateTime.now(),
-                                      lastActiveAt: DateTime.now(),
-                                    ),
-                                  )
-                                  .role,
-                              isMicFree: true,
+                              currentUserRole: liveRoomState.isSpeaker(user.id)
+                                  ? 'stage'
+                                  : (liveRoomState.hostId == user.id
+                                        ? 'host'
+                                        : 'audience'),
+                              isMicFree:
+                                  liveRoomState.speakerIds.length <
+                                  RoomState.maxSpeakers,
                               isLocalVideoEnabled: _isVideoEnabled,
-                              localSpeaking:
-                                  (_agoraService?.localSpeaking ?? false) &&
-                                  !_isMicMuted &&
-                                  participantsInRoom.any(
-                                    (p) =>
-                                        p.userId == user.id &&
-                                        roomParticipantCanBeShownAsTalking(p),
-                                  ),
+                              localSpeaking: liveRoomState.isSpeaker(user.id),
                               recentChatters: Set.unmodifiable(_recentChatters),
                               remoteUids: _agoraService?.remoteUids ?? const [],
                               isSpeakingFn: (uid) =>
@@ -5590,10 +5707,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   _userIdForRtcUid(uid, participantsInRoom),
                               onReleaseMic: () async {
                                 try {
-                                  await micAccessController.releaseMic(
-                                    roomId: widget.roomId,
-                                    userId: user.id,
-                                  );
+                                  await ref
+                                      .read(
+                                        liveRoomControllerProvider(
+                                          widget.roomId,
+                                        ).notifier,
+                                      )
+                                      .releaseMic(userId: user.id);
                                   final svc = _agoraService;
                                   if (svc != null &&
                                       _isCallReady &&
@@ -5605,28 +5725,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   }
                                   if (mounted) _showSnackBar('Mic released.');
                                 } catch (e) {
-                                  if (mounted)
+                                  if (mounted) {
                                     _showSnackBar('Could not release mic: $e');
+                                  }
                                 }
                               },
                               onJoinQueue: allowMicRequests
                                   ? () async {
-                                      // Grab the mic directly, displacing any
-                                      // current stage user (co-hosts are
-                                      // unaffected — their role stays 'cohost').
                                       try {
-                                        await micAccessController
-                                            .grabMicDirectly(
-                                              roomId: widget.roomId,
-                                              userId: user.id,
-                                            );
+                                        await ref
+                                            .read(
+                                              liveRoomControllerProvider(
+                                                widget.roomId,
+                                              ).notifier,
+                                            )
+                                            .requestMic(userId: user.id);
                                         if (mounted) {
-                                          _showSnackBar('You have the mic!');
+                                          _showSnackBar(
+                                            'Mic request sent to the stage.',
+                                          );
                                         }
                                       } catch (e) {
                                         if (mounted) {
                                           _showSnackBar(
-                                            'Could not grab mic: $e',
+                                            'Could not request mic: $e',
                                           );
                                         }
                                       }
@@ -5899,6 +6021,7 @@ class _MobileTabBtn extends StatelessWidget {
 
 class _RoomRosterSidebar extends StatelessWidget {
   const _RoomRosterSidebar({
+    required this.roomState,
     required this.participants,
     required this.displayNameById,
     required this.vipLevelById,
@@ -5928,6 +6051,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     this.recentChatters = const {},
   });
 
+  final RoomState roomState;
   final List<RoomParticipantModel> participants;
   final Map<String, String> displayNameById;
   final Map<String, int> vipLevelById;
@@ -5997,48 +6121,57 @@ class _RoomRosterSidebar extends StatelessWidget {
     final participantByUserId = <String, RoomParticipantModel>{
       for (final participant in participants) participant.userId: participant,
     };
+    for (final userId in roomState.userIds) {
+      participantByUserId.putIfAbsent(
+        userId,
+        () => RoomParticipantModel(
+          userId: userId,
+          role: userId == roomState.hostId
+              ? 'host'
+              : (roomState.isSpeaker(userId) ? 'stage' : 'audience'),
+          isMuted: false,
+          isBanned: false,
+          camOn: false,
+          micOn: roomState.isSpeaker(userId),
+          joinedAt: DateTime.now(),
+          lastActiveAt: DateTime.now(),
+        ),
+      );
+    }
 
-    // ── Compute speaking user IDs (including local user) ───────────────
-    final speakingUserIds = <String>{};
-    if (localSpeaking &&
-        roomParticipantCanBeShownAsTalking(participantByUserId[currentUserId])) {
-      speakingUserIds.add(currentUserId);
-    }
-    for (final uid in remoteUids) {
-      if (isSpeakingFn(uid)) {
-        final userId = uidToUserId(uid);
-        if (userId != null &&
-            roomParticipantCanBeShownAsTalking(participantByUserId[userId])) {
-          speakingUserIds.add(userId);
-        }
-      }
-    }
+    // ── Compute speaking user IDs from deterministic RoomState ──────────
+    final speakingUserIds = roomState.speakerIds.toSet();
 
     // ── On-cam participants ───────────────────────────────────
     final onCamParticipants = participants
-        .where((p) => p.userId == currentUserId ? (isLocalVideoEnabled || p.camOn) : p.camOn)
+        .where(
+          (p) => p.userId == currentUserId
+              ? (isLocalVideoEnabled || p.camOn)
+              : p.camOn,
+        )
         .toList(growable: false);
 
     // ── Sort: host → cohost → mod → audience, with self visible ──
-    final sorted = [...participants]..sort((a, b) {
-      int rank(String r) => switch (r) {
-        'host' || 'owner' => 0,
-        'cohost' => 1,
-        'moderator' => 2,
-        _ => 3,
-      };
-      final rankCompare = rank(a.role).compareTo(rank(b.role));
-      if (rankCompare != 0) {
-        return rankCompare;
-      }
-      if (a.userId == currentUserId && b.userId != currentUserId) {
-        return -1;
-      }
-      if (b.userId == currentUserId && a.userId != currentUserId) {
-        return 1;
-      }
-      return 0;
-    });
+    final sorted = participantByUserId.values.toList(growable: false)
+      ..sort((a, b) {
+        int rank(String r) => switch (r) {
+          'host' || 'owner' => 0,
+          'cohost' => 1,
+          'moderator' => 2,
+          _ => 3,
+        };
+        final rankCompare = rank(a.role).compareTo(rank(b.role));
+        if (rankCompare != 0) {
+          return rankCompare;
+        }
+        if (a.userId == currentUserId && b.userId != currentUserId) {
+          return -1;
+        }
+        if (b.userId == currentUserId && a.userId != currentUserId) {
+          return 1;
+        }
+        return 0;
+      });
 
     return ColoredBox(
       color: _kBg,
@@ -6070,6 +6203,10 @@ class _RoomRosterSidebar extends StatelessWidget {
                     camOn: participantByUserId[uid]?.camOn ?? false,
                     trailingIcon: Icons.mic,
                     trailingColor: const Color(0xFFC45E7A),
+                    isWatchingMe: roomState.isWatchingMe(
+                      myUserId: currentUserId,
+                      otherUserId: uid,
+                    ),
                     onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(participantByUserId[uid]!),
@@ -6091,7 +6228,7 @@ class _RoomRosterSidebar extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: currentUserRole == 'stage'
+                  backgroundColor: roomState.isSpeaker(currentUserId)
                       ? const Color(0xFFE53935) // red = you are on mic
                       : isMicFree
                       ? const Color(0xFF1DB954) // green = mic is free
@@ -6106,11 +6243,11 @@ class _RoomRosterSidebar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5),
                   ),
                 ),
-                onPressed: currentUserRole == 'stage'
+                onPressed: roomState.isSpeaker(currentUserId)
                     ? onReleaseMic
                     : onJoinQueue,
                 child: Text(
-                  currentUserRole == 'stage'
+                  roomState.isSpeaker(currentUserId)
                       ? 'Release Mic'
                       : isMicFree
                       ? 'Grab Mic'
@@ -6148,6 +6285,10 @@ class _RoomRosterSidebar extends StatelessWidget {
                     trailingColor: Colors.white38,
                     camOn: true,
                     hasRecentChat: recentChatters.contains(p.userId),
+                    isWatchingMe: roomState.isWatchingMe(
+                      myUserId: currentUserId,
+                      otherUserId: p.userId,
+                    ),
                     onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(p),
@@ -6159,7 +6300,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           const Divider(height: 1, thickness: 1, color: _kDivider),
           // ── Chatting ─────────────────────────────────────────
           _RosterHeader(
-            label: 'Chatting ${sorted.length}',
+            label: 'Chatting ${roomState.userIds.length}',
             icon: Icons.chat_bubble_outline,
             iconColor: const Color(0xFFB09080),
           ),
@@ -6201,6 +6342,10 @@ class _RoomRosterSidebar extends StatelessWidget {
                               : null,
                           trailingColor: const Color(0xFFFFD700),
                           hasRecentChat: recentChatters.contains(p.userId),
+                          isWatchingMe: roomState.isWatchingMe(
+                            myUserId: currentUserId,
+                            otherUserId: p.userId,
+                          ),
                           onSecretMessage: onSecretMessage == null
                               ? null
                               : () => onSecretMessage!(p),
@@ -6277,6 +6422,7 @@ class _RosterRow extends StatelessWidget {
     this.trailingIcon,
     this.trailingColor = Colors.white38,
     this.hasRecentChat = false,
+    this.isWatchingMe = false,
     this.onSecretMessage,
     this.onDirectMessage,
   });
@@ -6290,6 +6436,7 @@ class _RosterRow extends StatelessWidget {
   final IconData? trailingIcon;
   final Color trailingColor;
   final bool hasRecentChat;
+  final bool isWatchingMe;
   final VoidCallback? onSecretMessage;
   final VoidCallback? onDirectMessage;
 
@@ -6334,6 +6481,14 @@ class _RosterRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (isWatchingMe) ...[
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.visibility,
+                  size: 12,
+                  color: Color(0xFFD4AF37),
+                ),
+              ],
               if (vipLevel > 0) ...[
                 const SizedBox(width: 3),
                 Text(
@@ -6588,10 +6743,7 @@ class _InlineSecretComposer extends StatelessWidget {
                   autofocus: true,
                   enabled: !isSending,
                   maxLines: 1,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
                   cursorColor: const Color(0xFFD4A853),
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) {
@@ -6988,22 +7140,26 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                                       tooltip: 'Lower priority',
                                     ),
                                     IconButton(
-                                      onPressed: () =>
-                                          micAccessController.approveRequest(
-                                            widget.roomId,
-                                            request,
-                                          ),
+                                      onPressed: () => ref
+                                          .read(
+                                            liveRoomControllerProvider(
+                                              widget.roomId,
+                                            ).notifier,
+                                          )
+                                          .approveMicRequest(request),
                                       icon: const Icon(
                                         Icons.check_circle_outline,
                                       ),
                                       tooltip: 'Approve',
                                     ),
                                     IconButton(
-                                      onPressed: () =>
-                                          micAccessController.denyRequest(
-                                            widget.roomId,
-                                            request.id,
-                                          ),
+                                      onPressed: () => ref
+                                          .read(
+                                            liveRoomControllerProvider(
+                                              widget.roomId,
+                                            ).notifier,
+                                          )
+                                          .denyMicRequest(request.id),
                                       icon: const Icon(Icons.cancel_outlined),
                                       tooltip: 'Deny',
                                     ),

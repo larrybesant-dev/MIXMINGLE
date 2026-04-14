@@ -16,15 +16,19 @@ class CameraWallRemoteTileData {
   });
 
   final int uid;
+
   /// Firestore user ID for this remote participant (null if mapping unknown).
   final String? userId;
   final String label;
   final bool canView;
   final bool isSpeaking;
+
   /// True when this participant is the current mic holder (role == 'stage').
   final bool hasMic;
+
   /// Optional viewer count shown as a badge on the tile (null = hidden).
   final int? viewerCount;
+
   /// Profile photo URL shown in the cam area when camera is off or access is locked.
   final String? avatarUrl;
 }
@@ -47,13 +51,16 @@ class CameraWall extends ConsumerWidget {
     this.onDetachLocal,
     this.onDetachRemote,
     this.localAvatarUrl,
+    this.localViewerCount,
   });
 
   final String roomId;
   final String localLabel;
   final bool localSpeaking;
+
   /// Whether the local user's camera is on. If false, the local tile is hidden.
   final bool showLocalTile;
+
   /// True when the local user is the current mic holder (role == 'stage').
   final bool localHasMic;
   final Widget localTile;
@@ -64,12 +71,18 @@ class CameraWall extends ConsumerWidget {
   final String roomName;
   final int maxMainGridRemoteTiles;
   final int overflowPageSize;
+
   /// Called when the user clicks "detach" on the local cam tile.
   final VoidCallback? onDetachLocal;
+
   /// Called when the user clicks "detach" on a remote cam tile.
   final void Function(CameraWallRemoteTileData tile)? onDetachRemote;
+
   /// Profile photo URL for the local user (shown when camera is off).
   final String? localAvatarUrl;
+
+  /// Viewer count badge for the local camera tile.
+  final int? localViewerCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -100,7 +113,9 @@ class CameraWall extends ConsumerWidget {
         final overflowPageCount = overflowTiles.isEmpty
             ? 0
             : ((overflowTiles.length - 1) ~/ effectiveOverflowPageSize) + 1;
-        final rawOverflowPage = ref.watch(cameraWallOverflowPageProvider(roomId));
+        final rawOverflowPage = ref.watch(
+          cameraWallOverflowPageProvider(roomId),
+        );
         final overflowPage = overflowPageCount == 0
             ? 0
             : rawOverflowPage.clamp(0, overflowPageCount - 1);
@@ -140,9 +155,7 @@ class CameraWall extends ConsumerWidget {
         // causing the entire grid to reflow and tiles to jump positions.
         final speakingNames = <String>[
           if (localSpeaking && showLocalTile) localLabel,
-          ...mainGridRemoteTiles
-              .where((t) => t.isSpeaking)
-              .map((t) => t.label),
+          ...mainGridRemoteTiles.where((t) => t.isSpeaking).map((t) => t.label),
         ];
 
         final mainGridTiles = <Widget>[
@@ -153,6 +166,7 @@ class CameraWall extends ConsumerWidget {
               hasMic: localHasMic,
               compact: false,
               onDetach: onDetachLocal,
+              viewerCount: localViewerCount,
               child: localTile,
             ),
           ...mainGridRemoteTiles.map(
@@ -172,10 +186,21 @@ class CameraWall extends ConsumerWidget {
 
         final tileCount = mainGridTiles.length;
         final crossAxisCount = isDesktop
-            ? (tileCount <= 1 ? 1 : tileCount <= 4 ? 2 : tileCount <= 9 ? 3 : 4)
-            : (tileCount <= 2 ? 1 : tileCount <= 4 ? 2 : 3);
+            ? (tileCount <= 1
+                  ? 1
+                  : tileCount <= 4
+                  ? 2
+                  : tileCount <= 9
+                  ? 3
+                  : 4)
+            : (tileCount <= 2
+                  ? 1
+                  : tileCount <= 4
+                  ? 2
+                  : 3);
         const double spacing = 8;
-        final int rows = ((tileCount == 0 ? 1 : tileCount) / crossAxisCount).ceil();
+        final int rows = ((tileCount == 0 ? 1 : tileCount) / crossAxisCount)
+            .ceil();
         // tileHeight is computed from available width inside the Row, so we
         // use a LayoutBuilder. For the initial calc here we derive a fallback;
         // the real sizing is done inside LayoutBuilder below.
@@ -198,7 +223,10 @@ class CameraWall extends ConsumerWidget {
                       if (overflowPageCount > 1)
                         Text(
                           'Page ${overflowPage + 1} of $overflowPageCount',
-                          style: const TextStyle(color: Color(0xFFB09080), fontSize: 12),
+                          style: const TextStyle(
+                            color: Color(0xFFB09080),
+                            fontSize: 12,
+                          ),
                         ),
                       const SizedBox(width: 6),
                       IconButton(
@@ -207,8 +235,13 @@ class CameraWall extends ConsumerWidget {
                         onPressed: overflowPage > 0
                             ? () {
                                 ref
-                                    .read(cameraWallOverflowPageProvider(roomId).notifier)
-                                    .state = overflowPage - 1;
+                                        .read(
+                                          cameraWallOverflowPageProvider(
+                                            roomId,
+                                          ).notifier,
+                                        )
+                                        .state =
+                                    overflowPage - 1;
                               }
                             : null,
                         icon: const Icon(Icons.chevron_left),
@@ -219,8 +252,13 @@ class CameraWall extends ConsumerWidget {
                         onPressed: overflowPage < overflowPageCount - 1
                             ? () {
                                 ref
-                                    .read(cameraWallOverflowPageProvider(roomId).notifier)
-                                    .state = overflowPage + 1;
+                                        .read(
+                                          cameraWallOverflowPageProvider(
+                                            roomId,
+                                          ).notifier,
+                                        )
+                                        .state =
+                                    overflowPage + 1;
                               }
                             : null,
                         icon: const Icon(Icons.chevron_right),
@@ -236,7 +274,10 @@ class CameraWall extends ConsumerWidget {
                 if (speakingNames.isNotEmpty) ...[
                   Container(
                     margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF161012),
                       borderRadius: BorderRadius.circular(8),
@@ -283,17 +324,23 @@ class CameraWall extends ConsumerWidget {
                     builder: (context, lbConstraints) {
                       // Overflow sidebar takes 208 + 10px; ignore if not present.
                       final sideW = overflowTiles.isNotEmpty ? 218.0 : 0.0;
-                      final gridW = (lbConstraints.maxWidth - sideW).clamp(80.0, double.infinity);
+                      final gridW = (lbConstraints.maxWidth - sideW).clamp(
+                        80.0,
+                        double.infinity,
+                      );
                       // For a single tile, cap its width so it doesn't span the
                       // full ~800 px panel — makes the tile a reasonable size and
                       // leaves no wasted space beside it.
                       final effectiveTileW = tileCount <= 1
                           ? (gridW / crossAxisCount).clamp(80.0, 480.0)
-                          : (gridW - spacing * (crossAxisCount - 1)) / crossAxisCount;
+                          : (gridW - spacing * (crossAxisCount - 1)) /
+                                crossAxisCount;
                       // Use 4:3 ratio for tile height — matches typical webcam output so
                       // RTCVideoViewObjectFitContain fills the frame with minimal black bars.
-                      final tileHeight = (effectiveTileW * (3 / 4) + headerH).clamp(120.0, maxTileH);
-                      final mainGridHeight = rows * (tileHeight + spacing) - spacing;
+                      final tileHeight = (effectiveTileW * (3 / 4) + headerH)
+                          .clamp(120.0, maxTileH);
+                      final mainGridHeight =
+                          rows * (tileHeight + spacing) - spacing;
                       // For a single centered tile, wrap the grid in a centered box.
                       Widget grid = Wrap(
                         spacing: spacing,
@@ -312,25 +359,28 @@ class CameraWall extends ConsumerWidget {
                                 hasMic: localHasMic,
                                 compact: false,
                                 onDetach: onDetachLocal,
+                                viewerCount: localViewerCount,
                                 child: localTile,
                               ),
                             ),
-                          ...mainGridRemoteTiles.map((tile) => _ResizableTile(
-                            key: ValueKey('rtile_${tile.uid}'),
-                            defaultWidth: effectiveTileW,
-                            defaultHeight: tileHeight,
-                            child: _CameraWallTileFrame(
-                              label: tile.label,
-                              speaking: tile.isSpeaking,
-                              hasMic: tile.hasMic,
-                              compact: false,
-                              viewerCount: tile.viewerCount,
-                              onDetach: onDetachRemote == null
-                                  ? null
-                                  : () => onDetachRemote!(tile),
-                              child: remoteTileBuilder(tile),
+                          ...mainGridRemoteTiles.map(
+                            (tile) => _ResizableTile(
+                              key: ValueKey('rtile_${tile.uid}'),
+                              defaultWidth: effectiveTileW,
+                              defaultHeight: tileHeight,
+                              child: _CameraWallTileFrame(
+                                label: tile.label,
+                                speaking: tile.isSpeaking,
+                                hasMic: tile.hasMic,
+                                compact: false,
+                                viewerCount: tile.viewerCount,
+                                onDetach: onDetachRemote == null
+                                    ? null
+                                    : () => onDetachRemote!(tile),
+                                child: remoteTileBuilder(tile),
+                              ),
                             ),
-                          )),
+                          ),
                         ],
                       );
                       if (tileCount <= 1) {
@@ -342,70 +392,76 @@ class CameraWall extends ConsumerWidget {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      Expanded(child: grid),
-                      if (overflowTiles.isNotEmpty) ...[
-                        const SizedBox(width: 10),
-                        SizedBox(
-                          width: 208,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF161A21),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0x1A73757D),
+                          Expanded(child: grid),
+                          if (overflowTiles.isNotEmpty) ...[
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 208,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF161A21),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0x1A73757D),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Extra Windows',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      SizedBox(
+                                        height: (mainGridHeight - 24).clamp(
+                                          100.0,
+                                          1200.0,
+                                        ),
+                                        child: GridView.builder(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 2,
+                                                mainAxisSpacing: 8,
+                                                crossAxisSpacing: 8,
+                                                childAspectRatio: 1,
+                                              ),
+                                          itemCount:
+                                              visibleOverflowTiles.length,
+                                          itemBuilder: (context, index) {
+                                            final tile =
+                                                visibleOverflowTiles[index];
+                                            return _CameraWallTileFrame(
+                                              label: tile.label,
+                                              speaking: tile.isSpeaking,
+                                              hasMic: tile.hasMic,
+                                              compact: true,
+                                              onDetach: onDetachRemote == null
+                                                  ? null
+                                                  : () => onDetachRemote!(tile),
+                                              child: remoteTileBuilder(tile),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Extra Windows',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SizedBox(
-                                    height: (mainGridHeight - 24).clamp(100.0, 1200.0),
-                                    child: GridView.builder(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            mainAxisSpacing: 8,
-                                            crossAxisSpacing: 8,
-                                            childAspectRatio: 1,
-                                          ),
-                                      itemCount: visibleOverflowTiles.length,
-                                      itemBuilder: (context, index) {
-                                        final tile = visibleOverflowTiles[index];
-                                        return _CameraWallTileFrame(
-                                          label: tile.label,
-                                          speaking: tile.isSpeaking,
-                                          hasMic: tile.hasMic,
-                                          compact: true,
-                                          onDetach: onDetachRemote == null
-                                              ? null
-                                              : () => onDetachRemote!(tile),
-                                          child: remoteTileBuilder(tile),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  );
+                          ],
+                        ],
+                      );
                     },
                   )
                 else ...[
@@ -456,7 +512,10 @@ class CameraWall extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'Waiting for others to join video...',
-                        style: TextStyle(color: Color(0xFFB09080), fontSize: 13),
+                        style: TextStyle(
+                          color: Color(0xFFB09080),
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                 ],
@@ -482,13 +541,16 @@ class _CameraWallTileFrame extends StatefulWidget {
 
   final String label;
   final bool speaking;
+
   /// True when this participant is the current mic holder. EQ bars are only
   /// shown for the mic holder, not for everyone who is speaking.
   final bool hasMic;
   final bool compact;
   final Widget child;
+
   /// If non-null, a pop-out button is shown in the tile header.
   final VoidCallback? onDetach;
+
   /// If non-null and > 0, a viewer count badge is shown on the tile.
   final int? viewerCount;
 
@@ -497,30 +559,41 @@ class _CameraWallTileFrame extends StatefulWidget {
 }
 
 class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
-
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    const npSurfaceContainer = Color(0xFF0B0B0B);  // Jet Black
-    const npSurfaceHigh      = Color(0xFF1C1617);   // elevated surface
-    const npGold             = Color(0xFFD4AF37);   // Gold — host/mic holder
-    const npWineRed          = Color(0xFF9B2535);   // Wine Red — speaking glow
-    const npOnVariant        = Color(0xFFAD9585);   // muted cream
+    const npSurfaceContainer = Color(0xFF0B0B0B); // Jet Black
+    const npSurfaceHigh = Color(0xFF1C1617); // elevated surface
+    const npGold = Color(0xFFD4AF37); // Gold — host/mic holder
+    const npWineRed = Color(0xFF9B2535); // Wine Red — speaking glow
+    const npOnVariant = Color(0xFFAD9585); // muted cream
 
     final radius = widget.compact ? 8.0 : 10.0;
     // Host (hasMic) gets gold frame; speaking gets wine-red glow; else subtle
     final Color borderColor = widget.hasMic
         ? npGold
         : widget.speaking
-            ? npWineRed
-            : const Color(0x20D4AF37);
+        ? npWineRed
+        : const Color(0x20D4AF37);
     final double borderWidth = (widget.hasMic || widget.speaking) ? 2.0 : 1.0;
     final glowShadow = widget.hasMic
-        ? [BoxShadow(color: npGold.withAlpha(70), blurRadius: 12, spreadRadius: 1)]
+        ? [
+            BoxShadow(
+              color: npGold.withAlpha(70),
+              blurRadius: 12,
+              spreadRadius: 1,
+            ),
+          ]
         : widget.speaking
-            ? [BoxShadow(color: npWineRed.withAlpha(80), blurRadius: 10, spreadRadius: 1)]
-            : const <BoxShadow>[];
+        ? [
+            BoxShadow(
+              color: npWineRed.withAlpha(80),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ]
+        : const <BoxShadow>[];
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -549,8 +622,8 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                         color: widget.hasMic
                             ? npGold
                             : widget.speaking
-                                ? npWineRed
-                                : npOnVariant,
+                            ? npWineRed
+                            : npOnVariant,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -568,8 +641,7 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                       ),
                     ),
                     // Pop-out button: visible on hover (desktop) or always on mobile
-                    if (widget.onDetach != null &&
-                        (_hovered || widget.compact))
+                    if (widget.onDetach != null && (_hovered || widget.compact))
                       Tooltip(
                         message: 'Detach window',
                         child: InkWell(
@@ -615,7 +687,10 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                         right: widget.speaking ? 36 : 6,
                         bottom: 6,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withAlpha(160),
                             borderRadius: BorderRadius.circular(10),
@@ -623,7 +698,11 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.visibility, color: Color(0xFFC45E7A), size: 10),
+                              const Icon(
+                                Icons.visibility,
+                                color: Color(0xFFC45E7A),
+                                size: 10,
+                              ),
                               const SizedBox(width: 3),
                               Text(
                                 '${widget.viewerCount}',
@@ -725,8 +804,9 @@ class _SoundWaveEqState extends State<_SoundWaveEq>
                 width: 3,
                 height: _barAnims[i].value,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC45E7A)
-                      .withAlpha(widget.active ? 220 : 80),
+                  color: const Color(
+                    0xFFC45E7A,
+                  ).withAlpha(widget.active ? 220 : 80),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
