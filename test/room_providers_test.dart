@@ -58,6 +58,31 @@ void main() {
       expect(count, 2);
     });
 
+    test('participantsStreamProvider filters stale participants from the roster', () async {
+      final now = DateTime.now();
+      final fresh = Timestamp.fromDate(now);
+      final stale = Timestamp.fromDate(now.subtract(const Duration(minutes: 5)));
+
+      await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-1').set({
+        'userId': 'user-1',
+        'role': 'host',
+        'joinedAt': fresh,
+        'lastActiveAt': fresh,
+      });
+      await firestore.collection('rooms').doc('room-a').collection('participants').doc('ghost-user').set({
+        'userId': 'ghost-user',
+        'role': 'audience',
+        'joinedAt': stale,
+        'lastActiveAt': stale,
+      });
+
+      final participants = await container.read(participantsStreamProvider('room-a').future);
+      final count = await container.read(participantCountProvider('room-a').future);
+
+      expect(participants.map((p) => p.userId), ['user-1']);
+      expect(count, 1);
+    });
+
     test('currentParticipantProvider loads a participant model', () async {
       await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-1').set({
         'userId': 'user-1',

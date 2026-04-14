@@ -671,6 +671,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       isMicMuted: nextMicMuted,
       isSharingSystemAudio: nextSystemAudio,
     );
+    _syncMicLevelPolling();
+  }
+
+  void _syncMicLevelPolling() {
+    final shouldPoll = shouldTrackMicLevel(
+      isCallReady: _isCallReady,
+      hasRtcService: _agoraService != null,
+      isMicMuted: _isMicMuted,
+    );
+    if (shouldPoll) {
+      if (_micLevelTimer?.isActive != true) {
+        _startMicLevelPolling();
+      }
+      return;
+    }
+    _stopMicLevelPolling();
   }
 
   /// Wires up the common callbacks on any [RtcRoomService] implementation.
@@ -937,12 +953,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               .setMicOn(micUserId, micOn: !next),
         );
       }
-      // Start or stop the timer that refreshes the mic level bar.
-      if (!next) {
-        _startMicLevelPolling();
-      } else {
-        _stopMicLevelPolling();
-      }
+      // Keep the mic meter refreshing whenever live audio is available.
+      _syncMicLevelPolling();
       AppTelemetry.logAction(
         domain: 'room',
         action: 'toggle_mic',

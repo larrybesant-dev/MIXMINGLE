@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+bool shouldTrackMicLevel({
+  required bool isCallReady,
+  required bool hasRtcService,
+  required bool isMicMuted,
+}) {
+  return isCallReady && hasRtcService && !isMicMuted;
+}
+
 class LiveRoomMediaActionStrip extends StatelessWidget {
   const LiveRoomMediaActionStrip({
     super.key,
@@ -76,7 +84,12 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         micButton,
-        if (showMicLevel && !isMicMuted && hasRtcService)
+        if (showMicLevel &&
+            shouldTrackMicLevel(
+              isCallReady: isCallReady,
+              hasRtcService: hasRtcService,
+              isMicMuted: isMicMuted,
+            ))
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Center(
