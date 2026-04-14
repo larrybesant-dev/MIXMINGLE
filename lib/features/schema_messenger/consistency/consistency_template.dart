@@ -2,11 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Shared trend classification for module health providers.
 /// All governed modules import from here — do NOT redefine in module files.
-enum MigrationHealthTrend {
-  improving,
-  stable,
-  degrading,
-}
+enum MigrationHealthTrend { improving, stable, degrading }
 
 /// Reusable consistency template for schema-vs-legacy module comparisons.
 ///
@@ -26,13 +22,15 @@ abstract class ConsistencyParityResult {
 typedef BuildSnapshot<TSnapshot extends ConsistencySnapshot> =
     TSnapshot Function(WidgetRef ref, {required bool readOnly});
 
-typedef EvaluateSnapshot<TSnapshot extends ConsistencySnapshot,
-        TResult extends ConsistencyParityResult> =
-    TResult Function(TSnapshot snapshot);
+typedef EvaluateSnapshot<
+  TSnapshot extends ConsistencySnapshot,
+  TResult extends ConsistencyParityResult
+> = TResult Function(TSnapshot snapshot);
 
 abstract class ConsistencyModuleContract<
-    TSnapshot extends ConsistencySnapshot,
-    TResult extends ConsistencyParityResult> {
+  TSnapshot extends ConsistencySnapshot,
+  TResult extends ConsistencyParityResult
+> {
   const ConsistencyModuleContract();
 
   String get moduleId;
@@ -67,7 +65,8 @@ class ConsistencyGateState {
       lastEmittedSignature: lastEmittedSignature ?? this.lastEmittedSignature,
       candidateSignature: candidateSignature ?? this.candidateSignature,
       candidateCount: candidateCount ?? this.candidateCount,
-      lastReconcileSignature: lastReconcileSignature ?? this.lastReconcileSignature,
+      lastReconcileSignature:
+          lastReconcileSignature ?? this.lastReconcileSignature,
     );
   }
 
@@ -104,8 +103,9 @@ class ConsistencyComplianceReport {
 }
 
 ConsistencyComplianceReport validateContractCompliance<
-    TSnapshot extends ConsistencySnapshot,
-    TResult extends ConsistencyParityResult>(
+  TSnapshot extends ConsistencySnapshot,
+  TResult extends ConsistencyParityResult
+>(
   ConsistencyModuleContract<TSnapshot, TResult> contract, {
   required String expectedReference,
   required int expectedStableMismatchThreshold,
@@ -115,17 +115,17 @@ ConsistencyComplianceReport validateContractCompliance<
 
   if (contract.canonicalReference != expectedReference) {
     violations.add(
-      'reference_mismatch:${contract.canonicalReference}!=${expectedReference}',
+      'reference_mismatch:${contract.canonicalReference}!=$expectedReference',
     );
   }
   if (contract.stableMismatchThreshold != expectedStableMismatchThreshold) {
     violations.add(
-      'stable_threshold_mismatch:${contract.stableMismatchThreshold}!=${expectedStableMismatchThreshold}',
+      'stable_threshold_mismatch:${contract.stableMismatchThreshold}!=$expectedStableMismatchThreshold',
     );
   }
   if (contract.reconcileEveryMinutes != expectedReconcileMinutes) {
     violations.add(
-      'reconcile_minutes_mismatch:${contract.reconcileEveryMinutes}!=${expectedReconcileMinutes}',
+      'reconcile_minutes_mismatch:${contract.reconcileEveryMinutes}!=$expectedReconcileMinutes',
     );
   }
   if (contract.moduleId.trim().isEmpty) {
@@ -138,7 +138,8 @@ ConsistencyComplianceReport validateContractCompliance<
   );
 }
 
-ConsistencyGateDecision evaluateConsistencyGate<TResult extends ConsistencyParityResult>({
+ConsistencyGateDecision
+evaluateConsistencyGate<TResult extends ConsistencyParityResult>({
   required TResult result,
   required ConsistencyGateState state,
   required int stableMismatchThreshold,
@@ -156,28 +157,31 @@ ConsistencyGateDecision evaluateConsistencyGate<TResult extends ConsistencyParit
   if (result.isMatch) {
     return ConsistencyGateDecision(
       emitReactiveMismatch: false,
-      emitRestore: state.lastEmittedSignature.isNotEmpty && !isPeriodicReconcile,
-      emitReconcile: isPeriodicReconcile && state.lastReconcileSignature != result.signature,
+      emitRestore:
+          state.lastEmittedSignature.isNotEmpty && !isPeriodicReconcile,
+      emitReconcile:
+          isPeriodicReconcile &&
+          state.lastReconcileSignature != result.signature,
       nextState: state.copyWith(
         lastEmittedSignature: '',
         candidateSignature: '',
         candidateCount: 0,
-        lastReconcileSignature:
-            isPeriodicReconcile ? result.signature : state.lastReconcileSignature,
+        lastReconcileSignature: isPeriodicReconcile
+            ? result.signature
+            : state.lastReconcileSignature,
       ),
     );
   }
 
   if (isPeriodicReconcile) {
     final suppress =
-        state.lastEmittedSignature == result.signature || state.lastReconcileSignature == result.signature;
+        state.lastEmittedSignature == result.signature ||
+        state.lastReconcileSignature == result.signature;
     return ConsistencyGateDecision(
       emitReactiveMismatch: false,
       emitRestore: false,
       emitReconcile: !suppress,
-      nextState: state.copyWith(
-        lastReconcileSignature: result.signature,
-      ),
+      nextState: state.copyWith(lastReconcileSignature: result.signature),
     );
   }
 
@@ -195,8 +199,9 @@ ConsistencyGateDecision evaluateConsistencyGate<TResult extends ConsistencyParit
     nextState: state.copyWith(
       candidateSignature: nextCandidateSignature,
       candidateCount: nextCandidateCount,
-      lastEmittedSignature:
-          stable && !isDuplicate ? result.signature : state.lastEmittedSignature,
+      lastEmittedSignature: stable && !isDuplicate
+          ? result.signature
+          : state.lastEmittedSignature,
     ),
   );
 }

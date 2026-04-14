@@ -279,8 +279,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/404',
-        builder: (context, state) =>
-            NotFoundScreen(path: state.uri.toString()),
+        builder: (context, state) => NotFoundScreen(path: state.uri.toString()),
       ),
       // ── Full-screen overlays — bypass shell ────────────────────────────
       GoRoute(
@@ -316,15 +315,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => AppShell(
-          child: child,
           selectedIndex: _appShellIndexForLocation(state.matchedLocation),
           useDesktopMessengerLayout: MessengerRouteState.matches(state),
+          child: child,
         ),
         routes: [
-          GoRoute(
-            path: '/',
-            redirect: (context, state) => '/messages',
-          ),
+          GoRoute(path: '/', redirect: (context, state) => '/messages'),
           GoRoute(
             path: '/dashboard',
             builder: (context, state) => const DashboardScreen(),
@@ -344,9 +340,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/edit-profile',
             builder: (context, state) {
-              final tab = int.tryParse(
-                      state.uri.queryParameters['tab'] ?? '') ??
-                  0;
+              final tab =
+                  int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0;
               return EditProfileScreen(initialTab: tab);
             },
           ),
@@ -364,10 +359,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/payments',
             builder: (context, state) => const PaymentsScreen(),
           ),
-          GoRoute(
-            path: '/vip',
-            builder: (context, state) => const VipScreen(),
-          ),
+          GoRoute(path: '/vip', builder: (context, state) => const VipScreen()),
           GoRoute(
             path: '/speed-dating',
             builder: (context, state) => const SpeedDatingScreen(),
@@ -399,7 +391,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/beta-feedback',
             builder: (context, state) {
-              final isBeta = ref.read(isBetaTesterProvider).valueOrNull ?? false;
+              final isBeta =
+                  ref.read(isBetaTesterProvider).valueOrNull ?? false;
               if (!isBeta) return NotFoundScreen(path: state.uri.toString());
               return const BetaFeedbackScreen();
             },
@@ -459,7 +452,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/messages/:conversationId',
                 builder: (context, state) {
-                  final conversationId = _pathParamOrNull(state, 'conversationId');
+                  final conversationId = _pathParamOrNull(
+                    state,
+                    'conversationId',
+                  );
                   if (conversationId == null) {
                     return NotFoundScreen(path: state.uri.toString());
                   }
@@ -549,10 +545,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               }
               final uid = _currentUid(ref);
               if (uid == null) return const LoginScreen();
-              return GroupDetailsScreen(
-                groupId: groupId,
-                userId: uid,
-              );
+              return GroupDetailsScreen(groupId: groupId, userId: uid);
             },
           ),
           GoRoute(
@@ -616,8 +609,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/after-dark/create-lounge',
-            builder: (context, state) =>
-                const AfterDarkCreateLoungeScreen(),
+            builder: (context, state) => const AfterDarkCreateLoungeScreen(),
           ),
         ],
       ),
@@ -625,13 +617,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-final GlobalKey<NavigatorState> rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'mixvy-root-navigator');
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'mixvy-root-navigator',
+);
 
-final _shellNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'mixvy-shell-navigator');
+final _shellNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'mixvy-shell-navigator',
+);
 
-final _afterDarkShellKey =
-    GlobalKey<NavigatorState>(debugLabel: 'mixvy-after-dark-shell-navigator');
-
-
+final _afterDarkShellKey = GlobalKey<NavigatorState>(
+  debugLabel: 'mixvy-after-dark-shell-navigator',
+);
