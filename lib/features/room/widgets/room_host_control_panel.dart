@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/mic_access_request_model.dart';
 import '../../../models/room_participant_model.dart';
 import '../../../core/theme.dart';
-import '../providers/host_controls_provider.dart';
+import '../controllers/live_room_controller.dart';
 import '../providers/mic_access_provider.dart';
 import '../providers/room_policy_provider.dart';
 import '../providers/participant_providers.dart';
@@ -154,12 +154,16 @@ class _RoomHostControlPanelSheetState
                 tabs: [
                   const Tab(icon: Icon(Icons.tune, size: 18), text: 'Room'),
                   const Tab(icon: Icon(Icons.mic, size: 18), text: 'Stage'),
-                  const Tab(icon: Icon(Icons.volume_up, size: 18), text: 'Audio'),
+                  const Tab(
+                    icon: Icon(Icons.volume_up, size: 18),
+                    text: 'Audio',
+                  ),
                   const Tab(icon: Icon(Icons.people, size: 18), text: 'People'),
                   if (widget.isOwner)
                     const Tab(
-                        icon: Icon(Icons.admin_panel_settings, size: 18),
-                        text: 'Mods'),
+                      icon: Icon(Icons.admin_panel_settings, size: 18),
+                      text: 'Mods',
+                    ),
                 ],
               ),
               const Divider(height: 1),
@@ -169,12 +173,14 @@ class _RoomHostControlPanelSheetState
                   controller: _tabs,
                   children: [
                     _RoomSettingsTab(
-                        roomId: widget.roomId,
-                        isOwner: widget.isOwner,
-                        scrollController: scrollController),
+                      roomId: widget.roomId,
+                      isOwner: widget.isOwner,
+                      scrollController: scrollController,
+                    ),
                     _StageControlsTab(
-                        roomId: widget.roomId,
-                        scrollController: scrollController),
+                      roomId: widget.roomId,
+                      scrollController: scrollController,
+                    ),
                     _AudioControlsTab(
                       micVolume: _micVolume,
                       speakerVolume: _speakerVolume,
@@ -227,7 +233,9 @@ class _RoomSettingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hostControls = ref.read(hostControlsProvider);
+    final roomController = ref.read(
+      liveRoomControllerProvider(roomId).notifier,
+    );
     final roomPolicyAsync = ref.watch(roomPolicyProvider(roomId));
     final roomAsync = ref.watch(roomStreamProvider(roomId));
     final isLocked = roomAsync.valueOrNull?.isLocked ?? false;
@@ -236,8 +244,10 @@ class _RoomSettingsTab extends ConsumerWidget {
     final currentCategory = roomAsync.valueOrNull?.category ?? '';
     final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
     final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
-    final allowMicRequests = roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
-    final allowCamRequests = roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
+    final allowMicRequests =
+        roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
+    final allowCamRequests =
+        roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
 
     // Slow mode comes from the room doc.
     final slowMode = roomAsync.valueOrNull?.slowModeSeconds ?? 0;
@@ -256,36 +266,49 @@ class _RoomSettingsTab extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right, size: 20),
           ),
           // Inline tappable area on the tile triggers the edit dialog.
-          Builder(builder: (ctx) {
-            return InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => _showEditRoomInfoDialog(
-                ctx,
-                hostControls: ref.read(hostControlsProvider),
-                roomId: roomId,
-                currentName: currentName,
-                currentDescription: currentDescription,
-                currentCategory: currentCategory,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 4),
-                    const Icon(Icons.open_in_new, size: 14, color: Color(0xFFD4A853)),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Open room info editor',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(ctx).colorScheme.primary,
-                      ),
-                    ),
-                  ],
+          Builder(
+            builder: (ctx) {
+              return InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _showEditRoomInfoDialog(
+                  ctx,
+                  roomId: roomId,
+                  currentName: currentName,
+                  currentDescription: currentDescription,
+                  currentCategory: currentCategory,
+                  onSave:
+                      ({String? name, String? description, String? category}) {
+                        return roomController.setRoomInfo(
+                          name: name,
+                          description: description,
+                          category: category,
+                        );
+                      },
                 ),
-              ),
-            );
-          }),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.open_in_new,
+                        size: 14,
+                        color: Color(0xFFD4A853),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Open room info editor',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(ctx).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 8),
         ],
         _SectionHeader('Chat & Interaction'),
@@ -295,7 +318,7 @@ class _RoomSettingsTab extends ConsumerWidget {
           icon: isLocked ? Icons.lock : Icons.lock_open,
           trailing: Switch.adaptive(
             value: isLocked,
-            onChanged: (_) => hostControls.toggleLockRoom(roomId),
+            onChanged: (_) => roomController.toggleLockRoom(),
           ),
         ),
         _ControlTile(
@@ -304,7 +327,7 @@ class _RoomSettingsTab extends ConsumerWidget {
           icon: Icons.chat_bubble_outline,
           trailing: Switch.adaptive(
             value: allowChat,
-            onChanged: (_) => hostControls.toggleAllowChat(roomId),
+            onChanged: (_) => roomController.toggleAllowChat(),
           ),
         ),
         _ControlTile(
@@ -313,17 +336,18 @@ class _RoomSettingsTab extends ConsumerWidget {
           icon: Icons.card_giftcard,
           trailing: Switch.adaptive(
             value: allowGifts,
-            onChanged: (_) => hostControls.toggleAllowGifts(roomId),
+            onChanged: (_) => roomController.toggleAllowGifts(),
           ),
         ),
         _ControlTile(
           title: 'Mic requests',
-          subtitle:
-              allowMicRequests ? 'Users can request stage' : 'Requests paused',
+          subtitle: allowMicRequests
+              ? 'Users can request stage'
+              : 'Requests paused',
           icon: Icons.mic_none,
           trailing: Switch.adaptive(
             value: allowMicRequests,
-            onChanged: (_) => hostControls.toggleAllowMicRequests(roomId),
+            onChanged: (_) => roomController.toggleAllowMicRequests(),
           ),
         ),
         _ControlTile(
@@ -334,7 +358,7 @@ class _RoomSettingsTab extends ConsumerWidget {
           icon: Icons.videocam_outlined,
           trailing: Switch.adaptive(
             value: allowCamRequests,
-            onChanged: (_) => hostControls.toggleAllowCamRequests(roomId),
+            onChanged: (_) => roomController.toggleAllowCamRequests(),
           ),
         ),
         const SizedBox(height: 16),
@@ -355,7 +379,7 @@ class _RoomSettingsTab extends ConsumerWidget {
               DropdownMenuItem(value: 60, child: Text('60 seconds')),
             ],
             onChanged: (val) {
-              if (val != null) hostControls.toggleSlowMode(roomId, val);
+              if (val != null) roomController.toggleSlowMode(val);
             },
           ),
         ),
@@ -388,11 +412,13 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final hostControls = ref.read(hostControlsProvider);
-    final roomPolicyController = ref.read(roomPolicyControllerProvider);
+    final roomController = ref.read(
+      liveRoomControllerProvider(widget.roomId).notifier,
+    );
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
-    final micRequestsAsync =
-        ref.watch(roomMicAccessRequestsProvider(widget.roomId));
+    final micRequestsAsync = ref.watch(
+      roomMicAccessRequestsProvider(widget.roomId),
+    );
 
     final micLimit = roomPolicyAsync.valueOrNull?.micLimit ?? 6;
     final camLimit = roomPolicyAsync.valueOrNull?.camLimit ?? 6;
@@ -426,7 +452,7 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
                 label: '$micLimit',
                 onChanged: (v) {
                   final val = v.round();
-                  hostControls.setMaxBroadcasters(widget.roomId, val);
+                  roomController.setMaxBroadcasters(val);
                 },
               ),
             ],
@@ -460,10 +486,7 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
                 ],
                 selected: {micTimerSeconds},
                 onSelectionChanged: (selection) {
-                  roomPolicyController.setMicTimer(
-                    widget.roomId,
-                    selection.first,
-                  );
+                  roomController.setMicTimer(selection.first);
                 },
               ),
             ],
@@ -493,7 +516,7 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
                 divisions: 11,
                 label: '$camLimit',
                 onChanged: (v) {
-                  roomPolicyController.setCamLimit(widget.roomId, v.round());
+                  roomController.setCamLimit(v.round());
                 },
               ),
             ],
@@ -502,11 +525,12 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
         const SizedBox(height: 16),
         _SectionHeader('Mic Request Queue'),
         micRequestsAsync.when(
-          loading: () =>
-              const Center(child: Padding(
-                padding: EdgeInsets.all(12),
-                child: CircularProgressIndicator.adaptive(),
-              )),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: CircularProgressIndicator.adaptive(),
+            ),
+          ),
           error: (e, _) => Text('Error: $e'),
           data: (requests) {
             final pending = requests
@@ -523,16 +547,18 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
             if (pending.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No pending mic requests.',
-                    style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  'No pending mic requests.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               );
             }
             return Column(
               children: pending
-                  .map((req) => _MicRequestCard(
-                        request: req,
-                        roomId: widget.roomId,
-                      ))
+                  .map(
+                    (req) =>
+                        _MicRequestCard(request: req, roomId: widget.roomId),
+                  )
                   .toList(),
             );
           },
@@ -551,7 +577,9 @@ class _MicRequestCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(micAccessControllerProvider);
+    final roomController = ref.read(
+      liveRoomControllerProvider(roomId).notifier,
+    );
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -563,14 +591,16 @@ class _MicRequestCard extends ConsumerWidget {
           children: [
             IconButton(
               tooltip: 'Approve',
-              icon: const Icon(Icons.check_circle_outline,
-                  color: Colors.greenAccent),
-              onPressed: () => controller.approveRequest(roomId, request),
+              icon: const Icon(
+                Icons.check_circle_outline,
+                color: Colors.greenAccent,
+              ),
+              onPressed: () => roomController.approveMicRequest(request),
             ),
             IconButton(
               tooltip: 'Deny',
               icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
-              onPressed: () => controller.denyRequest(roomId, request.id),
+              onPressed: () => roomController.denyMicRequest(request.id),
             ),
           ],
         ),
@@ -626,8 +656,10 @@ class _AudioControlsTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: const [
             Text('0%', style: TextStyle(fontSize: 10, color: Colors.grey)),
-            Text('100% (default)',
-                style: TextStyle(fontSize: 10, color: Colors.grey)),
+            Text(
+              '100% (default)',
+              style: TextStyle(fontSize: 10, color: Colors.grey),
+            ),
             Text('200%', style: TextStyle(fontSize: 10, color: Colors.grey)),
           ],
         ),
@@ -654,8 +686,10 @@ class _AudioControlsTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: const [
             Text('Mute', style: TextStyle(fontSize: 10, color: Colors.grey)),
-            Text('100% (default)',
-                style: TextStyle(fontSize: 10, color: Colors.grey)),
+            Text(
+              '100% (default)',
+              style: TextStyle(fontSize: 10, color: Colors.grey),
+            ),
           ],
         ),
         const SizedBox(height: 32),
@@ -709,10 +743,9 @@ class _VolumeSliderRow extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.end,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -788,7 +821,9 @@ class _ParticipantTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hostControls = ref.read(hostControlsProvider);
+    final roomController = ref.read(
+      liveRoomControllerProvider(roomId).notifier,
+    );
     final isSelf = participant.userId == currentUserId;
 
     final roleColor = switch (participant.role) {
@@ -810,7 +845,9 @@ class _ParticipantTile extends ConsumerWidget {
       ),
       title: Row(
         children: [
-          Flexible(child: Text(participant.userId, overflow: TextOverflow.ellipsis)),
+          Flexible(
+            child: Text(participant.userId, overflow: TextOverflow.ellipsis),
+          ),
           if (isSelf)
             Container(
               margin: const EdgeInsets.only(left: 6),
@@ -819,8 +856,10 @@ class _ParticipantTile extends ConsumerWidget {
                 color: Colors.white12,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text('you',
-                  style: TextStyle(fontSize: 10, color: Colors.white70)),
+              child: const Text(
+                'you',
+                style: TextStyle(fontSize: 10, color: Colors.white70),
+              ),
             ),
         ],
       ),
@@ -876,10 +915,14 @@ class _ParticipantTile extends ConsumerWidget {
                   const PopupMenuItem(
                     value: _ParticipantAction.kick,
                     child: ListTile(
-                      leading: Icon(Icons.exit_to_app,
-                          color: Colors.orangeAccent),
-                      title: Text('Kick from room',
-                          style: TextStyle(color: Colors.orangeAccent)),
+                      leading: Icon(
+                        Icons.exit_to_app,
+                        color: Colors.orangeAccent,
+                      ),
+                      title: Text(
+                        'Kick from room',
+                        style: TextStyle(color: Colors.orangeAccent),
+                      ),
                       dense: true,
                     ),
                   ),
@@ -888,8 +931,10 @@ class _ParticipantTile extends ConsumerWidget {
                     value: _ParticipantAction.ban,
                     child: ListTile(
                       leading: Icon(Icons.block, color: Colors.redAccent),
-                      title: Text('Ban',
-                          style: TextStyle(color: Colors.redAccent)),
+                      title: Text(
+                        'Ban',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
                       dense: true,
                     ),
                   )
@@ -898,8 +943,10 @@ class _ParticipantTile extends ConsumerWidget {
                     value: _ParticipantAction.unban,
                     child: ListTile(
                       leading: Icon(Icons.undo, color: Colors.greenAccent),
-                      title: Text('Unban',
-                          style: TextStyle(color: Colors.greenAccent)),
+                      title: Text(
+                        'Unban',
+                        style: TextStyle(color: Colors.greenAccent),
+                      ),
                       dense: true,
                     ),
                   ),
@@ -907,21 +954,19 @@ class _ParticipantTile extends ConsumerWidget {
               onSelected: (action) async {
                 switch (action) {
                   case _ParticipantAction.mute:
-                    await hostControls.muteUser(roomId, participant.userId);
+                    await roomController.muteUser(participant.userId);
                   case _ParticipantAction.unmute:
-                    await hostControls.unmuteUser(roomId, participant.userId);
+                    await roomController.unmuteUser(participant.userId);
                   case _ParticipantAction.promote:
-                    await hostControls.promoteToModerator(
-                        roomId, participant.userId);
+                    await roomController.promoteToModerator(participant.userId);
                   case _ParticipantAction.demote:
-                    await hostControls.demoteToAudience(
-                        roomId, participant.userId);
+                    await roomController.demoteToAudience(participant.userId);
                   case _ParticipantAction.kick:
-                    await hostControls.removeUser(roomId, participant.userId);
+                    await roomController.removeUser(participant.userId);
                   case _ParticipantAction.ban:
-                    await hostControls.banUser(roomId, participant.userId);
+                    await roomController.banUser(participant.userId);
                   case _ParticipantAction.unban:
-                    await hostControls.unbanUser(roomId, participant.userId);
+                    await roomController.unbanUser(participant.userId);
                 }
               },
             ),
@@ -949,21 +994,24 @@ class _ModeratorsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final participantsAsync = ref.watch(participantsStreamProvider(roomId));
-    final hostControls = ref.read(hostControlsProvider);
+    final roomController = ref.read(
+      liveRoomControllerProvider(roomId).notifier,
+    );
 
     return participantsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator.adaptive()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (participants) {
         final mods = participants
-            .where(
-                (p) => p.role == 'moderator' || p.role == 'cohost')
+            .where((p) => p.role == 'moderator' || p.role == 'cohost')
             .toList();
         final eligible = participants
-            .where((p) =>
-                p.role == 'audience' &&
-                !p.isBanned &&
-                p.userId != currentUserId)
+            .where(
+              (p) =>
+                  p.role == 'audience' &&
+                  !p.isBanned &&
+                  p.userId != currentUserId,
+            )
             .toList();
 
         return ListView(
@@ -974,8 +1022,10 @@ class _ModeratorsTab extends ConsumerWidget {
             if (mods.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No moderators assigned yet.',
-                    style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  'No moderators assigned yet.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               )
             else
               ...mods.map(
@@ -996,8 +1046,10 @@ class _ModeratorsTab extends ConsumerWidget {
                       ),
                     ),
                     title: Text(p.userId),
-                    subtitle: Text(p.role.toUpperCase(),
-                        style: const TextStyle(fontSize: 11)),
+                    subtitle: Text(
+                      p.role.toUpperCase(),
+                      style: const TextStyle(fontSize: 11),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1005,15 +1057,18 @@ class _ModeratorsTab extends ConsumerWidget {
                         if (p.role == 'cohost')
                           IconButton(
                             tooltip: 'Transfer host',
-                            icon: const Icon(Icons.swap_horiz,
-                                color: Colors.orangeAccent),
+                            icon: const Icon(
+                              Icons.swap_horiz,
+                              color: Colors.orangeAccent,
+                            ),
                             onPressed: () async {
                               final confirmed = await showDialog<bool>(
                                 context: context,
                                 builder: (_) => AlertDialog(
                                   title: const Text('Transfer host?'),
                                   content: Text(
-                                      'Make ${p.userId} the new room host? You will become co-host.'),
+                                    'Make ${p.userId} the new room host? You will become co-host.',
+                                  ),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
@@ -1029,10 +1084,8 @@ class _ModeratorsTab extends ConsumerWidget {
                                 ),
                               );
                               if (confirmed == true) {
-                                await hostControls.transferHost(
-                                  roomId: roomId,
-                                  fromUserId: currentUserId,
-                                  toUserId: p.userId,
+                                await roomController.transferHost(
+                                  targetUserId: p.userId,
                                 );
                               }
                             },
@@ -1040,10 +1093,12 @@ class _ModeratorsTab extends ConsumerWidget {
                         // Remove mod role
                         IconButton(
                           tooltip: 'Demote to audience',
-                          icon: const Icon(Icons.person_remove_outlined,
-                              color: Colors.redAccent),
+                          icon: const Icon(
+                            Icons.person_remove_outlined,
+                            color: Colors.redAccent,
+                          ),
                           onPressed: () =>
-                              hostControls.demoteToAudience(roomId, p.userId),
+                              roomController.demoteToAudience(p.userId),
                         ),
                       ],
                     ),
@@ -1055,16 +1110,18 @@ class _ModeratorsTab extends ConsumerWidget {
             if (eligible.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No eligible audience members to promote.',
-                    style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  'No eligible audience members to promote.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               )
             else
               ...eligible.map(
                 (p) => ListTile(
                   leading: CircleAvatar(
-                    child: Text(p.userId.isNotEmpty
-                        ? p.userId[0].toUpperCase()
-                        : '?'),
+                    child: Text(
+                      p.userId.isNotEmpty ? p.userId[0].toUpperCase() : '?',
+                    ),
                   ),
                   title: Text(p.userId),
                   trailing: Wrap(
@@ -1074,14 +1131,16 @@ class _ModeratorsTab extends ConsumerWidget {
                         icon: const Icon(Icons.shield_outlined, size: 16),
                         label: const Text('Mod'),
                         onPressed: () =>
-                            hostControls.promoteToModerator(roomId, p.userId),
+                            roomController.promoteToModerator(p.userId),
                       ),
                       OutlinedButton.icon(
-                        icon: const Icon(Icons.supervisor_account_outlined,
-                            size: 16),
+                        icon: const Icon(
+                          Icons.supervisor_account_outlined,
+                          size: 16,
+                        ),
                         label: const Text('Co-host'),
                         onPressed: () =>
-                            hostControls.promoteToCohost(roomId, p.userId),
+                            roomController.promoteToCohost(p.userId),
                       ),
                     ],
                   ),
@@ -1100,8 +1159,11 @@ class _ModeratorsTab extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(Icons.stop_circle_outlined,
-                        color: Color(0xFFFF6E84), size: 28),
+                    const Icon(
+                      Icons.stop_circle_outlined,
+                      color: Color(0xFFFF6E84),
+                      size: 28,
+                    ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
@@ -1118,7 +1180,9 @@ class _ModeratorsTab extends ConsumerWidget {
                           Text(
                             'Closes the room for all participants. This cannot be undone.',
                             style: TextStyle(
-                                fontSize: 11, color: Colors.white54),
+                              fontSize: 11,
+                              color: Colors.white54,
+                            ),
                           ),
                         ],
                       ),
@@ -1135,7 +1199,8 @@ class _ModeratorsTab extends ConsumerWidget {
                           builder: (_) => AlertDialog(
                             title: const Text('End Room?'),
                             content: const Text(
-                                'This will close the room for everyone. Are you sure?'),
+                              'This will close the room for everyone. Are you sure?',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
@@ -1143,8 +1208,8 @@ class _ModeratorsTab extends ConsumerWidget {
                               ),
                               FilledButton(
                                 style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        const Color(0xFFFF6E84)),
+                                  backgroundColor: const Color(0xFFFF6E84),
+                                ),
                                 onPressed: () => Navigator.pop(context, true),
                                 child: const Text('End Room'),
                               ),
@@ -1152,7 +1217,7 @@ class _ModeratorsTab extends ConsumerWidget {
                           ),
                         );
                         if (confirmed == true) {
-                          await hostControls.endRoom(roomId);
+                          await roomController.endRoom();
                           if (context.mounted) Navigator.pop(context);
                         }
                       },
@@ -1185,9 +1250,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              letterSpacing: 0.5,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -1229,7 +1294,12 @@ extension _LetExt<T> on T {
 
 Future<void> _showEditRoomInfoDialog(
   BuildContext context, {
-  required HostControls hostControls,
+  required Future<void> Function({
+    String? name,
+    String? description,
+    String? category,
+  })
+  onSave,
   required String roomId,
   required String currentName,
   required String currentDescription,
@@ -1305,17 +1375,16 @@ Future<void> _showEditRoomInfoDialog(
             if (!(formKey.currentState?.validate() ?? false)) return;
             Navigator.pop(ctx);
             try {
-              await hostControls.setRoomInfo(
-                roomId,
+              await onSave(
                 name: nameCtrl.text,
                 description: descCtrl.text,
                 category: catCtrl.text,
               );
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to save: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
               }
             }
           },

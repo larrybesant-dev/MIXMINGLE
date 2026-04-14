@@ -28,6 +28,17 @@ class UserCamPermissionsController {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  /// Atomically removes [viewerId] from [userId]'s allowedViewers list.
+  Future<void> removeAllowedViewer({
+    required String userId,
+    required String viewerId,
+  }) async {
+    await _db.collection('userCamPermissions').doc(userId).set({
+      'allowedViewers': FieldValue.arrayRemove([viewerId]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 }
 
 final userCamPermissionsControllerProvider =

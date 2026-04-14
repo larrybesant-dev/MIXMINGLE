@@ -203,47 +203,18 @@ class MicAccessController {
   }
 
   Future<void> approveRequest(String roomId, MicAccessRequestModel request) async {
-    final participantsCol = _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants');
+    await FirebaseFunctions.instance
+        .httpsCallable('inviteToMic')
+        .call<Map<String, dynamic>>({
+          'roomId': roomId,
+          'targetId': request.requesterId,
+        });
 
-    // Demote any current stage holder before granting the approved user the mic.
-    final stageSnapshot = await participantsCol
-        .where('role', isEqualTo: 'stage')
-        .get();
-
-    final batch = _db.batch();
-
-    batch.update(_requestCollection(roomId).doc(request.id), {
+    await _requestCollection(roomId).doc(request.id).set({
       'status': 'approved',
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
 
-    for (final doc in stageSnapshot.docs) {
-      if (doc.id != request.requesterId) {
-        batch.set(
-          doc.reference,
-          {
-            'role': 'member',
-            'lastActiveAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
-      }
-    }
-
-    batch.set(
-      participantsCol.doc(request.requesterId),
-      {
-        'userId': request.requesterId,
-        'role': 'stage',
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-
-    await batch.commit();
     await NotificationService(firestore: _db).inAppNotification(
       request.requesterId,
       'Your mic access request was approved in room $roomId.',

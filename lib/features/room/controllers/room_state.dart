@@ -12,6 +12,7 @@ class RoomState {
     this.userIds = const <String>[],
     this.speakerIds = const <String>[],
     this.camViewersByUser = const <String, List<String>>{},
+    this.participantRolesByUser = const <String, String>{},
   });
 
   static const int maxSpeakers = 4;
@@ -26,6 +27,7 @@ class RoomState {
   final List<String> userIds;
   final List<String> speakerIds;
   final Map<String, List<String>> camViewersByUser;
+  final Map<String, String> participantRolesByUser;
 
   String? get userId => currentUserId;
 
@@ -42,6 +44,40 @@ class RoomState {
   bool isSpeaker(String userId) {
     final normalized = userId.trim();
     return normalized.isNotEmpty && speakerIds.contains(normalized);
+  }
+
+  String roleFor(String userId) {
+    final normalized = userId.trim();
+    if (normalized.isEmpty) {
+      return 'audience';
+    }
+    final role = participantRolesByUser[normalized]?.trim().toLowerCase();
+    if (role != null && role.isNotEmpty) {
+      return role;
+    }
+    return hostId.trim() == normalized ? 'host' : 'audience';
+  }
+
+  bool isHost(String userId) {
+    final normalized = userId.trim();
+    return normalized.isNotEmpty && hostId.trim() == normalized;
+  }
+
+  bool isCohost(String userId) => roleFor(userId) == 'cohost';
+
+  bool isModerator(String userId) => roleFor(userId) == 'moderator';
+
+  bool canManageStage(String userId) {
+    final role = roleFor(userId);
+    return role == 'host' || role == 'owner' || role == 'cohost';
+  }
+
+  bool canModerate(String userId) {
+    final role = roleFor(userId);
+    return role == 'host' ||
+        role == 'owner' ||
+        role == 'cohost' ||
+        role == 'moderator';
   }
 
   bool canAddSpeaker(String userId) {
@@ -95,6 +131,7 @@ class RoomState {
     List<String>? userIds,
     List<String>? speakerIds,
     Map<String, List<String>>? camViewersByUser,
+    Map<String, String>? participantRolesByUser,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -113,6 +150,8 @@ class RoomState {
       userIds: userIds ?? this.userIds,
       speakerIds: speakerIds ?? this.speakerIds,
       camViewersByUser: camViewersByUser ?? this.camViewersByUser,
+      participantRolesByUser:
+          participantRolesByUser ?? this.participantRolesByUser,
     );
   }
 }

@@ -6,6 +6,7 @@ import 'controllers/room_state.dart';
 import 'providers/host_controls_provider.dart';
 import 'providers/mic_access_provider.dart';
 import 'providers/participant_providers.dart';
+import 'providers/room_policy_provider.dart';
 import 'providers/user_cam_permissions_provider.dart';
 import 'services/room_session_service.dart';
 
@@ -17,6 +18,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       ref.read(roomSessionServiceProvider);
   HostControls get _hostControls => ref.read(hostControlsProvider);
   MicAccessController get _micAccess => ref.read(micAccessControllerProvider);
+  RoomPolicyController get _roomPolicy =>
+      ref.read(roomPolicyControllerProvider);
   UserCamPermissionsController get _camPermissions =>
       ref.read(userCamPermissionsControllerProvider);
 
@@ -37,6 +40,10 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final userIds = _resolveUserIds(participants);
     final speakerIds = _resolveSpeakerIds(participants, hostId: hostId);
     final camViewersByUser = _resolveCamViewers(userIds);
+    final participantRolesByUser = _resolveParticipantRoles(
+      participants,
+      hostId: hostId,
+    );
 
     final mergedUserIds = <String>{...userIds};
     final normalizedCurrentUserId = _currentUserId?.trim() ?? '';
@@ -55,6 +62,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       userIds: mergedUserIds.toList(growable: false),
       speakerIds: speakerIds,
       camViewersByUser: camViewersByUser,
+      participantRolesByUser: participantRolesByUser,
     );
   }
 
@@ -154,6 +162,48 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
               .toList(growable: false);
     }
     return result;
+  }
+
+  Map<String, String> _resolveParticipantRoles(
+    List<RoomParticipantModel> participants, {
+    required String hostId,
+  }) {
+    final result = <String, String>{};
+    for (final participant in participants) {
+      final userId = participant.userId.trim();
+      if (userId.isEmpty) {
+        continue;
+      }
+      final normalizedRole = participant.role.trim().toLowerCase();
+      result[userId] = normalizedRole.isEmpty ? 'audience' : normalizedRole;
+    }
+    if (hostId.trim().isNotEmpty) {
+      result.putIfAbsent(hostId.trim(), () => 'host');
+    }
+    return result;
+  }
+
+  String get _actorUserId => state.currentUserId?.trim() ?? '';
+
+  void _requireStageAuthority() {
+    final actorUserId = _actorUserId;
+    if (!state.canManageStage(actorUserId)) {
+      throw StateError('Only the host or co-host can manage the stage.');
+    }
+  }
+
+  void _requireModerationAuthority() {
+    final actorUserId = _actorUserId;
+    if (!state.canModerate(actorUserId)) {
+      throw StateError('Only room staff can manage participants.');
+    }
+  }
+
+  void _requireHostAuthority() {
+    final actorUserId = _actorUserId;
+    if (!state.isHost(actorUserId) && state.roleFor(actorUserId) != 'owner') {
+      throw StateError('Only the room host can perform this action.');
+    }
   }
 
   Future<RoomJoinResult> joinRoom(String userId) async {
@@ -302,6 +352,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   }
 
   Future<void> approveMicRequest(MicAccessRequestModel request) async {
+    _requireStageAuthority();
     if (!state.canAddSpeaker(request.requesterId)) {
       throw StateError(
         'The stage already has ${RoomState.maxSpeakers} speakers.',
@@ -311,26 +362,40 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   }
 
   Future<void> denyMicRequest(String requestId) {
+    _requireStageAuthority();
     return _micAccess.denyRequest(arg, requestId);
   }
 
   Future<void> releaseMic({required String userId}) {
-    return _micAccess.releaseMic(roomId: arg, userId: userId);
+    final normalizedUserId = userId.trim();
+    final actorUserId = _actorUserId;
+    final isSelfRelease =
+        actorUserId.isNotEmpty && actorUserId == normalizedUserId;
+    if (!isSelfRelease) {
+      _requireStageAuthority();
+    }
+    return _micAccess.releaseMic(roomId: arg, userId: normalizedUserId);
   }
 
   Future<void> promoteSpeaker({
-    required String actorUserId,
+    String? actorUserId,
     required String targetUserId,
   }) async {
-    final normalizedActorUserId = actorUserId.trim();
+    final normalizedControllerActor = _actorUserId;
+    final normalizedActorUserId = (actorUserId ?? normalizedControllerActor)
+        .trim();
     final normalizedTargetUserId = targetUserId.trim();
-    final actorCanPromote =
-        state.hostId == normalizedActorUserId ||
-        state.isSpeaker(normalizedActorUserId);
-    if (!actorCanPromote) {
+    if (normalizedControllerActor.isNotEmpty &&
+        normalizedActorUserId != normalizedControllerActor) {
       throw StateError(
-        'Only the host or an active speaker can promote listeners.',
+        'Stage mutations must come from the active room controller.',
       );
+    }
+    if (!state.canManageStage(normalizedActorUserId)) {
+      throw StateError('Only the host or co-host can promote listeners.');
+    }
+    if (!state.isUserInRoom(normalizedTargetUserId)) {
+      throw StateError('Only joined users can be added to the stage.');
     }
     if (!state.canAddSpeaker(normalizedTargetUserId)) {
       throw StateError(
@@ -342,6 +407,10 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   Future<void> demoteSpeaker(String targetUserId) async {
     final normalizedTargetUserId = targetUserId.trim();
+    final actorUserId = _actorUserId;
+    if (actorUserId != normalizedTargetUserId) {
+      _requireStageAuthority();
+    }
     if (!state.isSpeaker(normalizedTargetUserId)) {
       return;
     }
@@ -349,11 +418,136 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   }
 
   Future<void> muteUser(String userId) {
-    return _hostControls.muteUser(arg, userId);
+    _requireModerationAuthority();
+    return _hostControls.muteUser(arg, userId.trim());
   }
 
   Future<void> unmuteUser(String userId) {
-    return _hostControls.unmuteUser(arg, userId);
+    _requireModerationAuthority();
+    return _hostControls.unmuteUser(arg, userId.trim());
+  }
+
+  Future<void> promoteToModerator(String userId) {
+    _requireHostAuthority();
+    return _hostControls.promoteToModerator(arg, userId.trim());
+  }
+
+  Future<void> promoteToCohost(String userId) {
+    _requireHostAuthority();
+    return _hostControls.promoteToCohost(arg, userId.trim());
+  }
+
+  Future<void> demoteToAudience(String userId) {
+    _requireHostAuthority();
+    return _hostControls.demoteToAudience(arg, userId.trim());
+  }
+
+  Future<void> removeUser(String userId) {
+    _requireModerationAuthority();
+    return _hostControls.removeUser(arg, userId.trim());
+  }
+
+  Future<void> banUser(String userId) {
+    _requireModerationAuthority();
+    return _hostControls.banUser(arg, userId.trim());
+  }
+
+  Future<void> unbanUser(String userId) {
+    _requireModerationAuthority();
+    return _hostControls.unbanUser(arg, userId.trim());
+  }
+
+  Future<void> transferHost({required String targetUserId}) {
+    _requireHostAuthority();
+    return _hostControls.transferHost(
+      roomId: arg,
+      fromUserId: _actorUserId,
+      toUserId: targetUserId.trim(),
+    );
+  }
+
+  Future<void> toggleSlowMode(int seconds) {
+    _requireHostAuthority();
+    return _hostControls.toggleSlowMode(arg, seconds);
+  }
+
+  Future<void> toggleLockRoom() {
+    _requireHostAuthority();
+    return _hostControls.toggleLockRoom(arg);
+  }
+
+  Future<void> toggleAllowChat() {
+    _requireHostAuthority();
+    return _hostControls.toggleAllowChat(arg);
+  }
+
+  Future<void> toggleAllowCamRequests() {
+    _requireHostAuthority();
+    return _hostControls.toggleAllowCamRequests(arg);
+  }
+
+  Future<void> toggleAllowMicRequests() {
+    _requireHostAuthority();
+    return _hostControls.toggleAllowMicRequests(arg);
+  }
+
+  Future<void> toggleAllowGifts() {
+    _requireHostAuthority();
+    return _hostControls.toggleAllowGifts(arg);
+  }
+
+  Future<void> setMaxBroadcasters(int max) {
+    _requireHostAuthority();
+    return _hostControls.setMaxBroadcasters(arg, max);
+  }
+
+  Future<void> setMicLimit(int limit) {
+    _requireHostAuthority();
+    return _roomPolicy.setMicLimit(arg, limit);
+  }
+
+  Future<void> setMicTimer(int? seconds) {
+    _requireHostAuthority();
+    return _roomPolicy.setMicTimer(arg, seconds);
+  }
+
+  Future<void> setCamLimit(int limit) {
+    _requireHostAuthority();
+    return _roomPolicy.setCamLimit(arg, limit);
+  }
+
+  Future<void> bumpMicRequest(String requestId) {
+    _requireStageAuthority();
+    return _micAccess.bumpPriority(arg, requestId);
+  }
+
+  Future<void> lowerMicRequest(String requestId) {
+    _requireStageAuthority();
+    return _micAccess.lowerPriority(arg, requestId);
+  }
+
+  Future<void> expireMicRequest(String requestId) {
+    _requireStageAuthority();
+    return _micAccess.expireNow(arg, requestId);
+  }
+
+  Future<void> endRoom() {
+    _requireHostAuthority();
+    return _hostControls.endRoom(arg);
+  }
+
+  Future<void> setRoomInfo({
+    String? name,
+    String? description,
+    String? category,
+  }) {
+    _requireHostAuthority();
+    return _hostControls.setRoomInfo(
+      arg,
+      name: name,
+      description: description,
+      category: category,
+    );
   }
 
   Future<void> approveCameraViewer({
@@ -363,17 +557,24 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   }) async {
     final normalizedOwnerUserId = ownerUserId.trim();
     final normalizedViewerUserId = viewerUserId.trim();
-    final currentViewers = Set<String>.from(
-      state.camViewersByUser[normalizedOwnerUserId] ?? const <String>[],
-    );
-    if (approved) {
-      currentViewers.add(normalizedViewerUserId);
-    } else {
-      currentViewers.remove(normalizedViewerUserId);
+    final actorUserId = _actorUserId;
+    final canManageViewerAccess =
+        actorUserId == normalizedOwnerUserId || state.isHost(actorUserId);
+    if (!canManageViewerAccess) {
+      throw StateError(
+        'Only the camera owner or room host can manage viewers.',
+      );
     }
-    await _camPermissions.setAllowedViewers(
+    if (approved) {
+      await _camPermissions.addAllowedViewer(
+        userId: normalizedOwnerUserId,
+        viewerId: normalizedViewerUserId,
+      );
+      return;
+    }
+    await _camPermissions.removeAllowedViewer(
       userId: normalizedOwnerUserId,
-      allowedViewers: currentViewers.toList(growable: false),
+      viewerId: normalizedViewerUserId,
     );
   }
 }

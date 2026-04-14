@@ -38,4 +38,23 @@ void main() {
       expect(state.viewerCountFor('me'), 1);
     },
   );
+
+  test('RoomState authority helpers only allow staff to manage the room', () {
+    const state = RoomState(
+      roomId: 'room-b',
+      hostId: 'host-1',
+      participantRolesByUser: <String, String>{
+        'host-1': 'host',
+        'cohost-1': 'cohost',
+        'mod-1': 'moderator',
+        'guest-1': 'audience',
+      },
+    );
+
+    expect(state.canManageStage('host-1'), isTrue);
+    expect(state.canManageStage('cohost-1'), isTrue);
+    expect(state.canManageStage('mod-1'), isFalse);
+    expect(state.canModerate('mod-1'), isTrue);
+    expect(state.canManageStage('guest-1'), isFalse);
+  });
 }

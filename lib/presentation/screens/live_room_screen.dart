@@ -1554,8 +1554,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (myUserId == null) return;
     if (approved == true) {
       await ref
-          .read(userCamPermissionsControllerProvider)
-          .addAllowedViewer(userId: myUserId, viewerId: request.requesterId);
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .approveCameraViewer(
+            ownerUserId: myUserId,
+            viewerUserId: request.requesterId,
+            approved: true,
+          );
     }
     await ref
         .read(camViewRequestControllerProvider)
@@ -2442,7 +2446,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required String hostId,
     required bool isHost,
     required bool isModerator,
-    required HostControls hostControls,
     required Map<String, RoomUserPresentation> presentationByUserId,
   }) async {
     final isSelf = target.userId == currentUserId;
@@ -2495,6 +2498,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           Navigator.of(sheetContext).pop();
           await action();
         }
+
+        final roomController = ref.read(
+          liveRoomControllerProvider(widget.roomId).notifier,
+        );
 
         final actions = <RoomActionItem>[
           RoomActionItem(
@@ -2647,10 +2654,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               onTap: () => runAction(() async {
                 try {
                   if (target.isMuted) {
-                    await hostControls.unmuteUser(widget.roomId, target.userId);
+                    await roomController.unmuteUser(target.userId);
                     _showSnackBar('${target.userId} can chat again.');
                   } else {
-                    await hostControls.muteUser(widget.roomId, target.userId);
+                    await roomController.muteUser(target.userId);
                     _showSnackBar('${target.userId} was muted.');
                   }
                 } catch (e) {
@@ -2669,16 +2676,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               onTap: () => runAction(() async {
                 try {
                   if (target.role == 'moderator') {
-                    await hostControls.demoteToAudience(
-                      widget.roomId,
-                      target.userId,
-                    );
+                    await roomController.demoteToAudience(target.userId);
                     _showSnackBar('${target.userId} is now audience.');
                   } else {
-                    await hostControls.promoteToModerator(
-                      widget.roomId,
-                      target.userId,
-                    );
+                    await roomController.promoteToModerator(target.userId);
                     _showSnackBar('${target.userId} is now a moderator.');
                   }
                 } catch (e) {
@@ -2697,16 +2698,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               onTap: () => runAction(() async {
                 try {
                   if (target.role == 'cohost') {
-                    await hostControls.demoteToAudience(
-                      widget.roomId,
-                      target.userId,
-                    );
+                    await roomController.demoteToAudience(target.userId);
                     _showSnackBar('${target.userId} moved to the audience.');
                   } else {
-                    await hostControls.promoteToCohost(
-                      widget.roomId,
-                      target.userId,
-                    );
+                    await roomController.promoteToCohost(target.userId);
                     _showSnackBar('${target.userId} invited to the stage.');
                   }
                 } catch (e) {
@@ -2779,10 +2774,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   return;
                 }
                 try {
-                  await hostControls.transferHost(
-                    roomId: widget.roomId,
-                    fromUserId: currentUserId,
-                    toUserId: target.userId,
+                  await roomController.transferHost(
+                    targetUserId: target.userId,
                   );
                   _showSnackBar('${target.userId} is now the room host.');
                 } catch (e) {
@@ -2800,7 +2793,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               onTap: () => runAction(() async {
                 try {
                   if (target.isBanned) {
-                    await hostControls.unbanUser(widget.roomId, target.userId);
+                    await roomController.unbanUser(target.userId);
                     _showSnackBar('${target.userId} was unbanned.');
                   } else {
                     final confirmed = await _confirmAction(
@@ -2812,7 +2805,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                     if (!confirmed) {
                       return;
                     }
-                    await hostControls.banUser(widget.roomId, target.userId);
+                    await roomController.banUser(target.userId);
                     _showSnackBar('${target.userId} was banned.');
                   }
                 } catch (e) {
@@ -2836,7 +2829,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   return;
                 }
                 try {
-                  await hostControls.removeUser(widget.roomId, target.userId);
+                  await roomController.removeUser(target.userId);
                   _showSnackBar('${target.userId} was removed from the room.');
                 } catch (e) {
                   _showSnackBar('Could not remove user: $e');
@@ -2929,7 +2922,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required String hostId,
     required bool isHost,
     required bool isModerator,
-    required HostControls hostControls,
     required Map<String, RoomUserPresentation> presentationByUserId,
     required List<RoomPresenceModel> presenceList,
   }) async {
@@ -2962,7 +2954,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 hostId: hostId,
                 isHost: isHost,
                 isModerator: isModerator,
-                hostControls: hostControls,
                 presentationByUserId: presentationByUserId,
               );
             },
@@ -3041,7 +3032,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required String hostId,
     required bool isHost,
     required bool isModerator,
-    required HostControls hostControls,
     required List<RoomPresenceModel> presenceList,
   }) async {
     final presentationByUserId = await _loadParticipantPresentation(
@@ -3061,7 +3051,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       hostId: hostId,
       isHost: isHost,
       isModerator: isModerator,
-      hostControls: hostControls,
       presentationByUserId: presentationByUserId,
       presenceList: presenceList,
     );
@@ -3229,7 +3218,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   }
 
   /// Shows a confirmation dialog and ends the room if confirmed.
-  Future<void> _confirmAndEndRoom(HostControls hostControls) async {
+  Future<void> _confirmAndEndRoom() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -3253,7 +3242,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       ),
     );
     if (confirmed == true && mounted) {
-      await hostControls.endRoom(widget.roomId);
+      await ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .endRoom();
       await _disconnectCall();
       await _leaveRoom();
       _exitRoom();
@@ -3301,7 +3292,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required List<RoomParticipantModel> members,
     required String currentUserId,
     required List<String> currentAllowedViewers,
-    required UserCamPermissionsController controller,
   }) async {
     // Hydrate display names for all members so the sheet shows usernames.
     final missingIds = members
@@ -3395,12 +3385,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     selected.remove(member.userId);
                                   }
                                 });
-                                await controller.setAllowedViewers(
-                                  userId: currentUserId,
-                                  allowedViewers: selected.toList(
-                                    growable: false,
-                                  ),
-                                );
+                                await ref
+                                    .read(
+                                      liveRoomControllerProvider(
+                                        widget.roomId,
+                                      ).notifier,
+                                    )
+                                    .approveCameraViewer(
+                                      ownerUserId: currentUserId,
+                                      viewerUserId: member.userId,
+                                      approved: value,
+                                    );
                               },
                             );
                           },
@@ -3675,7 +3670,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final micRequestsAsync = ref.watch(
       roomMicAccessRequestsProvider(widget.roomId),
     );
-    final hostControls = ref.read(hostControlsProvider);
     final walletAsync = ref.watch(walletDetailsProvider);
     final topGifters = ref.watch(topGiftersProvider(widget.roomId));
 
@@ -3740,8 +3734,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               _micExpiryTimer = Timer(delay, () {
                 if (!mounted) return;
                 ref
-                    .read(micAccessControllerProvider)
-                    .releaseMic(roomId: widget.roomId, userId: user.id)
+                    .read(liveRoomControllerProvider(widget.roomId).notifier)
+                    .releaseMic(userId: user.id)
                     .then((_) {
                       if (mounted) _showSnackBar('Your mic time is up.');
                     })
@@ -4087,9 +4081,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       await _toggleVideo();
                     },
                     onLongPressVideo: () {
-                      final camController = ref.read(
-                        userCamPermissionsControllerProvider,
-                      );
                       final allowedViewers =
                           ref
                               .read(userCamAllowedViewersProvider(user.id))
@@ -4099,7 +4090,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         members: participantsInRoom,
                         currentUserId: user.id,
                         currentAllowedViewers: allowedViewers,
-                        controller: camController,
                       );
                     },
                     onToggleSystemAudio: _toggleSystemAudio,
@@ -4120,7 +4110,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       hostId: hostId,
                       isHost: isHost,
                       isModerator: isModerator,
-                      hostControls: hostControls,
                       presenceList: presenceAsync.valueOrNull ?? const [],
                     ),
                     onLeaveRoom: () async {
@@ -4558,7 +4547,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   hostId: hostId,
                                   isHost: isHost,
                                   isModerator: isModerator,
-                                  hostControls: hostControls,
                                   presenceList:
                                       presenceAsync.valueOrNull ?? const [],
                                 ),
@@ -4680,9 +4668,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         speakerVolume: _speakerVolume,
                         onMicVolumeChanged: _setMicVolume,
                         onSpeakerVolumeChanged: _setSpeakerVolume,
-                        onToggleLock: () =>
-                            hostControls.toggleLockRoom(widget.roomId),
-                        onEndRoom: () => _confirmAndEndRoom(hostControls),
+                        onToggleLock: () => ref
+                            .read(
+                              liveRoomControllerProvider(
+                                widget.roomId,
+                              ).notifier,
+                            )
+                            .toggleLockRoom(),
+                        onEndRoom: _confirmAndEndRoom,
                       ),
                     )
                   // ── CO-HOST / MODERATOR CONTROLS BUTTON ────────────────────
@@ -6879,9 +6872,9 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
 
   @override
   Widget build(BuildContext context) {
-    final hostControls = ref.read(hostControlsProvider);
-    final micAccessController = ref.read(micAccessControllerProvider);
-    final roomPolicyController = ref.read(roomPolicyControllerProvider);
+    final roomController = ref.read(
+      liveRoomControllerProvider(widget.roomId).notifier,
+    );
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
     final micRequestsAsync = ref.watch(
       roomMicAccessRequestsProvider(widget.roomId),
@@ -6965,7 +6958,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                             ],
                             onChanged: (val) {
                               if (val != null) {
-                                hostControls.toggleSlowMode(widget.roomId, val);
+                                roomController.toggleSlowMode(val);
                               }
                             },
                           ),
@@ -6981,8 +6974,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                           isLocked ? 'New listeners blocked' : 'Room is open',
                         ),
                         value: isLocked,
-                        onChanged: (_) =>
-                            hostControls.toggleLockRoom(widget.roomId),
+                        onChanged: (_) => roomController.toggleLockRoom(),
                       ),
                     ),
                     SizedBox(
@@ -6994,8 +6986,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                           allowChat ? 'Members can message' : 'Chat paused',
                         ),
                         value: allowChat,
-                        onChanged: (_) =>
-                            hostControls.toggleAllowChat(widget.roomId),
+                        onChanged: (_) => roomController.toggleAllowChat(),
                       ),
                     ),
                     SizedBox(
@@ -7010,7 +7001,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                         ),
                         value: allowMicRequests,
                         onChanged: (_) =>
-                            hostControls.toggleAllowMicRequests(widget.roomId),
+                            roomController.toggleAllowMicRequests(),
                       ),
                     ),
                     SizedBox(
@@ -7024,8 +7015,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                               : 'Gifts paused',
                         ),
                         value: allowGifts,
-                        onChanged: (_) =>
-                            hostControls.toggleAllowGifts(widget.roomId),
+                        onChanged: (_) => roomController.toggleAllowGifts(),
                       ),
                     ),
                     SizedBox(
@@ -7044,10 +7034,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                         ],
                         onChanged: (value) {
                           if (value == null) return;
-                          roomPolicyController.setMicLimit(
-                            widget.roomId,
-                            value,
-                          );
+                          roomController.setMaxBroadcasters(value);
                         },
                       ),
                     ),
@@ -7067,10 +7054,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                         ],
                         onChanged: (value) {
                           if (value == null) return;
-                          roomPolicyController.setCamLimit(
-                            widget.roomId,
-                            value,
-                          );
+                          roomController.setCamLimit(value);
                         },
                       ),
                     ),
@@ -7122,20 +7106,14 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                                   spacing: 4,
                                   children: [
                                     IconButton(
-                                      onPressed: () =>
-                                          micAccessController.bumpPriority(
-                                            widget.roomId,
-                                            request.id,
-                                          ),
+                                      onPressed: () => roomController
+                                          .bumpMicRequest(request.id),
                                       icon: const Icon(Icons.arrow_upward),
                                       tooltip: 'Bump priority',
                                     ),
                                     IconButton(
-                                      onPressed: () =>
-                                          micAccessController.lowerPriority(
-                                            widget.roomId,
-                                            request.id,
-                                          ),
+                                      onPressed: () => roomController
+                                          .lowerMicRequest(request.id),
                                       icon: const Icon(Icons.arrow_downward),
                                       tooltip: 'Lower priority',
                                     ),
@@ -7164,8 +7142,8 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                                       tooltip: 'Deny',
                                     ),
                                     IconButton(
-                                      onPressed: () => micAccessController
-                                          .expireNow(widget.roomId, request.id),
+                                      onPressed: () => roomController
+                                          .expireMicRequest(request.id),
                                       icon: const Icon(
                                         Icons.timer_off_outlined,
                                       ),
