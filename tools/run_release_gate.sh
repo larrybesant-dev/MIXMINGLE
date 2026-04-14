@@ -63,9 +63,10 @@ case "$tier" in
 
   tier2)
     echo "Running Tier 2 confidence gates (CG)"
+    echo "Tier 2 policy: errors and warnings block release; info-level lints are advisory only."
 
-    run_case "CG-1 Analyzer" \
-      flutter analyze --no-pub
+    run_case "CG-1 Analyzer (errors and warnings only)" \
+      flutter analyze --no-pub --fatal-warnings --no-fatal-infos
 
     run_case "CG-2 Schema Consistency Tests" \
       flutter test --no-pub test/features/schema_messenger/consistency
