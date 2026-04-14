@@ -94,10 +94,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _hasTrackedRoomJoin = false;
   bool _hasTrackedFirstMessage = false;
   RtcRoomService? _agoraService;
+
   /// Order of the three desktop columns. Valid values: 'cams', 'chat', 'users'.
   List<String> _columnOrder = const ['cams', 'chat', 'users'];
   double _chatColW = 280.0;
   static const double _kUsersColW = 260.0;
+
   /// Mobile tab: 0=Camera, 1=Chat, 2=People  (only used when width < 640)
   int _mobileTab = 0;
 
@@ -112,6 +114,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       setState(() => _columnOrder = List.unmodifiable(list));
     }
   }
+
   // Volume controls — persisted only for the lifetime of the room session.
   double _micVolume = 1.0;
   double _speakerVolume = 1.0;
@@ -119,6 +122,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _showEmojiTray = false;
   bool _showRichToolbar = false;
   String? _pendingRichColorHex;
+
   /// Prevents re-triggering camera toggle (double-click / web event replay).
   DateTime? _videoToggleCooldownUntil;
   Set<String> _excludedUserIds = const <String>{};
@@ -135,6 +139,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
     return '[color=$_pendingRichColorHex]$trimmed[/color]';
   }
+
   Timer? _micLevelTimer;
   DateTime? _roomJoinedAt;
   int _lastRenderedMessageCount = 0;
@@ -160,6 +165,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   // Reconnect back-off state
   int _reconnectAttempts = 0;
   Timer? _reconnectTimer;
+
   /// Fires when the stage user's mic-play-time limit expires; auto-releases mic.
   Timer? _micExpiryTimer;
   DateTime? _scheduledMicExpiresAt;
@@ -168,6 +174,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   static const Duration _kTypingWriteThrottle = Duration(seconds: 4);
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Map<String, int> _senderVipLevelById = <String, int>{};
+
   /// GlobalKeys for remote RTCVideoViews — lets Flutter move the platform-view
   /// element atomically when a tile is detached/reattached (avoids black screen).
   final Map<int, GlobalKey> _remoteViewKeys = {};
@@ -181,6 +188,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _isSendingSecretMessage = false;
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
+
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
   int _maxBroadcasters = 6;
   static const List<String> _quickEmojis = <String>[
@@ -218,7 +226,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   LiveRoomMediaState get _mediaState => _latestMediaState;
 
-    LiveRoomMediaController get _mediaController => _liveRoomMediaNotifier;
+  LiveRoomMediaController get _mediaController => _liveRoomMediaNotifier;
 
   bool get _isCallConnecting => _mediaState.isCallConnecting;
   bool get _isCallReady => _mediaState.isCallReady;
@@ -243,8 +251,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   @override
   void initState() {
     super.initState();
-    _liveRoomMediaNotifier =
-        ref.read(liveRoomMediaControllerProvider(widget.roomId).notifier);
+    _liveRoomMediaNotifier = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId).notifier,
+    );
     _mediaStateSubscription = ref.listenManual<LiveRoomMediaState>(
       liveRoomMediaControllerProvider(widget.roomId),
       (_, next) {
@@ -264,8 +273,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       if (user.username.trim().isNotEmpty) {
         _senderDisplayNameById[user.id] = user.username.trim();
       }
-      _senderAvatarUrlById[user.id] =
-          (user.avatarUrl?.isNotEmpty == true) ? user.avatarUrl : null;
+      _senderAvatarUrlById[user.id] = (user.avatarUrl?.isNotEmpty == true)
+          ? user.avatarUrl
+          : null;
       _joinRoom(user.id);
       if (kIsWeb) {
         // WebRTC path: no Agora WASM pre-warm needed.
@@ -298,7 +308,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     // Listen for incoming buzzes and trigger the overlay.
     if (user != null) {
       ref.listenManual<AsyncValue<List<BuzzEvent>>>(
-        incomingBuzzStreamProvider((roomId: widget.roomId, currentUserId: user.id)),
+        incomingBuzzStreamProvider((
+          roomId: widget.roomId,
+          currentUserId: user.id,
+        )),
         (_, next) {
           next.whenData((buzzes) {
             final joinedAt = _roomJoinedAt;
@@ -309,7 +322,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 continue;
               }
               _shownBuzzIds.add(buzz.id);
-              final senderName = _senderDisplayNameById[buzz.fromUserId] ?? buzz.fromUserId;
+              final senderName =
+                  _senderDisplayNameById[buzz.fromUserId] ?? buzz.fromUserId;
               RoomAudioCues.instance.playBuzz();
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _buzzKey.currentState?.triggerBuzz('$senderName buzzed you! ⚡');
@@ -323,8 +337,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     // Listen for incoming cam-view requests directed at the current user.
     if (user != null) {
       ref.listenManual<AsyncValue<List<CamViewRequest>>>(
-        pendingCamViewRequestsProvider(
-            (roomId: widget.roomId, targetId: user.id)),
+        pendingCamViewRequestsProvider((
+          roomId: widget.roomId,
+          targetId: user.id,
+        )),
         (_, next) {
           next.whenData((requests) {
             for (final request in requests) {
@@ -385,8 +401,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       },
     ];
     try {
-      final callable = FirebaseFunctions.instance
-          .httpsCallable('generateTurnCredentials');
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'generateTurnCredentials',
+      );
       final result = await callable.call<Map<String, dynamic>>({});
       final raw = result.data['iceServers'];
       if (raw is List && raw.isNotEmpty) {
@@ -437,14 +454,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required List<RoomPresenceModel> presenceList,
     required PresenceModel? globalPresence,
   }) {
-    final currentRoomPresence = _roomPresenceForUser(presenceList, currentUserId);
+    final currentRoomPresence = _roomPresenceForUser(
+      presenceList,
+      currentUserId,
+    );
     final isJoined = _joinedUserId == currentUserId;
-    final globalPresenceMismatch = globalPresence != null &&
+    final globalPresenceMismatch =
+        globalPresence != null &&
         (((globalPresence.isOnline ?? false) == false) ||
             globalPresence.inRoom != widget.roomId);
     final roomPresenceMismatch =
-        currentRoomPresence != null && currentRoomPresence.userStatus == 'offline';
-    final cameraMismatch = isJoined && _isVideoEnabled && currentParticipant?.camOn != true;
+        currentRoomPresence != null &&
+        currentRoomPresence.userStatus == 'offline';
+    final cameraMismatch =
+        isJoined && _isVideoEnabled && currentParticipant?.camOn != true;
 
     AppTelemetry.updateRoomState(
       roomId: widget.roomId,
@@ -463,15 +486,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       callError: _callError,
       currentRtcUid: _currentRtcUid,
       cameraMismatch: cameraMismatch,
-      presenceMismatch: isJoined && (globalPresenceMismatch || roomPresenceMismatch),
+      presenceMismatch:
+          isJoined && (globalPresenceMismatch || roomPresenceMismatch),
     );
   }
 
-  void _logLiveRoom(
-    String message, {
-    Object? error,
-    StackTrace? stackTrace,
-  }) {
+  void _logLiveRoom(String message, {Object? error, StackTrace? stackTrace}) {
     developer.log(message, name: 'LIVE_ROOM');
     debugPrint('[LIVE_ROOM] $message');
     AppTelemetry.logAction(
@@ -706,9 +726,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     RtcRoomService? connectedService;
 
     try {
-      _logLiveRoom(
-        'connect:start user=$userId room=${widget.roomId}',
-      );
+      _logLiveRoom('connect:start user=$userId room=${widget.roomId}');
       final rtcUid = _buildRtcUid(userId);
 
       if (kIsWeb) {
@@ -753,16 +771,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         if (mounted) {
           _mediaController.setCameraStatus('Connecting: requesting token...');
         }
-        final credentials = await _runWithWatchdog<({String token, String appId})>(
-          phase: 'token',
-          timeout: const Duration(seconds: 12),
-          timeoutCode: 'agora-token-missing',
-          timeoutMessage: 'Timed out fetching live media token.',
-          action: () => _fetchAgoraToken(
-            channelName: widget.roomId,
-            rtcUid: rtcUid,
-          ),
-        );
+        final credentials =
+            await _runWithWatchdog<({String token, String appId})>(
+              phase: 'token',
+              timeout: const Duration(seconds: 12),
+              timeoutCode: 'agora-token-missing',
+              timeoutMessage: 'Timed out fetching live media token.',
+              action: () =>
+                  _fetchAgoraToken(channelName: widget.roomId, rtcUid: rtcUid),
+            );
         _logLiveRoom('connect:token_ok uid=$rtcUid');
 
         const maxConnectAttempts = 2;
@@ -861,11 +878,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       );
       _syncMediaUiFromService();
     } catch (e, stackTrace) {
-      _logLiveRoom(
-        'connect:failed',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      _logLiveRoom('connect:failed', error: e, stackTrace: stackTrace);
       if (connectedService != null) {
         await connectedService.dispose();
       }
@@ -873,10 +886,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final errorCode = _extractErrorCode(e);
         final mappedError =
             errorCode == 'agora-initialize-live-media-failed' ||
-                    errorCode == 'webrtc-initialize-failed' ||
-                    errorCode == 'webrtc-join-failed'
-                ? "We couldn't connect to the live room. Check your connection and try again."
-                : _mapMediaError(e, canBroadcast: true);
+                errorCode == 'webrtc-initialize-failed' ||
+                errorCode == 'webrtc-join-failed'
+            ? "We couldn't connect to the live room. Check your connection and try again."
+            : _mapMediaError(e, canBroadcast: true);
         final debugSuffix = e is AgoraServiceException
             ? ' [${e.code}] ${e.cause ?? e.message}'
             : ' [$e]';
@@ -919,7 +932,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       final micUserId = _joinedUserId;
       if (micUserId != null) {
         unawaited(
-          ref.read(rtdbPresenceServiceProvider).setMicOn(micUserId, micOn: !next),
+          ref
+              .read(rtdbPresenceServiceProvider)
+              .setMicOn(micUserId, micOn: !next),
         );
       }
       // Start or stop the timer that refreshes the mic level bar.
@@ -1003,7 +1018,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   const Expanded(
                     child: Text(
                       'Share PC audio',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -1028,7 +1046,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               _SystemAudioStep(
                 number: '2',
                 icon: Icons.check_box,
-                text: 'Check "Share system audio" (the checkbox near the bottom of the picker).',
+                text:
+                    'Check "Share system audio" (the checkbox near the bottom of the picker).',
               ),
               const SizedBox(height: 8),
               _SystemAudioStep(
@@ -1059,7 +1078,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   Future<void> _toggleSystemAudio() async {
     final service = _agoraService;
-    if (service == null || !_isCallReady || _isSystemAudioActionInFlight) return;
+    if (service == null || !_isCallReady || _isSystemAudioActionInFlight)
+      return;
 
     // When starting (not stopping), show the guide so the user knows to check
     // "Share system audio" in Chrome's picker before clicking Share.
@@ -1138,7 +1158,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     try {
       if (next) {
         if (mounted) {
-          _mediaController.setCameraStatus('Requesting browser camera access...');
+          _mediaController.setCameraStatus(
+            'Requesting browser camera access...',
+          );
         }
 
         // Claim a broadcaster slot in Firebase before enabling the camera.
@@ -1215,18 +1237,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final camUserId = _joinedUserId;
         if (camUserId != null) {
           unawaited(
-            ref.read(rtdbPresenceServiceProvider).setCamOn(camUserId, camOn: next),
+            ref
+                .read(rtdbPresenceServiceProvider)
+                .setCamOn(camUserId, camOn: next),
           );
         }
         if (next) {
           Future<void>.delayed(const Duration(milliseconds: 450), () {
             if (mounted) setState(() {});
           });
-          final myName = _senderDisplayNameById[_joinedUserId ?? ''] ?? (_joinedUserId ?? '');
-          if (myName.isNotEmpty) _sendSystemEvent('$myName turned on their camera 📷');
+          final myName =
+              _senderDisplayNameById[_joinedUserId ?? ''] ??
+              (_joinedUserId ?? '');
+          if (myName.isNotEmpty)
+            _sendSystemEvent('$myName turned on their camera 📷');
         } else {
-          final myName = _senderDisplayNameById[_joinedUserId ?? ''] ?? (_joinedUserId ?? '');
-          if (myName.isNotEmpty) _sendSystemEvent('$myName turned off their camera');
+          final myName =
+              _senderDisplayNameById[_joinedUserId ?? ''] ??
+              (_joinedUserId ?? '');
+          if (myName.isNotEmpty)
+            _sendSystemEvent('$myName turned off their camera');
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
         _logLiveRoom('toggle_video:success_message $msg');
@@ -1237,11 +1267,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         );
       }
     } catch (e, st) {
-      _logLiveRoom(
-        'toggle_video:failed',
-        error: e,
-        stackTrace: st,
-      );
+      _logLiveRoom('toggle_video:failed', error: e, stackTrace: st);
       final mapped = _mapMediaError(e, canBroadcast: true);
       _showSnackBar(mapped);
       if (mounted) {
@@ -1255,8 +1281,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         // Set a short cooldown before another toggle is allowed. This prevents
         // a second click (or a Flutter-web button double-fire on rebuild) from
         // immediately re-toggling the camera.
-        _videoToggleCooldownUntil =
-            DateTime.now().add(const Duration(milliseconds: 900));
+        _videoToggleCooldownUntil = DateTime.now().add(
+          const Duration(milliseconds: 900),
+        );
         _mediaController.endVideoAction();
       }
       _logLiveRoom('toggle_video:end');
@@ -1294,7 +1321,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   backgroundColor: const Color(0xFF2A2D35),
                 )
               else
-                const Icon(Icons.videocam_off, size: 40, color: Color(0xFFB09080)),
+                const Icon(
+                  Icons.videocam_off,
+                  size: 40,
+                  color: Color(0xFFB09080),
+                ),
               const SizedBox(height: 8),
               Text(
                 _isVideoEnabled
@@ -1336,7 +1367,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   backgroundColor: const Color(0xFF2A2D35),
                 )
               else
-                const Icon(Icons.lock_outline, size: 24, color: Color(0xFFB09080)),
+                const Icon(
+                  Icons.lock_outline,
+                  size: 24,
+                  color: Color(0xFFB09080),
+                ),
               const SizedBox(height: 6),
               Text(
                 canViewRemote ? 'Loading video...' : 'Cam access locked',
@@ -1349,14 +1384,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   onPressed: onRequestAccess,
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
                     'Request Access',
-                    style: TextStyle(
-                        fontSize: 10, color: Color(0xFFC45E7A)),
+                    style: TextStyle(fontSize: 10, color: Color(0xFFC45E7A)),
                   ),
                 ),
               ],
@@ -1371,8 +1407,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   Future<void> _sendCamViewRequest(String targetUserId) async {
     final myUserId = _joinedUserId;
     if (myUserId == null || !mounted) return;
-    final targetName =
-        _senderDisplayNameById[targetUserId] ?? targetUserId;
+    final targetName = _senderDisplayNameById[targetUserId] ?? targetUserId;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1392,21 +1427,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
     if (confirmed != true || !mounted) return;
     try {
-      await ref.read(camViewRequestControllerProvider).sendRequest(
+      await ref
+          .read(camViewRequestControllerProvider)
+          .sendRequest(
             roomId: widget.roomId,
             requesterId: myUserId,
             targetId: targetUserId,
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request sent')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Request sent')));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not send request')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Could not send request')));
       }
     }
   }
@@ -1426,11 +1463,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final allowedViewers = remoteUserId == null
         ? const <String>[]
         : ref.watch(userCamAllowedViewersProvider(remoteUserId)).valueOrNull ??
-            const <String>[];
+              const <String>[];
     final canViewRemote = remoteUserId == null
         ? window.canViewRemote
         : (allowedViewers.isEmpty ||
-            (currentUserId != null && allowedViewers.contains(currentUserId)));
+              (currentUserId != null &&
+                  allowedViewers.contains(currentUserId)));
 
     return KeyedSubtree(
       key: _remoteViewKey(remoteUid),
@@ -1440,10 +1478,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         avatarUrl: window.avatarUrl,
         onRequestAccess:
             (!canViewRemote &&
-                    remoteUserId != null &&
-                    remoteUserId != currentUserId)
-                ? () => _sendCamViewRequest(remoteUserId)
-                : null,
+                remoteUserId != null &&
+                remoteUserId != currentUserId)
+            ? () => _sendCamViewRequest(remoteUserId)
+            : null,
       ),
     );
   }
@@ -1480,7 +1518,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           .read(userCamPermissionsControllerProvider)
           .addAllowedViewer(userId: myUserId, viewerId: request.requesterId);
     }
-    await ref.read(camViewRequestControllerProvider).respondToRequest(
+    await ref
+        .read(camViewRequestControllerProvider)
+        .respondToRequest(
           roomId: widget.roomId,
           requestId: request.id,
           approved: approved == true,
@@ -1563,7 +1603,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final firestore = _firestore;
     if (firestore == null) return;
     try {
-      final friends = await FriendService(firestore: firestore).getFriends(userId);
+      final friends = await FriendService(
+        firestore: firestore,
+      ).getFriends(userId);
       if (!mounted) return;
       if (friends.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1589,11 +1631,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           const Expanded(
                             child: Text(
                               'Invite friends to this room',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                           TextButton(
-                            onPressed: selected.isEmpty ? null : () => Navigator.of(sheetCtx).pop(true),
+                            onPressed: selected.isEmpty
+                                ? null
+                                : () => Navigator.of(sheetCtx).pop(true),
                             child: const Text('Send'),
                           ),
                         ],
@@ -1610,10 +1657,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           final isSelected = selected.contains(friend.id);
                           return CheckboxListTile(
                             value: isSelected,
-                            title: Text(friend.username.trim().isEmpty ? friend.id : friend.username),
+                            title: Text(
+                              friend.username.trim().isEmpty
+                                  ? friend.id
+                                  : friend.username,
+                            ),
                             secondary: CircleAvatar(
                               child: Text(
-                                (friend.username.trim().isEmpty ? '?' : friend.username.trim()[0]).toUpperCase(),
+                                (friend.username.trim().isEmpty
+                                        ? '?'
+                                        : friend.username.trim()[0])
+                                    .toUpperCase(),
                               ),
                             ),
                             onChanged: (val) {
@@ -1647,14 +1701,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invited ${selected.length} friend${selected.length == 1 ? '' : 's'}!')),
+          SnackBar(
+            content: Text(
+              'Invited ${selected.length} friend${selected.length == 1 ? '' : 's'}!',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not send invites: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not send invites: $e')));
       }
     }
   }
@@ -1670,22 +1728,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final firestore = _firestore;
     if (firestore == null) return;
 
-    final friends = await FriendService(firestore: firestore)
-        .getFriends(currentUserId);
+    final friends = await FriendService(
+      firestore: firestore,
+    ).getFriends(currentUserId);
     if (!mounted) return;
 
     if (friends.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You have no friends yet.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('You have no friends yet.')));
       return;
     }
 
     final presenceByUserId = await ref
         .read(presenceRepositoryProvider)
-        .getUsersPresence(friends.map((friend) => friend.id).toList(growable: false));
+        .getUsersPresence(
+          friends.map((friend) => friend.id).toList(growable: false),
+        );
 
-    final online = <({String id, String username, String? avatarUrl, String? currentRoomId})>[];
+    final online =
+        <
+          ({
+            String id,
+            String username,
+            String? avatarUrl,
+            String? currentRoomId,
+          })
+        >[];
     for (var i = 0; i < friends.length; i++) {
       final presence = presenceByUserId[friends[i].id];
       if (presence == null) continue;
@@ -1714,8 +1783,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   const Expanded(
                     child: Text(
                       'Online friends',
-                      style:
-                          TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   Text(
@@ -1743,15 +1814,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   itemBuilder: (ctx, i) {
                     final f = online[i];
                     final inThisRoom = f.currentRoomId == roomId;
-                    final inOtherRoom = f.currentRoomId != null &&
-                        f.currentRoomId != roomId;
+                    final inOtherRoom =
+                        f.currentRoomId != null && f.currentRoomId != roomId;
                     final safeAvatarUrl = sanitizeNetworkImageUrl(f.avatarUrl);
                     return ListTile(
                       leading: CircleAvatar(
-                      backgroundImage: safeAvatarUrl != null
-                        ? NetworkImage(safeAvatarUrl)
+                        backgroundImage: safeAvatarUrl != null
+                            ? NetworkImage(safeAvatarUrl)
                             : null,
-                      child: safeAvatarUrl == null
+                        child: safeAvatarUrl == null
                             ? Text(
                                 f.username.isNotEmpty
                                     ? f.username[0].toUpperCase()
@@ -1761,11 +1832,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       ),
                       title: Text(f.username),
                       subtitle: inThisRoom
-                          ? const Text('In this room',
-                              style: TextStyle(color: Color(0xFFC45E7A)))
+                          ? const Text(
+                              'In this room',
+                              style: TextStyle(color: Color(0xFFC45E7A)),
+                            )
                           : inOtherRoom
-                              ? const Text('In another room')
-                              : const Text('Online'),
+                          ? const Text('In another room')
+                          : const Text('Online'),
                       trailing: inOtherRoom
                           ? TextButton(
                               onPressed: () {
@@ -1787,7 +1860,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   }
 
   Future<void> _stopPresenceHeartbeat() async {
-    await ref.read(liveRoomControllerProvider(widget.roomId).notifier).pausePresence();
+    await ref
+        .read(liveRoomControllerProvider(widget.roomId).notifier)
+        .pausePresence();
   }
 
   /// Fetches a replacement token and calls engine.renewToken() so the channel
@@ -1821,14 +1896,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         ? 1
         : (1 << (_reconnectAttempts - 1)).clamp(1, _kMaxBackoffSeconds);
     _logLiveRoom(
-        'connection_lost: reconnect attempt=$_reconnectAttempts delay=${delaySecs}s');
+      'connection_lost: reconnect attempt=$_reconnectAttempts delay=${delaySecs}s',
+    );
 
     // Snapshot media state before _disconnectCall() resets it to defaults.
     final hadCameraSlot = _claimedSlotId != null;
     final previousRole = _appliedMediaRole;
     final wasMicMuted = _isMicMuted;
 
-    _logLiveRoom('connection_lost: reconnecting hadSlot=$hadCameraSlot micMuted=$wasMicMuted');
+    _logLiveRoom(
+      'connection_lost: reconnecting hadSlot=$hadCameraSlot micMuted=$wasMicMuted',
+    );
     await _disconnectCall();
     if (!mounted) return;
 
@@ -1857,7 +1935,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             );
             if (slotId != null && mounted) {
               _mediaController.setClaimedSlotId(slotId);
-              await service.enableVideo(true, publishMicrophoneTrack: !wasMicMuted);
+              await service.enableVideo(
+                true,
+                publishMicrophoneTrack: !wasMicMuted,
+              );
               await service.mute(wasMicMuted);
               if (mounted) {
                 _mediaController.restoreBroadcastAfterReconnect(
@@ -2002,7 +2083,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       return;
     }
     final now = DateTime.now();
-    final shouldWrite = !_typingStatusActive ||
+    final shouldWrite =
+        !_typingStatusActive ||
         _lastTypingWriteAt == null ||
         now.difference(_lastTypingWriteAt!) >= _kTypingWriteThrottle;
     if (shouldWrite) {
@@ -2108,7 +2190,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             .map((m) => m.senderId.trim())
             .where((id) => id.isNotEmpty && id != currentUserId),
       if (userIds != null)
-        ...userIds.map((id) => id.trim()).where((id) => id.isNotEmpty && id != currentUserId),
+        ...userIds
+            .map((id) => id.trim())
+            .where((id) => id.isNotEmpty && id != currentUserId),
     };
     final missingIds = senderIds
         .where(
@@ -2148,11 +2232,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               ? vip
               : (vip is num ? vip.toInt() : 0);
           final avatar = data['avatarUrl'];
-          resolvedAvatar[doc.id] =
-              (avatar is String && avatar.isNotEmpty) ? avatar : null;
+          resolvedAvatar[doc.id] = (avatar is String && avatar.isNotEmpty)
+              ? avatar
+              : null;
           final gender = data['gender'];
-          resolvedGender[doc.id] =
-              (gender is String && gender.isNotEmpty) ? gender : null;
+          resolvedGender[doc.id] = (gender is String && gender.isNotEmpty)
+              ? gender
+              : null;
         }
       }
 
@@ -2373,7 +2459,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               UserProfilePopup.show(context, ref, userId: target.userId);
             },
           ),
-          if (!isSelf && (kIsWeb || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.linux))
+          if (!isSelf &&
+              (kIsWeb ||
+                  defaultTargetPlatform == TargetPlatform.windows ||
+                  defaultTargetPlatform == TargetPlatform.macOS ||
+                  defaultTargetPlatform == TargetPlatform.linux))
             RoomActionItem(
               label: 'Pop out cam',
               icon: Icons.open_in_new,
@@ -2402,18 +2492,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         user1Name: currentUser.username,
                         user1AvatarUrl: currentUser.avatarUrl,
                         userId2: target.userId,
-                        user2Name: presentationByUserId[target.userId]?.displayName ?? target.userId,
-                        user2AvatarUrl: presentationByUserId[target.userId]?.avatarUrl,
+                        user2Name:
+                            presentationByUserId[target.userId]?.displayName ??
+                            target.userId,
+                        user2AvatarUrl:
+                            presentationByUserId[target.userId]?.avatarUrl,
                       );
                   if (!mounted) return;
-                  final peerName = presentationByUserId[target.userId]?.displayName ?? target.userId;
-                  final peerAvatar = presentationByUserId[target.userId]?.avatarUrl;
+                  final peerName =
+                      presentationByUserId[target.userId]?.displayName ??
+                      target.userId;
+                  final peerAvatar =
+                      presentationByUserId[target.userId]?.avatarUrl;
                   if (kIsWeb) {
-                    WebPopoutService().openWhisperWindow(target.userId, peerName);
+                    WebPopoutService().openWhisperWindow(
+                      target.userId,
+                      peerName,
+                    );
                   } else if (defaultTargetPlatform == TargetPlatform.windows ||
                       defaultTargetPlatform == TargetPlatform.macOS ||
                       defaultTargetPlatform == TargetPlatform.linux) {
-                    await DesktopWindowService().openWhisperWindow(target.userId, peerName);
+                    await DesktopWindowService().openWhisperWindow(
+                      target.userId,
+                      peerName,
+                    );
                   } else {
                     FloatingWhisperPanel.show(
                       context,
@@ -2602,7 +2704,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   await ref
                       .read(liveRoomControllerProvider(widget.roomId).notifier)
                       .setSpotlightUser(target.userId);
-                  _showSnackBar('${presentationByUserId[target.userId]?.displayName ?? target.userId} is now spotlighted!');
+                  _showSnackBar(
+                    '${presentationByUserId[target.userId]?.displayName ?? target.userId} is now spotlighted!',
+                  );
                 } catch (e) {
                   _showSnackBar('Could not spotlight user: $e');
                 }
@@ -2778,10 +2882,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       for (final p in presenceList)
         if (p.isOnline &&
             (p.lastHeartbeatAt == null ||
-                DateTime.now()
-                        .difference(p.lastHeartbeatAt!)
-                        .inSeconds <
-              60))
+                DateTime.now().difference(p.lastHeartbeatAt!).inSeconds < 60))
           p.userId: true,
     };
     await showModalBottomSheet<void>(
@@ -2907,14 +3008,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
   }
 
-  void _showSetStatusDialog(BuildContext ctx, {required String roomId, required String userId}) {
+  void _showSetStatusDialog(
+    BuildContext ctx, {
+    required String roomId,
+    required String userId,
+  }) {
     final ctrl = TextEditingController();
     showDialog<void>(
       context: ctx,
       builder: (dialogCtx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF241820),
-          title: const Text('Set Status', style: TextStyle(color: Colors.white, fontSize: 16)),
+          title: const Text(
+            'Set Status',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
           content: TextField(
             controller: ctrl,
             maxLength: 80,
@@ -2934,17 +3042,27 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: const Text('Cancel', style: TextStyle(color: Color(0xFFB09080))),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFFB09080)),
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
-                ref.read(liveRoomControllerProvider(roomId).notifier).setCustomStatus(
+                ref
+                    .read(liveRoomControllerProvider(roomId).notifier)
+                    .setCustomStatus(
                       userId: userId,
-                      status: ctrl.text.trim().isEmpty ? null : ctrl.text.trim(),
+                      status: ctrl.text.trim().isEmpty
+                          ? null
+                          : ctrl.text.trim(),
                     );
               },
-              child: const Text('Save', style: TextStyle(color: Color(0xFFD4A853))),
+              child: const Text(
+                'Save',
+                style: TextStyle(color: Color(0xFFD4A853)),
+              ),
             ),
           ],
         );
@@ -2994,11 +3112,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           joinedUserId: null,
           roomPhase: 'error',
           roomError:
-              joinResult.errorMessage ?? 'Could not join room. Please try again.',
+              joinResult.errorMessage ??
+              'Could not join room. Please try again.',
         );
         if (mounted) {
-          setState(() => _roomJoinError =
-              joinResult.errorMessage ?? 'Could not join room. Please try again.');
+          setState(
+            () => _roomJoinError =
+                joinResult.errorMessage ??
+                'Could not join room. Please try again.',
+          );
         }
         _joinedUserId = null;
         _exitRoom();
@@ -3053,8 +3175,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('End Room?'),
-        content:
-            const Text('This will close the room for all participants. Continue?'),
+        content: const Text(
+          'This will close the room for all participants. Continue?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -3104,7 +3227,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName left the room');
       await _stopPresenceHeartbeat();
-      await ref.read(liveRoomControllerProvider(widget.roomId).notifier).leaveRoom();
+      await ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .leaveRoom();
     } catch (_) {
       // Best-effort cleanup when users leave a room.
     } finally {
@@ -3122,7 +3247,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     // Hydrate display names for all members so the sheet shows usernames.
     final missingIds = members
         .map((m) => m.userId)
-        .where((id) => id != currentUserId && !_senderDisplayNameById.containsKey(id))
+        .where(
+          (id) =>
+              id != currentUserId && !_senderDisplayNameById.containsKey(id),
+        )
         .toList(growable: false);
     if (missingIds.isNotEmpty) {
       final FirebaseFirestore firestore =
@@ -3130,7 +3258,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       final resolved = <String, String>{};
       try {
         for (var i = 0; i < missingIds.length; i += 10) {
-          final batch = missingIds.sublist(i, (i + 10).clamp(0, missingIds.length));
+          final batch = missingIds.sublist(
+            i,
+            (i + 10).clamp(0, missingIds.length),
+          );
           final snap = await firestore
               .collection('users')
               .where(FieldPath.documentId, whereIn: batch)
@@ -3183,7 +3314,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           itemBuilder: (context, index) {
                             final member = selectableMembers[index];
                             final allowed = selected.contains(member.userId);
-                            final displayName = _senderDisplayNameById[member.userId] ?? member.userId;
+                            final displayName =
+                                _senderDisplayNameById[member.userId] ??
+                                member.userId;
                             return SwitchListTile.adaptive(
                               value: allowed,
                               title: Text(displayName),
@@ -3486,7 +3619,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     // Authoritative host check from the room doc — resolves before the
     // participant stream so broadcaster controls are NEVER gated on whether
     // the participant doc has been written yet.
-    final roomDocData = ref.watch(roomDocStreamProvider(widget.roomId)).valueOrNull;
+    final roomDocData = ref
+        .watch(roomDocStreamProvider(widget.roomId))
+        .valueOrNull;
     final roomHostId = _asString(
       roomDocData?['ownerId'],
       fallback: _asString(roomDocData?['hostId']),
@@ -3516,7 +3651,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         // NOTE: _claimedSlotId guard was removed — _applyRoleMediaState itself
         // guards enableVideo internally, so running it while camera is on is
         // safe and necessary (e.g. user grabs mic while camera is active).
-        if (_isCallReady && _appliedMediaRole != role &&
+        if (_isCallReady &&
+            _appliedMediaRole != role &&
             !_roleMediaStatePending) {
           _roleMediaStatePending = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3544,8 +3680,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                     .read(micAccessControllerProvider)
                     .releaseMic(roomId: widget.roomId, userId: user.id)
                     .then((_) {
-                  if (mounted) _showSnackBar('Your mic time is up.');
-                }).catchError((_) {});
+                      if (mounted) _showSnackBar('Your mic time is up.');
+                    })
+                    .catchError((_) {});
               });
             }
           }
@@ -3666,12 +3803,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 maxContentWidth: double.infinity,
                 body: AppEmptyView(
                   title: 'Room is locked',
-                  message: 'Only approved speakers and moderators can enter right now.',
+                  message:
+                      'Only approved speakers and moderators can enter right now.',
                   icon: Icons.lock_outline,
                 ),
               );
             }
-            final roomName = _asString(roomData?['name'], fallback: 'Live Room');
+            final roomName = _asString(
+              roomData?['name'],
+              fallback: 'Live Room',
+            );
             final roomDescription = _asString(roomData?['description']);
             final spotlightUserId = _asString(roomData?['spotlightUserId']);
             // ── 3-column layout helpers ──────────────────────────────────
@@ -3682,7 +3823,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             final effectiveUsersW = isMobile ? 0.0 : kUsersW;
             final camsW = isMobile
                 ? screenWidth
-                : (screenWidth - _chatColW - kUsersW).clamp(200.0, double.infinity);
+                : (screenWidth - _chatColW - kUsersW).clamp(
+                    200.0,
+                    double.infinity,
+                  );
             double colLeft(String slot) {
               if (isMobile) {
                 // Off-screen if not the active mobile tab
@@ -3704,6 +3848,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               }
               return 0;
             }
+
             Widget panelMoveBtn(
               String slot,
               int dir, {
@@ -3730,6 +3875,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 ),
               );
             }
+
             final spotlightName = spotlightUserId.isNotEmpty
                 ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
                 : null;
@@ -3764,9 +3910,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                     hasParticipants: participantsInRoom.isNotEmpty,
                     pendingMicCount: isHost
                         ? (micRequestsAsync.valueOrNull
-                                ?.where((r) => r.status == 'pending')
-                                .length ??
-                            0)
+                                  ?.where((r) => r.status == 'pending')
+                                  .length ??
+                              0)
                         : 0,
                     coinBalance: walletAsync.valueOrNull?.coinBalance,
                     onToggleMic: _toggleMic,
@@ -3789,7 +3935,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       final camController = ref.read(
                         userCamPermissionsControllerProvider,
                       );
-                      final allowedViewers = ref
+                      final allowedViewers =
+                          ref
                               .read(userCamAllowedViewersProvider(user.id))
                               .valueOrNull ??
                           const <String>[];
@@ -3801,8 +3948,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       );
                     },
                     onToggleSystemAudio: _toggleSystemAudio,
-                    onToggleVolumeControls: () =>
-                        setState(() => _showVolumeControls = !_showVolumeControls),
+                    onToggleVolumeControls: () => setState(
+                      () => _showVolumeControls = !_showVolumeControls,
+                    ),
                     onGoHome: () async {
                       await _disconnectCall();
                       await _leaveRoom();
@@ -3867,44 +4015,58 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         ? Builder(
                             builder: (context) {
                               final rawMaxBc = roomData?['maxBroadcasters'];
-                              final slotCount =
-                                  rawMaxBc is num ? rawMaxBc.toInt() : 6;
+                              final slotCount = rawMaxBc is num
+                                  ? rawMaxBc.toInt()
+                                  : 6;
                               final remoteUserIds = _agoraService!.remoteUids
-                                  .map((uid) => _userIdForRtcUid(
-                                        uid,
-                                        participantsInRoom,
-                                      ))
+                                  .map(
+                                    (uid) => _userIdForRtcUid(
+                                      uid,
+                                      participantsInRoom,
+                                    ),
+                                  )
                                   .whereType<String>()
                                   .toList();
                               if (remoteUserIds.isNotEmpty) {
-                                unawaited(_hydrateSenderDisplayNames(
-                                  userIds: remoteUserIds,
-                                  currentUserId: user.id,
-                                ));
+                                unawaited(
+                                  _hydrateSenderDisplayNames(
+                                    userIds: remoteUserIds,
+                                    currentUserId: user.id,
+                                  ),
+                                );
                               }
                               final presenceMap = <String, bool>{
-                                for (final p in presenceAsync.valueOrNull ??
-                                    const <RoomPresenceModel>[])
+                                for (final p
+                                    in presenceAsync.valueOrNull ??
+                                        const <RoomPresenceModel>[])
                                   if (p.isOnline &&
                                       (p.lastHeartbeatAt == null ||
                                           DateTime.now()
                                                   .difference(
-                                                      p.lastHeartbeatAt!)
+                                                    p.lastHeartbeatAt!,
+                                                  )
                                                   .inSeconds <
-                                          60))
+                                              60))
                                     p.userId: true,
                               };
                               final floatingIds = ref
                                   .watch(floatingCamWindowsProvider)
                                   .map((w) => w.id)
                                   .toSet();
-                              final localIsFloating = floatingIds.contains('${user.id}_local');
+                              final localIsFloating = floatingIds.contains(
+                                '${user.id}_local',
+                              );
                               final remoteTiles = _agoraService!.remoteUids
                                   .where((remoteUid) {
                                     // Hide from grid if already popped out.
-                                    if (floatingIds.contains('${remoteUid}_remote')) return false;
+                                    if (floatingIds.contains(
+                                      '${remoteUid}_remote',
+                                    ))
+                                      return false;
                                     final remoteUserId = _userIdForRtcUid(
-                                        remoteUid, participantsInRoom);
+                                      remoteUid,
+                                      participantsInRoom,
+                                    );
                                     if (remoteUserId == null) return true;
                                     final knownOnline =
                                         presenceMap[remoteUserId];
@@ -3913,24 +4075,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   })
                                   .map((remoteUid) {
                                     final remoteUserId = _userIdForRtcUid(
-                                        remoteUid, participantsInRoom);
+                                      remoteUid,
+                                      participantsInRoom,
+                                    );
                                     final allowedViewers = remoteUserId == null
                                         ? const <String>[]
                                         : ref
-                                                .watch(
+                                                  .watch(
                                                     userCamAllowedViewersProvider(
-                                                        remoteUserId))
-                                                .valueOrNull ??
-                                            const <String>[];
+                                                      remoteUserId,
+                                                    ),
+                                                  )
+                                                  .valueOrNull ??
+                                              const <String>[];
                                     final canViewRemote =
                                         remoteUserId != null &&
-                                            (allowedViewers.isEmpty ||
-                                                allowedViewers
-                                                    .contains(user.id));
+                                        (allowedViewers.isEmpty ||
+                                            allowedViewers.contains(user.id));
                                     final tileLabel = remoteUserId != null
-                                        ? (_senderDisplayNameById[
-                                                remoteUserId] ??
-                                            remoteUserId)
+                                        ? (_senderDisplayNameById[remoteUserId] ??
+                                              remoteUserId)
                                         : 'Guest $remoteUid';
                                     return CameraWallRemoteTileData(
                                       uid: remoteUid,
@@ -3939,10 +4103,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                       canView: canViewRemote,
                                       isSpeaking: _agoraService!
                                           .isRemoteSpeaking(remoteUid),
-                                      hasMic: remoteUserId != null &&
-                                          participantsInRoom.any((p) =>
-                                              p.userId == remoteUserId &&
-                                              p.role == 'stage'),
+                                      hasMic:
+                                          remoteUserId != null &&
+                                          participantsInRoom.any(
+                                            (p) =>
+                                                p.userId == remoteUserId &&
+                                                p.role == 'stage',
+                                          ),
                                       avatarUrl: remoteUserId != null
                                           ? _senderAvatarUrlById[remoteUserId]
                                           : null,
@@ -3954,23 +4121,28 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 roomName: roomName,
                                 localLabel:
                                     _senderDisplayNameById[user.id] ?? 'You',
-                                showLocalTile: (_agoraService?.isLocalVideoCapturing ?? false) && !localIsFloating,
-                                localHasMic: participantsInRoom.any((p) =>
-                                    p.userId == user.id &&
-                                    p.role == 'stage'),
+                                showLocalTile:
+                                    (_agoraService?.isLocalVideoCapturing ??
+                                        false) &&
+                                    !localIsFloating,
+                                localHasMic: participantsInRoom.any(
+                                  (p) =>
+                                      p.userId == user.id && p.role == 'stage',
+                                ),
                                 // Suppress speaking indicator when mic is muted so the
                                 // local tile stays in the main grid (not the small
                                 // "Talking Now" strip).  The VAD clone still monitors raw
                                 // audio for the mic level bar even while muted.
-                                localSpeaking: _agoraService!.localSpeaking && !_isMicMuted,
+                                localSpeaking:
+                                    _agoraService!.localSpeaking &&
+                                    !_isMicMuted,
                                 localTile: _buildLocalCamContent(
                                   avatarUrl: _senderAvatarUrlById[user.id],
                                 ),
                                 localAvatarUrl: _senderAvatarUrlById[user.id],
                                 remoteTiles: remoteTiles,
                                 maxMainGridRemoteTiles: slotCount,
-                                remoteTileBuilder: (tile) =>
-                                    KeyedSubtree(
+                                remoteTileBuilder: (tile) => KeyedSubtree(
                                   key: _remoteViewKey(tile.uid),
                                   child: _buildRemoteCamContent(
                                     remoteUid: tile.uid,
@@ -3978,56 +4150,58 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     avatarUrl: tile.avatarUrl,
                                     onRequestAccess:
                                         (!tile.canView &&
-                                                tile.userId != null &&
-                                                tile.userId != _joinedUserId)
-                                            ? () => _sendCamViewRequest(
-                                                tile.userId!)
-                                            : null,
+                                            tile.userId != null &&
+                                            tile.userId != _joinedUserId)
+                                        ? () =>
+                                              _sendCamViewRequest(tile.userId!)
+                                        : null,
                                   ),
                                 ),
                                 onSubscriptionPlanChanged:
                                     (highQualityUids, lowQualityUids) {
-                                  _scheduleRemoteVideoLayoutSync(
-                                    highQualityUids: highQualityUids,
-                                    lowQualityUids: lowQualityUids,
-                                  );
-                                },
+                                      _scheduleRemoteVideoLayoutSync(
+                                        highQualityUids: highQualityUids,
+                                        lowQualityUids: lowQualityUids,
+                                      );
+                                    },
                                 onDetachLocal: () {
                                   ref
-                                      .read(floatingCamWindowsProvider
-                                          .notifier)
-                                      .add(FloatingCamWindowData(
-                                        id: '${user.id}_local',
-                                        label:
-                                            _senderDisplayNameById[user.id] ??
-                                                'My Camera',
-                                        isLocal: true,
-                                        avatarUrl:
-                                            _senderAvatarUrlById[user.id],
-                                        offset: const Offset(40, 80),
-                                        width: 320,
-                                        height: 240,
-                                      ));
+                                      .read(floatingCamWindowsProvider.notifier)
+                                      .add(
+                                        FloatingCamWindowData(
+                                          id: '${user.id}_local',
+                                          label:
+                                              _senderDisplayNameById[user.id] ??
+                                              'My Camera',
+                                          isLocal: true,
+                                          avatarUrl:
+                                              _senderAvatarUrlById[user.id],
+                                          offset: const Offset(40, 80),
+                                          width: 320,
+                                          height: 240,
+                                        ),
+                                      );
                                 },
                                 onDetachRemote: (tile) {
                                   ref
-                                      .read(floatingCamWindowsProvider
-                                          .notifier)
-                                      .add(FloatingCamWindowData(
-                                        id: '${tile.uid}_remote',
-                                        label: tile.label,
-                                        isLocal: false,
-                                        remoteUid: tile.uid,
-                                        userId: tile.userId,
-                                        avatarUrl: tile.avatarUrl,
-                                        canViewRemote: tile.canView,
-                                        offset: Offset(
-                                          40 + (tile.uid % 200).toDouble(),
-                                          80 + (tile.uid % 150).toDouble(),
+                                      .read(floatingCamWindowsProvider.notifier)
+                                      .add(
+                                        FloatingCamWindowData(
+                                          id: '${tile.uid}_remote',
+                                          label: tile.label,
+                                          isLocal: false,
+                                          remoteUid: tile.uid,
+                                          userId: tile.userId,
+                                          avatarUrl: tile.avatarUrl,
+                                          canViewRemote: tile.canView,
+                                          offset: Offset(
+                                            40 + (tile.uid % 200).toDouble(),
+                                            80 + (tile.uid % 150).toDouble(),
+                                          ),
+                                          width: 320,
+                                          height: 240,
                                         ),
-                                        width: 320,
-                                        height: 240,
-                                      ));
+                                      );
                                 },
                               );
                             },
@@ -4038,8 +4212,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('🔴',
-                                      style: TextStyle(fontSize: 48)),
+                                  Text('🔴', style: TextStyle(fontSize: 48)),
                                   SizedBox(height: 12),
                                   Text(
                                     "You're live 🔴\nInvite people or start the vibe",
@@ -4072,7 +4245,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           final camsIdx = _columnOrder.indexOf('cams');
                           final chatRightOfCams = chatIdx > camsIdx;
                           _chatColW =
-                              (_chatColW + (chatRightOfCams ? -d.delta.dx : d.delta.dx))
+                              (_chatColW +
+                                      (chatRightOfCams
+                                          ? -d.delta.dx
+                                          : d.delta.dx))
                                   .clamp(220.0, 480.0);
                         }),
                         child: Container(color: const Color(0x20D4A853)),
@@ -4091,12 +4267,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          panelMoveBtn('cams', -1,
-                              tooltip: 'Move Cams left',
-                              icon: Icons.chevron_left),
-                          panelMoveBtn('cams', 1,
-                              tooltip: 'Move Cams right',
-                              icon: Icons.chevron_right),
+                          panelMoveBtn(
+                            'cams',
+                            -1,
+                            tooltip: 'Move Cams left',
+                            icon: Icons.chevron_left,
+                          ),
+                          panelMoveBtn(
+                            'cams',
+                            1,
+                            tooltip: 'Move Cams right',
+                            icon: Icons.chevron_right,
+                          ),
                         ],
                       ),
                     ),
@@ -4109,14 +4291,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       right: 0,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 14),
-                        color:
-                            const Color(0xFFFFD700).withValues(alpha: 0.85),
+                          vertical: 6,
+                          horizontal: 14,
+                        ),
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.85),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('⭐',
-                                style: TextStyle(fontSize: 16)),
+                            const Text('⭐', style: TextStyle(fontSize: 16)),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
@@ -4134,7 +4316,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 icon: const Icon(Icons.close, size: 16),
                                 onPressed: () async {
                                   await ref
-                                      .read(liveRoomControllerProvider(widget.roomId).notifier)
+                                      .read(
+                                        liveRoomControllerProvider(
+                                          widget.roomId,
+                                        ).notifier,
+                                      )
                                       .setSpotlightUser(null);
                                 },
                               ),
@@ -4151,21 +4337,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       child: Container(
                         color: const Color(0xD9FF6E84),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               _callError!,
                               style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600),
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 6),
                             OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white),
+                                foregroundColor: Colors.white,
+                              ),
                               onPressed: _isCallConnecting
                                   ? null
                                   : () async {
@@ -4194,51 +4384,62 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                     left: 336,
                     child: presenceAsync.when(
                       data: (presence) {
-                        final activeCutoff = DateTime.now()
-                            .subtract(const Duration(seconds: 50));
+                        final activeCutoff = DateTime.now().subtract(
+                          const Duration(seconds: 50),
+                        );
                         final onlineCount = presence
-                            .where((e) =>
-                                e.isOnline &&
-                                (e.lastHeartbeatAt == null ||
-                                    e.lastHeartbeatAt!.isAfter(activeCutoff)))
+                            .where(
+                              (e) =>
+                                  e.isOnline &&
+                                  (e.lastHeartbeatAt == null ||
+                                      e.lastHeartbeatAt!.isAfter(activeCutoff)),
+                            )
                             .length;
                         if (onlineCount == 0) return const SizedBox.shrink();
                         return GestureDetector(
                           onTap: participantsInRoom.isEmpty
                               ? null
                               : () => _openPeopleSheet(
-                                    participants: participantsInRoom,
-                                    currentParticipant: participant,
-                                    currentUserId: user.id,
-                                    currentUsername: user.username,
-                                    currentAvatarUrl: user.avatarUrl,
-                                    hostId: hostId,
-                                    isHost: isHost,
-                                    isModerator: isModerator,
-                                    hostControls: hostControls,
-                                    presenceList:
-                                        presenceAsync.valueOrNull ?? const [],
-                                  ),
+                                  participants: participantsInRoom,
+                                  currentParticipant: participant,
+                                  currentUserId: user.id,
+                                  currentUsername: user.username,
+                                  currentAvatarUrl: user.avatarUrl,
+                                  hostId: hostId,
+                                  isHost: isHost,
+                                  isModerator: isModerator,
+                                  hostControls: hostControls,
+                                  presenceList:
+                                      presenceAsync.valueOrNull ?? const [],
+                                ),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0x9910131A),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0x30D4A853)),
+                              border: Border.all(
+                                color: const Color(0x30D4A853),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.circle,
-                                    color: Color(0xFFC45E7A), size: 9),
+                                const Icon(
+                                  Icons.circle,
+                                  color: Color(0xFFC45E7A),
+                                  size: 9,
+                                ),
                                 const SizedBox(width: 5),
                                 Text(
                                   '$onlineCount online',
                                   style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600),
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -4260,8 +4461,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: topGifters.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: 6),
+                          separatorBuilder: (_, _) => const SizedBox(width: 6),
                           itemBuilder: (ctx, i) {
                             const medals = ['🥇', '🥈', '🥉'];
                             final gifter = topGifters[i];
@@ -4269,13 +4469,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             final isFirst = i == 0;
                             return Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
                               decoration: BoxDecoration(
                                 gradient: isFirst
-                                    ? const LinearGradient(colors: [
-                                        Color(0xFFFFD700),
-                                        Color(0xFFFFA500)
-                                      ])
+                                    ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFFFFD700),
+                                          Color(0xFFFFA500),
+                                        ],
+                                      )
                                     : null,
                                 color: isFirst ? null : Colors.black54,
                                 borderRadius: BorderRadius.circular(20),
@@ -4283,9 +4487,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(medal,
-                                      style:
-                                          const TextStyle(fontSize: 12)),
+                                  Text(
+                                    medal,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     gifter.displayName,
@@ -4301,8 +4506,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   Text(
                                     '🪙${gifter.totalCoins}',
                                     style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white54),
+                                      fontSize: 10,
+                                      color: Colors.white54,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -4326,8 +4532,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         onSpeakerVolumeChanged: _setSpeakerVolume,
                         onToggleLock: () =>
                             hostControls.toggleLockRoom(widget.roomId),
-                        onEndRoom: () =>
-                            _confirmAndEndRoom(hostControls),
+                        onEndRoom: () => _confirmAndEndRoom(hostControls),
                       ),
                     )
                   // ── CO-HOST / MODERATOR CONTROLS BUTTON ────────────────────
@@ -4348,7 +4553,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xB310131A),
                             borderRadius: BorderRadius.circular(20),
@@ -4357,13 +4564,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.settings_rounded,
-                                  color: Colors.white, size: 16),
+                              const Icon(
+                                Icons.settings_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 isCohost ? 'Co-host' : 'Mod Tools',
                                 style: const TextStyle(
-                                    color: Colors.white, fontSize: 12),
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
                               ),
                             ],
                           ),
@@ -4377,12 +4589,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       right: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xCC10131A),
                           borderRadius: BorderRadius.circular(16),
-                          border:
-                              Border.all(color: const Color(0x30D4A853)),
+                          border: Border.all(color: const Color(0x30D4A853)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4390,18 +4603,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.mic,
-                                    size: 16, color: Colors.white70),
+                                const Icon(
+                                  Icons.mic,
+                                  size: 16,
+                                  color: Colors.white70,
+                                ),
                                 const SizedBox(width: 6),
-                                const Text('Mic',
-                                    style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 11)),
+                                const Text(
+                                  'Mic',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                  ),
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${(_micVolume * 100).round()}%',
                                   style: const TextStyle(
-                                      color: Colors.white54, fontSize: 10),
+                                    color: Colors.white54,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             ),
@@ -4412,7 +4633,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   activeTrackColor: const Color(0xFF7C5FFF),
                                   trackHeight: 2.5,
                                   thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 7),
+                                    enabledThumbRadius: 7,
+                                  ),
                                 ),
                                 child: Slider.adaptive(
                                   value: _micVolume,
@@ -4420,25 +4642,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   max: 2.0,
                                   divisions: 40,
                                   label: '${(_micVolume * 100).round()}%',
-                                  onChanged:
-                                      _isCallReady ? _setMicVolume : null,
+                                  onChanged: _isCallReady
+                                      ? _setMicVolume
+                                      : null,
                                 ),
                               ),
                             ),
                             Row(
                               children: [
-                                const Icon(Icons.volume_up,
-                                    size: 16, color: Colors.white70),
+                                const Icon(
+                                  Icons.volume_up,
+                                  size: 16,
+                                  color: Colors.white70,
+                                ),
                                 const SizedBox(width: 6),
-                                const Text('Speaker',
-                                    style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 11)),
+                                const Text(
+                                  'Speaker',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                  ),
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${(_speakerVolume * 100).round()}%',
                                   style: const TextStyle(
-                                      color: Colors.white54, fontSize: 10),
+                                    color: Colors.white54,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             ),
@@ -4449,17 +4680,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   activeTrackColor: VelvetNoir.primary,
                                   trackHeight: 2.5,
                                   thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 7),
+                                    enabledThumbRadius: 7,
+                                  ),
                                 ),
                                 child: Slider.adaptive(
                                   value: _speakerVolume,
                                   min: 0.0,
                                   max: 1.0,
                                   divisions: 20,
-                                  label:
-                                      '${(_speakerVolume * 100).round()}%',
-                                  onChanged:
-                                      _isCallReady ? _setSpeakerVolume : null,
+                                  label: '${(_speakerVolume * 100).round()}%',
+                                  onChanged: _isCallReady
+                                      ? _setSpeakerVolume
+                                      : null,
                                 ),
                               ),
                             ),
@@ -4481,519 +4713,665 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         ),
                       ),
                       child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: DockablePanel(
-                            title: 'Room Chat',
-                            icon: Icons.chat_bubble_outline,
-                            backgroundColor: const Color(0xFF16181F),
-                            headerColor: const Color(0xFF23253A),
-                            actions: [
-                              panelMoveBtn('chat', -1,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: DockablePanel(
+                              title: 'Room Chat',
+                              icon: Icons.chat_bubble_outline,
+                              backgroundColor: const Color(0xFF16181F),
+                              headerColor: const Color(0xFF23253A),
+                              actions: [
+                                panelMoveBtn(
+                                  'chat',
+                                  -1,
                                   tooltip: 'Move Chat left',
-                                  icon: Icons.chevron_left),
-                              panelMoveBtn('chat', 1,
+                                  icon: Icons.chevron_left,
+                                ),
+                                panelMoveBtn(
+                                  'chat',
+                                  1,
                                   tooltip: 'Move Chat right',
-                                  icon: Icons.chevron_right),
-                            ],
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                          const Divider(height: 1, color: Color(0x30D4A853)),
-                          // Gift + hand raise row for non-hosts.
-                          // Resolve hostId from Firestore doc first; fall back
-                          // to the participants list so the row shows even when
-                          // ownerId isn't written to the room doc yet.
-                          Builder(builder: (context) {
-                            final resolvedHostId = hostId.isNotEmpty
-                                ? hostId
-                                : participantsInRoom
-                                      .where((p) => p.role == 'host')
-                                      .map((p) => p.userId)
-                                      .firstWhere(
-                                        (id) => id.isNotEmpty,
-                                        orElse: () => '',
-                                      );
-                            if (isHost ||
-                                resolvedHostId.isEmpty ||
-                                resolvedHostId == user.id) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              child: Row(
+                                  icon: Icons.chevron_right,
+                                ),
+                              ],
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  if (allowGifts)
-                                    TextButton.icon(
-                                      icon: const Icon(
-                                        Icons.card_giftcard,
-                                        size: 16,
+                                  const Divider(
+                                    height: 1,
+                                    color: Color(0x30D4A853),
+                                  ),
+                                  // Gift + hand raise row for non-hosts.
+                                  // Resolve hostId from Firestore doc first; fall back
+                                  // to the participants list so the row shows even when
+                                  // ownerId isn't written to the room doc yet.
+                                  Builder(
+                                    builder: (context) {
+                                      final resolvedHostId = hostId.isNotEmpty
+                                          ? hostId
+                                          : participantsInRoom
+                                                .where((p) => p.role == 'host')
+                                                .map((p) => p.userId)
+                                                .firstWhere(
+                                                  (id) => id.isNotEmpty,
+                                                  orElse: () => '',
+                                                );
+                                      if (isHost ||
+                                          resolvedHostId.isEmpty ||
+                                          resolvedHostId == user.id) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            if (allowGifts)
+                                              TextButton.icon(
+                                                icon: const Icon(
+                                                  Icons.card_giftcard,
+                                                  size: 16,
+                                                ),
+                                                label: const Text('Gift'),
+                                                onPressed: () => _showGiftSheet(
+                                                  hostId: resolvedHostId,
+                                                  hostName: 'Host',
+                                                  senderName: user.username,
+                                                  coinBalance:
+                                                      walletAsync
+                                                          .valueOrNull
+                                                          ?.coinBalance ??
+                                                      0,
+                                                ),
+                                              ),
+                                            // Set Status / Away message button
+                                            Tooltip(
+                                              message:
+                                                  'Set status / away message',
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                onTap: () =>
+                                                    _showSetStatusDialog(
+                                                      context,
+                                                      roomId: widget.roomId,
+                                                      userId: user.id,
+                                                    ),
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(6),
+                                                  child: Icon(
+                                                    Icons
+                                                        .emoji_emotions_outlined,
+                                                    color: Color(0xFFB09080),
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  // Blocked relationship warning
+                                  participantsAsync.when(
+                                    data: (participants) {
+                                      final hasBlocked = participants.any((p) {
+                                        final pid = p.userId.trim();
+                                        return pid.isNotEmpty &&
+                                            pid != user.id &&
+                                            _excludedUserIds.contains(pid);
+                                      });
+                                      if (!hasBlocked)
+                                        return const SizedBox.shrink();
+                                      return Container(
+                                        width: double.infinity,
+                                        margin: const EdgeInsets.fromLTRB(
+                                          8,
+                                          0,
+                                          8,
+                                          4,
+                                        ),
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.errorContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Blocked relationship in room. Leave to continue safely.',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.onErrorContainer,
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    loading: () => const SizedBox.shrink(),
+                                    error: (_, _) => const SizedBox.shrink(),
+                                  ),
+                                  // On-mic panel: shows host, co-hosts, and stage users
+                                  OnMicPanel(
+                                    roomId: widget.roomId,
+                                    currentUserId: user.id,
+                                    displayNameById: _senderDisplayNameById,
+                                  ),
+                                  // Mic queue (hand-raise queue, visible when non-empty)
+                                  MicQueuePanel(
+                                    roomId: widget.roomId,
+                                    currentUserId: user.id,
+                                    isHost: isHost || isCohost || isModerator,
+                                    displayNameById: _senderDisplayNameById,
+                                    onApprove: (request) {
+                                      ref
+                                          .read(micAccessControllerProvider)
+                                          .approveRequest(
+                                            widget.roomId,
+                                            request,
+                                          )
+                                          .ignore();
+                                    },
+                                    onDeny: (request) {
+                                      ref
+                                          .read(micAccessControllerProvider)
+                                          .denyRequest(
+                                            widget.roomId,
+                                            request.id,
+                                          )
+                                          .ignore();
+                                    },
+                                  ),
+                                  // Messages list
+                                  Expanded(
+                                    child: messageStreamAsync.when(
+                                      data: (messages) {
+                                        if (messages.length !=
+                                            _lastRenderedMessageCount) {
+                                          // Play a soft ping for new incoming messages (not own).
+                                          if (messages.length >
+                                              _lastRenderedMessageCount) {
+                                            final newest = messages.last;
+                                            if (newest.senderId !=
+                                                _joinedUserId) {
+                                              if (newest.type == 'private') {
+                                                RoomAudioCues.instance
+                                                    .playPrivateMessage();
+                                              } else if (newest.type ==
+                                                  'normal') {
+                                                RoomAudioCues.instance
+                                                    .playNewMessage();
+                                              }
+                                            }
+                                            if (newest.type == 'normal') {
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                    _markRecentChatter(
+                                                      newest.senderId,
+                                                    );
+                                                  });
+                                            }
+                                          }
+                                          _lastRenderedMessageCount =
+                                              messages.length;
+                                          // Double postFrameCallback: first frame lets
+                                          // ListView render the new item, second frame
+                                          // ensures maxScrollExtent is fully updated.
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                                WidgetsBinding.instance
+                                                    .addPostFrameCallback((_) {
+                                                      if (scrollController
+                                                              .hasClients &&
+                                                          scrollController
+                                                              .position
+                                                              .hasContentDimensions) {
+                                                        scrollController.jumpTo(
+                                                          scrollController
+                                                              .position
+                                                              .maxScrollExtent,
+                                                        );
+                                                      }
+                                                    });
+                                              });
+                                        }
+                                        if (messages.isEmpty) {
+                                          return Center(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                  ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: const [
+                                                  Icon(
+                                                    Icons
+                                                        .chat_bubble_outline_rounded,
+                                                    color: Color(0xFFD4A853),
+                                                    size: 28,
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                  Text(
+                                                    'No messages yet',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                  Text(
+                                                    'Say hey or invite people in to start the vibe.',
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      color: Colors.white70,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        return ListView.builder(
+                                          controller: scrollController,
+                                          padding: const EdgeInsets.all(8),
+                                          itemCount: messages.length,
+                                          itemBuilder: (context, i) {
+                                            if (i == 0) {
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                    _hydrateSenderDisplayNames(
+                                                      messages: messages,
+                                                      currentUserId: user.id,
+                                                    );
+                                                  });
+                                            }
+                                            final msg = messages[i];
+                                            return MessageBubble(
+                                              message: msg,
+                                              isMe: msg.senderId == user.id,
+                                              senderLabel: _senderLabelFor(
+                                                senderId: msg.senderId,
+                                                currentUserId: user.id,
+                                                currentUsername: user.username,
+                                              ),
+                                              senderVipLevel:
+                                                  _senderVipLevelById[msg
+                                                      .senderId] ??
+                                                  0,
+                                              senderCamOn:
+                                                  participantByUserId[msg
+                                                          .senderId]
+                                                      ?.camOn ??
+                                                  false,
+                                              senderAvatarUrl:
+                                                  _senderAvatarUrlById[msg
+                                                      .senderId],
+                                              onTapSender: (senderId) =>
+                                                  UserProfilePopup.show(
+                                                    context,
+                                                    ref,
+                                                    userId: senderId,
+                                                  ),
+                                              onTapCam: msg.senderId == user.id
+                                                  ? null
+                                                  : (senderId) =>
+                                                        _sendCamViewRequest(
+                                                          senderId,
+                                                        ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                      loading: () => const Center(
+                                        child: CircularProgressIndicator(),
                                       ),
-                                      label: const Text('Gift'),
-                                      onPressed: () => _showGiftSheet(
-                                        hostId: resolvedHostId,
-                                        hostName: 'Host',
-                                        senderName: user.username,
-                                        coinBalance:
-                                            walletAsync
-                                                .valueOrNull
-                                                ?.coinBalance ??
-                                            0,
-                                      ),
+                                      error: (e, _) =>
+                                          Center(child: Text('Error: $e')),
                                     ),
-                                  // Set Status / Away message button
-                                  Tooltip(
-                                    message: 'Set status / away message',
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(6),
-                                      onTap: () => _showSetStatusDialog(
-                                        context,
-                                        roomId: widget.roomId,
-                                        userId: user.id,
-                                      ),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(6),
-                                        child: Icon(
-                                          Icons.emoji_emotions_outlined,
-                                          color: Color(0xFFB09080),
-                                          size: 20,
+                                  ),
+                                  if (cooldownMessage.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Text(
+                                        cooldownMessage,
+                                        style: const TextStyle(
+                                          color: Color(0xFFFF6E84),
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
+                                    ),
+                                  if (_showEmojiTray)
+                                    SizedBox(
+                                      height: 68,
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          8,
+                                          0,
+                                          8,
+                                          4,
+                                        ),
+                                        child: _buildEmojiTray(),
+                                      ),
+                                    ),
+                                  if (_firestore != null)
+                                    StreamBuilder<
+                                      QuerySnapshot<Map<String, dynamic>>
+                                    >(
+                                      stream: _firestore!
+                                          .collection('rooms')
+                                          .doc(widget.roomId)
+                                          .collection('typing')
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        final docs = snapshot.data?.docs ?? [];
+                                        final currentUid = _joinedUserId ?? '';
+                                        final names = docs
+                                            .where(
+                                              (d) =>
+                                                  d.id != currentUid &&
+                                                  (d.data()['isTyping']
+                                                          as bool? ??
+                                                      false),
+                                            )
+                                            .map(
+                                              (d) =>
+                                                  _senderDisplayNameById[d
+                                                      .id] ??
+                                                  'Someone',
+                                            )
+                                            .toList(growable: false);
+                                        if (names.isEmpty) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        final label = names.length == 1
+                                            ? '${names[0]} is typing…'
+                                            : '${names.join(', ')} are typing…';
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 4,
+                                          ),
+                                          child: Text(
+                                            label,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  fontStyle: FontStyle.italic,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  // Rich text toolbar (toggled)
+                                  if (_showRichToolbar)
+                                    RichTextToolbar(
+                                      controller: messageController,
+                                      pendingColorHex: _pendingRichColorHex,
+                                      onPendingColorChanged: (value) =>
+                                          setState(
+                                            () => _pendingRichColorHex = value,
+                                          ),
+                                      onChanged: () => setState(() {}),
+                                    ),
+                                  // Input row
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      8,
+                                      4,
+                                      8,
+                                      8,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        IconButton(
+                                          tooltip: 'Emojis',
+                                          icon: Icon(
+                                            _showEmojiTray
+                                                ? Icons.emoji_emotions
+                                                : Icons.emoji_emotions_outlined,
+                                          ),
+                                          onPressed: () {
+                                            FocusScope.of(context).unfocus();
+                                            setState(
+                                              () => _showEmojiTray =
+                                                  !_showEmojiTray,
+                                            );
+                                          },
+                                        ),
+                                        Tooltip(
+                                          message: _showRichToolbar
+                                              ? 'Hide formatting'
+                                              : 'Rich text formatting',
+                                          child: IconButton(
+                                            icon: Icon(
+                                              Icons.text_format,
+                                              color: _showRichToolbar
+                                                  ? const Color(0xFFD4A853)
+                                                  : const Color(0xFF5A5E6B),
+                                              size: 20,
+                                            ),
+                                            onPressed: () => setState(
+                                              () => _showRichToolbar =
+                                                  !_showRichToolbar,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: messageController,
+                                            onChanged: (_) => _onTypingInput(),
+                                            enabled:
+                                                !isSending &&
+                                                participant?.isMuted != true &&
+                                                participant?.isBanned != true &&
+                                                !hasBlockedParticipantInRoom,
+                                            textInputAction:
+                                                TextInputAction.send,
+                                            onSubmitted:
+                                                isSending ||
+                                                    participant?.isMuted ==
+                                                        true ||
+                                                    participant?.isBanned ==
+                                                        true ||
+                                                    !allowChat ||
+                                                    hasBlockedParticipantInRoom
+                                                ? null
+                                                : (text) async {
+                                                    final trimmed = text.trim();
+                                                    if (trimmed.isEmpty) return;
+                                                    final outgoingMessage =
+                                                        _buildOutgoingChatMessage(
+                                                          trimmed,
+                                                        );
+                                                    if (slowModeSeconds > 0 &&
+                                                        lastMessageTime !=
+                                                            null) {
+                                                      final secs = DateTime.now()
+                                                          .difference(
+                                                            lastMessageTime!,
+                                                          )
+                                                          .inSeconds;
+                                                      if (secs <
+                                                          slowModeSeconds) {
+                                                        setState(() {
+                                                          cooldownMessage =
+                                                              'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                                        });
+                                                        return;
+                                                      }
+                                                    }
+                                                    setState(
+                                                      () => isSending = true,
+                                                    );
+                                                    try {
+                                                      await sendMessage(
+                                                        outgoingMessage,
+                                                      );
+                                                      lastMessageTime =
+                                                          DateTime.now();
+                                                      cooldownMessage = '';
+                                                      messageController.clear();
+                                                      _pendingRichColorHex =
+                                                          null;
+                                                      _showEmojiTray = false;
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              e.toString(),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
+                                                    } finally {
+                                                      if (mounted) {
+                                                        setState(
+                                                          () =>
+                                                              isSending = false,
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                            decoration: InputDecoration(
+                                              hintText:
+                                                  participant?.isMuted == true
+                                                  ? 'You are muted'
+                                                  : participant?.isBanned ==
+                                                        true
+                                                  ? 'You are banned'
+                                                  : hasBlockedParticipantInRoom
+                                                  ? 'Blocked relationship in room'
+                                                  : !allowChat
+                                                  ? 'Chat disabled by host'
+                                                  : 'Type a message…',
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        FilledButton(
+                                          onPressed:
+                                              isSending ||
+                                                  participant?.isMuted ==
+                                                      true ||
+                                                  participant?.isBanned ==
+                                                      true ||
+                                                  !allowChat ||
+                                                  hasBlockedParticipantInRoom
+                                              ? null
+                                              : () async {
+                                                  final trimmed =
+                                                      messageController.text
+                                                          .trim();
+                                                  if (trimmed.isEmpty) {
+                                                    return;
+                                                  }
+                                                  final outgoingMessage =
+                                                      _buildOutgoingChatMessage(
+                                                        trimmed,
+                                                      );
+                                                  if (slowModeSeconds > 0 &&
+                                                      lastMessageTime != null) {
+                                                    final secs = DateTime.now()
+                                                        .difference(
+                                                          lastMessageTime!,
+                                                        )
+                                                        .inSeconds;
+                                                    if (secs <
+                                                        slowModeSeconds) {
+                                                      setState(() {
+                                                        cooldownMessage =
+                                                            'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                                      });
+                                                      return;
+                                                    }
+                                                  }
+                                                  setState(
+                                                    () => isSending = true,
+                                                  );
+                                                  try {
+                                                    await sendMessage(
+                                                      outgoingMessage,
+                                                    );
+                                                    lastMessageTime =
+                                                        DateTime.now();
+                                                    cooldownMessage = '';
+                                                    messageController.clear();
+                                                    _pendingRichColorHex = null;
+                                                    _showEmojiTray = false;
+                                                    if (!_hasTrackedFirstMessage) {
+                                                      _hasTrackedFirstMessage =
+                                                          true;
+                                                      await AnalyticsService()
+                                                          .logEvent(
+                                                            'first_message_sent',
+                                                            params: {
+                                                              'room_id':
+                                                                  widget.roomId,
+                                                              'user_id':
+                                                                  user.id,
+                                                            },
+                                                          );
+                                                    }
+                                                  } catch (e) {
+                                                    if (context.mounted) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(
+                                                            e.toString(),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  } finally {
+                                                    if (context.mounted) {
+                                                      setState(
+                                                        () => isSending = false,
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                          child: isSending
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                )
+                                              : const Text('Send'),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            );
-                          }),
-                          // Blocked relationship warning
-                          participantsAsync.when(
-                            data: (participants) {
-                              final hasBlocked = participants.any((p) {
-                                final pid = p.userId.trim();
-                                return pid.isNotEmpty &&
-                                    pid != user.id &&
-                                    _excludedUserIds.contains(pid);
-                              });
-                              if (!hasBlocked) return const SizedBox.shrink();
-                              return Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.errorContainer,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Blocked relationship in room. Leave to continue safely.',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onErrorContainer,
-                                      ),
-                                ),
-                              );
-                            },
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, _) => const SizedBox.shrink(),
-                          ),
-                          // On-mic panel: shows host, co-hosts, and stage users
-                          OnMicPanel(
-                            roomId: widget.roomId,
-                            currentUserId: user.id,
-                            displayNameById: _senderDisplayNameById,
-                          ),
-                          // Mic queue (hand-raise queue, visible when non-empty)
-                          MicQueuePanel(
-                            roomId: widget.roomId,
-                            currentUserId: user.id,
-                            isHost: isHost || isCohost || isModerator,
-                            displayNameById: _senderDisplayNameById,
-                            onApprove: (request) {
-                              ref.read(micAccessControllerProvider)
-                                  .approveRequest(widget.roomId, request).ignore();
-                            },
-                            onDeny: (request) {
-                              ref.read(micAccessControllerProvider)
-                                  .denyRequest(widget.roomId, request.id).ignore();
-                            },
-                          ),
-                          // Messages list
-                          Expanded(
-                            child: messageStreamAsync.when(
-                              data: (messages) {
-                                if (messages.length !=
-                                    _lastRenderedMessageCount) {
-                                  // Play a soft ping for new incoming messages (not own).
-                                  if (messages.length > _lastRenderedMessageCount) {
-                                    final newest = messages.last;
-                                    if (newest.senderId != _joinedUserId) {
-                                      if (newest.type == 'private') {
-                                        RoomAudioCues.instance.playPrivateMessage();
-                                      } else if (newest.type == 'normal') {
-                                        RoomAudioCues.instance.playNewMessage();
-                                      }
-                                    }
-                                    if (newest.type == 'normal') {
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                        _markRecentChatter(newest.senderId);
-                                      });
-                                    }
-                                  }
-                                  _lastRenderedMessageCount = messages.length;
-                                  // Double postFrameCallback: first frame lets
-                                  // ListView render the new item, second frame
-                                  // ensures maxScrollExtent is fully updated.
-                                  WidgetsBinding.instance.addPostFrameCallback(
-                                    (_) {
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                        if (scrollController.hasClients &&
-                                            scrollController
-                                                .position
-                                                .hasContentDimensions) {
-                                          scrollController.jumpTo(
-                                            scrollController
-                                                .position
-                                                .maxScrollExtent,
-                                          );
-                                        }
-                                      });
-                                    },
-                                  );
-                                }
-                                if (messages.isEmpty) {
-                                  return const Center(
-                                    child: Text('No messages yet.'),
-                                  );
-                                }
-                                return ListView.builder(
-                                  controller: scrollController,
-                                  padding: const EdgeInsets.all(8),
-                                  itemCount: messages.length,
-                                  itemBuilder: (context, i) {
-                                    if (i == 0) {
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                            _hydrateSenderDisplayNames(
-                                              messages: messages,
-                                              currentUserId: user.id,
-                                            );
-                                          });
-                                    }
-                                    final msg = messages[i];
-                                    return MessageBubble(
-                                      message: msg,
-                                      isMe: msg.senderId == user.id,
-                                      senderLabel: _senderLabelFor(
-                                        senderId: msg.senderId,
-                                        currentUserId: user.id,
-                                        currentUsername: user.username,
-                                      ),
-                                      senderVipLevel:
-                                          _senderVipLevelById[msg.senderId] ??
-                                          0,
-                                        senderCamOn:
-                                          participantByUserId[msg.senderId]
-                                            ?.camOn ??
-                                          false,
-                                      senderAvatarUrl:
-                                          _senderAvatarUrlById[msg.senderId],
-                                      onTapSender: (senderId) =>
-                                          UserProfilePopup.show(
-                                            context,
-                                            ref,
-                                            userId: senderId,
-                                          ),
-                                        onTapCam: msg.senderId == user.id
-                                          ? null
-                                          : (senderId) =>
-                                            _sendCamViewRequest(senderId),
-                                    );
-                                  },
-                                );
-                              },
-                              loading: () => const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                              error: (e, _) => Center(
-                                child: Text('Error: $e'),
-                              ),
-                            ),
-                          ),
-                          if (cooldownMessage.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Text(
-                                cooldownMessage,
-                                style: const TextStyle(
-                                  color: Color(0xFFFF6E84),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          if (_showEmojiTray)
-                            SizedBox(
-                              height: 68,
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-                                child: _buildEmojiTray(),
-                              ),
-                            ),
-                          if (_firestore != null)
-                            StreamBuilder<
-                              QuerySnapshot<Map<String, dynamic>>
-                            >(
-                              stream: _firestore!
-                                  .collection('rooms')
-                                  .doc(widget.roomId)
-                                  .collection('typing')
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                final docs = snapshot.data?.docs ?? [];
-                                final currentUid = _joinedUserId ?? '';
-                                final names = docs
-                                    .where(
-                                      (d) =>
-                                          d.id != currentUid &&
-                                          (d.data()['isTyping'] as bool? ??
-                                              false),
-                                    )
-                                    .map(
-                                      (d) =>
-                                          _senderDisplayNameById[d.id] ??
-                                          'Someone',
-                                    )
-                                    .toList(growable: false);
-                                if (names.isEmpty) {
-                                  return const SizedBox.shrink();
-                                }
-                                final label = names.length == 1
-                                    ? '${names[0]} is typing…'
-                                    : '${names.join(', ')} are typing…';
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  child: Text(
-                                    label,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          fontStyle: FontStyle.italic,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
-                                        ),
-                                  ),
-                                );
-                              },
-                            ),
-                          // Rich text toolbar (toggled)
-                          if (_showRichToolbar)
-                            RichTextToolbar(
-                              controller: messageController,
-                              pendingColorHex: _pendingRichColorHex,
-                              onPendingColorChanged: (value) =>
-                                  setState(() => _pendingRichColorHex = value),
-                              onChanged: () => setState(() {}),
-                            ),
-                          // Input row
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  tooltip: 'Emojis',
-                                  icon: Icon(
-                                    _showEmojiTray
-                                        ? Icons.emoji_emotions
-                                        : Icons.emoji_emotions_outlined,
-                                  ),
-                                  onPressed: () {
-                                    FocusScope.of(context).unfocus();
-                                    setState(
-                                      () =>
-                                          _showEmojiTray = !_showEmojiTray,
-                                    );
-                                  },
-                                ),
-                                Tooltip(
-                                  message: _showRichToolbar ? 'Hide formatting' : 'Rich text formatting',
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.text_format,
-                                      color: _showRichToolbar
-                                          ? const Color(0xFFD4A853)
-                                          : const Color(0xFF5A5E6B),
-                                      size: 20,
-                                    ),
-                                    onPressed: () => setState(() => _showRichToolbar = !_showRichToolbar),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: TextField(
-                                    controller: messageController,
-                                    onChanged: (_) => _onTypingInput(),
-                                    enabled: !isSending &&
-                                        participant?.isMuted != true &&
-                                        participant?.isBanned != true &&
-                                        !hasBlockedParticipantInRoom,
-                                    textInputAction: TextInputAction.send,
-                                    onSubmitted: isSending ||
-                                            participant?.isMuted == true ||
-                                            participant?.isBanned == true ||
-                                            !allowChat ||
-                                            hasBlockedParticipantInRoom
-                                        ? null
-                                        : (text) async {
-                                          final trimmed = text.trim();
-                                            if (trimmed.isEmpty) return;
-                                          final outgoingMessage =
-                                            _buildOutgoingChatMessage(trimmed);
-                                            if (slowModeSeconds > 0 &&
-                                                lastMessageTime != null) {
-                                              final secs = DateTime.now()
-                                                  .difference(lastMessageTime!)
-                                                  .inSeconds;
-                                              if (secs < slowModeSeconds) {
-                                                setState(() {
-                                                  cooldownMessage =
-                                                      'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                                });
-                                                return;
-                                              }
-                                            }
-                                            setState(() => isSending = true);
-                                            try {
-                                              await sendMessage(outgoingMessage);
-                                              lastMessageTime = DateTime.now();
-                                              cooldownMessage = '';
-                                              messageController.clear();
-                                              _pendingRichColorHex = null;
-                                              _showEmojiTray = false;
-                                            } catch (e) {
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(SnackBar(
-                                                  content: Text(e.toString()),
-                                                ));
-                                              }
-                                            } finally {
-                                              if (mounted) {
-                                                setState(
-                                                  () => isSending = false,
-                                                );
-                                              }
-                                            }
-                                          },
-                                    decoration: InputDecoration(
-                                      hintText: participant?.isMuted == true
-                                          ? 'You are muted'
-                                          : participant?.isBanned == true
-                                          ? 'You are banned'
-                                          : hasBlockedParticipantInRoom
-                                          ? 'Blocked relationship in room'
-                                          : !allowChat
-                                          ? 'Chat disabled by host'
-                                          : 'Type a message…',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                FilledButton(
-                                  onPressed: isSending ||
-                                          participant?.isMuted == true ||
-                                          participant?.isBanned == true ||
-                                          !allowChat ||
-                                          hasBlockedParticipantInRoom
-                                      ? null
-                                      : () async {
-                                          final trimmed = messageController.text
-                                            .trim();
-                                          if (trimmed.isEmpty) {
-                                            return;
-                                          }
-                                          final outgoingMessage =
-                                            _buildOutgoingChatMessage(trimmed);
-                                          if (slowModeSeconds > 0 &&
-                                              lastMessageTime != null) {
-                                            final secs = DateTime.now()
-                                                .difference(lastMessageTime!)
-                                                .inSeconds;
-                                            if (secs < slowModeSeconds) {
-                                              setState(() {
-                                                cooldownMessage =
-                                                    'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                              });
-                                              return;
-                                            }
-                                          }
-                                          setState(() => isSending = true);
-                                          try {
-                                            await sendMessage(outgoingMessage);
-                                            lastMessageTime = DateTime.now();
-                                            cooldownMessage = '';
-                                            messageController.clear();
-                                            _pendingRichColorHex = null;
-                                            _showEmojiTray = false;
-                                            if (!_hasTrackedFirstMessage) {
-                                              _hasTrackedFirstMessage = true;
-                                              await AnalyticsService().logEvent(
-                                                'first_message_sent',
-                                                params: {
-                                                  'room_id': widget.roomId,
-                                                  'user_id': user.id,
-                                                },
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(e.toString()),
-                                                ),
-                                              );
-                                            }
-                                          } finally {
-                                            if (context.mounted) {
-                                              setState(
-                                                () => isSending = false,
-                                              );
-                                            }
-                                          }
-                                        },
-                                  child: isSending
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Text('Send'),
-                                ),
-                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                      ],
-                    ),
                     ),
                   ),
                   // ── USERS COLUMN (order-aware) ────────────────────────────
@@ -5005,174 +5383,198 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                     child: ColoredBox(
                       color: const Color(0xFF161A21),
                       child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // AppBar + ticker spacer so content starts below bar
-                        SizedBox(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // AppBar + ticker spacer so content starts below bar
+                          SizedBox(
                             height: roomDescription.isEmpty
                                 ? kToolbarHeight
-                                : kToolbarHeight + 24),
-                        // 32 px header row with ◄ ► move buttons
-                        Container(
-                          height: 32,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF241820),
-                            border: Border(
-                              left: BorderSide(
-                                  color: Color(0xFF2E2F3A), width: 1),
+                                : kToolbarHeight + 24,
+                          ),
+                          // 32 px header row with ◄ ► move buttons
+                          Container(
+                            height: 32,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF241820),
+                              border: Border(
+                                left: BorderSide(
+                                  color: Color(0xFF2E2F3A),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.people_outline,
+                                  size: 14,
+                                  color: Color(0xFFD4A853),
+                                ),
+                                const SizedBox(width: 6),
+                                const Expanded(
+                                  child: Text(
+                                    'Users',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                panelMoveBtn(
+                                  'users',
+                                  -1,
+                                  tooltip: 'Move Users left',
+                                  icon: Icons.chevron_left,
+                                ),
+                                panelMoveBtn(
+                                  'users',
+                                  1,
+                                  tooltip: 'Move Users right',
+                                  icon: Icons.chevron_right,
+                                ),
+                              ],
                             ),
                           ),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.people_outline,
-                                  size: 14, color: Color(0xFFD4A853)),
-                              const SizedBox(width: 6),
-                              const Expanded(
-                                child: Text('Users',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700)),
+                          Expanded(
+                            child: _RoomRosterSidebar(
+                              topPadding: 0,
+                              participants: participantsInRoom,
+                              displayNameById: Map.unmodifiable(
+                                _senderDisplayNameById,
                               ),
-                              panelMoveBtn('users', -1,
-                                  tooltip: 'Move Users left',
-                                  icon: Icons.chevron_left),
-                              panelMoveBtn('users', 1,
-                                  tooltip: 'Move Users right',
-                                  icon: Icons.chevron_right),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: _RoomRosterSidebar(
-                            topPadding: 0,
-                            participants: participantsInRoom,
-                            displayNameById: Map.unmodifiable(
-                                _senderDisplayNameById),
-                            vipLevelById: Map.unmodifiable(
-                                _senderVipLevelById),
-                            genderById: Map.unmodifiable(
-                                _senderGenderById),
-                            currentUserId: user.id,
-                            presenceList:
-                                presenceAsync.valueOrNull ?? const [],
-                            pendingMicCount: micRequestsAsync.valueOrNull
-                                    ?.where((r) => r.status == 'pending')
-                                    .length ??
-                                0,
-                            currentUserRole: participantsInRoom
-                                    .firstWhere(
-                                      (p) => p.userId == user.id,
-                                      orElse: () => RoomParticipantModel(
-                                        userId: user.id,
-                                        role: 'member',
-                                        joinedAt: DateTime.now(),
-                                        lastActiveAt: DateTime.now(),
-                                      ),
-                                    )
-                                    .role,
-                            isMicFree: true,
-                            isLocalVideoEnabled: _isVideoEnabled,
-                            localSpeaking:
-                                (_agoraService?.localSpeaking ?? false) ||
-                                (!_isMicMuted &&
-                                  participantsInRoom.any((p) =>
-                                      p.userId == user.id && p.role == 'stage')),
-                            recentChatters: Set.unmodifiable(_recentChatters),
-                            remoteUids:
-                                _agoraService?.remoteUids ?? const [],
-                            isSpeakingFn: (uid) =>
-                                _agoraService?.isRemoteSpeaking(uid) ??
-                                false,
-                            uidToUserId: (uid) =>
-                                _userIdForRtcUid(uid, participantsInRoom),
-                            onReleaseMic: () async {
-                              try {
-                                await micAccessController.releaseMic(
-                                  roomId: widget.roomId,
-                                  userId: user.id,
-                                );
-                                final svc = _agoraService;
-                                if (svc != null && _isCallReady && !_isMicMuted) {
-                                  await svc.mute(true);
-                                      if (mounted) {
-                                        _mediaController.setMicMuted(true);
-                                      }
-                                }
-                                if (mounted) _showSnackBar('Mic released.');
-                              } catch (e) {
-                                if (mounted) _showSnackBar('Could not release mic: $e');
-                              }
-                            },
-                            onJoinQueue: allowMicRequests
-                                ? () async {
-                                    // Grab the mic directly, displacing any
-                                    // current stage user (co-hosts are
-                                    // unaffected — their role stays 'cohost').
-                                    try {
-                                      await micAccessController
-                                          .grabMicDirectly(
-                                        roomId: widget.roomId,
-                                        userId: user.id,
-                                      );
-                                      if (mounted) {
-                                        _showSnackBar('You have the mic!');
-                                      }
-                                    } catch (e) {
-                                      if (mounted) {
-                                        _showSnackBar(
-                                            'Could not grab mic: $e');
-                                      }
+                              vipLevelById: Map.unmodifiable(
+                                _senderVipLevelById,
+                              ),
+                              genderById: Map.unmodifiable(_senderGenderById),
+                              currentUserId: user.id,
+                              presenceList:
+                                  presenceAsync.valueOrNull ?? const [],
+                              pendingMicCount:
+                                  micRequestsAsync.valueOrNull
+                                      ?.where((r) => r.status == 'pending')
+                                      .length ??
+                                  0,
+                              currentUserRole: participantsInRoom
+                                  .firstWhere(
+                                    (p) => p.userId == user.id,
+                                    orElse: () => RoomParticipantModel(
+                                      userId: user.id,
+                                      role: 'member',
+                                      joinedAt: DateTime.now(),
+                                      lastActiveAt: DateTime.now(),
+                                    ),
+                                  )
+                                  .role,
+                              isMicFree: true,
+                              isLocalVideoEnabled: _isVideoEnabled,
+                              localSpeaking:
+                                  (_agoraService?.localSpeaking ?? false) ||
+                                  (!_isMicMuted &&
+                                      participantsInRoom.any(
+                                        (p) =>
+                                            p.userId == user.id &&
+                                            p.role == 'stage',
+                                      )),
+                              recentChatters: Set.unmodifiable(_recentChatters),
+                              remoteUids: _agoraService?.remoteUids ?? const [],
+                              isSpeakingFn: (uid) =>
+                                  _agoraService?.isRemoteSpeaking(uid) ?? false,
+                              uidToUserId: (uid) =>
+                                  _userIdForRtcUid(uid, participantsInRoom),
+                              onReleaseMic: () async {
+                                try {
+                                  await micAccessController.releaseMic(
+                                    roomId: widget.roomId,
+                                    userId: user.id,
+                                  );
+                                  final svc = _agoraService;
+                                  if (svc != null &&
+                                      _isCallReady &&
+                                      !_isMicMuted) {
+                                    await svc.mute(true);
+                                    if (mounted) {
+                                      _mediaController.setMicMuted(true);
                                     }
                                   }
-                                : null,
-                            onWhisper: (p) async {
-                              final currentUser = ref.read(userProvider);
-                              if (currentUser == null) return;
-                              try {
-                                final conversationId = await ref
-                                    .read(messagingControllerProvider)
-                                    .createDirectConversation(
-                                      userId1: currentUser.id,
-                                      user1Name: currentUser.username,
-                                      user1AvatarUrl: currentUser.avatarUrl,
-                                      userId2: p.userId,
-                                      user2Name: _senderDisplayNameById[p.userId] ?? p.userId,
-                                      user2AvatarUrl: _senderAvatarUrlById[p.userId],
-                                    );
-                                if (!context.mounted) return;
-                                FloatingWhisperPanel.show(
-                                  context,
-                                  ref,
-                                  conversationId: conversationId,
-                                  peerName:
-                                      _senderDisplayNameById[p.userId] ??
-                                          p.userId,
-                                  peerAvatarUrl:
-                                      _senderAvatarUrlById[p.userId],
-                                );
-                              } catch (e) {
-                                _showSnackBar('Could not open whisper: $e');
-                              }
-                            },
-                            onSecretMessage: (p) =>
-                                _openSecretComposerForParticipant(p),
-                            secretComposerTarget: _secretComposerTarget,
-                            secretComposerTextController:
-                                _secretMessageController,
-                            isSendingSecretMessage: _isSendingSecretMessage,
-                            onSendSecretMessage: _secretComposerTarget == null
-                                ? null
-                                : () => _sendPrivateRoomMessageToParticipant(
-                                    _secretComposerTarget!,
-                                  ),
-                            onCancelSecretMessage: _closeSecretComposer,
+                                  if (mounted) _showSnackBar('Mic released.');
+                                } catch (e) {
+                                  if (mounted)
+                                    _showSnackBar('Could not release mic: $e');
+                                }
+                              },
+                              onJoinQueue: allowMicRequests
+                                  ? () async {
+                                      // Grab the mic directly, displacing any
+                                      // current stage user (co-hosts are
+                                      // unaffected — their role stays 'cohost').
+                                      try {
+                                        await micAccessController
+                                            .grabMicDirectly(
+                                              roomId: widget.roomId,
+                                              userId: user.id,
+                                            );
+                                        if (mounted) {
+                                          _showSnackBar('You have the mic!');
+                                        }
+                                      } catch (e) {
+                                        if (mounted) {
+                                          _showSnackBar(
+                                            'Could not grab mic: $e',
+                                          );
+                                        }
+                                      }
+                                    }
+                                  : null,
+                              onWhisper: (p) async {
+                                final currentUser = ref.read(userProvider);
+                                if (currentUser == null) return;
+                                try {
+                                  final conversationId = await ref
+                                      .read(messagingControllerProvider)
+                                      .createDirectConversation(
+                                        userId1: currentUser.id,
+                                        user1Name: currentUser.username,
+                                        user1AvatarUrl: currentUser.avatarUrl,
+                                        userId2: p.userId,
+                                        user2Name:
+                                            _senderDisplayNameById[p.userId] ??
+                                            p.userId,
+                                        user2AvatarUrl:
+                                            _senderAvatarUrlById[p.userId],
+                                      );
+                                  if (!context.mounted) return;
+                                  FloatingWhisperPanel.show(
+                                    context,
+                                    ref,
+                                    conversationId: conversationId,
+                                    peerName:
+                                        _senderDisplayNameById[p.userId] ??
+                                        p.userId,
+                                    peerAvatarUrl:
+                                        _senderAvatarUrlById[p.userId],
+                                  );
+                                } catch (e) {
+                                  _showSnackBar('Could not open whisper: $e');
+                                }
+                              },
+                              onSecretMessage: (p) =>
+                                  _openSecretComposerForParticipant(p),
+                              secretComposerTarget: _secretComposerTarget,
+                              secretComposerTextController:
+                                  _secretMessageController,
+                              isSendingSecretMessage: _isSendingSecretMessage,
+                              onSendSecretMessage: _secretComposerTarget == null
+                                  ? null
+                                  : () => _sendPrivateRoomMessageToParticipant(
+                                      _secretComposerTarget!,
+                                    ),
+                              onCancelSecretMessage: _closeSecretComposer,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                     ),
                   ),
                   if (_giftToasts.isNotEmpty)
@@ -5222,9 +5624,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   FloatingCamWindowLayer(
                     contentBuilder: _buildFloatingCamWindowContent,
                     onReattach: (id) {
-                      ref
-                          .read(floatingCamWindowsProvider.notifier)
-                          .remove(id);
+                      ref.read(floatingCamWindowsProvider.notifier).remove(id);
                     },
                   ),
                   // Floating emoji particles (gift animations)
@@ -5233,100 +5633,102 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   ),
                   // Buzz overlay (full-screen flash on receipt)
                   Positioned.fill(
-                    child: BuzzOverlay(key: _buzzKey, child: const SizedBox.expand()),
+                    child: BuzzOverlay(
+                      key: _buzzKey,
+                      child: const SizedBox.expand(),
+                    ),
                   ),
                 ],
               ),
-              bottomNavigationBar: !isMobile ? null : Container(
-                color: const Color(0xFF161A21),
-                child: Row(
-                  children: [
-                    _MobileTabBtn(
-                      icon: Icons.videocam_outlined,
-                      activeIcon: Icons.videocam_rounded,
-                      label: 'Camera',
-                      active: _mobileTab == 0,
-                      onTap: () => setState(() => _mobileTab = 0),
+              bottomNavigationBar: !isMobile
+                  ? null
+                  : Container(
+                      color: const Color(0xFF161A21),
+                      child: Row(
+                        children: [
+                          _MobileTabBtn(
+                            icon: Icons.videocam_outlined,
+                            activeIcon: Icons.videocam_rounded,
+                            label: 'Camera',
+                            active: _mobileTab == 0,
+                            onTap: () => setState(() => _mobileTab = 0),
+                          ),
+                          _MobileTabBtn(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            activeIcon: Icons.chat_bubble_rounded,
+                            label: 'Chat',
+                            active: _mobileTab == 1,
+                            onTap: () => setState(() => _mobileTab = 1),
+                          ),
+                          _MobileTabBtn(
+                            icon: Icons.people_outline_rounded,
+                            activeIcon: Icons.people_rounded,
+                            label: 'People',
+                            active: _mobileTab == 2,
+                            onTap: () => setState(() => _mobileTab = 2),
+                          ),
+                        ],
+                      ),
                     ),
-                    _MobileTabBtn(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      activeIcon: Icons.chat_bubble_rounded,
-                      label: 'Chat',
-                      active: _mobileTab == 1,
-                      onTap: () => setState(() => _mobileTab = 1),
-                    ),
-                    _MobileTabBtn(
-                      icon: Icons.people_outline_rounded,
-                      activeIcon: Icons.people_rounded,
-                      label: 'People',
-                      active: _mobileTab == 2,
-                      onTap: () => setState(() => _mobileTab = 2),
-                    ),
-                  ],
-                ),
-              ),
             );
           },
         );
       },
       loading: () => AppPageScaffold(
-          backgroundColor: const Color(0xFF0D0A0C),
-          safeArea: false,
-          maxContentWidth: double.infinity,
-          body: Stack(
-            children: [
-              const AppLoadingView(label: 'Joining live room...'),
-              // Show mic/cam controls while participant stream is loading so
-              // users don't lose their buttons during reconnect/init lag.
-              Positioned(
-                  bottom: 40,
-                  left: 12,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xB310131A),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0x30D4A853)),
+        backgroundColor: const Color(0xFF0D0A0C),
+        safeArea: false,
+        maxContentWidth: double.infinity,
+        body: Stack(
+          children: [
+            const AppLoadingView(label: 'Joining live room...'),
+            // Show mic/cam controls while participant stream is loading so
+            // users don't lose their buttons during reconnect/init lag.
+            Positioned(
+              bottom: 40,
+              left: 12,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xB310131A),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0x30D4A853)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        LiveRoomMediaActionStrip(
+                          isCallReady: _isCallReady,
+                          hasRtcService: _agoraService != null,
+                          isMicMuted: _isMicMuted,
+                          isVideoEnabled: _isVideoEnabled,
+                          isSharingSystemAudio: _isSharingSystemAudio,
+                          isMicActionInFlight: _isMicActionInFlight,
+                          isVideoActionInFlight: _isVideoActionInFlight,
+                          isSystemAudioActionInFlight:
+                              _isSystemAudioActionInFlight,
+                          localAudioLevel: _agoraService?.localAudioLevel ?? 0,
+                          onToggleMic: _toggleMic,
+                          onToggleVideo: _toggleVideo,
+                          showSystemAudioButton: kIsWeb,
+                          onToggleSystemAudio: _toggleSystemAudio,
+                          showMicLevel: false,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            LiveRoomMediaActionStrip(
-                              isCallReady: _isCallReady,
-                              hasRtcService: _agoraService != null,
-                              isMicMuted: _isMicMuted,
-                              isVideoEnabled: _isVideoEnabled,
-                              isSharingSystemAudio: _isSharingSystemAudio,
-                              isMicActionInFlight: _isMicActionInFlight,
-                              isVideoActionInFlight: _isVideoActionInFlight,
-                              isSystemAudioActionInFlight:
-                                  _isSystemAudioActionInFlight,
-                              localAudioLevel: _agoraService?.localAudioLevel ?? 0,
-                              onToggleMic: _toggleMic,
-                              onToggleVideo: _toggleVideo,
-                              showSystemAudioButton: kIsWeb,
-                              onToggleSystemAudio: _toggleSystemAudio,
-                              showMicLevel: false,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
+      ),
       error: (e, _) => AppPageScaffold(
         safeArea: false,
         maxContentWidth: double.infinity,
-        body: AppErrorView(
-          error: e,
-          fallbackContext: 'load the live room',
-        ),
+        body: AppErrorView(error: e, fallbackContext: 'load the live room'),
       ),
     );
   }
@@ -5479,7 +5881,8 @@ class _RoomRosterSidebar extends StatelessWidget {
     for (final uid in remoteUids) {
       if (isSpeakingFn(uid)) {
         final userId = uidToUserId(uid);
-        if (userId != null && userId != currentUserId) speakingUserIds.add(userId);
+        if (userId != null && userId != currentUserId)
+          speakingUserIds.add(userId);
       }
     }
 
@@ -5494,13 +5897,14 @@ class _RoomRosterSidebar extends StatelessWidget {
     };
 
     // ── Sort: host → cohost → mod → audience (self excluded) ──
-    final sorted = [...participants.where((p) => p.userId != currentUserId)]..sort((a, b) {
+    final sorted = [...participants.where((p) => p.userId != currentUserId)]
+      ..sort((a, b) {
         int rank(String r) => switch (r) {
-              'host' || 'owner' => 0,
-              'cohost' => 1,
-              'moderator' => 2,
-              _ => 3,
-            };
+          'host' || 'owner' => 0,
+          'cohost' => 1,
+          'moderator' => 2,
+          _ => 3,
+        };
         return rank(a.role).compareTo(rank(b.role));
       });
 
@@ -5520,11 +5924,12 @@ class _RoomRosterSidebar extends StatelessWidget {
           if (speakingUserIds.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text('—',
-                  style: TextStyle(color: _kSubtle, fontSize: 12)),
+              child: Text('—', style: TextStyle(color: _kSubtle, fontSize: 12)),
             )
           else
-            ...speakingUserIds.take(3).map(
+            ...speakingUserIds
+                .take(3)
+                .map(
                   (uid) => _RosterRow(
                     displayName: displayNameById[uid] ?? uid,
                     vipLevel: vipLevelById[uid] ?? 0,
@@ -5555,24 +5960,29 @@ class _RoomRosterSidebar extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: currentUserRole == 'stage'
-                      ? const Color(0xFFE53935)  // red = you are on mic
+                      ? const Color(0xFFE53935) // red = you are on mic
                       : isMicFree
-                          ? const Color(0xFF1DB954)  // green = mic is free
-                          : const Color(0xFF1756C8), // blue = join queue
+                      ? const Color(0xFF1DB954) // green = mic is free
+                      : const Color(0xFF1756C8), // blue = join queue
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   textStyle: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5)),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
                 ),
-                onPressed: currentUserRole == 'stage' ? onReleaseMic : onJoinQueue,
+                onPressed: currentUserRole == 'stage'
+                    ? onReleaseMic
+                    : onJoinQueue,
                 child: Text(
                   currentUserRole == 'stage'
                       ? 'Release Mic'
                       : isMicFree
-                          ? 'Grab Mic'
-                          : 'Join Queue to Talk',
+                      ? 'Grab Mic'
+                      : 'Join Queue to Talk',
                 ),
               ),
             ),
@@ -5587,11 +5997,15 @@ class _RoomRosterSidebar extends StatelessWidget {
           if (onCamParticipants.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text('No cameras yet',
-                  style: TextStyle(color: _kSubtle, fontSize: 11)),
+              child: Text(
+                'No cameras yet',
+                style: TextStyle(color: _kSubtle, fontSize: 11),
+              ),
             )
           else
-            ...onCamParticipants.take(8).map(
+            ...onCamParticipants
+                .take(8)
+                .map(
                   (p) => _RosterRow(
                     displayName: displayNameById[p.userId] ?? p.userId,
                     vipLevel: vipLevelById[p.userId] ?? 0,
@@ -5618,38 +6032,53 @@ class _RoomRosterSidebar extends StatelessWidget {
             iconColor: const Color(0xFFB09080),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              itemCount: sorted.length,
-              itemBuilder: (_, i) {
-                final p = sorted[i];
-                final vip = vipLevelById[p.userId] ?? 0;
-                return GestureDetector(
-                  onTap: onWhisper == null ? null : () => onWhisper!(p),
-                  child: _RosterRow(
-                    displayName: displayNameById[p.userId] ?? p.userId,
-                    vipLevel: vip,
-                    nameColor: _nameColor(vip),
-                    gender: genderById[p.userId],
-                    roleLabel: _roleLabel(p),
-                    camOn: p.camOn,
-                    trailingIcon: p.role == 'host' || p.role == 'owner'
-                        ? Icons.star
-                        : p.role == 'cohost'
-                            ? Icons.star_half
-                            : null,
-                    trailingColor: const Color(0xFFFFD700),
-                    hasRecentChat: recentChatters.contains(p.userId),
-                    onSecretMessage: onSecretMessage == null
-                        ? null
-                        : () => onSecretMessage!(p),
-                    onDirectMessage: onWhisper == null
-                        ? null
-                        : () => onWhisper!(p),
+            child: sorted.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'No one else is here yet. Invite people to join the room.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: sorted.length,
+                    itemBuilder: (_, i) {
+                      final p = sorted[i];
+                      final vip = vipLevelById[p.userId] ?? 0;
+                      return GestureDetector(
+                        onTap: onWhisper == null ? null : () => onWhisper!(p),
+                        child: _RosterRow(
+                          displayName: displayNameById[p.userId] ?? p.userId,
+                          vipLevel: vip,
+                          nameColor: _nameColor(vip),
+                          gender: genderById[p.userId],
+                          roleLabel: _roleLabel(p),
+                          camOn: p.camOn,
+                          trailingIcon: p.role == 'host' || p.role == 'owner'
+                              ? Icons.star
+                              : p.role == 'cohost'
+                              ? Icons.star_half
+                              : null,
+                          trailingColor: const Color(0xFFFFD700),
+                          hasRecentChat: recentChatters.contains(p.userId),
+                          onSecretMessage: onSecretMessage == null
+                              ? null
+                              : () => onSecretMessage!(p),
+                          onDirectMessage: onWhisper == null
+                              ? null
+                              : () => onWhisper!(p),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           if (secretComposerTarget != null &&
               secretComposerTextController != null)
@@ -5778,8 +6207,7 @@ class _RosterRow extends StatelessWidget {
                 const SizedBox(width: 3),
                 Text(
                   '💎$vipLevel',
-                  style: const TextStyle(
-                      fontSize: 9, color: Color(0xFF7777BB)),
+                  style: const TextStyle(fontSize: 9, color: Color(0xFF7777BB)),
                 ),
               ],
               if (trailingIcon != null) ...[
@@ -5856,10 +6284,7 @@ class _RosterChip extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.26),
-            color.withValues(alpha: 0.1),
-          ],
+          colors: [color.withValues(alpha: 0.26), color.withValues(alpha: 0.1)],
         ),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withValues(alpha: 0.4)),
@@ -5981,13 +6406,12 @@ class _InlineSecretComposer extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF241820),
-            Color(0xFF1A141B),
-          ],
+          colors: [Color(0xFF241820), Color(0xFF1A141B)],
         ),
         border: Border(
-          top: BorderSide(color: const Color(0xFFD4A853).withValues(alpha: 0.24)),
+          top: BorderSide(
+            color: const Color(0xFFD4A853).withValues(alpha: 0.24),
+          ),
         ),
       ),
       child: Column(
@@ -6040,8 +6464,10 @@ class _InlineSecretComposer extends StatelessWidget {
                     hintStyle: const TextStyle(color: Colors.white38),
                     filled: true,
                     fillColor: const Color(0xFF0F0D11),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 9,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(color: Color(0x33D4A853)),
@@ -6165,8 +6591,9 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
     final micAccessController = ref.read(micAccessControllerProvider);
     final roomPolicyController = ref.read(roomPolicyControllerProvider);
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
-    final micRequestsAsync =
-        ref.watch(roomMicAccessRequestsProvider(widget.roomId));
+    final micRequestsAsync = ref.watch(
+      roomMicAccessRequestsProvider(widget.roomId),
+    );
     final isLocked =
         ref.watch(roomStreamProvider(widget.roomId)).valueOrNull?.isLocked ??
         false;
@@ -6184,8 +6611,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SingleChildScrollView(
             controller: scrollController,
@@ -6220,8 +6646,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                           .doc(widget.roomId)
                           .snapshots(),
                       builder: (context, snap) {
-                        final data =
-                            snap.data?.data() as Map<String, dynamic>?;
+                        final data = snap.data?.data() as Map<String, dynamic>?;
                         final slow =
                             (data?['slowModeSeconds'] as num?)?.toInt() ?? 0;
                         return SizedBox(
@@ -6229,20 +6654,26 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                           child: DropdownButtonFormField<int>(
                             initialValue: slow,
                             decoration: const InputDecoration(
-                                labelText: 'Slow mode'),
+                              labelText: 'Slow mode',
+                            ),
                             items: const [
                               DropdownMenuItem(value: 0, child: Text('Off')),
                               DropdownMenuItem(
-                                  value: 5, child: Text('5 seconds')),
+                                value: 5,
+                                child: Text('5 seconds'),
+                              ),
                               DropdownMenuItem(
-                                  value: 10, child: Text('10 seconds')),
+                                value: 10,
+                                child: Text('10 seconds'),
+                              ),
                               DropdownMenuItem(
-                                  value: 30, child: Text('30 seconds')),
+                                value: 30,
+                                child: Text('30 seconds'),
+                              ),
                             ],
                             onChanged: (val) {
                               if (val != null) {
-                                hostControls.toggleSlowMode(
-                                    widget.roomId, val);
+                                hostControls.toggleSlowMode(widget.roomId, val);
                               }
                             },
                           ),
@@ -6254,9 +6685,9 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                       child: SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Lock room'),
-                        subtitle: Text(isLocked
-                            ? 'New listeners blocked'
-                            : 'Room is open'),
+                        subtitle: Text(
+                          isLocked ? 'New listeners blocked' : 'Room is open',
+                        ),
                         value: isLocked,
                         onChanged: (_) =>
                             hostControls.toggleLockRoom(widget.roomId),
@@ -6267,9 +6698,9 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                       child: SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Chat'),
-                        subtitle: Text(allowChat
-                            ? 'Members can message'
-                            : 'Chat paused'),
+                        subtitle: Text(
+                          allowChat ? 'Members can message' : 'Chat paused',
+                        ),
                         value: allowChat,
                         onChanged: (_) =>
                             hostControls.toggleAllowChat(widget.roomId),
@@ -6280,9 +6711,11 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                       child: SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Mic requests'),
-                        subtitle: Text(allowMicRequests
-                            ? 'Users can request stage access'
-                            : 'Requests paused'),
+                        subtitle: Text(
+                          allowMicRequests
+                              ? 'Users can request stage access'
+                              : 'Requests paused',
+                        ),
                         value: allowMicRequests,
                         onChanged: (_) =>
                             hostControls.toggleAllowMicRequests(widget.roomId),
@@ -6293,9 +6726,11 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                       child: SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Gifts'),
-                        subtitle: Text(allowGifts
-                            ? 'Gift interactions enabled'
-                            : 'Gifts paused'),
+                        subtitle: Text(
+                          allowGifts
+                              ? 'Gift interactions enabled'
+                              : 'Gifts paused',
+                        ),
                         value: allowGifts,
                         onChanged: (_) =>
                             hostControls.toggleAllowGifts(widget.roomId),
@@ -6304,9 +6739,11 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                     SizedBox(
                       width: 220,
                       child: DropdownButtonFormField<int>(
-                        initialValue: roomPolicyAsync.valueOrNull?.micLimit ?? 6,
-                        decoration:
-                            const InputDecoration(labelText: 'Mic seats'),
+                        initialValue:
+                            roomPolicyAsync.valueOrNull?.micLimit ?? 6,
+                        decoration: const InputDecoration(
+                          labelText: 'Mic seats',
+                        ),
                         items: const [
                           DropdownMenuItem(value: 2, child: Text('2 seats')),
                           DropdownMenuItem(value: 4, child: Text('4 seats')),
@@ -6316,16 +6753,20 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                         onChanged: (value) {
                           if (value == null) return;
                           roomPolicyController.setMicLimit(
-                              widget.roomId, value);
+                            widget.roomId,
+                            value,
+                          );
                         },
                       ),
                     ),
                     SizedBox(
                       width: 220,
                       child: DropdownButtonFormField<int>(
-                        initialValue: roomPolicyAsync.valueOrNull?.camLimit ?? 6,
-                        decoration:
-                            const InputDecoration(labelText: 'Camera seats'),
+                        initialValue:
+                            roomPolicyAsync.valueOrNull?.camLimit ?? 6,
+                        decoration: const InputDecoration(
+                          labelText: 'Camera seats',
+                        ),
                         items: const [
                           DropdownMenuItem(value: 2, child: Text('2 seats')),
                           DropdownMenuItem(value: 4, child: Text('4 seats')),
@@ -6335,7 +6776,9 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                         onChanged: (value) {
                           if (value == null) return;
                           roomPolicyController.setCamLimit(
-                              widget.roomId, value);
+                            widget.roomId,
+                            value,
+                          );
                         },
                       ),
                     ),
@@ -6373,63 +6816,75 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                     }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: pending.map((request) {
-                        return Card(
-                          child: ListTile(
-                            title: Text(
-                                'Mic request from ${request.requesterId}'),
-                            subtitle: Text(
-                                'Approve for stage access • Priority ${request.priority}'),
-                            trailing: Wrap(
-                              spacing: 4,
-                              children: [
-                                IconButton(
-                                  onPressed: () =>
-                                      micAccessController.bumpPriority(
-                                          widget.roomId, request.id),
-                                  icon: const Icon(Icons.arrow_upward),
-                                  tooltip: 'Bump priority',
+                      children: pending
+                          .map((request) {
+                            return Card(
+                              child: ListTile(
+                                title: Text(
+                                  'Mic request from ${request.requesterId}',
                                 ),
-                                IconButton(
-                                  onPressed: () =>
-                                      micAccessController.lowerPriority(
-                                          widget.roomId, request.id),
-                                  icon: const Icon(Icons.arrow_downward),
-                                  tooltip: 'Lower priority',
+                                subtitle: Text(
+                                  'Approve for stage access • Priority ${request.priority}',
                                 ),
-                                IconButton(
-                                  onPressed: () =>
-                                      micAccessController.approveRequest(
-                                          widget.roomId, request),
-                                  icon: const Icon(
-                                      Icons.check_circle_outline),
-                                  tooltip: 'Approve',
+                                trailing: Wrap(
+                                  spacing: 4,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () =>
+                                          micAccessController.bumpPriority(
+                                            widget.roomId,
+                                            request.id,
+                                          ),
+                                      icon: const Icon(Icons.arrow_upward),
+                                      tooltip: 'Bump priority',
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          micAccessController.lowerPriority(
+                                            widget.roomId,
+                                            request.id,
+                                          ),
+                                      icon: const Icon(Icons.arrow_downward),
+                                      tooltip: 'Lower priority',
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          micAccessController.approveRequest(
+                                            widget.roomId,
+                                            request,
+                                          ),
+                                      icon: const Icon(
+                                        Icons.check_circle_outline,
+                                      ),
+                                      tooltip: 'Approve',
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          micAccessController.denyRequest(
+                                            widget.roomId,
+                                            request.id,
+                                          ),
+                                      icon: const Icon(Icons.cancel_outlined),
+                                      tooltip: 'Deny',
+                                    ),
+                                    IconButton(
+                                      onPressed: () => micAccessController
+                                          .expireNow(widget.roomId, request.id),
+                                      icon: const Icon(
+                                        Icons.timer_off_outlined,
+                                      ),
+                                      tooltip: 'Expire now',
+                                    ),
+                                  ],
                                 ),
-                                IconButton(
-                                  onPressed: () =>
-                                      micAccessController.denyRequest(
-                                          widget.roomId, request.id),
-                                  icon: const Icon(Icons.cancel_outlined),
-                                  tooltip: 'Deny',
-                                ),
-                                IconButton(
-                                  onPressed: () =>
-                                      micAccessController.expireNow(
-                                          widget.roomId, request.id),
-                                  icon: const Icon(
-                                      Icons.timer_off_outlined),
-                                  tooltip: 'Expire now',
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(growable: false),
+                              ),
+                            );
+                          })
+                          .toList(growable: false),
                     );
                   },
                   loading: () => const LinearProgressIndicator(),
-                  error: (e, _) =>
-                      Text('Could not load mic requests: $e'),
+                  error: (e, _) => Text('Could not load mic requests: $e'),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -6446,11 +6901,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
 // ─────────────────────────────────────────────────────────────────────────────
 /// One numbered step row in the "Share PC audio" guide bottom sheet.
 class _SystemAudioStep extends StatelessWidget {
-  const _SystemAudioStep({
-    required this.number,
-    required this.text,
-    this.icon,
-  });
+  const _SystemAudioStep({required this.number, required this.text, this.icon});
 
   final String number;
   final String text;
@@ -6490,10 +6941,7 @@ class _SystemAudioStep extends StatelessWidget {
                   const SizedBox(width: 4),
                 ],
                 Expanded(
-                  child: Text(
-                    text,
-                    style: const TextStyle(fontSize: 13),
-                  ),
+                  child: Text(text, style: const TextStyle(fontSize: 13)),
                 ),
               ],
             ),
@@ -6568,10 +7016,7 @@ class _TickerBannerState extends State<_TickerBanner>
             },
             child: Text(
               widget.text,
-              style: const TextStyle(
-                color: Color(0xFFB09080),
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: Color(0xFFB09080), fontSize: 11),
               maxLines: 1,
               softWrap: false,
               overflow: TextOverflow.visible,
@@ -6728,4 +7173,3 @@ class _AdminBtn extends StatelessWidget {
     );
   }
 }
-

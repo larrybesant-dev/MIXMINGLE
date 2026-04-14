@@ -49,12 +49,12 @@ RoomParticipantModel _makeParticipant({
 
 void main() {
   group('OnMicPanel', () {
-    testWidgets('renders nothing when participant list is empty', (tester) async {
+    testWidgets('renders an empty state when participant list is empty', (tester) async {
       await tester.pumpWidget(_buildPanel(participants: []));
       await tester.pump();
       expect(find.byType(OnMicPanel), findsOneWidget);
-      // Panel hides itself when empty.
-      expect(find.text('On Mic'), findsNothing);
+      expect(find.textContaining('On Mic'), findsOneWidget);
+      expect(find.text('Nobody on mic yet'), findsOneWidget);
     });
 
     testWidgets('renders participant name and host badge for host', (tester) async {

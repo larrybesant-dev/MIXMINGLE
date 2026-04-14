@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/environment.dart';
 import '../../../../core/layout/app_layout.dart';
 import '../../../../core/telemetry/app_telemetry.dart';
 import '../../../../core/theme.dart';
@@ -55,6 +56,7 @@ class _FriendsSchemaBridgeViewState
     final notifier = ref.read(friendPaneRenderModeProvider.notifier);
     final health = ref.watch(schemaModuleHealthProvider('friends'));
     final isDesktop = context.isExpandedLayout;
+    final showGovernance = currentEnv == Environment.dev;
     final currentUser = ref.watch(userProvider);
     final authUserId = ref.watch(schemaAuthUserIdProvider).value;
     final bootTarget = ref.watch(schemaConversationFirstBootTargetProvider);
@@ -79,14 +81,16 @@ class _FriendsSchemaBridgeViewState
 
     return Column(
       children: [
-        _ModeHeader(
-          mode: mode,
-          onModeChanged: notifier.setMode,
-          isDesktop: isDesktop,
-          health: health,
-        ),
-        if (kDebugMode) const _BootTimelineStrip(),
-        const Divider(height: 1, color: VelvetNoir.outlineVariant),
+        if (showGovernance) ...[
+          _ModeHeader(
+            mode: mode,
+            onModeChanged: notifier.setMode,
+            isDesktop: isDesktop,
+            health: health,
+          ),
+          if (kDebugMode) const _BootTimelineStrip(),
+          const Divider(height: 1, color: VelvetNoir.outlineVariant),
+        ],
         Expanded(
           child: switch (mode) {
             FriendPaneRenderMode.legacy => const FriendsPaneView(showHeader: false),

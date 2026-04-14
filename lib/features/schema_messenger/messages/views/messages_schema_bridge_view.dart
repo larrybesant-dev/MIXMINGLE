@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../config/environment.dart';
 import '../../../../core/theme.dart';
 import '../../../messaging/panes/messages_pane_view.dart';
 import '../../consistency/architecture_health_interpretation_provider.dart';
@@ -28,18 +29,21 @@ class MessagesSchemaBridgeView extends ConsumerWidget {
     final health = ref.watch(schemaModuleHealthProvider('messages'));
     final interpretation = ref.watch(architectureHealthInterpretationProvider);
     final isDesktop = MediaQuery.sizeOf(context).width >= 1100;
+    final showGovernance = currentEnv == Environment.dev;
 
     return Column(
       children: [
-        _GovernanceHeader(
-          mode: mode,
-          health: health,
-          isDesktop: isDesktop,
-          interpretationLabel: _interpretationLabel(interpretation.classification),
-          onModeChanged:
-              ref.read(messagesPaneRenderModeProvider.notifier).setMode,
-        ),
-        const Divider(height: 1, color: VelvetNoir.outlineVariant),
+        if (showGovernance) ...[
+          _GovernanceHeader(
+            mode: mode,
+            health: health,
+            isDesktop: isDesktop,
+            interpretationLabel: _interpretationLabel(interpretation.classification),
+            onModeChanged:
+                ref.read(messagesPaneRenderModeProvider.notifier).setMode,
+          ),
+          const Divider(height: 1, color: VelvetNoir.outlineVariant),
+        ],
         Expanded(
           child: switch (mode) {
             MessagesPaneRenderMode.legacy => MessagesPaneView(

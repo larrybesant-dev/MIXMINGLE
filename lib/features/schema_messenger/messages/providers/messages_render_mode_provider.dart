@@ -8,7 +8,7 @@ enum MessagesPaneRenderMode {
 
 class MessagesPaneRenderModeController extends Notifier<MessagesPaneRenderMode> {
   @override
-  MessagesPaneRenderMode build() => MessagesPaneRenderMode.dual;
+  MessagesPaneRenderMode build() => MessagesPaneRenderMode.legacy;
 
   void setMode(MessagesPaneRenderMode mode) {
     state = mode;

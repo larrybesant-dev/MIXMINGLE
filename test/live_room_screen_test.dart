@@ -125,7 +125,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('No messages yet.'), findsOneWidget);
+    expect(find.text('No messages yet'), findsOneWidget);
     expect(find.textContaining('1 online'), findsOneWidget);
     expect(find.text('Send'), findsOneWidget);
     expect(find.byTooltip('Leave Room'), findsOneWidget);

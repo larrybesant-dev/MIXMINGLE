@@ -5,7 +5,7 @@ import '../providers/participant_providers.dart';
 import 'room_user_tile.dart';
 
 /// Panel shown above the chat that displays everyone currently on the mic
-/// (roles: host, cohost, stage). Hides itself when the list is empty.
+/// (roles: host, cohost, stage). Shows a small placeholder when empty.
 ///
 /// Renders a [RoomUserTile] per participant in a horizontally-scrollable row,
 /// with the host appearing first and larger, followed by co-hosts and stage
@@ -37,11 +37,9 @@ class OnMicPanel extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (participants) {
-        if (participants.isEmpty) return const SizedBox.shrink();
-
         // Sort: host first, then cohost, then stage.
-        final sorted = [...participants]..sort((a, b) =>
-            _roleOrder(a.role).compareTo(_roleOrder(b.role)));
+        final sorted = [...participants]
+          ..sort((a, b) => _roleOrder(a.role).compareTo(_roleOrder(b.role)));
 
         return Container(
           decoration: const BoxDecoration(
@@ -73,34 +71,46 @@ class OnMicPanel extends ConsumerWidget {
                   ],
                 ),
               ),
-              // ── Tile row (horizontal scroll) ─────────────────────────
-              SizedBox(
-                height: 104,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
+              if (sorted.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  child: Text(
+                    'Nobody on mic yet',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  itemCount: sorted.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final p = sorted[index];
-                    final name = displayNameById[p.userId] ?? p.userId;
-                    final isMe = p.userId == currentUserId;
-                    return RoomUserTile(
-                      displayName: name,
-                      role: p.role,
-                      isMicOn: p.micOn,
-                      isMuted: p.isMuted,
-                      isMe: isMe,
-                      micExpiresAt: p.micExpiresAt,
-                      layout: RoomUserTileLayout.grid,
-                      compact: true,
-                    );
-                  },
+                )
+              else
+                SizedBox(
+                  height: 104,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    itemCount: sorted.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final p = sorted[index];
+                      final name = displayNameById[p.userId] ?? p.userId;
+                      final isMe = p.userId == currentUserId;
+                      return RoomUserTile(
+                        displayName: name,
+                        role: p.role,
+                        isMicOn: p.micOn,
+                        isMuted: p.isMuted,
+                        isMe: isMe,
+                        micExpiresAt: p.micExpiresAt,
+                        layout: RoomUserTileLayout.grid,
+                        compact: true,
+                      );
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
         );
@@ -141,9 +151,10 @@ class _PulsingMicIconState extends State<_PulsingMicIcon>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _opacity = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _opacity = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
