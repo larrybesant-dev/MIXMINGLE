@@ -133,6 +133,69 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('LiveRoomScreen shows the current user in the sidebar when live', (
+    WidgetTester tester,
+  ) async {
+    await configureViewport(tester);
+    final firestore = FakeFirebaseFirestore();
+    await firestore.collection('rooms').doc('room-a').set({
+      'hostId': 'host-1',
+      'isLocked': false,
+      'slowModeSeconds': 0,
+    });
+
+    final me = RoomParticipantModel(
+      userId: 'user-1',
+      role: 'stage',
+      camOn: true,
+      micOn: true,
+      joinedAt: DateTime(2026, 1, 1),
+      lastActiveAt: DateTime(2026, 1, 1),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          currentParticipantProvider.overrideWith((ref, args) => Stream.value(me)),
+          participantsStreamProvider.overrideWith((ref, roomId) => Stream.value([me])),
+          participantCountProvider.overrideWith((ref, roomId) => Stream.value(1)),
+          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          hostProvider.overrideWith((ref, roomId) => Stream.value(Host('host-1'))),
+          coHostsProvider.overrideWith((ref, roomId) => Stream.value(const <Cohost>[])),
+          roomPresenceStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomPresenceModel(
+                userId: 'user-1',
+                isOnline: true,
+                lastHeartbeatAt: null,
+                lastSeenAt: null,
+              ),
+            ]),
+          ),
+          userProvider.overrideWithValue(
+            UserModel(
+              id: 'user-1',
+              email: 'user1@mixvy.com',
+              username: 'User One',
+              createdAt: DateTime(2026, 1, 1),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('On Cam 1'), findsOneWidget);
+    expect(find.text('Chatting 1'), findsOneWidget);
+    expect(find.text('No one else is here yet. Invite people to join the room.'), findsNothing);
+
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   test('PresenceModel reads legacy presence schema without Firestore writes', () {
     final presence = PresenceModel.fromJson({
       'userId': 'user-2',

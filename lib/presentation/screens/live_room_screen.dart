@@ -5888,37 +5888,53 @@ class _RoomRosterSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ── Compute speaking user IDs (others only) ───────────────
+    String displayNameFor(String userId) {
+      final name = displayNameById[userId] ?? userId;
+      return userId == currentUserId ? '$name (You)' : name;
+    }
+
+    // ── Compute speaking user IDs (including local user) ───────────────
     final speakingUserIds = <String>{};
+    if (localSpeaking) {
+      speakingUserIds.add(currentUserId);
+    }
     for (final uid in remoteUids) {
       if (isSpeakingFn(uid)) {
         final userId = uidToUserId(uid);
-        if (userId != null && userId != currentUserId)
+        if (userId != null) {
           speakingUserIds.add(userId);
+        }
       }
     }
 
     // ── On-cam participants ───────────────────────────────────
-    // Exclude the current user from all roster display sections — users
-    // should only see others in the list, never themselves.
     final onCamParticipants = participants
-        .where((p) => p.userId != currentUserId && p.camOn)
+        .where((p) => p.userId == currentUserId ? (isLocalVideoEnabled || p.camOn) : p.camOn)
         .toList(growable: false);
     final participantByUserId = <String, RoomParticipantModel>{
       for (final participant in participants) participant.userId: participant,
     };
 
-    // ── Sort: host → cohost → mod → audience (self excluded) ──
-    final sorted = [...participants.where((p) => p.userId != currentUserId)]
-      ..sort((a, b) {
-        int rank(String r) => switch (r) {
-          'host' || 'owner' => 0,
-          'cohost' => 1,
-          'moderator' => 2,
-          _ => 3,
-        };
-        return rank(a.role).compareTo(rank(b.role));
-      });
+    // ── Sort: host → cohost → mod → audience, with self visible ──
+    final sorted = [...participants]..sort((a, b) {
+      int rank(String r) => switch (r) {
+        'host' || 'owner' => 0,
+        'cohost' => 1,
+        'moderator' => 2,
+        _ => 3,
+      };
+      final rankCompare = rank(a.role).compareTo(rank(b.role));
+      if (rankCompare != 0) {
+        return rankCompare;
+      }
+      if (a.userId == currentUserId && b.userId != currentUserId) {
+        return -1;
+      }
+      if (b.userId == currentUserId && a.userId != currentUserId) {
+        return 1;
+      }
+      return 0;
+    });
 
     return ColoredBox(
       color: _kBg,
@@ -5943,7 +5959,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                 .take(3)
                 .map(
                   (uid) => _RosterRow(
-                    displayName: displayNameById[uid] ?? uid,
+                    displayName: displayNameFor(uid),
                     vipLevel: vipLevelById[uid] ?? 0,
                     nameColor: _nameColor(vipLevelById[uid] ?? 0),
                     roleLabel: _roleLabel(participantByUserId[uid]),
@@ -5961,7 +5977,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           const Divider(height: 1, thickness: 1, color: _kDivider),
           // ── Mic Queue ────────────────────────────────────────
           _RosterHeader(
-            label: 'Mic Queue  $pendingMicCount',
+            label: 'Mic Queue $pendingMicCount',
             icon: Icons.queue_music,
             iconColor: const Color(0xFFD4A853),
           ),
@@ -6002,7 +6018,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           const Divider(height: 1, thickness: 1, color: _kDivider),
           // ── On Cam ───────────────────────────────────────────
           _RosterHeader(
-            label: 'On Cam  ${onCamParticipants.length}',
+            label: 'On Cam ${onCamParticipants.length}',
             icon: Icons.videocam,
             iconColor: const Color(0xFF4CAF50),
           ),
@@ -6019,7 +6035,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                 .take(8)
                 .map(
                   (p) => _RosterRow(
-                    displayName: displayNameById[p.userId] ?? p.userId,
+                    displayName: displayNameFor(p.userId),
                     vipLevel: vipLevelById[p.userId] ?? 0,
                     nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
                     gender: genderById[p.userId],
@@ -6039,7 +6055,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           const Divider(height: 1, thickness: 1, color: _kDivider),
           // ── Chatting ─────────────────────────────────────────
           _RosterHeader(
-            label: 'Chatting  ${sorted.length}',
+            label: 'Chatting ${sorted.length}',
             icon: Icons.chat_bubble_outline,
             iconColor: const Color(0xFFB09080),
           ),
@@ -6068,7 +6084,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                       return GestureDetector(
                         onTap: onWhisper == null ? null : () => onWhisper!(p),
                         child: _RosterRow(
-                          displayName: displayNameById[p.userId] ?? p.userId,
+                          displayName: displayNameFor(p.userId),
                           vipLevel: vip,
                           nameColor: _nameColor(vip),
                           gender: genderById[p.userId],
@@ -6095,9 +6111,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           if (secretComposerTarget != null &&
               secretComposerTextController != null)
             _InlineSecretComposer(
-              targetDisplayName:
-                  displayNameById[secretComposerTarget!.userId] ??
-                  secretComposerTarget!.userId,
+              targetDisplayName: displayNameFor(secretComposerTarget!.userId),
               controller: secretComposerTextController!,
               isSending: isSendingSecretMessage,
               onCancel: onCancelSecretMessage,
