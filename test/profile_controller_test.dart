@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/profile/profile_controller.dart';
+import 'package:mixvy/features/profile/models/user_model.dart' as profile_model;
 import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -31,6 +32,16 @@ void main() {
   });
 
   group('ProfileController', () {
+    test('profile user model does not fall back to real displayName', () {
+      final user = profile_model.UserModel.fromJson({
+        'id': 'user123',
+        'email': 'user@example.com',
+        'displayName': 'Larry Besant',
+      });
+
+      expect(user.username, isEmpty);
+    });
+
     test('fetchProfile loads the Firestore user document', () async {
       await firestore.collection('users').doc('user123').set({
         'id': 'user123',

@@ -3777,8 +3777,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               );
             }
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
+            final rosterParticipants =
+                participantsAsync.valueOrNull ?? const <RoomParticipantModel>[];
             final participantsInRoom =
-                participantsAsync.valueOrNull ?? const [];
+                participant != null &&
+                    rosterParticipants.every((p) => p.userId != participant.userId)
+                ? <RoomParticipantModel>[...rosterParticipants, participant]
+                : rosterParticipants;
             _syncTelemetryForBuild(
               currentUserId: user.id,
               roomState: liveRoomState,
