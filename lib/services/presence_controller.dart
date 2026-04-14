@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -49,8 +50,8 @@ const Object _unset = Object();
 
 final presenceControllerProvider =
     NotifierProvider<PresenceController, PresenceControllerState>(
-  PresenceController.new,
-);
+      PresenceController.new,
+    );
 
 class PresenceController extends Notifier<PresenceControllerState>
     with WidgetsBindingObserver {
@@ -59,7 +60,15 @@ class PresenceController extends Notifier<PresenceControllerState>
   Timer? _heartbeatTimer;
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
 
-    RtdbPresenceService get _rtdb => ref.read(rtdbPresenceServiceProvider);
+  RtdbPresenceService get _rtdb => ref.read(rtdbPresenceServiceProvider);
+
+  bool get _hasFirebaseApp {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   PresenceControllerState build() {
@@ -73,6 +82,13 @@ class PresenceController extends Notifier<PresenceControllerState>
       _heartbeatTimer?.cancel();
       _heartbeatTimer = null;
     });
+
+    if (!_hasFirebaseApp) {
+      return const PresenceControllerState(
+        status: UserStatus.offline,
+        appState: PresenceAppState.detached,
+      );
+    }
 
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       unawaited(_handleAuthChange(previous?.uid, next.uid));

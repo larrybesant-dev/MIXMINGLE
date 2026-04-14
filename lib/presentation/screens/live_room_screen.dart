@@ -290,22 +290,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (user != null) {
       _firestore = ref.read(roomFirestoreProvider);
       _joinedUserId = user.id;
-      // Pre-seed own display name so local tile shows username immediately.
+      // Pre-seed the local cache immediately, but defer provider writes until
+      // after the first frame so the room joins cleanly without provider churn.
       if (user.username.trim().isNotEmpty) {
         _senderDisplayNameById[user.id] = user.username.trim();
       }
       _senderAvatarUrlById[user.id] = (user.avatarUrl?.isNotEmpty == true)
           ? user.avatarUrl
           : null;
-      _joinRoom(user.id);
-      if (kIsWeb) {
-        // WebRTC path: no Agora WASM pre-warm needed.
-        // Camera init is instant (browser native WebRTC).
-      } else {
-        // Pre-warm the Agora SDK in the background (mobile only) so WASM cold-start
-        // completes before the user taps "Turn on cam".
-        _preWarmAgora(user.id);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        if (user.username.trim().isNotEmpty) {
+          ref
+              .read(liveRoomControllerProvider(widget.roomId).notifier)
+              .cacheDisplayName(userId: user.id, displayName: user.username);
+        }
+        _joinRoom(user.id);
+        if (!kIsWeb) {
+          // Pre-warm the Agora SDK in the background (mobile only) so WASM
+          // cold-start completes before the user taps the camera button.
+          _preWarmAgora(user.id);
+        }
+      });
     }
 
     _giftEventsSubscription = ref.listenManual<AsyncValue<List<RoomGiftEvent>>>(
@@ -2003,14 +2011,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     });
   }
 
-  Future<void> _disconnectCall() async {
+  Future<void> _disconnectCall({bool resetUiState = true}) async {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _stopMicLevelPolling();
     final service = _agoraService;
     if (service is WebRtcRoomService) service.onSystemAudioStopped = null;
     _agoraService = null;
-    _mediaController.resetDisconnected();
+    if (resetUiState && mounted) {
+      _mediaController.resetDisconnected();
+    }
     if (service != null) {
       await service.dispose();
     }
@@ -2219,11 +2229,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required String currentUserId,
     required String currentUsername,
   }) {
-    if (senderId == currentUserId) {
-      final trimmed = currentUsername.trim();
-      return trimmed.isEmpty ? 'You' : trimmed;
-    }
-    return _senderDisplayNameById[senderId] ?? senderId;
+    final fallbackName = senderId == currentUserId ? currentUsername : senderId;
+    return getDisplayName(
+      uid: senderId,
+      resolvedDisplayName: _senderDisplayNameById[senderId],
+      fallbackName: fallbackName,
+    );
   }
 
   Future<void> _hydrateSenderDisplayNames({
@@ -2298,6 +2309,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         resolvedVip.putIfAbsent(id, () => 0);
         resolvedAvatar.putIfAbsent(id, () => null);
         resolvedGender.putIfAbsent(id, () => null);
+      }
+
+      final roomController = ref.read(
+        liveRoomControllerProvider(widget.roomId).notifier,
+      );
+      for (final entry in resolved.entries) {
+        roomController.cacheDisplayName(
+          userId: entry.key,
+          displayName: entry.value,
+        );
       }
 
       if (!mounted) {
@@ -3004,10 +3025,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
     }
 
-    presentationByUserId[currentUserId] = RoomUserPresentation(
-      displayName: currentUsername.trim().isEmpty
+    final resolvedCurrentUsername = currentUsername.trim();
+    final hydratedCurrentDisplayName =
+        presentationByUserId[currentUserId]?.displayName.trim() ?? '';
+    final preferredCurrentDisplayName = getDisplayName(
+      uid: currentUserId,
+      resolvedDisplayName: resolvedCurrentUsername,
+      fallbackName: hydratedCurrentDisplayName.isEmpty
           ? currentUserId
-          : currentUsername.trim(),
+          : hydratedCurrentDisplayName,
+    );
+
+    presentationByUserId[currentUserId] = RoomUserPresentation(
+      displayName: preferredCurrentDisplayName,
       avatarUrl: currentAvatarUrl == null || currentAvatarUrl.trim().isEmpty
           ? presentationByUserId[currentUserId]?.avatarUrl
           : currentAvatarUrl.trim(),
@@ -3150,9 +3180,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     });
 
     try {
+      final sessionDisplayName = getDisplayName(
+        uid: userId,
+        resolvedDisplayName: _senderDisplayNameById[userId],
+        fallbackName: ref.read(userProvider)?.username,
+      );
       final joinResult = await ref
           .read(liveRoomControllerProvider(widget.roomId).notifier)
-          .joinRoom(userId);
+          .joinRoom(userId, displayName: sessionDisplayName);
       _excludedUserIds = joinResult.excludedUserIds;
       if (!joinResult.isSuccess) {
         AppTelemetry.updateRoomState(
@@ -3615,8 +3650,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     _giftEventsSubscription?.close();
     _mediaStateSubscription.close();
     unawaited(_clearTypingStatus());
-    unawaited(_disconnectCall());
-    unawaited(_leaveRoom());
+    unawaited(_disconnectCall(resetUiState: false));
     AppTelemetry.clearRoomState();
     messageController.dispose();
     _secretMessageController.dispose();
@@ -3656,6 +3690,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
     final currentUserPresenceAsync = ref.watch(friendPresenceProvider(user.id));
     final liveRoomState = ref.watch(liveRoomControllerProvider(widget.roomId));
+    final currentSessionDisplayName = liveRoomState.displayNameFor(
+      user.id,
+      fallbackName: _senderDisplayNameById[user.id] ?? user.username,
+    );
     final participantsAsync = ref.watch(
       participantsStreamProvider(widget.roomId),
     );
@@ -3876,11 +3914,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               for (final participantItem in rosterParticipants)
                 participantItem.userId: participantItem,
             };
-            participantById[user.id] = effectiveSelfParticipant;
+            if (rosterSelfParticipant != null ||
+                liveRoomState.shouldRenderUser(user.id)) {
+              participantById[user.id] = effectiveSelfParticipant;
+            }
             final stateBackedUserIds = <String>{
-              ...liveRoomState.userIds,
+              ...liveRoomState.stableUserIds.where(
+                liveRoomState.shouldRenderUser,
+              ),
               ...rosterParticipants.map((p) => p.userId),
-              user.id,
+              if (rosterSelfParticipant != null ||
+                  liveRoomState.shouldRenderUser(user.id))
+                user.id,
             };
             final participantsInRoom = stateBackedUserIds
                 .map((userId) {
@@ -4105,7 +4150,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       participants: participantsInRoom,
                       currentParticipant: participant,
                       currentUserId: user.id,
-                      currentUsername: user.username,
+                      currentUsername: currentSessionDisplayName,
                       currentAvatarUrl: user.avatarUrl,
                       hostId: hostId,
                       isHost: isHost,
@@ -4235,10 +4280,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                           targetUserId: remoteUserId,
                                           viewerUserId: user.id,
                                         );
-                                    final tileLabel = remoteUserId != null
-                                        ? (_senderDisplayNameById[remoteUserId] ??
-                                              remoteUserId)
-                                        : 'Guest $remoteUid';
+                                    final tileLabel = getDisplayName(
+                                      uid: remoteUserId ?? 'remote_$remoteUid',
+                                      resolvedDisplayName: remoteUserId == null
+                                          ? null
+                                          : _senderDisplayNameById[remoteUserId],
+                                      fallbackName: remoteUserId ?? 'Member',
+                                    );
                                     return CameraWallRemoteTileData(
                                       uid: remoteUid,
                                       userId: remoteUserId,
@@ -4264,8 +4312,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               return CameraWall(
                                 roomId: widget.roomId,
                                 roomName: roomName,
-                                localLabel:
-                                    _senderDisplayNameById[user.id] ?? 'You',
+                                localLabel: currentSessionDisplayName,
                                 showLocalTile:
                                     (_agoraService?.isLocalVideoCapturing ??
                                         false) &&
@@ -4542,7 +4589,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   participants: participantsInRoom,
                                   currentParticipant: participant,
                                   currentUserId: user.id,
-                                  currentUsername: user.username,
+                                  currentUsername: currentSessionDisplayName,
                                   currentAvatarUrl: user.avatarUrl,
                                   hostId: hostId,
                                   isHost: isHost,
@@ -5151,7 +5198,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                               senderLabel: _senderLabelFor(
                                                 senderId: msg.senderId,
                                                 currentUserId: user.id,
-                                                currentUsername: user.username,
+                                                currentUsername:
+                                                    currentSessionDisplayName,
                                               ),
                                               senderVipLevel:
                                                   _senderVipLevelById[msg
@@ -5674,7 +5722,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               ),
                               genderById: Map.unmodifiable(_senderGenderById),
                               currentUserId: user.id,
-                              currentUsername: user.username,
+                              currentUsername: currentSessionDisplayName,
                               presenceList:
                                   presenceAsync.valueOrNull ?? const [],
                               pendingMicCount:
@@ -6105,10 +6153,18 @@ class _RoomRosterSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     String displayNameFor(String userId) {
       final selfName = currentUsername.trim();
-      final name = userId == currentUserId && selfName.isNotEmpty
-          ? selfName
-          : (displayNameById[userId] ?? userId);
-      return userId == currentUserId ? '$name (You)' : name;
+      final hydratedName = displayNameById[userId]?.trim() ?? '';
+      final fallbackName = userId == currentUserId
+          ? (selfName.isEmpty ? hydratedName : selfName)
+          : (hydratedName.isEmpty ? userId : hydratedName);
+      return roomState.displayNameFor(
+        userId,
+        fallbackName: getDisplayName(
+          uid: userId,
+          resolvedDisplayName: hydratedName,
+          fallbackName: fallbackName,
+        ),
+      );
     }
 
     final participantByUserId = <String, RoomParticipantModel>{
@@ -6193,6 +6249,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     vipLevel: vipLevelById[uid] ?? 0,
                     nameColor: _nameColor(vipLevelById[uid] ?? 0),
                     roleLabel: _roleLabel(participantByUserId[uid]),
+                    isCurrentUser: uid == currentUserId,
                     camOn: participantByUserId[uid]?.camOn ?? false,
                     trailingIcon: Icons.mic,
                     trailingColor: const Color(0xFFC45E7A),
@@ -6274,6 +6331,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
                     gender: genderById[p.userId],
                     roleLabel: _roleLabel(p),
+                    isCurrentUser: p.userId == currentUserId,
                     trailingIcon: Icons.videocam,
                     trailingColor: Colors.white38,
                     camOn: true,
@@ -6327,6 +6385,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                           nameColor: _nameColor(vip),
                           gender: genderById[p.userId],
                           roleLabel: _roleLabel(p),
+                          isCurrentUser: p.userId == currentUserId,
                           camOn: p.camOn,
                           trailingIcon: p.role == 'host' || p.role == 'owner'
                               ? Icons.star
@@ -6411,6 +6470,7 @@ class _RosterRow extends StatelessWidget {
     required this.nameColor,
     this.gender,
     this.roleLabel,
+    this.isCurrentUser = false,
     this.camOn = false,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
@@ -6425,6 +6485,7 @@ class _RosterRow extends StatelessWidget {
   final Color nameColor;
   final String? gender;
   final String? roleLabel;
+  final bool isCurrentUser;
   final bool camOn;
   final IconData? trailingIcon;
   final Color trailingColor;
@@ -6500,6 +6561,12 @@ class _RosterRow extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: [
+              if (isCurrentUser)
+                const _RosterChip(
+                  label: '(You)',
+                  icon: Icons.person,
+                  color: Color(0xFFD4A853),
+                ),
               if (roleLabel != null)
                 _RosterChip(
                   label: roleLabel!,

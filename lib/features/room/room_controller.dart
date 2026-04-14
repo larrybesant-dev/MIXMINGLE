@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/mic_access_request_model.dart';
@@ -23,14 +25,25 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   UserCamPermissionsController get _camPermissions =>
       ref.read(userCamPermissionsControllerProvider);
 
+  static const Duration _kJoinStabilizationDelay = Duration(milliseconds: 350);
+
   LiveRoomPhase _phase = LiveRoomPhase.idle;
   String? _currentUserId;
   String? _errorMessage;
   DateTime? _joinedAt;
   Set<String> _excludedUserIds = const <String>{};
+  final Map<String, RoomSessionSnapshot> _sessionSnapshotsByUser =
+      <String, RoomSessionSnapshot>{};
+  final Set<String> _pendingUserIds = <String>{};
+  final Set<String> _stableUserIds = <String>{};
+  Timer? _joinStabilizationTimer;
 
   @override
   RoomState build(String roomId) {
+    ref.onDispose(() {
+      _joinStabilizationTimer?.cancel();
+    });
+
     final roomDoc = ref.watch(roomDocStreamProvider(roomId)).valueOrNull;
     final participants =
         ref.watch(participantsStreamProvider(roomId)).valueOrNull ??
@@ -41,6 +54,10 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final speakerIds = _resolveSpeakerIds(participants, hostId: hostId);
     final camViewersByUser = _resolveCamViewers(userIds);
     final participantRolesByUser = _resolveParticipantRoles(
+      participants,
+      hostId: hostId,
+    );
+    final sessionSnapshotsByUser = _resolveSessionSnapshots(
       participants,
       hostId: hostId,
     );
@@ -60,9 +77,16 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       excludedUserIds: _excludedUserIds,
       hostId: hostId,
       userIds: mergedUserIds.toList(growable: false),
+      stableUserIds: _resolveStableUserIds(
+        mergedUserIds.toList(growable: false),
+      ),
+      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
       speakerIds: speakerIds,
       camViewersByUser: camViewersByUser,
       participantRolesByUser: participantRolesByUser,
+      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+        sessionSnapshotsByUser,
+      ),
     );
   }
 
@@ -183,6 +207,124 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return result;
   }
 
+  bool _isPlaceholderDisplayName(String value) {
+    final normalized = value.trim();
+    final generatedHandlePattern = RegExp(r'^(User|Guest) [A-Z0-9]{1,4}$');
+    return normalized.isEmpty ||
+        normalized == 'MixVy User' ||
+        generatedHandlePattern.hasMatch(normalized);
+  }
+
+  Map<String, RoomSessionSnapshot> _resolveSessionSnapshots(
+    List<RoomParticipantModel> participants, {
+    required String hostId,
+  }) {
+    final result = <String, RoomSessionSnapshot>{..._sessionSnapshotsByUser};
+
+    for (final participant in participants) {
+      final userId = participant.userId.trim();
+      if (userId.isEmpty) {
+        continue;
+      }
+      final existing = result[userId];
+      final existingName = existing?.displayName.trim() ?? '';
+      result[userId] = RoomSessionSnapshot(
+        userId: userId,
+        displayName: existingName.isNotEmpty ? existingName : userId,
+        role: participant.role.trim().isEmpty
+            ? (userId == hostId ? 'host' : 'audience')
+            : participant.role.trim().toLowerCase(),
+        joinedAt: existing?.joinedAt ?? participant.joinedAt,
+      );
+    }
+
+    final currentUserId = _currentUserId?.trim() ?? '';
+    if (currentUserId.isNotEmpty) {
+      result.putIfAbsent(
+        currentUserId,
+        () => RoomSessionSnapshot(
+          userId: currentUserId,
+          displayName: currentUserId,
+          role: currentUserId == hostId ? 'host' : 'audience',
+          joinedAt: _joinedAt,
+        ),
+      );
+    }
+
+    _sessionSnapshotsByUser
+      ..clear()
+      ..addAll(result);
+    return result;
+  }
+
+  List<String> _resolveStableUserIds(List<String> userIds) {
+    final stable = <String>{...userIds, ..._stableUserIds};
+    for (final userId in _pendingUserIds) {
+      if (!userIds.contains(userId)) {
+        stable.remove(userId);
+      }
+    }
+    return stable.toList(growable: false);
+  }
+
+  void _publishSessionState() {
+    state = state.copyWith(
+      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+      stableUserIds: _resolveStableUserIds(state.userIds),
+      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+        _sessionSnapshotsByUser,
+      ),
+    );
+  }
+
+  void _scheduleStabilization(String userId) {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      return;
+    }
+    _pendingUserIds.add(normalizedUserId);
+    _stableUserIds.remove(normalizedUserId);
+    _publishSessionState();
+
+    _joinStabilizationTimer?.cancel();
+    _joinStabilizationTimer = Timer(_kJoinStabilizationDelay, () {
+      _pendingUserIds.remove(normalizedUserId);
+      _stableUserIds.add(normalizedUserId);
+      _publishSessionState();
+    });
+  }
+
+  void cacheDisplayName({
+    required String userId,
+    required String displayName,
+    String? role,
+  }) {
+    final normalizedUserId = userId.trim();
+    final normalizedDisplayName = displayName.trim();
+    if (normalizedUserId.isEmpty || normalizedDisplayName.isEmpty) {
+      return;
+    }
+
+    final existing = _sessionSnapshotsByUser[normalizedUserId];
+    final shouldUpdate =
+        existing == null || _isPlaceholderDisplayName(existing.displayName);
+    if (!shouldUpdate) {
+      return;
+    }
+
+    _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
+      userId: normalizedUserId,
+      displayName: normalizedDisplayName,
+      role: role?.trim().isNotEmpty == true
+          ? role!.trim().toLowerCase()
+          : (existing?.role ?? state.roleFor(normalizedUserId)),
+      joinedAt: existing?.joinedAt ?? _joinedAt,
+    );
+    _stableUserIds.add(normalizedUserId);
+    _pendingUserIds.remove(normalizedUserId);
+    _publishSessionState();
+  }
+
   String get _actorUserId => state.currentUserId?.trim() ?? '';
 
   void _requireStageAuthority() {
@@ -206,8 +348,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
   }
 
-  Future<RoomJoinResult> joinRoom(String userId) async {
+  Future<RoomJoinResult> joinRoom(String userId, {String? displayName}) async {
     final normalizedUserId = userId.trim();
+    final normalizedDisplayName = displayName?.trim() ?? '';
     if (_phase == LiveRoomPhase.joining ||
         (state.isJoined && state.currentUserId == normalizedUserId)) {
       return RoomJoinResult.success(
@@ -219,10 +362,25 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _phase = LiveRoomPhase.joining;
     _currentUserId = normalizedUserId;
     _errorMessage = null;
+    _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
+      userId: normalizedUserId,
+      displayName: normalizedDisplayName.isNotEmpty
+          ? normalizedDisplayName
+          : (_sessionSnapshotsByUser[normalizedUserId]?.displayName ??
+                normalizedUserId),
+      role: _sessionSnapshotsByUser[normalizedUserId]?.role ?? 'audience',
+      joinedAt: DateTime.now(),
+    );
+    _scheduleStabilization(normalizedUserId);
     state = state.copyWith(
       phase: _phase,
       currentUserId: _currentUserId,
       errorMessage: null,
+      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+      stableUserIds: _resolveStableUserIds(state.userIds),
+      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+        _sessionSnapshotsByUser,
+      ),
     );
 
     final result = await _sessionService.joinRoom(
@@ -249,12 +407,26 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _joinedAt = result.joinedAt;
     _excludedUserIds = result.excludedUserIds;
     _errorMessage = null;
+    final existingSnapshot = _sessionSnapshotsByUser[normalizedUserId];
+    _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
+      userId: normalizedUserId,
+      displayName: normalizedDisplayName.isNotEmpty
+          ? normalizedDisplayName
+          : (existingSnapshot?.displayName ?? normalizedUserId),
+      role: existingSnapshot?.role ?? 'audience',
+      joinedAt: _joinedAt,
+    );
     state = state.copyWith(
       phase: _phase,
       currentUserId: normalizedUserId,
       errorMessage: null,
       joinedAt: _joinedAt,
       excludedUserIds: _excludedUserIds,
+      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+      stableUserIds: _resolveStableUserIds(state.userIds),
+      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+        _sessionSnapshotsByUser,
+      ),
     );
     return result;
   }
@@ -267,6 +439,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _joinedAt = null;
       _errorMessage = null;
       _excludedUserIds = const <String>{};
+      _pendingUserIds.clear();
+      _stableUserIds.clear();
+      _sessionSnapshotsByUser.clear();
       state = const RoomState();
       return;
     }
@@ -279,6 +454,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _joinedAt = null;
     _errorMessage = null;
     _excludedUserIds = const <String>{};
+    _pendingUserIds.clear();
+    _stableUserIds.clear();
+    _sessionSnapshotsByUser.clear();
     state = const RoomState();
   }
 

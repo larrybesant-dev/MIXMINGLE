@@ -57,4 +57,30 @@ void main() {
     expect(state.canModerate('mod-1'), isTrue);
     expect(state.canManageStage('guest-1'), isFalse);
   });
+
+  test('RoomState only renders users after their join snapshot is stable', () {
+    const state = RoomState(
+      roomId: 'room-c',
+      userIds: <String>['host-1', 'user-1'],
+      stableUserIds: <String>['host-1'],
+      pendingUserIds: <String>{'user-1'},
+      sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+        'host-1': RoomSessionSnapshot(
+          userId: 'host-1',
+          displayName: 'HostOne',
+          role: 'host',
+        ),
+        'user-1': RoomSessionSnapshot(
+          userId: 'user-1',
+          displayName: 'VelvetHandle',
+          role: 'audience',
+        ),
+      },
+    );
+
+    expect(state.shouldRenderUser('host-1'), isTrue);
+    expect(state.shouldRenderUser('user-1'), isFalse);
+    expect(state.displayNameFor('host-1'), 'HostOne');
+    expect(state.displayNameFor('user-1'), 'VelvetHandle');
+  });
 }

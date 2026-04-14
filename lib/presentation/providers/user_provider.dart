@@ -23,6 +23,40 @@ bool _looksLikePersonalName(String value) {
   return parts.length >= 2 && parts.every(wordPattern.hasMatch);
 }
 
+bool isAnonymousDisplayName(String value) {
+  final normalized = value.trim();
+  final generatedHandlePattern = RegExp(r'^(User|Guest) [A-Z0-9]{1,4}$');
+  return normalized.isEmpty ||
+      normalized == 'MixVy User' ||
+      generatedHandlePattern.hasMatch(normalized);
+}
+
+String getDisplayName({
+  required String uid,
+  String? resolvedDisplayName,
+  String? profileUsername,
+  String? authDisplayName,
+  String? fallbackName,
+}) {
+  final normalizedResolved = resolvedDisplayName?.trim() ?? '';
+  if (normalizedResolved.isNotEmpty &&
+      !isAnonymousDisplayName(normalizedResolved)) {
+    return normalizedResolved;
+  }
+
+  final normalizedFallback = fallbackName?.trim() ?? '';
+  if (normalizedFallback.isNotEmpty &&
+      !isAnonymousDisplayName(normalizedFallback)) {
+    return normalizedFallback;
+  }
+
+  return resolvePublicUsername(
+    uid: uid,
+    profileUsername: profileUsername,
+    authDisplayName: authDisplayName,
+  );
+}
+
 String resolvePublicUsername({
   required String uid,
   String? profileUsername,
@@ -30,17 +64,9 @@ String resolvePublicUsername({
 }) {
   final normalizedUid = uid.trim();
   final normalizedProfile = profileUsername?.trim() ?? '';
-  final normalizedDisplayName = authDisplayName?.trim() ?? '';
-
-  final matchesAuthDisplayName =
-      normalizedProfile.isNotEmpty &&
-      normalizedDisplayName.isNotEmpty &&
-      normalizedProfile.toLowerCase() == normalizedDisplayName.toLowerCase();
   final looksPersonal = _looksLikePersonalName(normalizedProfile);
 
-  if (normalizedProfile.isNotEmpty &&
-      !matchesAuthDisplayName &&
-      !looksPersonal) {
+  if (normalizedProfile.isNotEmpty && !looksPersonal) {
     return normalizedProfile;
   }
 
@@ -54,7 +80,7 @@ String resolvePublicUsername({
   final suffix = compactUid.isEmpty
       ? ''
       : compactUid.substring(0, compactUid.length < 4 ? compactUid.length : 4);
-  return suffix.isEmpty ? 'MixVy User' : 'Guest $suffix';
+  return suffix.isEmpty ? 'MixVy User' : 'User $suffix';
 }
 
 final userProvider = Provider<UserModel?>((ref) {

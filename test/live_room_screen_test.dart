@@ -47,6 +47,27 @@ void main() {
   });
 
   test(
+    'resolvePublicUsername keeps safe handles visible for the current user',
+    () {
+      expect(
+        resolvePublicUsername(
+          uid: 'user-1',
+          profileUsername: 'VelvetHandle',
+          authDisplayName: 'VelvetHandle',
+        ),
+        'VelvetHandle',
+      );
+    },
+  );
+
+  test('resolvePublicUsername never falls back to Guest labels', () {
+    expect(
+      resolvePublicUsername(uid: 'user-1', profileUsername: null),
+      isNot(contains('Guest')),
+    );
+  });
+
+  test(
     'roomParticipantCanBeShownAsTalking keeps active local mic users visible',
     () {
       final activeMember = RoomParticipantModel(
