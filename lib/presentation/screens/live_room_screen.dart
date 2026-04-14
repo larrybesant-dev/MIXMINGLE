@@ -79,6 +79,20 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveRoomScreen> createState() => _LiveRoomScreenState();
 }
 
+bool roomParticipantHasMicAccess(RoomParticipantModel? participant) {
+  final role = participant?.role ?? '';
+  return role == 'host' ||
+      role == 'owner' ||
+      role == 'cohost' ||
+      role == 'stage';
+}
+
+bool roomParticipantCanBeShownAsTalking(RoomParticipantModel? participant) {
+  return roomParticipantHasMicAccess(participant) &&
+      (participant?.micOn ?? false) &&
+      !(participant?.isMuted ?? false);
+}
+
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late TextEditingController messageController;
   late TextEditingController _secretMessageController;
@@ -3779,11 +3793,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             final rosterParticipants =
                 participantsAsync.valueOrNull ?? const <RoomParticipantModel>[];
+            final synthesizedSelfParticipant = (participant ??
+                RoomParticipantModel(
+                  userId: user.id,
+                  role: 'member',
+                  isMuted: _isMicMuted,
+                  camOn: _isVideoEnabled,
+                  micOn: false,
+                  userStatus: 'online',
+                  joinedAt: DateTime.now(),
+                  lastActiveAt: DateTime.now(),
+                ));
             final participantsInRoom =
-                participant != null &&
-                    rosterParticipants.every((p) => p.userId != participant.userId)
-                ? <RoomParticipantModel>[...rosterParticipants, participant]
-                : rosterParticipants;
+                rosterParticipants.any((p) => p.userId == user.id)
+                ? rosterParticipants
+                : <RoomParticipantModel>[
+                    ...rosterParticipants,
+                    synthesizedSelfParticipant,
+                  ];
             _syncTelemetryForBuild(
               currentUserId: user.id,
               roomState: liveRoomState,
@@ -4073,6 +4100,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               final localIsFloating = floatingIds.contains(
                                 '${user.id}_local',
                               );
+                              final participantByUserId = <String, RoomParticipantModel>{
+                                for (final participant in participantsInRoom)
+                                  participant.userId: participant,
+                              };
                               final remoteTiles = _agoraService!.remoteUids
                                   .where((remoteUid) {
                                     // Hide from grid if already popped out.
@@ -4113,20 +4144,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                         ? (_senderDisplayNameById[remoteUserId] ??
                                               remoteUserId)
                                         : 'Guest $remoteUid';
+                                    final remoteParticipant = remoteUserId == null
+                                        ? null
+                                        : participantByUserId[remoteUserId];
                                     return CameraWallRemoteTileData(
                                       uid: remoteUid,
                                       userId: remoteUserId,
                                       label: tileLabel,
                                       canView: canViewRemote,
-                                      isSpeaking: _agoraService!
-                                          .isRemoteSpeaking(remoteUid),
-                                      hasMic:
-                                          remoteUserId != null &&
-                                          participantsInRoom.any(
-                                            (p) =>
-                                                p.userId == remoteUserId &&
-                                                p.role == 'stage',
-                                          ),
+                                      isSpeaking:
+                                          roomParticipantCanBeShownAsTalking(
+                                            remoteParticipant,
+                                          ) &&
+                                          _agoraService!.isRemoteSpeaking(remoteUid),
+                                      hasMic: roomParticipantHasMicAccess(
+                                        remoteParticipant,
+                                      ),
                                       avatarUrl: remoteUserId != null
                                           ? _senderAvatarUrlById[remoteUserId]
                                           : null,
@@ -4142,15 +4175,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     (_agoraService?.isLocalVideoCapturing ??
                                         false) &&
                                     !localIsFloating,
-                                localHasMic: participantsInRoom.any(
-                                  (p) =>
-                                      p.userId == user.id && p.role == 'stage',
+                                localHasMic: roomParticipantHasMicAccess(
+                                  participantByUserId[user.id],
                                 ),
-                                // Suppress speaking indicator when mic is muted so the
-                                // local tile stays in the main grid (not the small
-                                // "Talking Now" strip).  The VAD clone still monitors raw
-                                // audio for the mic level bar even while muted.
+                                // Only show the speaking indicator for users who
+                                // actually hold the mic in the room.
                                 localSpeaking:
+                                    roomParticipantCanBeShownAsTalking(
+                                      participantByUserId[user.id],
+                                    ) &&
                                     _agoraService!.localSpeaking &&
                                     !_isMicMuted,
                                 localTile: _buildLocalCamContent(
@@ -5466,6 +5499,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               ),
                               genderById: Map.unmodifiable(_senderGenderById),
                               currentUserId: user.id,
+                              currentUsername: user.username,
                               presenceList:
                                   presenceAsync.valueOrNull ?? const [],
                               pendingMicCount:
@@ -5487,13 +5521,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               isMicFree: true,
                               isLocalVideoEnabled: _isVideoEnabled,
                               localSpeaking:
-                                  (_agoraService?.localSpeaking ?? false) ||
-                                  (!_isMicMuted &&
-                                      participantsInRoom.any(
-                                        (p) =>
-                                            p.userId == user.id &&
-                                            p.role == 'stage',
-                                      )),
+                                  (_agoraService?.localSpeaking ?? false) &&
+                                  !_isMicMuted &&
+                                  participantsInRoom.any(
+                                    (p) =>
+                                        p.userId == user.id &&
+                                        roomParticipantCanBeShownAsTalking(p),
+                                  ),
                               recentChatters: Set.unmodifiable(_recentChatters),
                               remoteUids: _agoraService?.remoteUids ?? const [],
                               isSpeakingFn: (uid) =>
@@ -5815,6 +5849,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     required this.vipLevelById,
     required this.genderById,
     required this.currentUserId,
+    required this.currentUsername,
     required this.presenceList,
     required this.pendingMicCount,
     required this.isLocalVideoEnabled,
@@ -5842,6 +5877,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final Map<String, int> vipLevelById;
   final Map<String, String?> genderById;
   final String currentUserId;
+  final String currentUsername;
   final List<RoomPresenceModel> presenceList;
   final int pendingMicCount;
   final bool isLocalVideoEnabled;
@@ -5894,19 +5930,28 @@ class _RoomRosterSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String displayNameFor(String userId) {
-      final name = displayNameById[userId] ?? userId;
+      final selfName = currentUsername.trim();
+      final name = userId == currentUserId && selfName.isNotEmpty
+          ? selfName
+          : (displayNameById[userId] ?? userId);
       return userId == currentUserId ? '$name (You)' : name;
     }
 
+    final participantByUserId = <String, RoomParticipantModel>{
+      for (final participant in participants) participant.userId: participant,
+    };
+
     // ── Compute speaking user IDs (including local user) ───────────────
     final speakingUserIds = <String>{};
-    if (localSpeaking) {
+    if (localSpeaking &&
+        roomParticipantCanBeShownAsTalking(participantByUserId[currentUserId])) {
       speakingUserIds.add(currentUserId);
     }
     for (final uid in remoteUids) {
       if (isSpeakingFn(uid)) {
         final userId = uidToUserId(uid);
-        if (userId != null) {
+        if (userId != null &&
+            roomParticipantCanBeShownAsTalking(participantByUserId[userId])) {
           speakingUserIds.add(userId);
         }
       }
@@ -5916,9 +5961,6 @@ class _RoomRosterSidebar extends StatelessWidget {
     final onCamParticipants = participants
         .where((p) => p.userId == currentUserId ? (isLocalVideoEnabled || p.camOn) : p.camOn)
         .toList(growable: false);
-    final participantByUserId = <String, RoomParticipantModel>{
-      for (final participant in participants) participant.userId: participant,
-    };
 
     // ── Sort: host → cohost → mod → audience, with self visible ──
     final sorted = [...participants]..sort((a, b) {

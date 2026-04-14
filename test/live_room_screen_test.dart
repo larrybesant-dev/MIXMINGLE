@@ -21,6 +21,34 @@ import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
 void main() {
+  test('roomParticipantCanBeShownAsTalking only allows active mic holders', () {
+    final audience = RoomParticipantModel(
+      userId: 'user-1',
+      role: 'member',
+      micOn: true,
+      joinedAt: DateTime(2026, 1, 1),
+      lastActiveAt: DateTime(2026, 1, 1),
+    );
+    final mutedStage = RoomParticipantModel(
+      userId: 'user-2',
+      role: 'stage',
+      micOn: false,
+      joinedAt: DateTime(2026, 1, 1),
+      lastActiveAt: DateTime(2026, 1, 1),
+    );
+    final liveStage = RoomParticipantModel(
+      userId: 'user-3',
+      role: 'stage',
+      micOn: true,
+      joinedAt: DateTime(2026, 1, 1),
+      lastActiveAt: DateTime(2026, 1, 1),
+    );
+
+    expect(roomParticipantCanBeShownAsTalking(audience), isFalse);
+    expect(roomParticipantCanBeShownAsTalking(mutedStage), isFalse);
+    expect(roomParticipantCanBeShownAsTalking(liveStage), isTrue);
+  });
+
   Future<void> configureViewport(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 2200);
     tester.view.devicePixelRatio = 1.0;
@@ -274,7 +302,7 @@ void main() {
       ProviderScope(
         overrides: [
           roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith((ref, args) => const Stream.value(null)),
+          currentParticipantProvider.overrideWith((ref, args) => Stream.value(null)),
           participantsStreamProvider.overrideWith((ref, roomId) => Stream.value(const <RoomParticipantModel>[])),
           participantCountProvider.overrideWith((ref, roomId) => Stream.value(1)),
           messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),

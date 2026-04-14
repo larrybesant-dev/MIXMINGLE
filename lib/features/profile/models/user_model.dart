@@ -69,7 +69,7 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: _stringOrEmpty(json['id'] ?? json['uid']),
         email: _stringOrEmpty(json['email']),
-        username: _stringOrEmpty(json['username'] ?? json['displayName']),
+        username: _stringOrEmpty(json['username']),
         avatarUrl: _stringOrNull(json['avatarUrl']),
         coverPhotoUrl: _stringOrNull(json['coverPhotoUrl']),
         galleryUrls: _stringList(json['galleryUrls']),
