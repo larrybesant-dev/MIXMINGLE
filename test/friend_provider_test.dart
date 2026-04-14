@@ -92,31 +92,74 @@ void main() {
       container.dispose();
     });
 
-    test('friendsListProvider resolves accepted friends from friendships', () async {
-      final friends = await container.read(friendsListProvider.future);
+    test(
+      'friendsListProvider resolves accepted friends from friendships',
+      () async {
+        final friends = await container.read(friendsListProvider.future);
 
-      expect(friends, hasLength(1));
-      expect(friends.single.id, 'user-2');
-      expect(friends.single.username, 'User Two');
-    });
+        expect(friends, hasLength(1));
+        expect(friends.single.id, 'user-2');
+        expect(friends.single.username, 'User Two');
+      },
+    );
 
-    test('friendCandidateSearchProvider excludes friends and pending requests', () async {
-      container.read(friendSearchQueryProvider.notifier).state = 'search';
+    test(
+      'friendCandidateSearchProvider excludes friends and pending requests',
+      () async {
+        container.read(friendSearchQueryProvider.notifier).state = 'search';
 
-      final users = await container.read(friendCandidateSearchProvider.future);
+        final users = await container.read(
+          friendCandidateSearchProvider.future,
+        );
 
-      expect(users, hasLength(1));
-      expect(users.single.id, 'user-5');
-    });
+        expect(users, hasLength(1));
+        expect(users.single.id, 'user-5');
+      },
+    );
 
-    test('incomingFriendRequestsProvider resolves sender user details from friendships', () async {
-      final requests = await container.read(incomingFriendRequestsProvider.future);
+    test(
+      'incomingFriendRequestsProvider resolves sender user details from friendships',
+      () async {
+        final requests = await container.read(
+          incomingFriendRequestsProvider.future,
+        );
 
-      expect(requests, hasLength(1));
-      expect(requests.single.request.id, 'user-1_user-3');
-      expect(requests.single.fromUser?.id, 'user-3');
-      expect(requests.single.fromUser?.username, 'Searchable Person');
-    });
+        expect(requests, hasLength(1));
+        expect(requests.single.request.id, 'user-1_user-3');
+        expect(requests.single.fromUser?.id, 'user-3');
+        expect(requests.single.fromUser?.username, 'Searchable Person');
+      },
+    );
+
+    test(
+      'sendFriendRequest mirrors pending links into schema collection',
+      () async {
+        final service = container.read(friendServiceProvider);
+
+        await service.sendFriendRequest('user-1', 'user-5');
+
+        final legacyLink = await firestore
+            .collection('friendships')
+            .doc('user-1_user-5')
+            .get();
+        final schemaLink = await firestore
+            .collection('friend_links')
+            .doc('user-1_user-5')
+            .get();
+
+        expect(legacyLink.exists, isTrue);
+        expect(legacyLink.data()?['status'], 'pending');
+        expect(legacyLink.data()?['requestedBy'], 'user-1');
+
+        expect(schemaLink.exists, isTrue);
+        expect(schemaLink.data()?['status'], 'pending');
+        expect(schemaLink.data()?['requestedBy'], 'user-1');
+        expect(
+          schemaLink.data()?['users'],
+          containsAll(<String>['user-1', 'user-5']),
+        );
+      },
+    );
 
     test('onlineFriendsProvider filters live online friends', () async {
       final rosterContainer = ProviderContainer(
@@ -160,22 +203,34 @@ void main() {
       expect(onlineFriends.single.isOnline, isTrue);
     });
 
-    test('sendFriendRequest reconciles reciprocal pending friendships', () async {
-      final service = container.read(friendServiceProvider);
+    test(
+      'sendFriendRequest reconciles reciprocal pending friendships',
+      () async {
+        final service = container.read(friendServiceProvider);
 
-      await service.sendFriendRequest('user-1', 'user-3');
+        await service.sendFriendRequest('user-1', 'user-3');
 
-      final friendship = await firestore.collection('friendships').doc('user-1_user-3').get();
-      expect(friendship.data()?['status'], 'accepted');
+        final friendship = await firestore
+            .collection('friendships')
+            .doc('user-1_user-3')
+            .get();
+        final schemaLink = await firestore
+            .collection('friend_links')
+            .doc('user-1_user-3')
+            .get();
+        expect(friendship.data()?['status'], 'accepted');
+        expect(schemaLink.exists, isTrue);
+        expect(schemaLink.data()?['status'], 'accepted');
 
-      final notifications = await firestore
-          .collection('notifications')
-          .where('userId', isEqualTo: 'user-3')
-          .get();
+        final notifications = await firestore
+            .collection('notifications')
+            .where('userId', isEqualTo: 'user-3')
+            .get();
 
-      expect(notifications.docs, isNotEmpty);
-      expect(notifications.docs.last.data()['type'], 'friend_accept');
-      expect(notifications.docs.last.data()['actorId'], 'user-1');
-    });
+        expect(notifications.docs, isNotEmpty);
+        expect(notifications.docs.last.data()['type'], 'friend_accept');
+        expect(notifications.docs.last.data()['actorId'], 'user-1');
+      },
+    );
   });
 }

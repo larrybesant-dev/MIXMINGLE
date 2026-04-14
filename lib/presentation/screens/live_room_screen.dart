@@ -96,6 +96,8 @@ bool roomParticipantCanBeShownAsTalking(RoomParticipantModel? participant) {
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late TextEditingController messageController;
   late TextEditingController _secretMessageController;
+  late FocusNode _chatInputFocusNode;
+  late FocusNode _secretInputFocusNode;
   late ScrollController scrollController;
   FirebaseFirestore? _firestore;
   String? _joinedUserId;
@@ -277,6 +279,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
     messageController = TextEditingController();
     _secretMessageController = TextEditingController();
+    _chatInputFocusNode = FocusNode(debugLabel: 'roomChatInput');
+    _secretInputFocusNode = FocusNode(debugLabel: 'roomSecretInput');
     scrollController = ScrollController();
 
     final user = ref.read(userProvider);
@@ -2101,27 +2105,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   }
 
   void _onTypingInput() {
-    _typingTimer?.cancel();
-    final userId = _joinedUserId;
-    if (userId == null || userId.isEmpty) return;
-    if (messageController.text.trim().isEmpty) {
-      _clearTypingStatus().ignore();
-      return;
+    try {
+      _typingTimer?.cancel();
+      final userId = _joinedUserId;
+      if (userId == null || userId.isEmpty) return;
+      if (messageController.text.trim().isEmpty) {
+        _clearTypingStatus().ignore();
+        return;
+      }
+      final now = DateTime.now();
+      final shouldWrite =
+          !_typingStatusActive ||
+          _lastTypingWriteAt == null ||
+          now.difference(_lastTypingWriteAt!) >= _kTypingWriteThrottle;
+      if (shouldWrite) {
+        _typingStatusActive = true;
+        _lastTypingWriteAt = now;
+        ref
+            .read(liveRoomControllerProvider(widget.roomId).notifier)
+            .setTyping(userId: userId, isTyping: true)
+            .ignore();
+      }
+      _typingTimer = Timer(_kTypingIdleTimeout, _clearTypingStatus);
+    } catch (_) {
+      // Typing indicators are best-effort only and must never block editing.
     }
-    final now = DateTime.now();
-    final shouldWrite =
-        !_typingStatusActive ||
-        _lastTypingWriteAt == null ||
-        now.difference(_lastTypingWriteAt!) >= _kTypingWriteThrottle;
-    if (shouldWrite) {
-      _typingStatusActive = true;
-      _lastTypingWriteAt = now;
-      ref
-          .read(liveRoomControllerProvider(widget.roomId).notifier)
-          .setTyping(userId: userId, isTyping: true)
-          .ignore();
-    }
-    _typingTimer = Timer(_kTypingIdleTimeout, _clearTypingStatus);
   }
 
   Future<void> _clearTypingStatus() async {
@@ -2851,6 +2859,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     setState(() {
       _secretComposerTarget = target;
       _secretMessageController.clear();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _secretInputFocusNode.requestFocus();
+      }
     });
   }
 
@@ -3589,6 +3602,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     AppTelemetry.clearRoomState();
     messageController.dispose();
     _secretMessageController.dispose();
+    _chatInputFocusNode.dispose();
+    _secretInputFocusNode.dispose();
     scrollController.dispose();
     super.dispose();
   }
@@ -5226,12 +5241,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                         Expanded(
                                           child: TextField(
                                             controller: messageController,
+                                            focusNode: _chatInputFocusNode,
+                                            onTap: () => _chatInputFocusNode.requestFocus(),
                                             onChanged: (_) => _onTypingInput(),
                                             enabled:
                                                 !isSending &&
                                                 participant?.isMuted != true &&
                                                 participant?.isBanned != true &&
                                                 !hasBlockedParticipantInRoom,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                            ),
+                                            cursorColor: const Color(0xFFD4A853),
                                             textInputAction:
                                                 TextInputAction.send,
                                             onSubmitted:
@@ -5314,6 +5336,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                   : !allowChat
                                                   ? 'Chat disabled by host'
                                                   : 'Type a message…',
+                                              hintStyle: const TextStyle(
+                                                color: Colors.white38,
+                                              ),
+                                              filled: true,
+                                              fillColor: const Color(0xFF0F0D11),
+                                              isDense: true,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 10,
+                                                  ),
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0x33D4A853),
+                                                ),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0x44D4A853),
+                                                ),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFFD4A853),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -5615,6 +5669,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               secretComposerTarget: _secretComposerTarget,
                               secretComposerTextController:
                                   _secretMessageController,
+                              secretComposerFocusNode: _secretInputFocusNode,
                               isSendingSecretMessage: _isSendingSecretMessage,
                               onSendSecretMessage: _secretComposerTarget == null
                                   ? null
@@ -5865,6 +5920,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     this.onSecretMessage,
     this.secretComposerTarget,
     this.secretComposerTextController,
+    this.secretComposerFocusNode,
     this.isSendingSecretMessage = false,
     this.onSendSecretMessage,
     this.onCancelSecretMessage,
@@ -5893,6 +5949,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final void Function(RoomParticipantModel participant)? onSecretMessage;
   final RoomParticipantModel? secretComposerTarget;
   final TextEditingController? secretComposerTextController;
+  final FocusNode? secretComposerFocusNode;
   final bool isSendingSecretMessage;
   final VoidCallback? onSendSecretMessage;
   final VoidCallback? onCancelSecretMessage;
@@ -6160,6 +6217,7 @@ class _RoomRosterSidebar extends StatelessWidget {
             _InlineSecretComposer(
               targetDisplayName: displayNameFor(secretComposerTarget!.userId),
               controller: secretComposerTextController!,
+              focusNode: secretComposerFocusNode ?? FocusNode(),
               isSending: isSendingSecretMessage,
               onCancel: onCancelSecretMessage,
               onSend: onSendSecretMessage,
@@ -6460,6 +6518,7 @@ class _InlineSecretComposer extends StatelessWidget {
   const _InlineSecretComposer({
     required this.targetDisplayName,
     required this.controller,
+    required this.focusNode,
     required this.isSending,
     this.onCancel,
     this.onSend,
@@ -6467,6 +6526,7 @@ class _InlineSecretComposer extends StatelessWidget {
 
   final String targetDisplayName;
   final TextEditingController controller;
+  final FocusNode focusNode;
   final bool isSending;
   final VoidCallback? onCancel;
   final VoidCallback? onSend;
@@ -6524,8 +6584,15 @@ class _InlineSecretComposer extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
+                  focusNode: focusNode,
+                  autofocus: true,
                   enabled: !isSending,
                   maxLines: 1,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                  ),
+                  cursorColor: const Color(0xFFD4A853),
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) {
                     if (isSending || onSend == null) return;

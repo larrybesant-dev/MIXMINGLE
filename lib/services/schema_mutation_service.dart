@@ -10,7 +10,7 @@ import '../models/profile_privacy_model.dart';
 
 class SchemaMutationService {
   SchemaMutationService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -65,7 +65,9 @@ class SchemaMutationService {
     bool? mirrorLegacyAvatarInUsers,
   }) async {
     final userRef = _firestore.collection('users').doc(user.uid);
-    final profilePublicRef = _firestore.collection('profile_public').doc(user.uid);
+    final profilePublicRef = _firestore
+        .collection('profile_public')
+        .doc(user.uid);
 
     final userSnapshot = await userRef.get();
     final now = FieldValue.serverTimestamp();
@@ -77,7 +79,8 @@ class SchemaMutationService {
       'updatedAt': now,
     };
 
-    if (mirrorLegacyAvatarInUsers ?? SchemaMigrationFlags.enableAvatarLegacyWrite) {
+    if (mirrorLegacyAvatarInUsers ??
+        SchemaMigrationFlags.enableAvatarLegacyWrite) {
       identityPayload['avatarUrl'] = user.photoURL;
       _logEnforcementEvent(
         action: 'legacy_avatar_mirror_write',
@@ -108,7 +111,9 @@ class SchemaMutationService {
     bool? mirrorLegacyUserDoc,
   }) async {
     final usersRef = _firestore.collection('users').doc(userId);
-    final profilePublicRef = _firestore.collection('profile_public').doc(userId);
+    final profilePublicRef = _firestore
+        .collection('profile_public')
+        .doc(userId);
     final preferencesRef = _firestore.collection('preferences').doc(userId);
     final verificationRef = _firestore.collection('verification').doc(userId);
     final privacyRef = usersRef.collection('privacy').doc('settings');
@@ -126,33 +131,22 @@ class SchemaMutationService {
     final profilePublicPayload = _pickAllowedFields(
       userData: userData,
       allowedFields: _profilePublicFields,
-    )
-      ..addAll(<String, dynamic>{
-      'userId': userId,
-      'updatedAt': now,
-    });
+    )..addAll(<String, dynamic>{'userId': userId, 'updatedAt': now});
 
     profilePublicPayload['galleryUrls'] =
         userData['galleryUrls'] ?? const <dynamic>[];
-    profilePublicPayload['interests'] = userData['interests'] ?? const <dynamic>[];
+    profilePublicPayload['interests'] =
+        userData['interests'] ?? const <dynamic>[];
 
     final preferencesPayload = _pickAllowedFields(
       userData: userData,
       allowedFields: _preferencesFields,
-    )
-      ..addAll(<String, dynamic>{
-      'userId': userId,
-      'updatedAt': now,
-    });
+    )..addAll(<String, dynamic>{'userId': userId, 'updatedAt': now});
 
     final verificationPayload = _pickAllowedFields(
       userData: userData,
       allowedFields: _verificationFields,
-    )
-      ..addAll(<String, dynamic>{
-      'userId': userId,
-      'updatedAt': now,
-    });
+    )..addAll(<String, dynamic>{'userId': userId, 'updatedAt': now});
 
     final batch = _firestore.batch();
 
@@ -162,32 +156,20 @@ class SchemaMutationService {
     batch.set(verificationRef, verificationPayload, SetOptions(merge: true));
 
     // Preserve existing runtime paths while migration is in progress.
-    batch.set(
-      privacyRef,
-      {
-        ...privacy.toJson(),
-        'updatedAt': now,
-      },
-      SetOptions(merge: true),
-    );
-    batch.set(
-      adultRef,
-      {
-        ...adultProfile.toJson(),
-        'updatedAt': now,
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(privacyRef, {
+      ...privacy.toJson(),
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(adultRef, {
+      ...adultProfile.toJson(),
+      'updatedAt': now,
+    }, SetOptions(merge: true));
 
     if (mirrorLegacyUserDoc ?? SchemaMigrationFlags.enableProfileLegacyWrite) {
-      batch.set(
-        usersRef,
-        {
-          ...userData,
-          'updatedAt': now,
-        },
-        SetOptions(merge: true),
-      );
+      batch.set(usersRef, {
+        ...userData,
+        'updatedAt': now,
+      }, SetOptions(merge: true));
       _logEnforcementEvent(
         action: 'legacy_profile_mirror_write',
         userId: userId,
@@ -276,16 +258,45 @@ class SchemaMutationService {
 
     final sortedPair = FriendshipModel.sortedPair(firstUserId, secondUserId);
     final linkId = FriendshipModel.canonicalIdFor(firstUserId, secondUserId);
-    final linkRef = _firestore.collection(collectionName).doc(linkId);
+    final normalizedCollectionName = collectionName.trim().isEmpty
+        ? 'friendships'
+        : collectionName.trim();
+    final now = FieldValue.serverTimestamp();
 
-    await linkRef.set({
+    final schemaPayload = <String, dynamic>{
+      'users': <String>[sortedPair.userA, sortedPair.userB],
+      'status': status,
+      'requestedBy': requestedBy,
+      if (status == 'pending') 'createdAt': now,
+      'updatedAt': now,
+    };
+
+    final legacyPayload = <String, dynamic>{
       'userA': sortedPair.userA,
       'userB': sortedPair.userB,
       'status': status,
       'requestedBy': requestedBy,
-      if (status == 'pending') 'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+      if (status == 'pending') 'createdAt': now,
+      'updatedAt': now,
+    };
+
+    final batch = _firestore.batch();
+    batch.set(
+      _firestore.collection('friend_links').doc(linkId),
+      schemaPayload,
+      SetOptions(merge: true),
+    );
+
+    if (SchemaMigrationFlags.enableFriendLegacyWrite ||
+        normalizedCollectionName != 'friend_links') {
+      batch.set(
+        _firestore.collection(normalizedCollectionName).doc(linkId),
+        legacyPayload,
+        SetOptions(merge: true),
+      );
+    }
+
+    await batch.commit();
   }
 
   Map<String, dynamic> _pickAllowedFields({
@@ -322,7 +333,9 @@ class SchemaMutationService {
       level: SchemaMigrationFlags.strictWriteAuthority ? 'error' : 'warning',
       action: 'blocked_unknown_profile_keys',
       userId: userId,
-      result: SchemaMigrationFlags.strictWriteAuthority ? 'blocked' : 'quarantined',
+      result: SchemaMigrationFlags.strictWriteAuthority
+          ? 'blocked'
+          : 'quarantined',
       metadata: <String, Object?>{'keys': unknownKeys.join(',')},
     );
 
@@ -352,20 +365,17 @@ class SchemaMutationService {
     final convRef = _firestore.collection('conversations').doc(conversationId);
     final now = FieldValue.serverTimestamp();
 
-    await convRef.set(
-      <String, dynamic>{
-        'participantIds': sortedIds,
-        'participantNames': participantNames,
-        'type': 'direct',
-        'status': 'active',
-        'isArchived': false,
-        'pinnedBy': <String>[],
-        'lastReadAt': <String, dynamic>{},
-        'createdAt': now,
-        'updatedAt': now,
-      },
-      SetOptions(merge: true),
-    );
+    await convRef.set(<String, dynamic>{
+      'participantIds': sortedIds,
+      'participantNames': participantNames,
+      'type': 'direct',
+      'status': 'active',
+      'isArchived': false,
+      'pinnedBy': <String>[],
+      'lastReadAt': <String, dynamic>{},
+      'createdAt': now,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
 
     _logEnforcementEvent(
       action: 'messages_conversation_created',
@@ -440,13 +450,10 @@ class SchemaMutationService {
     required String userId,
   }) async {
     final convRef = _firestore.collection('conversations').doc(conversationId);
-    await convRef.set(
-      <String, dynamic>{
-        'lastReadAt': <String, dynamic>{userId: FieldValue.serverTimestamp()},
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    await convRef.set(<String, dynamic>{
+      'lastReadAt': <String, dynamic>{userId: FieldValue.serverTimestamp()},
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   void _validateMessageText({required String text, required String userId}) {
@@ -457,7 +464,9 @@ class SchemaMutationService {
         userId: userId,
         result: 'blocked',
       );
-      throw StateError('SchemaMutationService: message text must not be empty.');
+      throw StateError(
+        'SchemaMutationService: message text must not be empty.',
+      );
     }
   }
 

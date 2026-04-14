@@ -20,14 +20,18 @@ class FriendService {
     ModerationService? moderationService,
     PresenceRepository? presenceRepository,
     SchemaMutationService? mutationService,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _analyticsService = analyticsService ?? AnalyticsService(),
-        _moderationService = moderationService ??
-            ModerationService(firestore: firestore ?? FirebaseFirestore.instance),
-        _presenceRepository = presenceRepository ??
-        FirestorePresenceRepository(firestore ?? FirebaseFirestore.instance),
-      _mutationService =
-        mutationService ?? SchemaMutationService(firestore: firestore);
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _analyticsService = analyticsService ?? AnalyticsService(),
+       _moderationService =
+           moderationService ??
+           ModerationService(
+             firestore: firestore ?? FirebaseFirestore.instance,
+           ),
+       _presenceRepository =
+           presenceRepository ??
+           FirestorePresenceRepository(firestore ?? FirebaseFirestore.instance),
+       _mutationService =
+           mutationService ?? SchemaMutationService(firestore: firestore);
 
   static const int _firestoreWhereInLimit = 30;
 
@@ -119,42 +123,54 @@ class FriendService {
       }
 
       Query<Map<String, dynamic>> buildQuery(String field) {
-        var query = _friendshipsCollection.where(field, isEqualTo: normalizedUserId);
+        var query = _friendshipsCollection.where(
+          field,
+          isEqualTo: normalizedUserId,
+        );
         if (normalizedStatuses.length == 1) {
           query = query.where('status', isEqualTo: normalizedStatuses.first);
         } else if (normalizedStatuses.length > 1) {
-          query = query.where('status', whereIn: normalizedStatuses.toList(growable: false));
+          query = query.where(
+            'status',
+            whereIn: normalizedStatuses.toList(growable: false),
+          );
         }
         return query;
       }
 
-      final subA = buildQuery('userA').snapshots().listen((snapshot) {
-        userAFriendships = snapshot.docs
-            .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
-            .toList(growable: false);
-        emit();
-      }, onError: (error, stackTrace) {
-        if (_isPermissionDenied(error)) {
-          userAFriendships = const <FriendshipModel>[];
+      final subA = buildQuery('userA').snapshots().listen(
+        (snapshot) {
+          userAFriendships = snapshot.docs
+              .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
+              .toList(growable: false);
           emit();
-          return;
-        }
-        controller.addError(error, stackTrace);
-      });
+        },
+        onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            userAFriendships = const <FriendshipModel>[];
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        },
+      );
 
-      final subB = buildQuery('userB').snapshots().listen((snapshot) {
-        userBFriendships = snapshot.docs
-            .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
-            .toList(growable: false);
-        emit();
-      }, onError: (error, stackTrace) {
-        if (_isPermissionDenied(error)) {
-          userBFriendships = const <FriendshipModel>[];
+      final subB = buildQuery('userB').snapshots().listen(
+        (snapshot) {
+          userBFriendships = snapshot.docs
+              .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
+              .toList(growable: false);
           emit();
-          return;
-        }
-        controller.addError(error, stackTrace);
-      });
+        },
+        onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            userBFriendships = const <FriendshipModel>[];
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        },
+      );
 
       controller.onCancel = () async {
         await subA.cancel();
@@ -175,25 +191,25 @@ class FriendService {
 
       void startFallback() {
         if (fallbackSub != null) return;
-        fallbackSub = _watchAcceptedFriendshipsFromUserDoc(normalizedUserId).listen(
-          controller.add,
-          onError: controller.addError,
-        );
+        fallbackSub = _watchAcceptedFriendshipsFromUserDoc(
+          normalizedUserId,
+        ).listen(controller.add, onError: controller.addError);
       }
 
-      primarySub = watchFriendships(
-        normalizedUserId,
-        statuses: const <String>{'accepted'},
-      ).listen(
-        controller.add,
-        onError: (error, stackTrace) {
-          if (_isPermissionDenied(error)) {
-            startFallback();
-            return;
-          }
-          controller.addError(error, stackTrace);
-        },
-      );
+      primarySub =
+          watchFriendships(
+            normalizedUserId,
+            statuses: const <String>{'accepted'},
+          ).listen(
+            controller.add,
+            onError: (error, stackTrace) {
+              if (_isPermissionDenied(error)) {
+                startFallback();
+                return;
+              }
+              controller.addError(error, stackTrace);
+            },
+          );
 
       controller.onCancel = () async {
         await primarySub?.cancel();
@@ -203,8 +219,8 @@ class FriendService {
   }
 
   Stream<List<FriendshipModel>> _watchAcceptedFriendshipsFromUserDoc(
-      String userId,
-      ) {
+    String userId,
+  ) {
     return _usersCollection.doc(userId).snapshots().map((doc) {
       final data = doc.data();
       if (!doc.exists || data == null) {
@@ -213,16 +229,18 @@ class FriendService {
 
       final friendIds = _asStringList(data['friends']);
       final fallbackCreatedAt = DateTime.fromMillisecondsSinceEpoch(0);
-      return friendIds.map((friendId) {
-        final sorted = FriendshipModel.sortedPair(userId, friendId);
-        return FriendshipModel(
-          id: FriendshipModel.canonicalIdFor(userId, friendId),
-          userA: sorted.userA,
-          userB: sorted.userB,
-          status: 'accepted',
-          createdAt: fallbackCreatedAt,
-        );
-      }).toList(growable: false);
+      return friendIds
+          .map((friendId) {
+            final sorted = FriendshipModel.sortedPair(userId, friendId);
+            return FriendshipModel(
+              id: FriendshipModel.canonicalIdFor(userId, friendId),
+              userA: sorted.userA,
+              userB: sorted.userB,
+              status: 'accepted',
+              createdAt: fallbackCreatedAt,
+            );
+          })
+          .toList(growable: false);
     });
   }
 
@@ -237,10 +255,15 @@ class FriendService {
       StreamSubscription<List<UserModel>>? usersSub;
 
       Future<void> bindUsers(List<FriendshipModel> friendships) async {
-        final excludedIds = await _moderationService.getExcludedUserIds(normalizedUserId);
+        final excludedIds = await _moderationService.getExcludedUserIds(
+          normalizedUserId,
+        );
         final friendIds = friendships
             .map((friendship) => friendship.otherUserId(normalizedUserId))
-            .where((friendId) => friendId.isNotEmpty && !excludedIds.contains(friendId))
+            .where(
+              (friendId) =>
+                  friendId.isNotEmpty && !excludedIds.contains(friendId),
+            )
             .toList(growable: false);
 
         await usersSub?.cancel();
@@ -250,7 +273,9 @@ class FriendService {
         }
 
         usersSub = _watchUsersByIds(friendIds).listen((users) {
-          final usersById = <String, UserModel>{for (final user in users) user.id: user};
+          final usersById = <String, UserModel>{
+            for (final user in users) user.id: user,
+          };
           final ordered = friendIds
               .map((friendId) => usersById[friendId])
               .whereType<UserModel>()
@@ -298,29 +323,34 @@ class FriendService {
         if (latestFriendships.isNotEmpty && (!usersReady || !presenceReady)) {
           return;
         }
-        final entries = latestFriendships
-            .map((friendship) {
-              final friendId = friendship.otherUserId(normalizedUserId);
-              final user = usersById[friendId];
-              if (friendId.isEmpty || user == null) {
-                return null;
-              }
-              final presence = presenceById[friendId] ??
-                  PresenceModel(
-                    userId: friendId,
-                    isOnline: false,
-                    status: UserStatus.offline,
+        final entries =
+            latestFriendships
+                .map((friendship) {
+                  final friendId = friendship.otherUserId(normalizedUserId);
+                  final user = usersById[friendId];
+                  if (friendId.isEmpty || user == null) {
+                    return null;
+                  }
+                  final presence =
+                      presenceById[friendId] ??
+                      PresenceModel(
+                        userId: friendId,
+                        isOnline: false,
+                        status: UserStatus.offline,
+                      );
+                  return FriendRosterEntry(
+                    friendship: friendship,
+                    user: user,
+                    presence: presence,
                   );
-              return FriendRosterEntry(
-                friendship: friendship,
-                user: user,
-                presence: presence,
+                })
+                .whereType<FriendRosterEntry>()
+                .toList(growable: false)
+              ..sort(
+                (left, right) => left.user.username.toLowerCase().compareTo(
+                  right.user.username.toLowerCase(),
+                ),
               );
-            })
-            .whereType<FriendRosterEntry>()
-            .toList(growable: false)
-          ..sort((left, right) =>
-              left.user.username.toLowerCase().compareTo(right.user.username.toLowerCase()));
         controller.add(entries);
       }
 
@@ -339,10 +369,15 @@ class FriendService {
       }
 
       Future<void> rebindFriendData(List<FriendshipModel> friendships) async {
-        final excludedIds = await _moderationService.getExcludedUserIds(normalizedUserId);
+        final excludedIds = await _moderationService.getExcludedUserIds(
+          normalizedUserId,
+        );
         final filteredFriendships = friendships
-            .where((friendship) =>
-                !excludedIds.contains(friendship.otherUserId(normalizedUserId)))
+            .where(
+              (friendship) => !excludedIds.contains(
+                friendship.otherUserId(normalizedUserId),
+              ),
+            )
             .toList(growable: false);
         final friendIds = filteredFriendships
             .map((friendship) => friendship.otherUserId(normalizedUserId))
@@ -365,34 +400,40 @@ class FriendService {
           return;
         }
 
-        usersSub = _watchUsersByIds(friendIds).listen((users) {
-          usersById = {for (final user in users) user.id: user};
-          usersReady = true;
-          emit();
-        }, onError: (error, stackTrace) {
-          if (_isPermissionDenied(error)) {
-            usersById = const <String, UserModel>{};
+        usersSub = _watchUsersByIds(friendIds).listen(
+          (users) {
+            usersById = {for (final user in users) user.id: user};
             usersReady = true;
             emit();
-            return;
-          }
-          controller.addError(error, stackTrace);
-        });
+          },
+          onError: (error, stackTrace) {
+            if (_isPermissionDenied(error)) {
+              usersById = const <String, UserModel>{};
+              usersReady = true;
+              emit();
+              return;
+            }
+            controller.addError(error, stackTrace);
+          },
+        );
 
-        presenceSub = _watchPresenceByUserIds(friendIds).listen((presenceMap) {
-          logPresenceTransitions(presenceMap);
-          presenceById = presenceMap;
-          presenceReady = true;
-          emit();
-        }, onError: (error, stackTrace) {
-          if (_isPermissionDenied(error)) {
-            presenceById = const <String, PresenceModel>{};
+        presenceSub = _watchPresenceByUserIds(friendIds).listen(
+          (presenceMap) {
+            logPresenceTransitions(presenceMap);
+            presenceById = presenceMap;
             presenceReady = true;
             emit();
-            return;
-          }
-          controller.addError(error, stackTrace);
-        });
+          },
+          onError: (error, stackTrace) {
+            if (_isPermissionDenied(error)) {
+              presenceById = const <String, PresenceModel>{};
+              presenceReady = true;
+              emit();
+              return;
+            }
+            controller.addError(error, stackTrace);
+          },
+        );
       }
 
       friendshipsSub = watchAcceptedFriendships(normalizedUserId).listen(
@@ -425,20 +466,24 @@ class FriendService {
       return Stream.value(const <FriendRequestModel>[]);
     }
 
-    return watchFriendships(normalizedUserId, statuses: const <String>{'pending'}).map((friendships) {
-      final requests = friendships
-          .where((friendship) => friendship.requestedBy != normalizedUserId)
-          .map(
-            (friendship) => FriendRequestModel(
-              id: friendship.id,
-              fromUserId: friendship.requestedBy ?? friendship.userA,
-              toUserId: normalizedUserId,
-              status: friendship.status,
-              createdAt: friendship.createdAt,
-            ),
-          )
-          .toList(growable: false)
-        ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
+    return watchFriendships(
+      normalizedUserId,
+      statuses: const <String>{'pending'},
+    ).map((friendships) {
+      final requests =
+          friendships
+              .where((friendship) => friendship.requestedBy != normalizedUserId)
+              .map(
+                (friendship) => FriendRequestModel(
+                  id: friendship.id,
+                  fromUserId: friendship.requestedBy ?? friendship.userA,
+                  toUserId: normalizedUserId,
+                  status: friendship.status,
+                  createdAt: friendship.createdAt,
+                ),
+              )
+              .toList(growable: false)
+            ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
       return requests;
     });
   }
@@ -449,7 +494,10 @@ class FriendService {
       return Stream.value(const <String>[]);
     }
 
-    return watchFriendships(normalizedUserId, statuses: const <String>{'pending'}).map((friendships) {
+    return watchFriendships(
+      normalizedUserId,
+      statuses: const <String>{'pending'},
+    ).map((friendships) {
       return friendships
           .where((friendship) => friendship.requestedBy == normalizedUserId)
           .map((friendship) => friendship.otherUserId(normalizedUserId))
@@ -467,7 +515,10 @@ class FriendService {
       return;
     }
 
-    if (await _moderationService.hasBlockingRelationship(normalizedFromUserId, normalizedToUserId)) {
+    if (await _moderationService.hasBlockingRelationship(
+      normalizedFromUserId,
+      normalizedToUserId,
+    )) {
       return;
     }
 
@@ -477,10 +528,16 @@ class FriendService {
       return;
     }
 
-    final friendshipId = friendshipIdFor(normalizedFromUserId, normalizedToUserId);
+    final friendshipId = friendshipIdFor(
+      normalizedFromUserId,
+      normalizedToUserId,
+    );
     final friendshipRef = _friendshipsCollection.doc(friendshipId);
     final friendshipSnap = await friendshipRef.get();
-    final sortedPair = FriendshipModel.sortedPair(normalizedFromUserId, normalizedToUserId);
+    final sortedPair = FriendshipModel.sortedPair(
+      normalizedFromUserId,
+      normalizedToUserId,
+    );
 
     if (friendshipSnap.exists) {
       final friendship = FriendshipModel.fromJson(
@@ -523,11 +580,14 @@ class FriendService {
     );
 
     try {
-      await _analyticsService.logEvent('friend_request_sent', params: {
-        'from_user_id': normalizedFromUserId,
-        'to_user_id': normalizedToUserId,
-        'friendship_id': friendshipId,
-      });
+      await _analyticsService.logEvent(
+        'friend_request_sent',
+        params: {
+          'from_user_id': normalizedFromUserId,
+          'to_user_id': normalizedToUserId,
+          'friendship_id': friendshipId,
+        },
+      );
     } catch (_) {
       // Keep the friendship flow resilient when analytics is unavailable.
     }
@@ -557,15 +617,17 @@ class FriendService {
       collectionName: 'friendships',
     );
 
-    final accepterId =
-        friendship.requestedBy == friendship.userA ? friendship.userB : friendship.userA;
+    final accepterId = friendship.requestedBy == friendship.userA
+        ? friendship.userB
+        : friendship.userA;
     final accepter = await getUserById(accepterId);
     final requesterId = friendship.requestedBy ?? friendship.userA;
 
     await _createNotification(
       requesterId,
       type: 'friend_accept',
-      content: '${accepter?.username ?? 'Someone'} accepted your friend request.',
+      content:
+          '${accepter?.username ?? 'Someone'} accepted your friend request.',
       actorId: accepterId,
     );
 
@@ -575,11 +637,14 @@ class FriendService {
     );
 
     try {
-      await _analyticsService.logEvent('friend_request_accepted', params: {
-        'friendship_id': normalizedRequestId,
-        'requester_id': requesterId,
-        'accepter_id': accepterId,
-      });
+      await _analyticsService.logEvent(
+        'friend_request_accepted',
+        params: {
+          'friendship_id': normalizedRequestId,
+          'requester_id': requesterId,
+          'accepter_id': accepterId,
+        },
+      );
     } catch (_) {
       // Keep the friendship flow resilient when analytics is unavailable.
     }
@@ -603,7 +668,10 @@ class FriendService {
       return;
     }
 
-    await friendshipRef.delete();
+    await Future.wait<void>([
+      friendshipRef.delete(),
+      _firestore.collection('friend_links').doc(normalizedRequestId).delete(),
+    ]);
   }
 
   Future<List<UserModel>> getFriends(String userId) async {
@@ -662,7 +730,10 @@ class FriendService {
   }
 
   Future<List<String>> getFriendIds(String userId) async {
-    final friendships = await _getFriendships(userId, statuses: const <String>{'accepted'});
+    final friendships = await _getFriendships(
+      userId,
+      statuses: const <String>{'accepted'},
+    );
     return friendships
         .map((friendship) => friendship.otherUserId(userId))
         .where((friendId) => friendId.isNotEmpty)
@@ -676,7 +747,11 @@ class FriendService {
     return _asStringList(data['favoriteFriendIds']).toSet();
   }
 
-  Future<void> setFavorite(String userId, String friendId, {required bool isFavorite}) async {
+  Future<void> setFavorite(
+    String userId,
+    String friendId, {
+    required bool isFavorite,
+  }) async {
     if (userId.trim().isEmpty || friendId.trim().isEmpty) return;
     await _mutationService.setLegacyFavoriteFriend(
       userId: userId,
@@ -694,7 +769,10 @@ class FriendService {
   }
 
   Future<List<String>> getIncomingRequesterIds(String userId) async {
-    final friendships = await _getFriendships(userId, statuses: const <String>{'pending'});
+    final friendships = await _getFriendships(
+      userId,
+      statuses: const <String>{'pending'},
+    );
     return friendships
         .where((friendship) => friendship.requestedBy != userId.trim())
         .map((friendship) => friendship.requestedBy ?? '')
@@ -704,7 +782,10 @@ class FriendService {
 
   Future<List<String>> getOutgoingPendingRequestIds(String userId) async {
     final normalizedUserId = userId.trim();
-    final friendships = await _getFriendships(normalizedUserId, statuses: const <String>{'pending'});
+    final friendships = await _getFriendships(
+      normalizedUserId,
+      statuses: const <String>{'pending'},
+    );
     return friendships
         .where((friendship) => friendship.requestedBy == normalizedUserId)
         .map((friendship) => friendship.otherUserId(normalizedUserId))
@@ -714,7 +795,10 @@ class FriendService {
 
   Future<void> removeFriend(String userId, String friendId) async {
     final friendshipId = friendshipIdFor(userId, friendId);
-    await _friendshipsCollection.doc(friendshipId).delete();
+    await Future.wait<void>([
+      _friendshipsCollection.doc(friendshipId).delete(),
+      _firestore.collection('friend_links').doc(friendshipId).delete(),
+    ]);
   }
 
   Future<List<UserModel>> searchUsers(
@@ -778,7 +862,10 @@ class FriendService {
 
     final sorted = mutualCount.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final topIds = sorted.take(limit).map((entry) => entry.key).toList(growable: false);
+    final topIds = sorted
+        .take(limit)
+        .map((entry) => entry.key)
+        .toList(growable: false);
     if (topIds.isEmpty) return const <UserModel>[];
 
     return getUsersByIds(topIds);
@@ -796,7 +883,8 @@ class FriendService {
         chunks.length,
         (_) => <String, UserModel>{},
       );
-      final subscriptions = <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+      final subscriptions =
+          <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
 
       void emit() {
         final merged = <String, UserModel>{};
@@ -816,20 +904,23 @@ class FriendService {
         final sub = _usersCollection
             .where(FieldPath.documentId, whereIn: chunk)
             .snapshots()
-            .listen((snapshot) {
-          chunkMaps[index] = {
-            for (final doc in snapshot.docs)
-              doc.id: UserModel.fromJson({'id': doc.id, ...doc.data()}),
-          };
-          emit();
-        }, onError: (error, stackTrace) {
-          if (_isPermissionDenied(error)) {
-            chunkMaps[index] = <String, UserModel>{};
-            emit();
-            return;
-          }
-          controller.addError(error, stackTrace);
-        });
+            .listen(
+              (snapshot) {
+                chunkMaps[index] = {
+                  for (final doc in snapshot.docs)
+                    doc.id: UserModel.fromJson({'id': doc.id, ...doc.data()}),
+                };
+                emit();
+              },
+              onError: (error, stackTrace) {
+                if (_isPermissionDenied(error)) {
+                  chunkMaps[index] = <String, UserModel>{};
+                  emit();
+                  return;
+                }
+                controller.addError(error, stackTrace);
+              },
+            );
         subscriptions.add(sub);
       }
 
@@ -841,7 +932,9 @@ class FriendService {
     });
   }
 
-  Stream<Map<String, PresenceModel>> _watchPresenceByUserIds(List<String> userIds) {
+  Stream<Map<String, PresenceModel>> _watchPresenceByUserIds(
+    List<String> userIds,
+  ) {
     return _presenceRepository.watchUsersPresence(userIds);
   }
 
@@ -855,11 +948,17 @@ class FriendService {
     }
 
     Query<Map<String, dynamic>> buildQuery(String field) {
-      var query = _friendshipsCollection.where(field, isEqualTo: normalizedUserId);
+      var query = _friendshipsCollection.where(
+        field,
+        isEqualTo: normalizedUserId,
+      );
       if (statuses.length == 1) {
         query = query.where('status', isEqualTo: statuses.first);
       } else if (statuses.length > 1) {
-        query = query.where('status', whereIn: statuses.toList(growable: false));
+        query = query.where(
+          'status',
+          whereIn: statuses.toList(growable: false),
+        );
       }
       return query;
     }
