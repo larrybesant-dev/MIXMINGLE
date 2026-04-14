@@ -250,12 +250,13 @@
         "entryCountDelta",
         "boundaryBehaviorChanged",
         "tierChanged",
+        "classification",
         "changeClassification",
         "confidence",
         "notes"
       ],
       "allowedModes": ["baseline", "delta"],
-      "allowedChangeClassification": ["baseline", "stable", "drifting", "improving", "mixed"],
+      "allowedChangeClassification": ["baseline", "no_change", "minor_drift", "structural_shift"],
       "allowedConfidence": ["low", "normal"]
     }
   }

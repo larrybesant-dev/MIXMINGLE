@@ -7,7 +7,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function To-IsoOrNow {
+function Get-IsoTimeOrNow {
   param([object]$Value)
   if ($null -eq $Value) { return (Get-Date).ToUniversalTime() }
   try { return ([datetime]$Value).ToUniversalTime() } catch { return (Get-Date).ToUniversalTime() }
@@ -35,7 +35,7 @@ if ($index.Count -eq 0) {
 
 $ordered = @(
   $index | Sort-Object `
-    @{ Expression = { To-IsoOrNow -Value $_.generatedAtUtc } ; Ascending = $true }, `
+    @{ Expression = { Get-IsoTimeOrNow -Value $_.generatedAtUtc } ; Ascending = $true }, `
     @{ Expression = { [string]$_.runId } ; Ascending = $true }, `
     @{ Expression = { [string]$_.file } ; Ascending = $true }
 )
@@ -62,7 +62,7 @@ $thresholdDelta = $null
 $entryCountDelta = $null
 $boundaryChanged = $null
 $tierChanged = $null
-$changeClassification = 'baseline'
+$classification = 'baseline'
 $confidence = 'low'
 $notes = 'Baseline run: no previous snapshot available for comparison.'
 
@@ -73,6 +73,7 @@ if ($mode -eq 'delta') {
   $entryCountDelta = ([int]$current.metrics.entryCount - [int]$previous.metrics.entryCount)
   $boundaryChanged = ([string]$current.metrics.boundaryBehavior -ne [string]$previous.metrics.boundaryBehavior)
   $tierChanged = ([string]$current.metrics.tier -ne [string]$previous.metrics.tier)
+  $currentJaccard = [double]$current.metrics.jaccard
 
   if ([string]$current.metrics.boundaryBehavior -eq 'insufficient_history') {
     $confidence = 'low'
@@ -81,17 +82,14 @@ if ($mode -eq 'delta') {
   }
 
   if ($driftDelta -eq 0 -and $jaccardDelta -eq 0 -and $thresholdDelta -eq 0 -and -not $boundaryChanged -and -not $tierChanged) {
-    $changeClassification = 'stable'
-    $notes = 'No significant drift detected versus previous run.'
-  } elseif ($driftDelta -gt 0 -or $jaccardDelta -lt 0 -or $thresholdDelta -gt 0 -or $boundaryChanged -or $tierChanged) {
-    $changeClassification = 'drifting'
-    $notes = 'Drift indicators increased versus previous run.'
-  } elseif ($driftDelta -lt 0 -or $jaccardDelta -gt 0 -or $thresholdDelta -lt 0) {
-    $changeClassification = 'improving'
-    $notes = 'Drift indicators improved versus previous run.'
+    $classification = 'no_change'
+    $notes = 'No meaningful policy drift detected versus previous run.'
+  } elseif ($currentJaccard -lt 0.9 -or $jaccardDelta -le -0.1 -or $thresholdDelta -ge 2 -or $boundaryChanged -or $tierChanged) {
+    $classification = 'structural_shift'
+    $notes = 'Structural shift detected: surface similarity or boundary behavior changed materially.'
   } else {
-    $changeClassification = 'mixed'
-    $notes = 'Mixed directional changes detected versus previous run.'
+    $classification = 'minor_drift'
+    $notes = 'Minor drift detected: directional change observed without major structural shift.'
   }
 }
 
@@ -135,7 +133,8 @@ $result = [ordered]@{
     entryCountDelta = $entryCountDelta
     boundaryBehaviorChanged = $boundaryChanged
     tierChanged = $tierChanged
-    changeClassification = $changeClassification
+    classification = $classification
+    changeClassification = $classification
     confidence = $confidence
     notes = $notes
   }

@@ -255,8 +255,12 @@ try {
       throw "Contract violation in policy_analysis_delta.summary: invalid mode '$($delta.summary.mode)'."
     }
 
-    if (@($deltaContract.allowedChangeClassification) -notcontains [string]$delta.summary.changeClassification) {
-      throw "Contract violation in policy_analysis_delta.summary: invalid changeClassification '$($delta.summary.changeClassification)'."
+    if (@($deltaContract.allowedChangeClassification) -notcontains [string]$delta.summary.classification) {
+      throw "Contract violation in policy_analysis_delta.summary: invalid classification '$($delta.summary.classification)'."
+    }
+
+    if ([string]$delta.summary.changeClassification -ne [string]$delta.summary.classification) {
+      throw "Contract violation in policy_analysis_delta.summary: changeClassification must match classification."
     }
 
     if (@($deltaContract.allowedConfidence) -notcontains [string]$delta.summary.confidence) {

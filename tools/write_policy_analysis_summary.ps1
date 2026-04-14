@@ -86,8 +86,15 @@ if ($null -ne $deltaArtifact) {
   $lines += 'Change vs Previous Run:'
   $lines += ''
 
+  $classificationValue = if ($deltaArtifact.summary.PSObject.Properties.Name -contains 'classification') {
+    $deltaArtifact.summary.classification
+  } else {
+    $deltaArtifact.summary.changeClassification
+  }
+
   if ([string]$deltaArtifact.summary.mode -eq 'baseline') {
     $lines += '- Baseline run: no previous snapshot available.'
+    $lines += "- Classification: $classificationValue"
     $lines += "- Confidence: $($deltaArtifact.summary.confidence)"
     $lines += ''
   } else {
@@ -106,7 +113,7 @@ if ($null -ne $deltaArtifact) {
     $lines += "- DriftScore: $prevScore -> $currScore ($scoreSign$deltaScore)"
     $lines += "- Jaccard: $prevJaccard -> $currJaccard ($jaccardSign$deltaJaccard)"
     $lines += "- Boundary Behavior: $prevBoundary -> $currBoundary"
-    $lines += "- Classification: $($deltaArtifact.summary.changeClassification)"
+    $lines += "- Classification: $classificationValue"
     $lines += "- Confidence: $($deltaArtifact.summary.confidence)"
     $lines += ''
   }
