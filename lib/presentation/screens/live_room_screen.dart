@@ -3259,7 +3259,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       );
       final joinResult = await ref
           .read(liveRoomControllerProvider(widget.roomId).notifier)
-          .joinRoom(userId, displayName: sessionDisplayName);
+          .joinRoom(
+            userId,
+            displayName: sessionDisplayName,
+            avatarUrl: ref.read(userProvider)?.avatarUrl,
+          );
       _excludedUserIds = joinResult.excludedUserIds;
       if (!joinResult.isSuccess) {
         AppTelemetry.updateRoomState(
@@ -4059,23 +4063,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 .toList(growable: false);
             final hasPresenceSnapshot = roomPresenceList.isNotEmpty;
             final now = DateTime.now();
+            final confirmedRoomUserIds = rosterParticipants
+                .map((participantItem) => participantItem.userId.trim())
+                .where((participantId) => participantId.isNotEmpty)
+                .toSet();
             final participantsInRoom = hasPresenceSnapshot
                 ? rawParticipantsInRoom
                       .where((participantItem) {
-                        if (participantItem.userId == user.id ||
-                            onlineRoomUserIds.contains(
-                              participantItem.userId,
-                            )) {
-                          return true;
+                        final participantUserId = participantItem.userId.trim();
+                        if (participantUserId.isEmpty) {
+                          return false;
                         }
 
-                        final presence =
-                            presenceByUserId[participantItem.userId];
+                        final presence = presenceByUserId[participantUserId];
                         final hasRecentRoomActivity =
                             recentMessageSenderIds.contains(
-                              participantItem.userId,
+                              participantUserId,
                             ) ||
-                            _recentChatters.contains(participantItem.userId) ||
+                            _recentChatters.contains(participantUserId) ||
                             participantItem.camOn ||
                             participantItem.micOn ||
                             roomParticipantHasMicAccess(participantItem);
@@ -4086,10 +4091,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             (participantItem.userStatus?.trim().toLowerCase() ??
                                 '') ==
                             'online';
+                        final hasExplicitOfflineSignal =
+                            presence != null &&
+                            !presence.isOnline &&
+                            presence.lastHeartbeatAt == null &&
+                            presence.lastSeenAt == null &&
+                            !hasRecentRoomActivity;
 
+                        if (participantUserId == user.id ||
+                            onlineRoomUserIds.contains(participantUserId)) {
+                          return true;
+                        }
                         if (hasRecentRoomActivity ||
                             (participantLooksOnline && joinedRecently)) {
                           return true;
+                        }
+                        if (confirmedRoomUserIds.contains(participantUserId)) {
+                          return !hasExplicitOfflineSignal;
                         }
 
                         return presence == null;
@@ -6375,11 +6393,24 @@ class _RoomRosterSidebar extends StatelessWidget {
     final participantByUserId = <String, RoomParticipantModel>{
       for (final participant in participants) participant.userId: participant,
     };
+    final onlinePresenceUserIds = {
+      for (final presence in presenceList)
+        if (presence.isOnline && presence.userId.trim().isNotEmpty)
+          presence.userId.trim(),
+    };
+    final hasPresenceSnapshot = presenceList.isNotEmpty;
     for (final roomUserId in roomState.users) {
       final normalizedUserId = roomUserId.trim();
+      final shouldIncludeFromSharedState =
+          normalizedUserId == currentUserId ||
+          !hasPresenceSnapshot ||
+          onlinePresenceUserIds.contains(normalizedUserId) ||
+          recentChatters.contains(normalizedUserId) ||
+          roomState.isSpeaker(normalizedUserId);
       if (normalizedUserId.isEmpty ||
           participantByUserId.containsKey(normalizedUserId) ||
-          !roomState.shouldRenderUser(normalizedUserId)) {
+          !roomState.shouldRenderUser(normalizedUserId) ||
+          !shouldIncludeFromSharedState) {
         continue;
       }
       participantByUserId[normalizedUserId] = RoomParticipantModel(

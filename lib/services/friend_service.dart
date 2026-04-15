@@ -650,38 +650,47 @@ class FriendService {
       return;
     }
 
-    final fromUserDoc = await _usersCollection.doc(normalizedFromUserId).get();
-    final toUserDoc = await _usersCollection.doc(normalizedToUserId).get();
-    if (!fromUserDoc.exists || !toUserDoc.exists) {
-      return;
-    }
-
     final friendshipId = friendshipIdFor(
       normalizedFromUserId,
       normalizedToUserId,
     );
     final friendshipRef = _friendshipsCollection.doc(friendshipId);
-    final friendshipSnap = await friendshipRef.get();
     final sortedPair = FriendshipModel.sortedPair(
       normalizedFromUserId,
       normalizedToUserId,
     );
 
-    if (friendshipSnap.exists) {
-      final friendship = FriendshipModel.fromJson(
-        friendshipSnap.id,
-        friendshipSnap.data() ?? <String, dynamic>{},
+    FriendshipModel? friendship;
+    try {
+      final friendshipSnap = await friendshipRef.get();
+      if (friendshipSnap.exists) {
+        friendship = FriendshipModel.fromJson(
+          friendshipSnap.id,
+          friendshipSnap.data() ?? <String, dynamic>{},
+        );
+      }
+    } catch (error, stackTrace) {
+      if (!_isPermissionDenied(error)) {
+        rethrow;
+      }
+      developer.log(
+        'friendship_lookup_denied from=$normalizedFromUserId to=$normalizedToUserId proceeding_with_create=true',
+        name: 'FriendService',
+        error: error,
+        stackTrace: stackTrace,
       );
+    }
 
-      if (friendship.status == 'accepted' || friendship.status == 'blocked') {
+    if (friendship != null) {
+      if (friendship!.status == 'accepted' || friendship!.status == 'blocked') {
         return;
       }
 
-      if (friendship.status == 'pending') {
-        if (friendship.requestedBy == normalizedFromUserId) {
+      if (friendship!.status == 'pending') {
+        if (friendship!.requestedBy == normalizedFromUserId) {
           return;
         }
-        await acceptFriendRequest(friendship.id);
+        await acceptFriendRequest(friendship!.id);
         return;
       }
     }
@@ -694,13 +703,23 @@ class FriendService {
       collectionName: 'friendships',
     );
 
-    final fromUser = await getUserById(normalizedFromUserId);
-    await _createNotification(
-      normalizedToUserId,
-      type: 'friend_request',
-      content: '${fromUser?.username ?? 'Someone'} sent you a friend request.',
-      actorId: normalizedFromUserId,
-    );
+    try {
+      final fromUser = await getUserById(normalizedFromUserId);
+      await _createNotification(
+        normalizedToUserId,
+        type: 'friend_request',
+        content:
+            '${fromUser?.username ?? 'Someone'} sent you a friend request.',
+        actorId: normalizedFromUserId,
+      );
+    } catch (error, stackTrace) {
+      developer.log(
+        'friend_request_notification_failed from=$normalizedFromUserId to=$normalizedToUserId friendshipId=$friendshipId',
+        name: 'FriendService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
 
     developer.log(
       'friend_request_sent from=$normalizedFromUserId to=$normalizedToUserId friendshipId=$friendshipId',

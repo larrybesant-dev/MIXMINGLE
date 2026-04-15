@@ -17,8 +17,11 @@ class RoomParticipantModel {
   final bool micOn;
   final String? customStatus;
   final String? userStatus;
+  final String? displayName;
+  final String? photoUrl;
   final DateTime joinedAt;
   final DateTime lastActiveAt;
+
   /// Set when the room owner has enabled a mic play-time limit.
   /// When DateTime.now() >= micExpiresAt the client demotes the user and
   /// the next grabMic call treats the doc as stale.
@@ -33,6 +36,8 @@ class RoomParticipantModel {
     this.micOn = false,
     this.customStatus,
     this.userStatus,
+    this.displayName,
+    this.photoUrl,
     required this.joinedAt,
     required this.lastActiveAt,
     this.micExpiresAt,
@@ -48,12 +53,16 @@ class RoomParticipantModel {
       micOn: map['micOn'] ?? false,
       customStatus: map['customStatus'] as String?,
       userStatus: map['userStatus'] as String?,
+      displayName: map['displayName'] as String?,
+      photoUrl: map['photoUrl'] as String?,
       joinedAt: (map['joinedAt'] is Timestamp)
           ? (map['joinedAt'] as Timestamp).toDate()
-          : DateTime.tryParse(map['joinedAt']?.toString() ?? '') ?? DateTime.now(),
+          : DateTime.tryParse(map['joinedAt']?.toString() ?? '') ??
+                DateTime.now(),
       lastActiveAt: (map['lastActiveAt'] is Timestamp)
           ? (map['lastActiveAt'] as Timestamp).toDate()
-          : DateTime.tryParse(map['lastActiveAt']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+          : DateTime.tryParse(map['lastActiveAt']?.toString() ?? '') ??
+                DateTime.fromMillisecondsSinceEpoch(0),
       micExpiresAt: _parseDateTimeField(map['micExpiresAt']),
     );
   }
@@ -68,9 +77,12 @@ class RoomParticipantModel {
       'micOn': micOn,
       if (customStatus != null) 'customStatus': customStatus,
       if (userStatus != null) 'userStatus': userStatus,
+      if (displayName != null) 'displayName': displayName,
+      if (photoUrl != null) 'photoUrl': photoUrl,
       'joinedAt': Timestamp.fromDate(joinedAt),
       'lastActiveAt': Timestamp.fromDate(lastActiveAt),
-      if (micExpiresAt != null) 'micExpiresAt': Timestamp.fromDate(micExpiresAt!),
+      if (micExpiresAt != null)
+        'micExpiresAt': Timestamp.fromDate(micExpiresAt!),
     };
   }
 
@@ -83,6 +95,8 @@ class RoomParticipantModel {
     bool? micOn,
     String? customStatus,
     String? userStatus,
+    String? displayName,
+    String? photoUrl,
     DateTime? joinedAt,
     DateTime? lastActiveAt,
     DateTime? micExpiresAt,
@@ -96,6 +110,8 @@ class RoomParticipantModel {
       micOn: micOn ?? this.micOn,
       customStatus: customStatus ?? this.customStatus,
       userStatus: userStatus ?? this.userStatus,
+      displayName: displayName ?? this.displayName,
+      photoUrl: photoUrl ?? this.photoUrl,
       joinedAt: joinedAt ?? this.joinedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
       micExpiresAt: micExpiresAt ?? this.micExpiresAt,

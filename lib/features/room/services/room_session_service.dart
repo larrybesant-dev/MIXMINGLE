@@ -92,9 +92,13 @@ class RoomSessionService {
   Future<RoomJoinResult> joinRoom({
     required String roomId,
     required String userId,
+    String? displayName,
+    String? photoUrl,
   }) async {
     final normalizedRoomId = roomId.trim();
     final normalizedUserId = userId.trim();
+    final normalizedDisplayName = displayName?.trim() ?? '';
+    final normalizedPhotoUrl = photoUrl?.trim() ?? '';
     if (normalizedRoomId.isEmpty || normalizedUserId.isEmpty) {
       return const RoomJoinResult.failure(
         'Could not join room. Please try again.',
@@ -231,6 +235,9 @@ class RoomSessionService {
           'camOn': false,
           'lastActiveAt': now,
           'userStatus': 'online',
+          if (normalizedDisplayName.isNotEmpty)
+            'displayName': normalizedDisplayName,
+          if (normalizedPhotoUrl.isNotEmpty) 'photoUrl': normalizedPhotoUrl,
         }, SetOptions(merge: true)),
       );
       await traceFirestoreWrite<void>(
@@ -243,6 +250,9 @@ class RoomSessionService {
           'role': ownerId == normalizedUserId ? 'owner' : 'member',
           'joinedAt': data['joinedAt'] ?? now,
           'lastActiveAt': now,
+          if (normalizedDisplayName.isNotEmpty)
+            'displayName': normalizedDisplayName,
+          if (normalizedPhotoUrl.isNotEmpty) 'photoUrl': normalizedPhotoUrl,
         }, SetOptions(merge: true)),
       );
     } else {
@@ -259,6 +269,9 @@ class RoomSessionService {
           'isBanned': false,
           'camOn': false,
           'userStatus': 'online',
+          if (normalizedDisplayName.isNotEmpty)
+            'displayName': normalizedDisplayName,
+          if (normalizedPhotoUrl.isNotEmpty) 'photoUrl': normalizedPhotoUrl,
           'joinedAt': now,
           'lastActiveAt': now,
         }),
@@ -271,6 +284,9 @@ class RoomSessionService {
         action: () => memberRef.set({
           'userId': normalizedUserId,
           'role': ownerId == normalizedUserId ? 'owner' : 'member',
+          if (normalizedDisplayName.isNotEmpty)
+            'displayName': normalizedDisplayName,
+          if (normalizedPhotoUrl.isNotEmpty) 'photoUrl': normalizedPhotoUrl,
           'joinedAt': now,
           'lastActiveAt': now,
         }),

@@ -394,7 +394,11 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
   }
 
-  Future<RoomJoinResult> joinRoom(String userId, {String? displayName}) async {
+  Future<RoomJoinResult> joinRoom(
+    String userId, {
+    String? displayName,
+    String? avatarUrl,
+  }) async {
     final normalizedUserId = userId.trim();
     final normalizedDisplayName = displayName?.trim() ?? '';
     if (_phase == LiveRoomPhase.joining ||
@@ -432,6 +436,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final result = await _sessionService.joinRoom(
       roomId: arg,
       userId: normalizedUserId,
+      displayName: normalizedDisplayName,
+      photoUrl: avatarUrl,
     );
     if (!result.isSuccess) {
       _stopRoomHeartbeat();

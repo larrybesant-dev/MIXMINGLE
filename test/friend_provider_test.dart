@@ -258,6 +258,30 @@ void main() {
       },
     );
 
+    test(
+      'sendFriendRequest still creates a pending link when the target profile doc is not readable yet',
+      () async {
+        await firestore.collection('users').doc('user-5').delete();
+        final service = container.read(friendServiceProvider);
+
+        await service.sendFriendRequest('user-1', 'user-5');
+
+        final legacyLink = await firestore
+            .collection('friendships')
+            .doc('user-1_user-5')
+            .get();
+        final schemaLink = await firestore
+            .collection('friend_links')
+            .doc('user-1_user-5')
+            .get();
+
+        expect(legacyLink.exists, isTrue);
+        expect(legacyLink.data()?['status'], 'pending');
+        expect(schemaLink.exists, isTrue);
+        expect(schemaLink.data()?['status'], 'pending');
+      },
+    );
+
     test('onlineFriendsProvider filters live online friends', () async {
       final rosterContainer = ProviderContainer(
         overrides: [
