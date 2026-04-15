@@ -82,7 +82,7 @@ class HomeFeedService {
 
   List<PulseFeedItem> _rankAndDedupe(List<PulseFeedItem> rawItems) {
     if (rawItems.isEmpty) {
-      return const <PulseFeedItem>[
+      return <PulseFeedItem>[
         PulseFeedItem(
           id: 'quiet-state',
           type: 'quiet_state',
