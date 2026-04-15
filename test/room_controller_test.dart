@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -195,40 +197,89 @@ void main() {
       expect(micAccess.cancelled, isTrue);
     });
 
-    test('MicAccessController prevents rapid requeue spam after denial', () async {
+    test(
+      'MicAccessController prevents rapid requeue spam after denial',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        await firestore.collection('rooms').doc('room-a').set({
+          'hostId': 'host-1',
+        });
+        await firestore
+            .collection('rooms')
+            .doc('room-a')
+            .collection('mic_access_requests')
+            .doc('user-1_host-1')
+            .set({
+              'id': 'user-1_host-1',
+              'roomId': 'room-a',
+              'requesterId': 'user-1',
+              'hostId': 'host-1',
+              'status': 'denied',
+              'priority': 1,
+              'expiresAt': Timestamp.fromDate(
+                DateTime.now().add(const Duration(minutes: 5)),
+              ),
+              'createdAt': Timestamp.fromDate(DateTime.now()),
+              'updatedAt': Timestamp.fromDate(DateTime.now()),
+            });
+
+        final controller = MicAccessController(firestore);
+
+        await expectLater(
+          controller.requestAccess(
+            roomId: 'room-a',
+            requesterId: 'user-1',
+            hostId: 'host-1',
+          ),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
+
+    test('host authority survives delayed participant hydration', () async {
       final firestore = FakeFirebaseFirestore();
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'host-1',
+        'isLocked': false,
       });
-      await firestore
+
+      final participantsController =
+          StreamController<List<RoomParticipantModel>>.broadcast();
+      addTearDown(participantsController.close);
+
+      final container = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          roomDocStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value({'hostId': 'host-1'}),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => participantsController.stream,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(
+        roomControllerProvider('room-a').notifier,
+      );
+
+      await controller.joinRoom('host-1', displayName: 'Host One');
+      controller.hydrateCurrentUser(
+        'host-1',
+        displayName: 'Host One',
+        role: 'host',
+      );
+
+      await expectLater(controller.setMicTimer(60), completes);
+
+      final policySnap = await firestore
           .collection('rooms')
           .doc('room-a')
-          .collection('mic_access_requests')
-          .doc('user-1_host-1')
-          .set({
-            'id': 'user-1_host-1',
-            'roomId': 'room-a',
-            'requesterId': 'user-1',
-            'hostId': 'host-1',
-            'status': 'denied',
-            'priority': 1,
-            'expiresAt': Timestamp.fromDate(
-              DateTime.now().add(const Duration(minutes: 5)),
-            ),
-            'createdAt': Timestamp.fromDate(DateTime.now()),
-            'updatedAt': Timestamp.fromDate(DateTime.now()),
-          });
-
-      final controller = MicAccessController(firestore);
-
-      await expectLater(
-        controller.requestAccess(
-          roomId: 'room-a',
-          requesterId: 'user-1',
-          hostId: 'host-1',
-        ),
-        throwsA(isA<StateError>()),
-      );
+          .collection('policies')
+          .doc('settings')
+          .get();
+      expect(policySnap.data()?['micTimerSeconds'], 60);
     });
   });
 }

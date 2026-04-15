@@ -1,26 +1,23 @@
-class RoomPermissions {
-  static const String host = 'host';
-  static const String cohost = 'cohost';
-  static const String moderator = 'moderator';
-  static const String stage = 'stage';
-  static const String audience = 'audience';
+import 'controllers/room_state.dart';
 
-  static bool isHost(String role) => role == host;
-  static bool isModerator(String role) => role == moderator;
-  static bool isStaff(String role) => role == host || role == moderator;
+class RoomPermissions {
+  static const String host = roomRoleHost;
+  static const String cohost = roomRoleCohost;
+  static const String moderator = roomRoleModerator;
+  static const String stage = roomRoleStage;
+  static const String audience = roomRoleAudience;
+
+  static bool isHost(String role) => isHostLikeRole(role);
+  static bool isModerator(String role) =>
+      normalizeRoomRole(role, fallbackRole: '') == moderator;
+  static bool isStaff(String role) => canModerateRole(role);
 
   static bool canUseMic(String role) {
-    // Users must be on stage or in a staff role before their mic can go live.
-    return role == host ||
-        role == 'owner' ||
-        role == cohost ||
-        role == moderator ||
-        role == stage;
+    return canUseMicRole(role);
   }
 
   static bool canUseCamera(String role) {
-    // Any room member can publish their own camera.
-    return role.isNotEmpty;
+    return canUseCameraRole(role);
   }
 
   static bool canManageParticipant({

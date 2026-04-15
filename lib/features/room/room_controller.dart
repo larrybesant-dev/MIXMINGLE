@@ -161,44 +161,49 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         for (final participant in participants)
           participant.userId.trim(): participant,
       };
-      final resolvedUserIds = speakerUserIds
-          .map((userId) => userId.trim())
-          .where((userId) => userId.isNotEmpty)
-          .toSet()
-          .toList(growable: false)
-        ..sort((left, right) {
-          final leftParticipant = participantsByUser[left];
-          final rightParticipant = participantsByUser[right];
-          final leftRank = _speakerRank(
-            leftParticipant ??
-                RoomParticipantModel(
-                  userId: left,
-                  role: left == hostId ? 'host' : 'stage',
-                  joinedAt: DateTime.fromMillisecondsSinceEpoch(0),
-                  lastActiveAt: DateTime.fromMillisecondsSinceEpoch(0),
-                ),
-            hostId: hostId,
-          );
-          final rightRank = _speakerRank(
-            rightParticipant ??
-                RoomParticipantModel(
-                  userId: right,
-                  role: right == hostId ? 'host' : 'stage',
-                  joinedAt: DateTime.fromMillisecondsSinceEpoch(0),
-                  lastActiveAt: DateTime.fromMillisecondsSinceEpoch(0),
-                ),
-            hostId: hostId,
-          );
-          if (leftRank != rightRank) {
-            return leftRank.compareTo(rightRank);
-          }
-          final leftJoinedAt =
-              leftParticipant?.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final rightJoinedAt =
-              rightParticipant?.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return leftJoinedAt.compareTo(rightJoinedAt);
-        });
-      return resolvedUserIds.take(RoomState.maxSpeakers).toList(growable: false);
+      final resolvedUserIds =
+          speakerUserIds
+              .map((userId) => userId.trim())
+              .where((userId) => userId.isNotEmpty)
+              .toSet()
+              .toList(growable: false)
+            ..sort((left, right) {
+              final leftParticipant = participantsByUser[left];
+              final rightParticipant = participantsByUser[right];
+              final leftRank = _speakerRank(
+                leftParticipant ??
+                    RoomParticipantModel(
+                      userId: left,
+                      role: left == hostId ? 'host' : 'stage',
+                      joinedAt: DateTime.fromMillisecondsSinceEpoch(0),
+                      lastActiveAt: DateTime.fromMillisecondsSinceEpoch(0),
+                    ),
+                hostId: hostId,
+              );
+              final rightRank = _speakerRank(
+                rightParticipant ??
+                    RoomParticipantModel(
+                      userId: right,
+                      role: right == hostId ? 'host' : 'stage',
+                      joinedAt: DateTime.fromMillisecondsSinceEpoch(0),
+                      lastActiveAt: DateTime.fromMillisecondsSinceEpoch(0),
+                    ),
+                hostId: hostId,
+              );
+              if (leftRank != rightRank) {
+                return leftRank.compareTo(rightRank);
+              }
+              final leftJoinedAt =
+                  leftParticipant?.joinedAt ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              final rightJoinedAt =
+                  rightParticipant?.joinedAt ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              return leftJoinedAt.compareTo(rightJoinedAt);
+            });
+      return resolvedUserIds
+          .take(RoomState.maxSpeakers)
+          .toList(growable: false);
     }
 
     final speakers =
@@ -408,11 +413,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
   }
 
-  void hydrateCurrentUser(
-    String userId, {
-    String? displayName,
-    String? role,
-  }) {
+  void hydrateCurrentUser(String userId, {String? displayName, String? role}) {
     final normalizedUserId = userId.trim();
     if (normalizedUserId.isEmpty) {
       return;
@@ -428,7 +429,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
           : (existing?.displayName ?? normalizedUserId),
       role: (resolvedRole != null && resolvedRole.isNotEmpty)
           ? resolvedRole
-          : (existing?.role ?? state.roleFor(normalizedUserId)),
+          : resolveParticipantRole(
+              userId: normalizedUserId,
+              hostId: state.hostId,
+              participantRolesByUser: state.participantRolesByUser,
+              sessionSnapshotsByUser: _sessionSnapshotsByUser,
+            ),
       joinedAt: existing?.joinedAt ?? _joinedAt,
     );
     state = state.copyWith(
@@ -463,7 +469,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       displayName: normalizedDisplayName,
       role: role?.trim().isNotEmpty == true
           ? role!.trim().toLowerCase()
-          : (existing?.role ?? state.roleFor(normalizedUserId)),
+          : resolveParticipantRole(
+              userId: normalizedUserId,
+              hostId: state.hostId,
+              participantRolesByUser: state.participantRolesByUser,
+              sessionSnapshotsByUser: _sessionSnapshotsByUser,
+            ),
       joinedAt: existing?.joinedAt ?? _joinedAt,
     );
 
@@ -482,6 +493,11 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   void _requireStageAuthority() {
     final actorUserId = _actorUserId;
+    if (!state.isRoomFullyHydrated) {
+      throw StateError(
+        'Room permissions are still syncing. Try again in a moment.',
+      );
+    }
     if (!state.canManageStage(actorUserId)) {
       throw StateError('Only room staff can manage the stage.');
     }
@@ -489,6 +505,11 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   void _requireModerationAuthority() {
     final actorUserId = _actorUserId;
+    if (!state.isRoomFullyHydrated) {
+      throw StateError(
+        'Room permissions are still syncing. Try again in a moment.',
+      );
+    }
     if (!state.canModerate(actorUserId)) {
       throw StateError('Only room staff can manage participants.');
     }
@@ -496,7 +517,13 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   void _requireHostAuthority() {
     final actorUserId = _actorUserId;
-    if (!state.isHost(actorUserId) && state.roleFor(actorUserId) != 'owner') {
+    if (!state.isRoomFullyHydrated) {
+      throw StateError(
+        'Room permissions are still syncing. Try again in a moment.',
+      );
+    }
+    final actorRole = state.roleFor(actorUserId);
+    if (actorRole != 'host' && actorRole != 'owner') {
       throw StateError('Only the room host can perform this action.');
     }
   }
@@ -525,7 +552,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
           ? normalizedDisplayName
           : (_sessionSnapshotsByUser[normalizedUserId]?.displayName ??
                 normalizedUserId),
-      role: _sessionSnapshotsByUser[normalizedUserId]?.role ?? 'audience',
+      role: resolveParticipantRole(
+        userId: normalizedUserId,
+        hostId: state.hostId,
+        participantRolesByUser: state.participantRolesByUser,
+        sessionSnapshotsByUser: _sessionSnapshotsByUser,
+      ),
       joinedAt: DateTime.now(),
     );
     _scheduleStabilization(normalizedUserId);
@@ -574,7 +606,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       displayName: normalizedDisplayName.isNotEmpty
           ? normalizedDisplayName
           : (existingSnapshot?.displayName ?? normalizedUserId),
-      role: existingSnapshot?.role ?? 'audience',
+      role: resolveParticipantRole(
+        userId: normalizedUserId,
+        hostId: state.hostId,
+        participantRolesByUser: state.participantRolesByUser,
+        sessionSnapshotsByUser: _sessionSnapshotsByUser,
+      ),
       joinedAt: _joinedAt,
     );
     state = state.copyWith(
@@ -793,10 +830,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     if (!isSelfRelease) {
       _requireStageAuthority();
     }
-    await _roomRepository.releaseMic(
-      roomId: arg,
-      userId: normalizedUserId,
-    );
+    await _roomRepository.releaseMic(roomId: arg, userId: normalizedUserId);
     AppEventBus.instance.emit(
       MicStateChangedEvent(
         id: 'mic-release:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',

@@ -30,6 +30,93 @@ class RoomSessionSnapshot {
   }
 }
 
+const String roomRoleHost = 'host';
+const String roomRoleOwner = 'owner';
+const String roomRoleCohost = 'cohost';
+const String roomRoleModerator = 'moderator';
+const String roomRoleStage = 'stage';
+const String roomRoleAudience = 'audience';
+
+String normalizeRoomRole(
+  String? role, {
+  String fallbackRole = roomRoleAudience,
+}) {
+  final normalized = role?.trim().toLowerCase() ?? '';
+  switch (normalized) {
+    case roomRoleHost:
+    case roomRoleOwner:
+    case roomRoleCohost:
+    case roomRoleModerator:
+    case roomRoleStage:
+    case roomRoleAudience:
+      return normalized;
+    case '':
+      return fallbackRole;
+    default:
+      return fallbackRole;
+  }
+}
+
+bool isHostLikeRole(String role) {
+  final normalized = normalizeRoomRole(role, fallbackRole: '');
+  return normalized == roomRoleHost || normalized == roomRoleOwner;
+}
+
+bool canManageStageRole(String role) {
+  final normalized = normalizeRoomRole(role, fallbackRole: '');
+  return isHostLikeRole(normalized) || normalized == roomRoleCohost;
+}
+
+bool canModerateRole(String role) {
+  final normalized = normalizeRoomRole(role, fallbackRole: '');
+  return canManageStageRole(normalized) || normalized == roomRoleModerator;
+}
+
+bool canUseMicRole(String role) {
+  final normalized = normalizeRoomRole(role, fallbackRole: '');
+  return canModerateRole(normalized) || normalized == roomRoleStage;
+}
+
+bool canUseCameraRole(String role) {
+  return normalizeRoomRole(role, fallbackRole: '').isNotEmpty;
+}
+
+String resolveParticipantRole({
+  required String userId,
+  String hostId = '',
+  Map<String, String> participantRolesByUser = const <String, String>{},
+  Map<String, RoomSessionSnapshot> sessionSnapshotsByUser =
+      const <String, RoomSessionSnapshot>{},
+  String fallbackRole = roomRoleAudience,
+}) {
+  final normalizedUserId = userId.trim();
+  if (normalizedUserId.isEmpty) {
+    return fallbackRole;
+  }
+
+  final participantRole = normalizeRoomRole(
+    participantRolesByUser[normalizedUserId],
+    fallbackRole: '',
+  );
+  if (participantRole.isNotEmpty) {
+    return participantRole;
+  }
+
+  if (hostId.trim() == normalizedUserId) {
+    return roomRoleHost;
+  }
+
+  final snapshotRole = normalizeRoomRole(
+    sessionSnapshotsByUser[normalizedUserId]?.role,
+    fallbackRole: '',
+  );
+  if (snapshotRole.isNotEmpty) {
+    return snapshotRole;
+  }
+
+  return normalizeRoomRole(fallbackRole);
+}
+
 class RoomState {
   const RoomState({
     this.phase = LiveRoomPhase.idle,
@@ -75,6 +162,32 @@ class RoomState {
 
   bool get isJoined =>
       phase == LiveRoomPhase.joined && (currentUserId?.isNotEmpty == true);
+
+  bool get isRoomFullyHydrated {
+    final normalizedCurrentUserId = currentUserId?.trim() ?? '';
+    if (normalizedCurrentUserId.isEmpty) {
+      return false;
+    }
+
+    final snapshotRole =
+        sessionSnapshotsByUser[normalizedCurrentUserId]?.role
+            .trim()
+            .toLowerCase() ??
+        '';
+    final hasExplicitAuthorityRole =
+        snapshotRole.isNotEmpty && snapshotRole != 'audience';
+
+    if (pendingUserIds.contains(normalizedCurrentUserId) &&
+        hostId.trim() != normalizedCurrentUserId &&
+        !hasExplicitAuthorityRole) {
+      return false;
+    }
+
+    return stableUserIds.contains(normalizedCurrentUserId) ||
+        participantRolesByUser.containsKey(normalizedCurrentUserId) ||
+        hostId.trim() == normalizedCurrentUserId ||
+        hasExplicitAuthorityRole;
+  }
 
   bool isUserInRoom(String userId) {
     final normalized = userId.trim();
@@ -131,45 +244,58 @@ class RoomState {
   }
 
   String roleFor(String userId) {
+    return resolveParticipantRole(
+      userId: userId,
+      hostId: hostId,
+      participantRolesByUser: participantRolesByUser,
+      sessionSnapshotsByUser: sessionSnapshotsByUser,
+    );
+  }
+
+  bool _canResolveAuthorityFor(String userId) {
     final normalized = userId.trim();
     if (normalized.isEmpty) {
-      return 'audience';
+      return false;
     }
-    final role = participantRolesByUser[normalized]?.trim().toLowerCase();
-    if (role != null && role.isNotEmpty) {
-      return role;
+    final normalizedCurrentUserId = currentUserId?.trim() ?? '';
+    if (normalizedCurrentUserId.isEmpty ||
+        normalized != normalizedCurrentUserId) {
+      return true;
     }
-    if (hostId.trim() == normalized) {
-      return 'host';
-    }
-    final snapshotRole =
-        snapshotFor(normalized)?.role.trim().toLowerCase() ?? '';
-    if (snapshotRole.isNotEmpty) {
-      return snapshotRole;
-    }
-    return 'audience';
+    return isRoomFullyHydrated;
   }
 
   bool isHost(String userId) {
+    if (!_canResolveAuthorityFor(userId)) {
+      return false;
+    }
     final normalized = userId.trim();
-    return normalized.isNotEmpty && hostId.trim() == normalized;
+    if (normalized.isEmpty) {
+      return false;
+    }
+    return isHostLikeRole(roleFor(normalized));
   }
 
-  bool isCohost(String userId) => roleFor(userId) == 'cohost';
+  bool isCohost(String userId) =>
+      _canResolveAuthorityFor(userId) &&
+      normalizeRoomRole(roleFor(userId), fallbackRole: '') == roomRoleCohost;
 
-  bool isModerator(String userId) => roleFor(userId) == 'moderator';
+  bool isModerator(String userId) =>
+      _canResolveAuthorityFor(userId) &&
+      normalizeRoomRole(roleFor(userId), fallbackRole: '') == roomRoleModerator;
 
   bool canManageStage(String userId) {
-    final role = roleFor(userId);
-    return role == 'host' || role == 'owner' || role == 'cohost';
+    if (!_canResolveAuthorityFor(userId)) {
+      return false;
+    }
+    return canManageStageRole(roleFor(userId));
   }
 
   bool canModerate(String userId) {
-    final role = roleFor(userId);
-    return role == 'host' ||
-        role == 'owner' ||
-        role == 'cohost' ||
-        role == 'moderator';
+    if (!_canResolveAuthorityFor(userId)) {
+      return false;
+    }
+    return canModerateRole(roleFor(userId));
   }
 
   bool canAddSpeaker(String userId) {

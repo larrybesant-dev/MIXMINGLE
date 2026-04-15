@@ -58,6 +58,37 @@ void main() {
     expect(state.canManageStage('guest-1'), isFalse);
   });
 
+  test(
+    'role contract stays deterministic across owner host and fallback cases',
+    () {
+      const state = RoomState(
+        roomId: 'room-b',
+        hostId: 'host-1',
+        participantRolesByUser: <String, String>{'cohost-1': 'cohost'},
+        sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+          'owner-1': RoomSessionSnapshot(
+            userId: 'owner-1',
+            displayName: 'Owner',
+            role: 'owner',
+          ),
+          'guest-1': RoomSessionSnapshot(
+            userId: 'guest-1',
+            displayName: 'Guest',
+            role: 'mystery-role',
+          ),
+        },
+      );
+
+      expect(state.roleFor('host-1'), roomRoleHost);
+      expect(state.roleFor('owner-1'), roomRoleOwner);
+      expect(state.roleFor('cohost-1'), roomRoleCohost);
+      expect(state.roleFor('guest-1'), roomRoleAudience);
+      expect(canManageStageRole(roomRoleOwner), isTrue);
+      expect(canModerateRole(roomRoleModerator), isTrue);
+      expect(canUseMicRole(roomRoleStage), isTrue);
+    },
+  );
+
   test('RoomState only renders users after their join snapshot is stable', () {
     const state = RoomState(
       roomId: 'room-c',
@@ -83,4 +114,42 @@ void main() {
     expect(state.displayNameFor('host-1'), 'HostOne');
     expect(state.displayNameFor('user-1'), 'VelvetHandle');
   });
+
+  test(
+    'RoomState blocks current-user authority until hydration is resolved',
+    () {
+      const pendingAudienceState = RoomState(
+        roomId: 'room-d',
+        currentUserId: 'user-1',
+        pendingUserIds: <String>{'user-1'},
+        sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+          'user-1': RoomSessionSnapshot(
+            userId: 'user-1',
+            displayName: 'Late Joiner',
+            role: 'audience',
+          ),
+        },
+      );
+
+      const hydratedHostState = RoomState(
+        roomId: 'room-d',
+        currentUserId: 'host-1',
+        hostId: 'host-1',
+        pendingUserIds: <String>{'host-1'},
+        sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+          'host-1': RoomSessionSnapshot(
+            userId: 'host-1',
+            displayName: 'Host One',
+            role: 'host',
+          ),
+        },
+      );
+
+      expect(pendingAudienceState.isRoomFullyHydrated, isFalse);
+      expect(pendingAudienceState.canManageStage('user-1'), isFalse);
+
+      expect(hydratedHostState.isRoomFullyHydrated, isTrue);
+      expect(hydratedHostState.canManageStage('host-1'), isTrue);
+    },
+  );
 }
