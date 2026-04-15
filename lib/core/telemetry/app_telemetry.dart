@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
+import '../../services/analytics_service.dart';
 import '../logger.dart';
 
 class TelemetryEvent {
@@ -81,10 +84,8 @@ class AppTelemetryState {
   final int firestoreSnapshotCount;
   final List<TelemetryEvent> recentEvents;
 
-  int get activeListenerCount => activeListenersByKey.values.fold<int>(
-        0,
-        (sum, count) => sum + count,
-      );
+  int get activeListenerCount =>
+      activeListenersByKey.values.fold<int>(0, (sum, count) => sum + count);
 
   List<String> get duplicateListenerKeys => activeListenersByKey.entries
       .where((entry) => entry.value > 1)
@@ -119,16 +120,23 @@ class AppTelemetryState {
     List<TelemetryEvent>? recentEvents,
   }) {
     return AppTelemetryState(
-      authUserId:
-          identical(authUserId, _unset) ? this.authUserId : authUserId as String?,
+      authUserId: identical(authUserId, _unset)
+          ? this.authUserId
+          : authUserId as String?,
       authLoading: authLoading ?? this.authLoading,
-      authError: identical(authError, _unset) ? this.authError : authError as String?,
+      authError: identical(authError, _unset)
+          ? this.authError
+          : authError as String?,
       roomId: identical(roomId, _unset) ? this.roomId : roomId as String?,
       joinedUserId: identical(joinedUserId, _unset)
           ? this.joinedUserId
           : joinedUserId as String?,
-      roomPhase: identical(roomPhase, _unset) ? this.roomPhase : roomPhase as String?,
-      roomError: identical(roomError, _unset) ? this.roomError : roomError as String?,
+      roomPhase: identical(roomPhase, _unset)
+          ? this.roomPhase
+          : roomPhase as String?,
+      roomError: identical(roomError, _unset)
+          ? this.roomError
+          : roomError as String?,
       participantCount: participantCount ?? this.participantCount,
       micMuted: micMuted ?? this.micMuted,
       videoEnabled: videoEnabled ?? this.videoEnabled,
@@ -145,7 +153,9 @@ class AppTelemetryState {
       cameraStatus: identical(cameraStatus, _unset)
           ? this.cameraStatus
           : cameraStatus as String?,
-      callError: identical(callError, _unset) ? this.callError : callError as String?,
+      callError: identical(callError, _unset)
+          ? this.callError
+          : callError as String?,
       currentRtcUid: identical(currentRtcUid, _unset)
           ? this.currentRtcUid
           : currentRtcUid as int?,
@@ -155,7 +165,8 @@ class AppTelemetryState {
       activeListenersByKey: activeListenersByKey ?? this.activeListenersByKey,
       firestoreReadCount: firestoreReadCount ?? this.firestoreReadCount,
       firestoreWriteCount: firestoreWriteCount ?? this.firestoreWriteCount,
-      firestoreSnapshotCount: firestoreSnapshotCount ?? this.firestoreSnapshotCount,
+      firestoreSnapshotCount:
+          firestoreSnapshotCount ?? this.firestoreSnapshotCount,
       recentEvents: recentEvents ?? this.recentEvents,
     );
   }
@@ -167,6 +178,7 @@ class AppTelemetry {
   AppTelemetry._();
 
   static const int _maxEvents = 40;
+  static final AnalyticsService _analyticsService = AnalyticsService();
 
   static final ValueNotifier<AppTelemetryState> notifier =
       ValueNotifier<AppTelemetryState>(const AppTelemetryState());
@@ -240,7 +252,8 @@ class AppTelemetry {
         level: 'warning',
         domain: 'room',
         action: 'camera_mismatch',
-        message: 'UI reports camera on while Firestore participant state is off.',
+        message:
+            'UI reports camera on while Firestore participant state is off.',
         userId: next.joinedUserId,
         roomId: next.roomId,
         result: 'mismatch',
@@ -274,7 +287,9 @@ class AppTelemetry {
         roomId: next.roomId,
         result: 'stale',
         metadata: <String, Object?>{
-          'staleParticipantIds': next.staleParticipantIds.toList(growable: false),
+          'staleParticipantIds': next.staleParticipantIds.toList(
+            growable: false,
+          ),
         },
       );
     }
@@ -510,27 +525,91 @@ class AppTelemetry {
 
     switch (level) {
       case 'error':
-        Logger.error(
-          formatted,
-          error: error,
-          stackTrace: stackTrace,
-        );
+        Logger.error(formatted, error: error, stackTrace: stackTrace);
         break;
       case 'warning':
-        Logger.warning(
-          formatted,
-          error: error,
-          stackTrace: stackTrace,
-        );
+        Logger.warning(formatted, error: error, stackTrace: stackTrace);
         break;
       default:
-        Logger.info(
-          formatted,
-          error: error,
-          stackTrace: stackTrace,
-        );
+        Logger.info(formatted, error: error, stackTrace: stackTrace);
         break;
     }
+
+    if (_shouldForwardToAnalytics(event)) {
+      unawaited(
+        _analyticsService.logEvent(
+          _analyticsEventNameFor(event),
+          params: _analyticsParamsFor(event),
+        ),
+      );
+    }
+  }
+
+  static bool _shouldForwardToAnalytics(TelemetryEvent event) {
+    if (event.domain == 'firestore') {
+      return event.level == 'error';
+    }
+    return const <String>{
+      'room',
+      'auth',
+      'presence',
+      'schema',
+      'moderation',
+    }.contains(event.domain);
+  }
+
+  static String _analyticsEventNameFor(TelemetryEvent event) {
+    final raw = '${event.domain}_${event.action}'.toLowerCase();
+    final normalized = raw
+        .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    final candidate = normalized.isEmpty
+        ? 'mixvy_event'
+        : (RegExp(r'^[a-z]').hasMatch(normalized)
+              ? normalized
+              : 'e_$normalized');
+    return candidate.length <= 40 ? candidate : candidate.substring(0, 40);
+  }
+
+  static Map<String, Object> _analyticsParamsFor(TelemetryEvent event) {
+    final params = <String, Object>{
+      'level': event.level,
+      if (event.result?.isNotEmpty == true) 'result': event.result!,
+      if (event.roomId?.isNotEmpty == true) 'room_id': event.roomId!,
+      'has_error': event.level == 'error',
+    };
+
+    for (final entry in event.metadata.entries) {
+      if (params.length >= 10) {
+        break;
+      }
+      final key = entry.key
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
+          .replaceAll(RegExp(r'_+'), '_')
+          .replaceAll(RegExp(r'^_+|_+$'), '');
+      if (key.isEmpty || params.containsKey(key)) {
+        continue;
+      }
+      final value = entry.value;
+      if (value is bool) {
+        params[key] = value;
+      } else if (value is int) {
+        params[key] = value;
+      } else if (value is double) {
+        params[key] = value;
+      } else if (value != null) {
+        final asString = value.toString();
+        if (asString.isNotEmpty) {
+          params[key] = asString.length <= 100
+              ? asString
+              : asString.substring(0, 100);
+        }
+      }
+    }
+
+    return params;
   }
 
   static void logEnforcementEvent({
@@ -552,10 +631,7 @@ class AppTelemetry {
       userId: userId,
       roomId: roomId,
       result: result,
-      metadata: <String, Object?>{
-        'eventCategory': 'enforcement',
-        ...metadata,
-      },
+      metadata: <String, Object?>{'eventCategory': 'enforcement', ...metadata},
       error: error,
       stackTrace: stackTrace,
     );
@@ -581,10 +657,7 @@ class AppTelemetry {
       userId: userId,
       roomId: roomId,
       result: result,
-      metadata: <String, Object?>{
-        'eventCategory': 'migration',
-        ...metadata,
-      },
+      metadata: <String, Object?>{'eventCategory': 'migration', ...metadata},
       error: error,
       stackTrace: stackTrace,
     );
@@ -610,10 +683,7 @@ class AppTelemetry {
       userId: userId,
       roomId: roomId,
       result: result,
-      metadata: <String, Object?>{
-        'eventCategory': 'parity',
-        ...metadata,
-      },
+      metadata: <String, Object?>{'eventCategory': 'parity', ...metadata},
       error: error,
       stackTrace: stackTrace,
     );

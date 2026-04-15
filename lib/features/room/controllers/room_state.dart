@@ -100,22 +100,39 @@ class RoomStateMachine {
       return fallbackRole;
     }
 
+    final normalizedHostId = hostId.trim();
     final participantRole = normalizeRoomRole(
       participantRolesByUser[normalizedUserId],
       fallbackRole: '',
     );
-    if (participantRole.isNotEmpty) {
-      return participantRole;
-    }
-
-    if (hostId.trim() == normalizedUserId) {
-      return roomRoleHost;
-    }
-
     final snapshotRole = normalizeRoomRole(
       sessionSnapshotsByUser[normalizedUserId]?.role,
       fallbackRole: '',
     );
+
+    if (normalizedHostId.isNotEmpty) {
+      if (normalizedHostId == normalizedUserId) {
+        if (isHostLikeRole(participantRole)) {
+          return participantRole;
+        }
+        if (isHostLikeRole(snapshotRole)) {
+          return snapshotRole;
+        }
+        return roomRoleHost;
+      }
+
+      if (participantRole.isNotEmpty && !isHostLikeRole(participantRole)) {
+        return participantRole;
+      }
+      if (snapshotRole.isNotEmpty && !isHostLikeRole(snapshotRole)) {
+        return snapshotRole;
+      }
+      return normalizeRoomRole(fallbackRole);
+    }
+
+    if (participantRole.isNotEmpty) {
+      return participantRole;
+    }
     if (snapshotRole.isNotEmpty) {
       return snapshotRole;
     }

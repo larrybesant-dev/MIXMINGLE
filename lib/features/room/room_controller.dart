@@ -13,12 +13,14 @@ export 'controllers/room_state.dart'
 
 import '../../core/events/app_event.dart';
 import '../../core/events/app_event_bus.dart';
+import '../../core/telemetry/app_telemetry.dart';
 import '../../models/mic_access_request_model.dart';
 import '../../models/room_participant_model.dart';
 import 'controllers/room_state.dart';
 import 'providers/host_controls_provider.dart';
 import 'providers/mic_access_provider.dart';
 import 'providers/participant_providers.dart';
+import 'providers/room_firestore_provider.dart';
 import 'repository/room_repository.dart';
 import 'providers/room_policy_provider.dart';
 import 'providers/user_cam_permissions_provider.dart';
@@ -573,35 +575,108 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   String get _actorUserId => state.currentUserId?.trim() ?? '';
 
+  void _logModerationAction(
+    String action, {
+    String? targetUserId,
+    String result = 'success',
+  }) {
+    AppTelemetry.logAction(
+      domain: 'moderation',
+      action: action,
+      message: 'Room moderation action applied.',
+      roomId: arg,
+      userId: _actorUserId,
+      result: result,
+      metadata: <String, Object?>{
+        if (targetUserId != null && targetUserId.isNotEmpty)
+          'targetUserId': targetUserId,
+      },
+    );
+  }
+
   void _requireActiveLifecycle() {
-    if (state.lifecycleState != RoomLifecycleState.active) {
+    final lifecycleState = state.lifecycleState;
+    final isReadyForMutation =
+        lifecycleState == RoomLifecycleState.active ||
+        (state.phase == LiveRoomPhase.joined &&
+            lifecycleState != RoomLifecycleState.ended);
+    if (!isReadyForMutation) {
       throw StateError('Room state is still syncing. Try again in a moment.');
     }
   }
 
-  void _requireStageAuthority() {
+  Future<String> _refreshActorRole(String userId) async {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      return roomRoleAudience;
+    }
+
+    final firestore = ref.read(roomFirestoreProvider);
+    final roomSnapshot = await firestore.collection('rooms').doc(arg).get();
+    final participantSnapshot = await firestore
+        .collection('rooms')
+        .doc(arg)
+        .collection('participants')
+        .doc(normalizedUserId)
+        .get();
+
+    final authoritativeHostId = RoomStateMachine.resolveHostId(
+      roomDoc: roomSnapshot.data(),
+    );
+    final participantRole = normalizeRoomRole(
+      participantSnapshot.data()?['role'] as String?,
+      fallbackRole: '',
+    );
+
+    final nextParticipantRoles = Map<String, String>.from(
+      state.participantRolesByUser,
+    );
+    if (participantRole.isNotEmpty) {
+      nextParticipantRoles[normalizedUserId] = participantRole;
+    }
+
+    if (authoritativeHostId != state.hostId || participantRole.isNotEmpty) {
+      _emitState(
+        state.copyWith(
+          hostId: authoritativeHostId,
+          participantRolesByUser: Map<String, String>.unmodifiable(
+            nextParticipantRoles,
+          ),
+        ),
+      );
+    }
+
+    return RoomStateMachine.resolveParticipantRole(
+      userId: normalizedUserId,
+      hostId: authoritativeHostId,
+      participantRolesByUser: nextParticipantRoles,
+      sessionSnapshotsByUser: state.sessionSnapshotsByUser,
+    );
+  }
+
+  Future<void> _requireStageAuthority() async {
     final actorUserId = _actorUserId;
     _requireActiveLifecycle();
-    if (!state.canExecute(RoomAction.manageStage, userId: actorUserId)) {
+    final actorRole = await _refreshActorRole(actorUserId);
+    if (!canManageStageRole(actorRole)) {
       throw StateError('Only room staff can manage the stage.');
     }
   }
 
-  void _requireModerationAuthority() {
+  Future<void> _requireModerationAuthority() async {
     final actorUserId = _actorUserId;
     _requireActiveLifecycle();
-    if (!state.canExecute(
-      RoomAction.moderateParticipants,
-      userId: actorUserId,
-    )) {
+    final actorRole = await _refreshActorRole(actorUserId);
+    if (!canModerateRole(actorRole)) {
       throw StateError('Only room staff can manage participants.');
     }
   }
 
-  void _requireHostAuthority() {
+  Future<void> _requireHostAuthority() async {
     final actorUserId = _actorUserId;
     _requireActiveLifecycle();
-    if (!state.canExecute(RoomAction.manageRoom, userId: actorUserId)) {
+    final actorRole = await _refreshActorRole(actorUserId);
+    if (!isHostLikeRole(actorRole)) {
       throw StateError('Only the room host can perform this action.');
     }
   }
@@ -909,7 +984,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   }
 
   Future<void> approveMicRequest(MicAccessRequestModel request) async {
-    _requireStageAuthority();
+    await _requireStageAuthority();
     await _roomRepository.requestMic(
       roomId: arg,
       userId: request.requesterId,
@@ -919,8 +994,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     await _micAccess.approveRequest(arg, request);
   }
 
-  Future<void> denyMicRequest(String requestId) {
-    _requireStageAuthority();
+  Future<void> denyMicRequest(String requestId) async {
+    await _requireStageAuthority();
     return _micAccess.denyRequest(arg, requestId);
   }
 
@@ -939,7 +1014,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final isSelfRelease =
         actorUserId.isNotEmpty && actorUserId == normalizedUserId;
     if (!isSelfRelease) {
-      _requireStageAuthority();
+      await _requireStageAuthority();
     }
     await _roomRepository.releaseMic(roomId: arg, userId: normalizedUserId);
     if (actorUserId == normalizedUserId) {
@@ -978,7 +1053,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         'Stage mutations must come from the active room controller.',
       );
     }
-    _requireStageAuthority();
+    await _requireStageAuthority();
     if (!state.isUserInRoom(normalizedTargetUserId)) {
       throw StateError('Only joined users can be added to the stage.');
     }
@@ -999,7 +1074,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final normalizedTargetUserId = targetUserId.trim();
     final actorUserId = _actorUserId;
     if (actorUserId != normalizedTargetUserId) {
-      _requireStageAuthority();
+      await _requireStageAuthority();
     }
     if (!state.isSpeaker(normalizedTargetUserId)) {
       return;
@@ -1010,48 +1085,64 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
-  Future<void> muteUser(String userId) {
-    _requireModerationAuthority();
-    return _hostControls.muteUser(arg, userId.trim());
+  Future<void> muteUser(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireModerationAuthority();
+    await _hostControls.muteUser(arg, normalizedUserId);
+    _logModerationAction('mute_user', targetUserId: normalizedUserId);
   }
 
-  Future<void> unmuteUser(String userId) {
-    _requireModerationAuthority();
-    return _hostControls.unmuteUser(arg, userId.trim());
+  Future<void> unmuteUser(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireModerationAuthority();
+    await _hostControls.unmuteUser(arg, normalizedUserId);
+    _logModerationAction('unmute_user', targetUserId: normalizedUserId);
   }
 
-  Future<void> promoteToModerator(String userId) {
-    _requireHostAuthority();
-    return _hostControls.promoteToModerator(arg, userId.trim());
+  Future<void> promoteToModerator(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireHostAuthority();
+    await _hostControls.promoteToModerator(arg, normalizedUserId);
+    _logModerationAction('promote_moderator', targetUserId: normalizedUserId);
   }
 
-  Future<void> promoteToCohost(String userId) {
-    _requireHostAuthority();
-    return _hostControls.promoteToCohost(arg, userId.trim());
+  Future<void> promoteToCohost(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireHostAuthority();
+    await _hostControls.promoteToCohost(arg, normalizedUserId);
+    _logModerationAction('promote_cohost', targetUserId: normalizedUserId);
   }
 
-  Future<void> demoteToAudience(String userId) {
-    _requireHostAuthority();
-    return _hostControls.demoteToAudience(arg, userId.trim());
+  Future<void> demoteToAudience(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireHostAuthority();
+    await _hostControls.demoteToAudience(arg, normalizedUserId);
+    _logModerationAction('demote_audience', targetUserId: normalizedUserId);
   }
 
-  Future<void> removeUser(String userId) {
-    _requireModerationAuthority();
-    return _hostControls.removeUser(arg, userId.trim());
+  Future<void> removeUser(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireModerationAuthority();
+    await _hostControls.removeUser(arg, normalizedUserId);
+    _logModerationAction('remove_user', targetUserId: normalizedUserId);
   }
 
-  Future<void> banUser(String userId) {
-    _requireModerationAuthority();
-    return _hostControls.banUser(arg, userId.trim());
+  Future<void> banUser(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireModerationAuthority();
+    await _hostControls.banUser(arg, normalizedUserId);
+    _logModerationAction('ban_user', targetUserId: normalizedUserId);
   }
 
-  Future<void> unbanUser(String userId) {
-    _requireModerationAuthority();
-    return _hostControls.unbanUser(arg, userId.trim());
+  Future<void> unbanUser(String userId) async {
+    final normalizedUserId = userId.trim();
+    await _requireModerationAuthority();
+    await _hostControls.unbanUser(arg, normalizedUserId);
+    _logModerationAction('unban_user', targetUserId: normalizedUserId);
   }
 
-  Future<void> transferHost({required String targetUserId}) {
-    _requireHostAuthority();
+  Future<void> transferHost({required String targetUserId}) async {
+    await _requireHostAuthority();
     return _hostControls.transferHost(
       roomId: arg,
       fromUserId: _actorUserId,
@@ -1059,73 +1150,73 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
-  Future<void> toggleSlowMode(int seconds) {
-    _requireHostAuthority();
+  Future<void> toggleSlowMode(int seconds) async {
+    await _requireHostAuthority();
     return _hostControls.toggleSlowMode(arg, seconds);
   }
 
-  Future<void> toggleLockRoom() {
-    _requireHostAuthority();
+  Future<void> toggleLockRoom() async {
+    await _requireHostAuthority();
     return _hostControls.toggleLockRoom(arg);
   }
 
-  Future<void> toggleAllowChat() {
-    _requireHostAuthority();
+  Future<void> toggleAllowChat() async {
+    await _requireHostAuthority();
     return _hostControls.toggleAllowChat(arg);
   }
 
-  Future<void> toggleAllowCamRequests() {
-    _requireHostAuthority();
+  Future<void> toggleAllowCamRequests() async {
+    await _requireHostAuthority();
     return _hostControls.toggleAllowCamRequests(arg);
   }
 
-  Future<void> toggleAllowMicRequests() {
-    _requireHostAuthority();
+  Future<void> toggleAllowMicRequests() async {
+    await _requireHostAuthority();
     return _hostControls.toggleAllowMicRequests(arg);
   }
 
-  Future<void> toggleAllowGifts() {
-    _requireHostAuthority();
+  Future<void> toggleAllowGifts() async {
+    await _requireHostAuthority();
     return _hostControls.toggleAllowGifts(arg);
   }
 
-  Future<void> setMaxBroadcasters(int max) {
-    _requireHostAuthority();
+  Future<void> setMaxBroadcasters(int max) async {
+    await _requireHostAuthority();
     return _hostControls.setMaxBroadcasters(arg, max);
   }
 
-  Future<void> setMicLimit(int limit) {
-    _requireHostAuthority();
+  Future<void> setMicLimit(int limit) async {
+    await _requireHostAuthority();
     return _roomPolicy.setMicLimit(arg, limit);
   }
 
-  Future<void> setMicTimer(int? seconds) {
-    _requireHostAuthority();
+  Future<void> setMicTimer(int? seconds) async {
+    await _requireHostAuthority();
     return _roomPolicy.setMicTimer(arg, seconds);
   }
 
-  Future<void> setCamLimit(int limit) {
-    _requireHostAuthority();
+  Future<void> setCamLimit(int limit) async {
+    await _requireHostAuthority();
     return _roomPolicy.setCamLimit(arg, limit);
   }
 
-  Future<void> bumpMicRequest(String requestId) {
-    _requireStageAuthority();
+  Future<void> bumpMicRequest(String requestId) async {
+    await _requireStageAuthority();
     return _micAccess.bumpPriority(arg, requestId);
   }
 
-  Future<void> lowerMicRequest(String requestId) {
-    _requireStageAuthority();
+  Future<void> lowerMicRequest(String requestId) async {
+    await _requireStageAuthority();
     return _micAccess.lowerPriority(arg, requestId);
   }
 
-  Future<void> expireMicRequest(String requestId) {
-    _requireStageAuthority();
+  Future<void> expireMicRequest(String requestId) async {
+    await _requireStageAuthority();
     return _micAccess.expireNow(arg, requestId);
   }
 
-  Future<void> endRoom() {
-    _requireHostAuthority();
+  Future<void> endRoom() async {
+    await _requireHostAuthority();
     return _hostControls.endRoom(arg);
   }
 
@@ -1133,8 +1224,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     String? name,
     String? description,
     String? category,
-  }) {
-    _requireHostAuthority();
+  }) async {
+    await _requireHostAuthority();
     return _hostControls.setRoomInfo(
       arg,
       name: name,

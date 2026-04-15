@@ -335,8 +335,18 @@ service cloud.firestore {
           || (
             participantId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus'])
+          )
+          || (
+            participantId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus', 'role'])
-            && request.resource.data.role in ['audience', 'member', 'stage']
+            && (
+              (resource.data.role == 'stage'
+                && request.resource.data.role in ['member', 'audience'])
+              || (resource.data.role == 'member'
+                && request.resource.data.role == 'audience')
+            )
           );
         allow delete: if isRoomHost(roomId) || participantId == request.auth.uid;
       }

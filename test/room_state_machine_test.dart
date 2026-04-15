@@ -73,10 +73,7 @@ void main() {
         RoomStateMachine.resolveParticipantRole(
           userId: 'host-1',
           hostId: hostId,
-          participantRolesByUser: const {
-            'host-1': 'owner',
-            'user-2': 'cohost',
-          },
+          participantRolesByUser: const {'host-1': 'owner', 'user-2': 'cohost'},
         ),
         'owner',
       );
@@ -84,13 +81,44 @@ void main() {
         RoomStateMachine.resolveParticipantRole(
           userId: 'user-2',
           hostId: hostId,
-          participantRolesByUser: const {
-            'host-1': 'owner',
-            'user-2': 'cohost',
-          },
+          participantRolesByUser: const {'host-1': 'owner', 'user-2': 'cohost'},
         ),
         'cohost',
       );
+    });
+
+    test('ignores stale host claims after migration to a new host', () {
+      final state = RoomState(
+        phase: LiveRoomPhase.joined,
+        lifecycleState: RoomLifecycleState.active,
+        roomId: 'room-a',
+        currentUserId: 'user-2',
+        hostId: 'user-2',
+        userIds: const <String>['host-1', 'user-2'],
+        stableUserIds: const <String>['host-1', 'user-2'],
+        participantRolesByUser: const <String, String>{
+          'host-1': 'host',
+          'user-2': 'audience',
+        },
+        sessionSnapshotsByUser: const <String, RoomSessionSnapshot>{
+          'host-1': RoomSessionSnapshot(
+            userId: 'host-1',
+            displayName: 'Old Host',
+            role: 'host',
+          ),
+          'user-2': RoomSessionSnapshot(
+            userId: 'user-2',
+            displayName: 'New Host',
+            role: 'audience',
+          ),
+        },
+      );
+
+      expect(
+        state.canExecute(RoomAction.manageRoom, userId: 'host-1'),
+        isFalse,
+      );
+      expect(state.canExecute(RoomAction.manageRoom, userId: 'user-2'), isTrue);
     });
 
     test('keeps authority gated until the room is hydrated', () {
