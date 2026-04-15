@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/dashboard/widgets/social_pulse_section.dart';
-import 'package:mixvy/models/social_activity_model.dart';
+import 'package:mixvy/features/feed/models/home_feed_snapshot.dart';
 
 void main() {
   testWidgets('SocialPulseSection renders activity items and CTA labels', (
@@ -11,20 +11,20 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: SocialPulseSection(
-            activities: [
-              SocialActivity(
-                id: 'a1',
-                userId: 'u1',
-                type: 'joined_room',
+            pulseItems: [
+              PulseFeedItem(
+                id: 'p1',
+                type: 'room_momentum',
+                title: 'Velvet Lounge is hot right now',
+                detail: '12 inside • 3 on mic',
                 timestamp: DateTime(2026, 4, 12, 21, 0),
-                metadata: {'roomName': 'Velvet Lounge'},
               ),
-              SocialActivity(
-                id: 'a2',
-                userId: 'u1',
+              PulseFeedItem(
+                id: 'p2',
                 type: 'followed_user',
+                title: 'Fresh activity from your circle',
+                detail: '@midnightmuse',
                 timestamp: DateTime(2026, 4, 12, 20, 45),
-                metadata: {'targetUsername': '@midnightmuse'},
               ),
             ],
             onOpenRooms: _noop,
@@ -48,7 +48,7 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: SocialPulseSection(
-            activities: [],
+            pulseItems: const [],
             onOpenRooms: _noop,
             onOpenDiscover: _noop,
           ),

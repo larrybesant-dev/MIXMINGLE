@@ -11,6 +11,7 @@ import '../../../models/user_model.dart';
 import '../../../presentation/providers/user_provider.dart';
 import '../../../services/presence_repository.dart';
 import '../../../services/social_activity_service.dart';
+import '../services/home_feed_service.dart';
 import 'package:mixvy/models/models.dart';
 
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
@@ -93,13 +94,17 @@ final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
   return SocialActivityService(firestore: ref.watch(firestoreProvider));
 });
 
+final homeFeedServiceProvider = Provider<HomeFeedService>((ref) {
+  return const HomeFeedService();
+});
+
 final currentUserActivitiesProvider =
     StreamProvider.autoDispose<List<SocialActivity>>((ref) {
       final currentUser = ref.watch(userProvider);
       final userId = currentUser?.id ?? '';
       return ref
           .watch(socialActivityServiceProvider)
-          .watchUserActivities(userId, limit: 4);
+          .watchUserActivities(userId, limit: 12);
     });
 
 final homeFeedSnapshotProvider =
@@ -115,10 +120,13 @@ final homeFeedSnapshotProvider =
       }
 
       return AsyncValue.data(
-        HomeFeedSnapshot(
-          activities: activitiesAsync.valueOrNull ?? const <SocialActivity>[],
-          liveRooms: roomsAsync.valueOrNull ?? const <RoomModel>[],
-          suggestedUsers: usersAsync.valueOrNull ?? const <UserModel>[],
-        ),
+        ref
+            .watch(homeFeedServiceProvider)
+            .buildSnapshot(
+              activities:
+                  activitiesAsync.valueOrNull ?? const <SocialActivity>[],
+              liveRooms: roomsAsync.valueOrNull ?? const <RoomModel>[],
+              suggestedUsers: usersAsync.valueOrNull ?? const <UserModel>[],
+            ),
       );
     });

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme.dart';
-import '../../../models/social_activity_model.dart';
+import '../../feed/models/home_feed_snapshot.dart';
 
 class SocialPulseSection extends StatelessWidget {
   const SocialPulseSection({
     super.key,
-    required this.activities,
+    required this.pulseItems,
     required this.onOpenRooms,
     required this.onOpenDiscover,
     this.headline,
@@ -16,7 +16,7 @@ class SocialPulseSection extends StatelessWidget {
     this.suggestionCount = 0,
   });
 
-  final List<SocialActivity> activities;
+  final List<PulseFeedItem> pulseItems;
   final VoidCallback onOpenRooms;
   final VoidCallback onOpenDiscover;
   final String? headline;
@@ -26,7 +26,7 @@ class SocialPulseSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasActivity = activities.isNotEmpty;
+    final hasActivity = pulseItems.any((item) => !item.isQuietState);
     final titleText =
         headline ??
         (hasActivity
@@ -122,12 +122,12 @@ class SocialPulseSection extends StatelessWidget {
             ],
             const SizedBox(height: 14),
             if (hasActivity)
-              ...activities
+              ...pulseItems
                   .take(3)
                   .map(
-                    (activity) => Padding(
+                    (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: _ActivityRow(activity: activity),
+                      child: _PulseItemRow(item: item),
                     ),
                   )
             else
@@ -179,10 +179,10 @@ class SocialPulseSection extends StatelessWidget {
   }
 }
 
-class _ActivityRow extends StatelessWidget {
-  const _ActivityRow({required this.activity});
+class _PulseItemRow extends StatelessWidget {
+  const _PulseItemRow({required this.item});
 
-  final SocialActivity activity;
+  final PulseFeedItem item;
 
   @override
   Widget build(BuildContext context) {
@@ -198,10 +198,14 @@ class _ActivityRow extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: activity.accent.withValues(alpha: 0.18),
+              color: _accentFor(item.type).withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(activity.icon, color: activity.accent, size: 18),
+            child: Icon(
+              _iconFor(item.type),
+              color: _accentFor(item.type),
+              size: 18,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -209,7 +213,7 @@ class _ActivityRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  activity.label,
+                  item.title,
                   style: GoogleFonts.raleway(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -218,7 +222,7 @@ class _ActivityRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  activity.value,
+                  item.detail,
                   style: GoogleFonts.raleway(
                     fontSize: 11,
                     color: VelvetNoir.onSurfaceVariant,
@@ -231,7 +235,7 @@ class _ActivityRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            _relativeTime(activity.timestamp),
+            _relativeTime(item.timestamp),
             style: GoogleFonts.raleway(
               fontSize: 10,
               color: VelvetNoir.onSurfaceVariant,
@@ -240,6 +244,32 @@ class _ActivityRow extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _iconFor(String type) {
+    switch (type) {
+      case 'room_momentum':
+        return Icons.mic_rounded;
+      case 'followed_user':
+        return Icons.favorite_rounded;
+      case 'quiet_state':
+        return Icons.nightlight_round;
+      default:
+        return Icons.bolt_rounded;
+    }
+  }
+
+  Color _accentFor(String type) {
+    switch (type) {
+      case 'room_momentum':
+        return VelvetNoir.liveGlow;
+      case 'followed_user':
+        return const Color(0xFF7C5FFF);
+      case 'quiet_state':
+        return VelvetNoir.primary;
+      default:
+        return VelvetNoir.secondary;
+    }
   }
 
   String _relativeTime(DateTime timestamp) {

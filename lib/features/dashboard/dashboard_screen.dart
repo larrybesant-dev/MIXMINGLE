@@ -282,7 +282,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: homeFeedAsync.when(
                   data: (snapshot) => SocialPulseSection(
-                    activities: snapshot.activities,
+                    pulseItems: snapshot.pulseItems,
                     headline: snapshot.headline,
                     subheadline: snapshot.subheadline,
                     liveRoomCount: snapshot.liveRooms.length,
@@ -295,7 +295,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     child: _HorizontalSkeleton(height: 190),
                   ),
                   error: (_, _) => SocialPulseSection(
-                    activities: const [],
+                    pulseItems: const [],
                     onOpenRooms: () => context.go('/rooms'),
                     onOpenDiscover: () => context.go('/discover'),
                   ),
