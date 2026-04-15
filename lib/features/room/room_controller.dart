@@ -41,11 +41,16 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   final Set<String> _pendingUserIds = <String>{};
   final Set<String> _stableUserIds = <String>{};
   Timer? _joinStabilizationTimer;
+  Timer? _roomHeartbeatTimer;
+  DateTime? _lastParticipantSyncAt;
+
+  static const Duration _kRoomHeartbeatInterval = Duration(seconds: 20);
 
   @override
   RoomState build(String roomId) {
     ref.onDispose(() {
       _joinStabilizationTimer?.cancel();
+      _roomHeartbeatTimer?.cancel();
     });
 
     final roomDoc = ref.watch(roomDocStreamProvider(roomId)).valueOrNull;
@@ -298,6 +303,43 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     });
   }
 
+  void _startRoomHeartbeat() {
+    _roomHeartbeatTimer?.cancel();
+    if ((_currentUserId?.trim().isEmpty ?? true) ||
+        _phase != LiveRoomPhase.joined) {
+      return;
+    }
+
+    unawaited(_sendRoomHeartbeat(forceSync: true));
+    _roomHeartbeatTimer = Timer.periodic(_kRoomHeartbeatInterval, (_) {
+      unawaited(_sendRoomHeartbeat());
+    });
+  }
+
+  void _stopRoomHeartbeat() {
+    _roomHeartbeatTimer?.cancel();
+    _roomHeartbeatTimer = null;
+    _lastParticipantSyncAt = null;
+  }
+
+  Future<void> _sendRoomHeartbeat({bool forceSync = false}) async {
+    final userId = _currentUserId?.trim() ?? '';
+    if (userId.isEmpty || _phase != LiveRoomPhase.joined) {
+      return;
+    }
+
+    try {
+      _lastParticipantSyncAt = await _sessionService.heartbeat(
+        roomId: arg,
+        userId: userId,
+        lastParticipantSyncAt: _lastParticipantSyncAt,
+        forceParticipantSync: forceSync,
+      );
+    } catch (_) {
+      // Best-effort roster freshness sync.
+    }
+  }
+
   void cacheDisplayName({
     required String userId,
     required String displayName,
@@ -392,6 +434,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       userId: normalizedUserId,
     );
     if (!result.isSuccess) {
+      _stopRoomHeartbeat();
       _phase = LiveRoomPhase.error;
       _currentUserId = null;
       _errorMessage = result.errorMessage;
@@ -410,6 +453,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _phase = LiveRoomPhase.joined;
     _joinedAt = result.joinedAt;
     _excludedUserIds = result.excludedUserIds;
+    _startRoomHeartbeat();
     _errorMessage = null;
     final existingSnapshot = _sessionSnapshotsByUser[normalizedUserId];
     _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
@@ -454,6 +498,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   Future<void> leaveRoom() async {
     final userId = _currentUserId?.trim();
     if (userId == null || userId.isEmpty) {
+      _stopRoomHeartbeat();
       _phase = LiveRoomPhase.idle;
       _currentUserId = null;
       _joinedAt = null;
@@ -466,6 +511,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       return;
     }
 
+    _stopRoomHeartbeat();
     _phase = LiveRoomPhase.leaving;
     state = state.copyWith(phase: _phase, errorMessage: null);
     await _sessionService.leaveRoom(roomId: arg, userId: userId);
@@ -508,6 +554,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
     _phase = LiveRoomPhase.joined;
     _errorMessage = null;
+    _startRoomHeartbeat();
     state = state.copyWith(phase: _phase, errorMessage: null);
   }
 

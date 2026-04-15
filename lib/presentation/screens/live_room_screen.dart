@@ -3986,6 +3986,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   joinedAt: liveRoomState.joinedAt ?? DateTime.now(),
                   lastActiveAt: DateTime.now(),
                 );
+            final roomMessages =
+                messageStreamAsync.valueOrNull ?? const <MessageModel>[];
+            final roomPresenceList =
+                presenceAsync.valueOrNull ?? const <RoomPresenceModel>[];
+            final presenceByUserId = <String, RoomPresenceModel>{
+              for (final presence in roomPresenceList)
+                if (presence.userId.trim().isNotEmpty)
+                  presence.userId.trim(): presence,
+            };
+            final onlineRoomUserIds = roomPresenceList
+                .where((presence) => presence.isOnline)
+                .map((presence) => presence.userId.trim())
+                .where((userId) => userId.isNotEmpty)
+                .toSet();
+            final recentMessageSenderIds = roomMessages
+                .map((message) => message.senderId.trim())
+                .where((userId) => userId.isNotEmpty)
+                .toSet();
+
             final participantById = <String, RoomParticipantModel>{
               for (final participantItem in rosterParticipants)
                 participantItem.userId: participantItem,
@@ -3998,7 +4017,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               ...liveRoomState.stableUserIds.where(
                 liveRoomState.shouldRenderUser,
               ),
+              ...liveRoomState.users.where(liveRoomState.shouldRenderUser),
               ...rosterParticipants.map((p) => p.userId),
+              ...onlineRoomUserIds,
+              ...recentMessageSenderIds,
               if (rosterSelfParticipant != null ||
                   liveRoomState.shouldRenderUser(user.id))
                 user.id,
@@ -4035,25 +4057,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   );
                 })
                 .toList(growable: false);
-            final roomMessages =
-                messageStreamAsync.valueOrNull ?? const <MessageModel>[];
-            final roomPresenceList =
-                presenceAsync.valueOrNull ?? const <RoomPresenceModel>[];
-            final presenceByUserId = <String, RoomPresenceModel>{
-              for (final presence in roomPresenceList)
-                if (presence.userId.trim().isNotEmpty)
-                  presence.userId.trim(): presence,
-            };
-            final onlineRoomUserIds = roomPresenceList
-                .where((presence) => presence.isOnline)
-                .map((presence) => presence.userId.trim())
-                .where((userId) => userId.isNotEmpty)
-                .toSet();
-            final recentMessageSenderIds = roomMessages
-                .map((message) => message.senderId.trim())
-                .where((userId) => userId.isNotEmpty)
-                .toSet();
             final hasPresenceSnapshot = roomPresenceList.isNotEmpty;
+            final now = DateTime.now();
             final participantsInRoom = hasPresenceSnapshot
                 ? rawParticipantsInRoom
                       .where((participantItem) {
@@ -4074,8 +4079,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             participantItem.camOn ||
                             participantItem.micOn ||
                             roomParticipantHasMicAccess(participantItem);
+                        final joinedRecently =
+                            now.difference(participantItem.joinedAt) <=
+                            const Duration(minutes: 2);
+                        final participantLooksOnline =
+                            (participantItem.userStatus?.trim().toLowerCase() ??
+                                '') ==
+                            'online';
 
-                        if (hasRecentRoomActivity) {
+                        if (hasRecentRoomActivity ||
+                            (participantLooksOnline && joinedRecently)) {
                           return true;
                         }
 
@@ -6339,7 +6352,7 @@ class _RoomRosterSidebar extends StatelessWidget {
       final fallbackName = userId == currentUserId
           ? (selfName.isEmpty ? hydratedName : selfName)
           : (hydratedName.isEmpty ? userId : hydratedName);
-      return roomState.displayNameFor(
+      final resolvedName = roomState.displayNameFor(
         userId,
         fallbackName: getDisplayName(
           uid: userId,
@@ -6347,11 +6360,61 @@ class _RoomRosterSidebar extends StatelessWidget {
           fallbackName: fallbackName,
         ),
       );
+
+      final trimmedResolved = resolvedName.trim();
+      final normalizedUserId = userId.trim();
+      final looksLikeSimpleHandle = RegExp(
+        r'^[a-z][a-z0-9_]{2,24}$',
+      ).hasMatch(trimmedResolved);
+      if (trimmedResolved == normalizedUserId && looksLikeSimpleHandle) {
+        return '${trimmedResolved[0].toUpperCase()}${trimmedResolved.substring(1)}';
+      }
+      return trimmedResolved;
     }
 
     final participantByUserId = <String, RoomParticipantModel>{
       for (final participant in participants) participant.userId: participant,
     };
+    for (final roomUserId in roomState.users) {
+      final normalizedUserId = roomUserId.trim();
+      if (normalizedUserId.isEmpty ||
+          participantByUserId.containsKey(normalizedUserId) ||
+          !roomState.shouldRenderUser(normalizedUserId)) {
+        continue;
+      }
+      participantByUserId[normalizedUserId] = RoomParticipantModel(
+        userId: normalizedUserId,
+        role: roomState.roleFor(normalizedUserId),
+        isMuted: false,
+        isBanned: false,
+        camOn: false,
+        micOn: roomState.isSpeaker(normalizedUserId),
+        userStatus: 'online',
+        joinedAt:
+            roomState.snapshotFor(normalizedUserId)?.joinedAt ?? DateTime.now(),
+        lastActiveAt: DateTime.now(),
+      );
+    }
+    for (final presence in presenceList) {
+      final normalizedUserId = presence.userId.trim();
+      if (normalizedUserId.isEmpty ||
+          participantByUserId.containsKey(normalizedUserId) ||
+          !presence.isOnline) {
+        continue;
+      }
+      participantByUserId[normalizedUserId] = RoomParticipantModel(
+        userId: normalizedUserId,
+        role: roomState.roleFor(normalizedUserId),
+        isMuted: false,
+        isBanned: false,
+        camOn: false,
+        micOn: roomState.isSpeaker(normalizedUserId),
+        userStatus: 'online',
+        joinedAt:
+            roomState.snapshotFor(normalizedUserId)?.joinedAt ?? DateTime.now(),
+        lastActiveAt: DateTime.now(),
+      );
+    }
     if (!participantByUserId.containsKey(currentUserId) &&
         roomState.shouldRenderUser(currentUserId)) {
       participantByUserId[currentUserId] = RoomParticipantModel(
@@ -6422,7 +6485,14 @@ class _RoomRosterSidebar extends StatelessWidget {
         if (b.userId == currentUserId && a.userId != currentUserId) {
           return 1;
         }
-        return 0;
+        final recentChatCompare = (recentChatters.contains(b.userId) ? 1 : 0)
+            .compareTo(recentChatters.contains(a.userId) ? 1 : 0);
+        if (recentChatCompare != 0) {
+          return recentChatCompare;
+        }
+        return displayNameFor(
+          a.userId,
+        ).toLowerCase().compareTo(displayNameFor(b.userId).toLowerCase());
       });
 
     return ColoredBox(
