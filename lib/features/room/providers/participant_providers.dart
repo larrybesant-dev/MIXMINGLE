@@ -95,6 +95,18 @@ final currentParticipantProvider = StreamProvider.autoDispose
 const Duration _kParticipantFreshnessWindow = Duration(seconds: 90);
 
 bool _isParticipantFresh(RoomParticipantModel participant, {DateTime? now}) {
+  final normalizedRole = participant.role.trim().toLowerCase();
+  final shouldKeepActiveSeatVisible =
+      normalizedRole == 'host' ||
+      normalizedRole == 'owner' ||
+      normalizedRole == 'cohost' ||
+      normalizedRole == 'stage' ||
+      participant.camOn ||
+      participant.micOn;
+  if (shouldKeepActiveSeatVisible) {
+    return true;
+  }
+
   final currentTime = now ?? DateTime.now();
   return currentTime.difference(participant.lastActiveAt) <=
       _kParticipantFreshnessWindow;

@@ -37,6 +37,7 @@ class LiveRoomAppBarActions extends StatelessWidget {
     required this.onShareRoom,
     required this.onReportRoom,
     required this.onReportIssue,
+    required this.onEditProfile,
     this.coinBalance,
   });
 
@@ -68,6 +69,7 @@ class LiveRoomAppBarActions extends StatelessWidget {
   final VoidCallback onShareRoom;
   final VoidCallback onReportRoom;
   final VoidCallback onReportIssue;
+  final VoidCallback onEditProfile;
   final int? coinBalance;
 
   @override
@@ -159,6 +161,8 @@ class LiveRoomAppBarActions extends StatelessWidget {
                 onInviteFriends();
               case 'online_friends':
                 onShowOnlineFriends();
+              case 'edit_profile':
+                onEditProfile();
               case 'share':
                 onShareRoom();
               case 'report_room':
@@ -182,6 +186,15 @@ class LiveRoomAppBarActions extends StatelessWidget {
               child: ListTile(
                 leading: Icon(Icons.people_outline),
                 title: Text('Online friends'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'edit_profile',
+              child: ListTile(
+                leading: Icon(Icons.edit_outlined),
+                title: Text('Edit profile'),
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),

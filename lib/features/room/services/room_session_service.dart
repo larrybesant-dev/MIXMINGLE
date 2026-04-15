@@ -21,19 +21,19 @@ class RoomJoinResult {
     required DateTime joinedAt,
     Set<String> excludedUserIds = const <String>{},
   }) : this._(
-          isSuccess: true,
-          joinedAt: joinedAt,
-          excludedUserIds: excludedUserIds,
-        );
+         isSuccess: true,
+         joinedAt: joinedAt,
+         excludedUserIds: excludedUserIds,
+       );
 
   const RoomJoinResult.failure(
     String errorMessage, {
     Set<String> excludedUserIds = const <String>{},
   }) : this._(
-          isSuccess: false,
-          errorMessage: errorMessage,
-          excludedUserIds: excludedUserIds,
-        );
+         isSuccess: false,
+         errorMessage: errorMessage,
+         excludedUserIds: excludedUserIds,
+       );
 
   final bool isSuccess;
   final String? errorMessage;
@@ -52,8 +52,8 @@ class RoomSessionService {
   RoomSessionService({
     required FirebaseFirestore firestore,
     required PresenceController presenceController,
-  })  : _firestore = firestore,
-        _presenceController = presenceController;
+  }) : _firestore = firestore,
+       _presenceController = presenceController;
 
   static const Duration participantSyncInterval = Duration(seconds: 60);
 
@@ -96,7 +96,9 @@ class RoomSessionService {
     final normalizedRoomId = roomId.trim();
     final normalizedUserId = userId.trim();
     if (normalizedRoomId.isEmpty || normalizedUserId.isEmpty) {
-      return const RoomJoinResult.failure('Could not join room. Please try again.');
+      return const RoomJoinResult.failure(
+        'Could not join room. Please try again.',
+      );
     }
 
     AppTelemetry.updateRoomState(
@@ -137,11 +139,13 @@ class RoomSessionService {
       fallback: _asString(roomDoc.data()?['hostId']),
     );
     final moderationService = ModerationService(firestore: _firestore);
-    final excludedUserIds = await moderationService.getExcludedUserIds(normalizedUserId);
+    final excludedUserIds = await moderationService.getExcludedUserIds(
+      normalizedUserId,
+    );
 
     if (ownerId.isNotEmpty) {
-      final hasBlockingRelationship =
-          await moderationService.hasBlockingRelationship(normalizedUserId, ownerId);
+      final hasBlockingRelationship = await moderationService
+          .hasBlockingRelationship(normalizedUserId, ownerId);
       if (hasBlockingRelationship) {
         return RoomJoinResult.failure(
           'You cannot join this room.',
@@ -221,10 +225,13 @@ class RoomSessionService {
         operation: 'refresh_participant_join',
         roomId: normalizedRoomId,
         userId: normalizedUserId,
-        action: () => participantRef.update({
+        action: () => participantRef.set({
+          'userId': normalizedUserId,
           'role': correctedRole,
           'camOn': false,
-        }),
+          'lastActiveAt': now,
+          'userStatus': 'online',
+        }, SetOptions(merge: true)),
       );
       await traceFirestoreWrite<void>(
         path: 'rooms/$normalizedRoomId/members/$normalizedUserId',
@@ -251,7 +258,9 @@ class RoomSessionService {
           'isMuted': false,
           'isBanned': false,
           'camOn': false,
+          'userStatus': 'online',
           'joinedAt': now,
+          'lastActiveAt': now,
         }),
       );
       await traceFirestoreWrite<void>(
@@ -345,9 +354,50 @@ class RoomSessionService {
     DateTime? lastParticipantSyncAt,
     bool forceParticipantSync = false,
   }) async {
-    // Room participant presence authority is intentionally disabled.
-    // Global presence is derived from RTDB session truth.
-    return lastParticipantSyncAt ?? DateTime.now();
+    final now = DateTime.now();
+    final shouldSyncParticipant =
+        forceParticipantSync ||
+        lastParticipantSyncAt == null ||
+        now.difference(lastParticipantSyncAt) >= participantSyncInterval;
+
+    if (!shouldSyncParticipant) {
+      return lastParticipantSyncAt;
+    }
+
+    await traceFirestoreWrite<void>(
+      path: 'rooms/$roomId/participants/$userId',
+      operation: 'heartbeat_participant_sync',
+      roomId: roomId,
+      userId: userId,
+      action: () => _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId)
+          .set({
+            'userId': userId,
+            'lastActiveAt': now,
+            'userStatus': 'online',
+          }, SetOptions(merge: true)),
+    );
+
+    await traceFirestoreWrite<void>(
+      path: 'rooms/$roomId/members/$userId',
+      operation: 'heartbeat_member_sync',
+      roomId: roomId,
+      userId: userId,
+      action: () => _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('members')
+          .doc(userId)
+          .set({
+            'userId': userId,
+            'lastActiveAt': now,
+          }, SetOptions(merge: true)),
+    );
+
+    return now;
   }
 
   Future<void> setCustomStatus({
@@ -365,9 +415,7 @@ class RoomSessionService {
           .doc(roomId)
           .collection('participants')
           .doc(userId)
-          .set({
-        'customStatus': status,
-      }, SetOptions(merge: true)),
+          .set({'customStatus': status}, SetOptions(merge: true)),
     );
   }
 
@@ -380,15 +428,19 @@ class RoomSessionService {
       operation: 'post_system_event',
       roomId: roomId,
       metadata: <String, Object?>{'content': content},
-      action: () => _firestore.collection('rooms').doc(roomId).collection('messages').add({
-        'senderId': 'system',
-        'roomId': roomId,
-        'content': content,
-        'type': 'system',
-        'richText': '',
-        'sentAt': FieldValue.serverTimestamp(),
-        'clientSentAt': DateTime.now().toIso8601String(),
-      }),
+      action: () => _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('messages')
+          .add({
+            'senderId': 'system',
+            'roomId': roomId,
+            'content': content,
+            'type': 'system',
+            'richText': '',
+            'sentAt': FieldValue.serverTimestamp(),
+            'clientSentAt': DateTime.now().toIso8601String(),
+          }),
     );
   }
 

@@ -25,9 +25,11 @@ final schemaFriendLinksProvider =
         return const Stream<List<SchemaFriendLink>>.empty();
       }
 
-      return ref.watch(friendServiceProvider).watchFriendships(userId).map((
-        friendships,
-      ) {
+      final friendService = FriendService(
+        firestore: ref.watch(schemaFriendFirestoreProvider),
+      );
+
+      return friendService.watchFriendships(userId).map((friendships) {
         final links =
             friendships
                 .map(

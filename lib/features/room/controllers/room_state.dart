@@ -67,6 +67,12 @@ class RoomState {
 
   String? get userId => currentUserId;
 
+  List<String> get users => List<String>.unmodifiable(userIds);
+
+  List<String> get speakers => List<String>.unmodifiable(speakerIds);
+
+  bool get isConnected => phase == LiveRoomPhase.joined;
+
   bool get isJoined =>
       phase == LiveRoomPhase.joined && (currentUserId?.isNotEmpty == true);
 
@@ -151,10 +157,7 @@ class RoomState {
 
   bool canManageStage(String userId) {
     final role = roleFor(userId);
-    return role == 'host' ||
-        role == 'owner' ||
-        role == 'cohost' ||
-        role == 'moderator';
+    return role == 'host' || role == 'owner' || role == 'cohost';
   }
 
   bool canModerate(String userId) {

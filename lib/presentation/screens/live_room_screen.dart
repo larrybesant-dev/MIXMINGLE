@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -245,6 +246,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     return RegExp(r'^[a-zA-Z0-9]{32}$').hasMatch(trimmed);
   }
 
+  bool get _hasFirebaseApp {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   LiveRoomMediaState get _mediaState => _latestMediaState;
 
   LiveRoomMediaController get _mediaController => _liveRoomMediaNotifier;
@@ -310,7 +319,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               .cacheDisplayName(userId: user.id, displayName: user.username);
         }
         _joinRoom(user.id);
-        if (!kIsWeb) {
+        if (!kIsWeb && _hasFirebaseApp) {
           // Pre-warm the Agora SDK in the background (mobile only) so WASM
           // cold-start completes before the user taps the camera button.
           _preWarmAgora(user.id);
@@ -2312,11 +2321,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             .where((id) => id.isNotEmpty && id != currentUserId),
     };
     final missingIds = senderIds
-        .where(
-          (id) =>
-              !_senderDisplayNameById.containsKey(id) &&
-              !_senderLookupInFlight.contains(id),
-        )
+        .where((id) {
+          final cachedDisplayName = _senderDisplayNameById[id]?.trim() ?? '';
+          final needsLookup =
+              cachedDisplayName.isEmpty ||
+              cachedDisplayName == id ||
+              isAnonymousDisplayName(cachedDisplayName);
+          return needsLookup && !_senderLookupInFlight.contains(id);
+        })
         .toList(growable: false);
     if (missingIds.isEmpty) {
       return;
@@ -2362,9 +2374,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         }
       }
 
-      // Prevent repeated lookups for missing docs by falling back to the id.
+      // Prevent repeated lookups for missing docs by falling back to a
+      // safe public display label instead of leaking the raw uid.
       for (final id in missingIds) {
-        resolved.putIfAbsent(id, () => id);
+        resolved.putIfAbsent(id, () => resolvePublicUsername(uid: id));
         resolvedVip.putIfAbsent(id, () => 0);
         resolvedAvatar.putIfAbsent(id, () => null);
         resolvedGender.putIfAbsent(id, () => null);
@@ -3277,10 +3290,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         roomError: null,
       );
 
-      // Connect the media service automatically on both platforms.
-      // On web this uses WebRTC which is instant (no WASM download).
-      // On native this initialises the Agora SDK.
-      await _connectCall(userId);
+      // Connect the media service automatically once Firebase is available.
+      // On web this uses WebRTC which is instant, while native initializes
+      // the live media engine.
+      if (_hasFirebaseApp) {
+        await _connectCall(userId);
+      } else {
+        _logLiveRoom('connect:skipped firebase_not_initialized');
+      }
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
@@ -4018,28 +4035,65 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   );
                 })
                 .toList(growable: false);
+            final roomMessages =
+                messageStreamAsync.valueOrNull ?? const <MessageModel>[];
             final roomPresenceList =
                 presenceAsync.valueOrNull ?? const <RoomPresenceModel>[];
+            final presenceByUserId = <String, RoomPresenceModel>{
+              for (final presence in roomPresenceList)
+                if (presence.userId.trim().isNotEmpty)
+                  presence.userId.trim(): presence,
+            };
             final onlineRoomUserIds = roomPresenceList
                 .where((presence) => presence.isOnline)
                 .map((presence) => presence.userId.trim())
                 .where((userId) => userId.isNotEmpty)
                 .toSet();
+            final recentMessageSenderIds = roomMessages
+                .map((message) => message.senderId.trim())
+                .where((userId) => userId.isNotEmpty)
+                .toSet();
             final hasPresenceSnapshot = roomPresenceList.isNotEmpty;
             final participantsInRoom = hasPresenceSnapshot
                 ? rawParticipantsInRoom
-                      .where(
-                        (participantItem) =>
-                            participantItem.userId == user.id ||
-                            onlineRoomUserIds.contains(participantItem.userId),
-                      )
+                      .where((participantItem) {
+                        if (participantItem.userId == user.id ||
+                            onlineRoomUserIds.contains(
+                              participantItem.userId,
+                            )) {
+                          return true;
+                        }
+
+                        final presence =
+                            presenceByUserId[participantItem.userId];
+                        final hasRecentRoomActivity =
+                            recentMessageSenderIds.contains(
+                              participantItem.userId,
+                            ) ||
+                            _recentChatters.contains(participantItem.userId) ||
+                            participantItem.camOn ||
+                            participantItem.micOn ||
+                            roomParticipantHasMicAccess(participantItem);
+
+                        if (hasRecentRoomActivity) {
+                          return true;
+                        }
+
+                        return presence == null;
+                      })
                       .toList(growable: false)
                 : rawParticipantsInRoom;
+
+            bool participantHasMicSeat(RoomParticipantModel? participantItem) {
+              if (participantItem == null || participantItem.isBanned) {
+                return false;
+              }
+              return liveRoomState.isSpeaker(participantItem.userId) ||
+                  roomParticipantHasMicAccess(participantItem);
+            }
+
             final onMicCount = participantsInRoom
-                .where(
-                  (participantItem) =>
-                      liveRoomState.isSpeaker(participantItem.userId),
-                )
+                .where(participantHasMicSeat)
                 .length;
             final onCamParticipants = participantsInRoom
                 .where(
@@ -4070,10 +4124,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 : onMicCount > 0
                 ? 'Jump into the convo or keep the chat moving.'
                 : 'Keep the room moving with chat, cam, or mic.';
-            final isOnMic = liveRoomState.isSpeaker(user.id);
-            final isMicFree = liveRoomState.speakerIds.every(
-              (speakerId) => speakerId == user.id,
-            );
+            final isOnMic = participantHasMicSeat(effectiveSelfParticipant);
+            final isMicFree = isOnMic || onMicCount < RoomState.maxSpeakers;
 
             Future<void> handleReleaseMic() async {
               try {
@@ -4115,8 +4167,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             }
 
             final canRequestMic =
-                allowMicRequests ||
-                liveRoomState.speakerIds.length < RoomState.maxSpeakers;
+                allowMicRequests || onMicCount < RoomState.maxSpeakers;
             final VoidCallback? onGrabMicAction = isOnMic
                 ? () => unawaited(handleReleaseMic())
                 : canRequestMic
@@ -4355,6 +4406,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       fallbackReason: 'Live room review requested',
                     ),
                     onReportIssue: () => BetaFeedbackSheet.show(context),
+                    onEditProfile: () => context.push('/edit-profile'),
                   ),
                 ],
               ),
@@ -4732,40 +4784,41 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       right: 0,
                       child: LinearProgressIndicator(),
                     ),
-                  Positioned(
-                    top: 56,
-                    left: colLeft('cams') + 12,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: isMobile
-                            ? screenWidth - 24
-                            : (camsW - 24).clamp(240.0, 420.0),
-                      ),
-                      child: GestureDetector(
-                        onTap: participantsInRoom.isEmpty
-                            ? null
-                            : () => _openPeopleSheet(
-                                participants: participantsInRoom,
-                                currentParticipant: participant,
-                                currentUserId: user.id,
-                                currentUsername: currentSessionDisplayName,
-                                currentAvatarUrl: user.avatarUrl,
-                                hostId: hostId,
-                                isHost: isHost,
-                                isModerator: isModerator,
-                                presenceList:
-                                    presenceAsync.valueOrNull ?? const [],
-                              ),
-                        child: _RoomPresenceEnergyCard(
-                          title: roomEnergyLabel,
-                          statusLabel: '$roomOnlineCount online',
-                          summary: roomPresenceSummary,
-                          prompt: roomEnergyPrompt,
-                          isQuiet: roomFeelsQuiet,
+                  if (onCamCount == 0)
+                    Positioned(
+                      top: 56,
+                      left: colLeft('cams') + 12,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isMobile
+                              ? screenWidth - 24
+                              : (camsW - 24).clamp(240.0, 420.0),
+                        ),
+                        child: GestureDetector(
+                          onTap: participantsInRoom.isEmpty
+                              ? null
+                              : () => _openPeopleSheet(
+                                  participants: participantsInRoom,
+                                  currentParticipant: participant,
+                                  currentUserId: user.id,
+                                  currentUsername: currentSessionDisplayName,
+                                  currentAvatarUrl: user.avatarUrl,
+                                  hostId: hostId,
+                                  isHost: isHost,
+                                  isModerator: isModerator,
+                                  presenceList:
+                                      presenceAsync.valueOrNull ?? const [],
+                                ),
+                          child: _RoomPresenceEnergyCard(
+                            title: roomEnergyLabel,
+                            statusLabel: '$roomOnlineCount online',
+                            summary: roomPresenceSummary,
+                            prompt: roomEnergyPrompt,
+                            isQuiet: roomFeelsQuiet,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   // ── TOP GIFTERS STRIP (bottom-left, above admin bar) ──────
                   if (topGifters.isNotEmpty)
                     Positioned(

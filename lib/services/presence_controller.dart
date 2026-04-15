@@ -55,7 +55,9 @@ final presenceControllerProvider =
 
 class PresenceController extends Notifier<PresenceControllerState>
     with WidgetsBindingObserver {
-  static const Duration heartbeatInterval = Duration(seconds: 30);
+  // Web-safe heartbeat cadence. Presence consumers treat entries older than
+  // roughly 30-60 seconds as stale, so keep writes comfortably inside that window.
+  static const Duration heartbeatInterval = Duration(seconds: 20);
 
   Timer? _heartbeatTimer;
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
