@@ -4,18 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme.dart';
 
-enum ProfilePresenceState {
-  online,
-  recentlyActive,
-  inRoom,
-  offline,
-}
+enum ProfilePresenceState { online, recentlyActive, inRoom, offline }
 
 class ProfileCard extends StatelessWidget {
   const ProfileCard({
     super.key,
     required this.displayName,
     required this.avatarUrl,
+    this.usernameHandle,
     required this.statusText,
     required this.presenceState,
     required this.onMessage,
@@ -24,6 +20,7 @@ class ProfileCard extends StatelessWidget {
     this.currentRoom,
     this.lastMessagePreview,
     this.mutualFriendsCount,
+    this.activities = const <ProfileActivityItem>[],
     this.onMute,
     required this.onBlock,
     required this.onReport,
@@ -32,6 +29,7 @@ class ProfileCard extends StatelessWidget {
 
   final String displayName;
   final String? avatarUrl;
+  final String? usernameHandle;
   final String statusText;
   final ProfilePresenceState presenceState;
   final VoidCallback onMessage;
@@ -40,6 +38,7 @@ class ProfileCard extends StatelessWidget {
   final String? currentRoom;
   final String? lastMessagePreview;
   final int? mutualFriendsCount;
+  final List<ProfileActivityItem> activities;
   final VoidCallback? onMute;
   final VoidCallback onBlock;
   final VoidCallback onReport;
@@ -52,6 +51,7 @@ class ProfileCard extends StatelessWidget {
         ProfileHeader(
           displayName: displayName,
           avatarUrl: avatarUrl,
+          usernameHandle: usernameHandle,
           statusText: statusText,
           presenceState: presenceState,
         ),
@@ -66,6 +66,7 @@ class ProfileCard extends StatelessWidget {
           currentRoom: currentRoom,
           lastMessagePreview: lastMessagePreview,
           mutualFriendsCount: mutualFriendsCount,
+          activities: activities,
         ),
         const SizedBox(height: 10),
         _SecondaryActionsRow(
@@ -84,12 +85,14 @@ class ProfileHeader extends StatelessWidget {
     super.key,
     required this.displayName,
     required this.avatarUrl,
+    this.usernameHandle,
     required this.statusText,
     required this.presenceState,
   });
 
   final String displayName;
   final String? avatarUrl;
+  final String? usernameHandle;
   final String statusText;
   final ProfilePresenceState presenceState;
 
@@ -108,10 +111,7 @@ class ProfileHeader extends StatelessWidget {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: ringColor,
-                width: 2.2,
-              ),
+              border: Border.all(color: ringColor, width: 2.2),
               boxShadow: glowColor == null
                   ? null
                   : [
@@ -153,6 +153,19 @@ class ProfileHeader extends StatelessWidget {
               letterSpacing: 0.1,
             ),
           ),
+          if ((usernameHandle ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              usernameHandle!.trim(),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.raleway(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: VelvetNoir.primary,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
           const SizedBox(height: 4),
           Text(
             statusText,
@@ -241,21 +254,48 @@ class ProfileActionsRow extends StatelessWidget {
   }
 }
 
+class ProfileActivityItem {
+  const ProfileActivityItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.accent,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? accent;
+}
+
 class ProfileActivitySection extends StatelessWidget {
   const ProfileActivitySection({
     super.key,
     this.currentRoom,
     this.lastMessagePreview,
     this.mutualFriendsCount,
+    this.activities = const <ProfileActivityItem>[],
   });
 
   final String? currentRoom;
   final String? lastMessagePreview;
   final int? mutualFriendsCount;
+  final List<ProfileActivityItem> activities;
 
   @override
   Widget build(BuildContext context) {
     final rows = <Widget>[];
+
+    for (final activity in activities) {
+      rows.add(
+        _ActivityRow(
+          icon: activity.icon,
+          label: activity.label,
+          value: activity.value,
+          accent: activity.accent,
+        ),
+      );
+    }
 
     if ((currentRoom ?? '').isNotEmpty) {
       rows.add(
@@ -299,8 +339,18 @@ class ProfileActivitySection extends StatelessWidget {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(height: 1, color: Color(0x1FF7EDE2)),
+        const SizedBox(height: 10),
+        Text(
+          'Recent activity',
+          style: GoogleFonts.raleway(
+            color: VelvetNoir.onSurface,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
         const SizedBox(height: 10),
         for (var i = 0; i < rows.length; i++) ...[
           rows[i],
@@ -330,14 +380,10 @@ class _ActivityRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: accent ?? VelvetNoir.onSurfaceVariant,
-        ),
+        Icon(icon, size: 14, color: accent ?? VelvetNoir.onSurfaceVariant),
         const SizedBox(width: 8),
         Text(
-          '$label:',
+          label,
           style: GoogleFonts.raleway(
             fontSize: 12,
             color: VelvetNoir.onSurfaceVariant,
@@ -410,7 +456,11 @@ class _SecondaryActionsRow extends StatelessWidget {
         const SizedBox(width: 4),
         TextButton.icon(
           onPressed: onReport,
-          icon: const Icon(Icons.flag_outlined, size: 16, color: VelvetNoir.error),
+          icon: const Icon(
+            Icons.flag_outlined,
+            size: 16,
+            color: VelvetNoir.error,
+          ),
           label: Text(
             'Report',
             style: GoogleFonts.raleway(

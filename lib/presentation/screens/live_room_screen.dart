@@ -66,6 +66,7 @@ import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/presence_repository.dart';
 import '../../services/room_audio_cues.dart';
+import '../../services/social_activity_service.dart';
 import '../../core/providers/firebase_providers.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
@@ -1296,6 +1297,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               (_joinedUserId ?? '');
           if (myName.isNotEmpty) {
             _sendSystemEvent('$myName turned on their camera 📷');
+          }
+          if ((_joinedUserId ?? '').isNotEmpty) {
+            unawaited(
+              SocialActivityService().logActivity(
+                userId: _joinedUserId!,
+                type: 'went_live',
+                targetId: widget.roomId,
+                metadata: const <String, dynamic>{'detail': 'Turned on camera'},
+              ),
+            );
           }
         } else {
           final myName =
@@ -3233,6 +3244,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _roomJoinedAt = joinResult.joinedAt ?? DateTime.now();
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName joined the room');
+      unawaited(
+        SocialActivityService().logActivity(
+          userId: userId,
+          type: 'joined_room',
+          targetId: widget.roomId,
+          metadata: const <String, dynamic>{'detail': 'Entered a live room'},
+        ),
+      );
     } catch (_) {
       AppTelemetry.updateRoomState(
         roomId: widget.roomId,
@@ -3311,6 +3330,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     try {
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName left the room');
+      unawaited(
+        SocialActivityService().logActivity(
+          userId: userId,
+          type: 'left_room',
+          targetId: widget.roomId,
+          metadata: const <String, dynamic>{'detail': 'Exited a live room'},
+        ),
+      );
       await _stopPresenceHeartbeat();
       await ref
           .read(liveRoomControllerProvider(widget.roomId).notifier)
@@ -3976,6 +4003,40 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       )
                       .toList(growable: false)
                 : rawParticipantsInRoom;
+            final onMicCount = participantsInRoom
+                .where(
+                  (participantItem) =>
+                      liveRoomState.isSpeaker(participantItem.userId),
+                )
+                .length;
+            final onCamCount = participantsInRoom
+                .where(
+                  (participantItem) => participantItem.userId == user.id
+                      ? (_isVideoEnabled || participantItem.camOn)
+                      : participantItem.camOn,
+                )
+                .length;
+            final watchingCamCount = participantsInRoom.fold<int>(
+              0,
+              (total, participantItem) =>
+                  total + liveRoomState.viewerCountFor(participantItem.userId),
+            );
+            final roomFeelsQuiet = onMicCount == 0 && onCamCount == 0;
+            final roomOnlineCount = participantsInRoom.length;
+            final roomEnergyLabel = roomFeelsQuiet
+                ? 'Room warming up'
+                : watchingCamCount > 0
+                ? 'People are tuned in'
+                : onMicCount > 0
+                ? 'Conversation is live'
+                : 'Cameras are active';
+            final roomPresenceSummary =
+                '${participantsInRoom.length} here • $onMicCount on mic • $watchingCamCount watching cam';
+            final roomEnergyPrompt = roomFeelsQuiet
+                ? 'Tap mic to speak or turn on cam to start the vibe.'
+                : onMicCount > 0
+                ? 'Jump into the convo or keep the chat moving.'
+                : 'Keep the room moving with chat, cam, or mic.';
             _syncTelemetryForBuild(
               currentUserId: user.id,
               roomState: liveRoomState,
@@ -4581,75 +4642,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       right: 0,
                       child: LinearProgressIndicator(),
                     ),
-                  // ── AVATAR STRIP + ONLINE COUNT (top-right of camera area) ──
                   Positioned(
                     top: 56,
-                    left: 336,
-                    child: presenceAsync.when(
-                      data: (presence) {
-                        final activeCutoff = DateTime.now().subtract(
-                          const Duration(seconds: 50),
-                        );
-                        final onlineCount = presence
-                            .where(
-                              (e) =>
-                                  e.isOnline &&
-                                  (e.lastHeartbeatAt == null ||
-                                      e.lastHeartbeatAt!.isAfter(activeCutoff)),
-                            )
-                            .length;
-                        if (onlineCount == 0) return const SizedBox.shrink();
-                        return GestureDetector(
-                          onTap: participantsInRoom.isEmpty
-                              ? null
-                              : () => _openPeopleSheet(
-                                  participants: participantsInRoom,
-                                  currentParticipant: participant,
-                                  currentUserId: user.id,
-                                  currentUsername: currentSessionDisplayName,
-                                  currentAvatarUrl: user.avatarUrl,
-                                  hostId: hostId,
-                                  isHost: isHost,
-                                  isModerator: isModerator,
-                                  presenceList:
-                                      presenceAsync.valueOrNull ?? const [],
-                                ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0x9910131A),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0x30D4A853),
+                    left: colLeft('cams') + 12,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile
+                            ? screenWidth - 24
+                            : (camsW - 24).clamp(240.0, 420.0),
+                      ),
+                      child: GestureDetector(
+                        onTap: participantsInRoom.isEmpty
+                            ? null
+                            : () => _openPeopleSheet(
+                                participants: participantsInRoom,
+                                currentParticipant: participant,
+                                currentUserId: user.id,
+                                currentUsername: currentSessionDisplayName,
+                                currentAvatarUrl: user.avatarUrl,
+                                hostId: hostId,
+                                isHost: isHost,
+                                isModerator: isModerator,
+                                presenceList:
+                                    presenceAsync.valueOrNull ?? const [],
                               ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.circle,
-                                  color: Color(0xFFC45E7A),
-                                  size: 9,
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  '$onlineCount online',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => const SizedBox.shrink(),
+                        child: _RoomPresenceEnergyCard(
+                          title: roomEnergyLabel,
+                          statusLabel: '$roomOnlineCount online',
+                          summary: roomPresenceSummary,
+                          prompt: roomEnergyPrompt,
+                          isQuiet: roomFeelsQuiet,
+                        ),
+                      ),
                     ),
                   ),
                   // ── TOP GIFTERS STRIP (bottom-left, above admin bar) ──────
@@ -5163,15 +5187,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                   ),
                                               child: Column(
                                                 mainAxisSize: MainAxisSize.min,
-                                                children: const [
+                                                children: [
                                                   Icon(
                                                     Icons
                                                         .chat_bubble_outline_rounded,
-                                                    color: Color(0xFFD4A853),
+                                                    color: const Color(
+                                                      0xFFD4A853,
+                                                    ),
                                                     size: 28,
                                                   ),
-                                                  SizedBox(height: 10),
+                                                  const SizedBox(height: 10),
                                                   Text(
+                                                    roomEnergyLabel,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    roomPresenceSummary,
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                      color: Color(0xFFD4A853),
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  const Text(
                                                     'No messages yet',
                                                     style: TextStyle(
                                                       color: Colors.white,
@@ -5180,11 +5227,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                           FontWeight.w700,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 4),
+                                                  const SizedBox(height: 4),
                                                   Text(
-                                                    'Say hey or invite people in to start the vibe.',
+                                                    roomEnergyPrompt,
                                                     textAlign: TextAlign.center,
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       color: Colors.white70,
                                                       fontSize: 12,
                                                     ),
@@ -5740,6 +5787,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               genderById: Map.unmodifiable(_senderGenderById),
                               currentUserId: user.id,
                               currentUsername: currentSessionDisplayName,
+                              roomEnergyLabel: roomEnergyLabel,
+                              roomEnergySummary: roomPresenceSummary,
+                              roomEnergyPrompt: roomEnergyPrompt,
                               presenceList:
                                   presenceAsync.valueOrNull ?? const [],
                               pendingMicCount:
@@ -6091,6 +6141,9 @@ class _RoomRosterSidebar extends StatelessWidget {
     required this.genderById,
     required this.currentUserId,
     required this.currentUsername,
+    this.roomEnergyLabel = '',
+    this.roomEnergySummary = '',
+    this.roomEnergyPrompt = '',
     required this.presenceList,
     required this.pendingMicCount,
     required this.isLocalVideoEnabled,
@@ -6121,6 +6174,9 @@ class _RoomRosterSidebar extends StatelessWidget {
   final Map<String, String?> genderById;
   final String currentUserId;
   final String currentUsername;
+  final String roomEnergyLabel;
+  final String roomEnergySummary;
+  final String roomEnergyPrompt;
   final List<RoomPresenceModel> presenceList;
   final int pendingMicCount;
   final bool isLocalVideoEnabled;
@@ -6249,6 +6305,20 @@ class _RoomRosterSidebar extends StatelessWidget {
         children: [
           // Space for the floating AppBar above
           SizedBox(height: topPadding),
+          if (roomEnergyLabel.trim().isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+              child: _RoomPresenceEnergyCard(
+                title: roomEnergyLabel,
+                statusLabel: roomEnergyLabel == 'Room warming up'
+                    ? 'Start it'
+                    : 'Live now',
+                summary: roomEnergySummary,
+                prompt: roomEnergyPrompt,
+                isQuiet: roomEnergyLabel == 'Room warming up',
+              ),
+            ),
+          ],
           // ── Talking Now ──────────────────────────────────────
           _RosterHeader(
             label: 'Talking Now',
@@ -6258,7 +6328,10 @@ class _RoomRosterSidebar extends StatelessWidget {
           if (speakingUserIds.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text('—', style: TextStyle(color: _kSubtle, fontSize: 12)),
+              child: Text(
+                'Nobody on mic yet',
+                style: TextStyle(color: _kSubtle, fontSize: 12),
+              ),
             )
           else
             ...speakingUserIds
@@ -6337,7 +6410,7 @@ class _RoomRosterSidebar extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
-                'No cameras yet',
+                'No cameras live yet — be the first to go live',
                 style: TextStyle(color: _kSubtle, fontSize: 11),
               ),
             )
@@ -6475,6 +6548,110 @@ class _RosterHeader extends StatelessWidget {
                 letterSpacing: 0.2,
               ),
               overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoomPresenceEnergyCard extends StatelessWidget {
+  const _RoomPresenceEnergyCard({
+    required this.title,
+    required this.statusLabel,
+    required this.summary,
+    required this.prompt,
+    required this.isQuiet,
+  });
+
+  final String title;
+  final String statusLabel;
+  final String summary;
+  final String prompt;
+  final bool isQuiet;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = isQuiet ? const Color(0xFFD4A853) : const Color(0xFFC45E7A);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xE6141018),
+            isQuiet ? const Color(0xCC302316) : const Color(0xCC351623),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.18),
+            blurRadius: 18,
+            spreadRadius: 0.6,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isQuiet ? Icons.auto_awesome : Icons.local_fire_department,
+                color: accent,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            summary,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            prompt,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.82),
+              fontSize: 11,
+              height: 1.3,
             ),
           ),
         ],

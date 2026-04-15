@@ -662,6 +662,14 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.followerUserId == request.auth.uid;
     }
 
+    match /activity_feed/{activityId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type is string;
+      allow update, delete: if false;
+    }
+
     match /refund_requests/{requestId} {
       allow read: if signedIn()
         && (resource.data.requesterId == request.auth.uid

@@ -2,19 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/moderation_service.dart';
+import 'social_activity_service.dart';
 
 class FollowService {
   FollowService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     ModerationService? moderationService,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _moderationService = moderationService ?? ModerationService(firestore: firestore ?? FirebaseFirestore.instance, auth: auth ?? FirebaseAuth.instance);
+    SocialActivityService? socialActivityService,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _moderationService =
+           moderationService ??
+           ModerationService(
+             firestore: firestore ?? FirebaseFirestore.instance,
+             auth: auth ?? FirebaseAuth.instance,
+           ),
+       _socialActivityService =
+           socialActivityService ??
+           SocialActivityService(
+             firestore: firestore ?? FirebaseFirestore.instance,
+           );
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final ModerationService _moderationService;
+  final SocialActivityService _socialActivityService;
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
@@ -81,36 +94,67 @@ class FollowService {
 
   Future<void> followUser(String followedUserId) async {
     final followerUserId = _auth.currentUser?.uid;
-    if (followerUserId == null || followerUserId == followedUserId || followedUserId.trim().isEmpty) {
+    if (followerUserId == null ||
+        followerUserId == followedUserId ||
+        followedUserId.trim().isEmpty) {
       return;
     }
 
-    if (await _moderationService.hasBlockingRelationship(followerUserId, followedUserId)) {
+    if (await _moderationService.hasBlockingRelationship(
+      followerUserId,
+      followedUserId,
+    )) {
       throw Exception('You cannot follow this user.');
     }
 
-    final targetSnapshot = await _firestore.collection('users').doc(followedUserId).get();
+    final targetSnapshot = await _firestore
+        .collection('users')
+        .doc(followedUserId)
+        .get();
     if (!targetSnapshot.exists) {
       throw Exception('User not found.');
     }
 
-    final currentUserSnapshot = await _firestore.collection('users').doc(followerUserId).get();
-  final actorName = _asString((currentUserSnapshot.data() ?? const <String, dynamic>{})['username']);
+    final targetName = _asString(
+      (targetSnapshot.data() ?? const <String, dynamic>{})['username'],
+    );
+    final currentUserSnapshot = await _firestore
+        .collection('users')
+        .doc(followerUserId)
+        .get();
+    final actorName = _asString(
+      (currentUserSnapshot.data() ?? const <String, dynamic>{})['username'],
+    );
 
-    await _firestore.collection('follows').doc(_followDocId(followerUserId, followedUserId)).set({
-      'followerUserId': followerUserId,
-      'followedUserId': followedUserId,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _firestore
+        .collection('follows')
+        .doc(_followDocId(followerUserId, followedUserId))
+        .set({
+          'followerUserId': followerUserId,
+          'followedUserId': followedUserId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
     await _firestore.collection('notifications').add({
       'userId': followedUserId,
       'actorId': followerUserId,
       'type': 'follow',
-      'content': '${actorName.isEmpty ? 'Someone' : actorName} started following you.',
+      'content':
+          '${actorName.isEmpty ? 'Someone' : actorName} started following you.',
       'isRead': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    try {
+      await _socialActivityService.logActivity(
+        userId: followerUserId,
+        type: 'followed_user',
+        targetId: followedUserId,
+        metadata: {
+          'targetUsername': targetName.isEmpty ? followedUserId : targetName,
+        },
+      );
+    } catch (_) {}
   }
 
   Future<void> unfollowUser(String followedUserId) async {
@@ -119,16 +163,24 @@ class FollowService {
       return;
     }
 
-    await _firestore.collection('follows').doc(_followDocId(followerUserId, followedUserId)).delete();
+    await _firestore
+        .collection('follows')
+        .doc(_followDocId(followerUserId, followedUserId))
+        .delete();
   }
 
   Future<void> inviteUserToHostedRoom(String invitedUserId) async {
     final inviterUserId = _auth.currentUser?.uid;
-    if (inviterUserId == null || invitedUserId.trim().isEmpty || invitedUserId == inviterUserId) {
+    if (inviterUserId == null ||
+        invitedUserId.trim().isEmpty ||
+        invitedUserId == inviterUserId) {
       return;
     }
 
-    if (await _moderationService.hasBlockingRelationship(inviterUserId, invitedUserId)) {
+    if (await _moderationService.hasBlockingRelationship(
+      inviterUserId,
+      invitedUserId,
+    )) {
       throw Exception('You cannot invite this user.');
     }
 
@@ -143,18 +195,25 @@ class FollowService {
       throw Exception('Create a live room first.');
     }
 
-    final preferredRoom = roomDocs.cast<QueryDocumentSnapshot<Map<String, dynamic>>?>().firstWhere(
+    final preferredRoom = roomDocs
+        .cast<QueryDocumentSnapshot<Map<String, dynamic>>?>()
+        .firstWhere(
           (doc) => _asBool(doc?.data()['isLive']),
           orElse: () => roomDocs.first,
         );
     final roomData = preferredRoom?.data() ?? const <String, dynamic>{};
     final roomId = preferredRoom?.id ?? '';
-        final roomName = _asString(roomData['name']);
+    final roomName = _asString(roomData['name']);
 
-    final inviterSnapshot = await _firestore.collection('users').doc(inviterUserId).get();
-        final inviterName = _asString((inviterSnapshot.data() ?? const <String, dynamic>{})['username']);
-        final safeInviterName = inviterName.isEmpty ? 'Someone' : inviterName;
-        final safeRoomName = roomName.isEmpty ? 'their room' : roomName;
+    final inviterSnapshot = await _firestore
+        .collection('users')
+        .doc(inviterUserId)
+        .get();
+    final inviterName = _asString(
+      (inviterSnapshot.data() ?? const <String, dynamic>{})['username'],
+    );
+    final safeInviterName = inviterName.isEmpty ? 'Someone' : inviterName;
+    final safeRoomName = roomName.isEmpty ? 'their room' : roomName;
 
     await _firestore.collection('notifications').add({
       'userId': invitedUserId,

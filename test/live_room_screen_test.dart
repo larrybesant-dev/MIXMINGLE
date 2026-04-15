@@ -203,6 +203,9 @@ void main() {
 
     expect(find.text('No messages yet'), findsOneWidget);
     expect(find.textContaining('1 online'), findsOneWidget);
+    expect(find.text('Room warming up'), findsWidgets);
+    expect(find.textContaining('1 here • 0 on mic • 0 watching cam'), findsWidgets);
+    expect(find.text('Tap mic to speak or turn on cam to start the vibe.'), findsWidgets);
     expect(find.byTooltip('Send message'), findsOneWidget);
     expect(find.byTooltip('Leave Room'), findsOneWidget);
     // Drain the _preWarmAgora Future.delayed(2s) timer so the test ends cleanly.
