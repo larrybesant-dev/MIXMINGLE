@@ -334,7 +334,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   void _requireStageAuthority() {
     final actorUserId = _actorUserId;
     if (!state.canManageStage(actorUserId)) {
-      throw StateError('Only the host or co-host can manage the stage.');
+      throw StateError('Only room staff can manage the stage.');
     }
   }
 
@@ -548,7 +548,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       return MicRequestResult.grabbed;
     }
 
-    if (state.speakerIds.length < RoomState.maxSpeakers) {
+    final otherSpeakerIds = state.speakerIds
+        .where((speakerId) => speakerId != normalizedUserId)
+        .toList(growable: false);
+    final canGrabDirectly =
+        otherSpeakerIds.isEmpty &&
+        state.speakerIds.length < RoomState.maxSpeakers;
+
+    if (canGrabDirectly) {
       await _micAccess.grabMicDirectly(roomId: arg, userId: normalizedUserId);
       AppEventBus.instance.emit(
         MicStateChangedEvent(

@@ -4041,14 +4041,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       liveRoomState.isSpeaker(participantItem.userId),
                 )
                 .length;
-            final onCamCount = participantsInRoom
+            final onCamParticipants = participantsInRoom
                 .where(
                   (participantItem) => participantItem.userId == user.id
-                      ? (_isVideoEnabled || participantItem.camOn)
+                      ? _isVideoEnabled
                       : participantItem.camOn,
                 )
-                .length;
-            final watchingCamCount = participantsInRoom.fold<int>(
+                .toList(growable: false);
+            final onCamCount = onCamParticipants.length;
+            final watchingCamCount = onCamParticipants.fold<int>(
               0,
               (total, participantItem) =>
                   total + liveRoomState.viewerCountFor(participantItem.userId),
@@ -4070,8 +4071,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 ? 'Jump into the convo or keep the chat moving.'
                 : 'Keep the room moving with chat, cam, or mic.';
             final isOnMic = liveRoomState.isSpeaker(user.id);
-            final isMicFree =
-                liveRoomState.speakerIds.length < RoomState.maxSpeakers;
+            final isMicFree = liveRoomState.speakerIds.every(
+              (speakerId) => speakerId == user.id,
+            );
 
             Future<void> handleReleaseMic() async {
               try {
@@ -5812,8 +5814,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           // AppBar + ticker spacer so content starts below bar
                           SizedBox(
                             height: roomDescription.isEmpty
-                                ? kToolbarHeight
-                                : kToolbarHeight + 24,
+                                ? kToolbarHeight - 12
+                                : kToolbarHeight + 8,
                           ),
                           // 32 px header row with ◄ ► move buttons
                           Container(
@@ -5895,7 +5897,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   RoomState.maxSpeakers,
                               isLocalVideoEnabled: _isVideoEnabled,
                               localSpeaking: liveRoomState.isSpeaker(user.id),
-                              recentChatters: Set.unmodifiable(_recentChatters),
+                              recentChatters: Set.unmodifiable({
+                                ..._recentChatters,
+                                ...(messageStreamAsync.valueOrNull
+                                        ?.where(
+                                          (message) => message.type == 'normal',
+                                        )
+                                        .map(
+                                          (message) => message.senderId.trim(),
+                                        )
+                                        .where(
+                                          (senderId) => senderId.isNotEmpty,
+                                        ) ??
+                                    const <String>[]),
+                              }),
                               remoteUids: _agoraService?.remoteUids ?? const [],
                               isSpeakingFn: (uid) =>
                                   _agoraService?.isRemoteSpeaking(uid) ?? false,
@@ -6299,6 +6314,29 @@ class _RoomRosterSidebar extends StatelessWidget {
         lastActiveAt: DateTime.now(),
       );
     }
+    for (final chatterUserId in recentChatters) {
+      final normalizedUserId = chatterUserId.trim();
+      if (normalizedUserId.isEmpty ||
+          participantByUserId.containsKey(normalizedUserId)) {
+        continue;
+      }
+      participantByUserId[normalizedUserId] = RoomParticipantModel(
+        userId: normalizedUserId,
+        role: roomState.roleFor(normalizedUserId),
+        isMuted: false,
+        isBanned: false,
+        camOn: false,
+        micOn: roomState.isSpeaker(normalizedUserId),
+        userStatus: 'online',
+        joinedAt:
+            roomState.snapshotFor(normalizedUserId)?.joinedAt ?? DateTime.now(),
+        lastActiveAt: DateTime.now(),
+      );
+    }
+
+    final isCurrentUserCamLive =
+        isLocalVideoEnabled ||
+        (participantByUserId[currentUserId]?.camOn ?? false);
 
     // ── Compute speaking user IDs from deterministic RoomState ──────────
     final speakingUserIds = roomState.speakerIds.toSet();
@@ -6382,10 +6420,12 @@ class _RoomRosterSidebar extends StatelessWidget {
                     camOn: participantByUserId[uid]?.camOn ?? false,
                     trailingIcon: Icons.mic,
                     trailingColor: const Color(0xFFC45E7A),
-                    isWatchingMe: roomState.isWatchingMe(
-                      myUserId: currentUserId,
-                      otherUserId: uid,
-                    ),
+                    isWatchingMe:
+                        isCurrentUserCamLive &&
+                        roomState.isWatchingMe(
+                          myUserId: currentUserId,
+                          otherUserId: uid,
+                        ),
                     onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(participantByUserId[uid]!),
@@ -6442,10 +6482,12 @@ class _RoomRosterSidebar extends StatelessWidget {
                     trailingColor: Colors.white38,
                     camOn: true,
                     hasRecentChat: recentChatters.contains(p.userId),
-                    isWatchingMe: roomState.isWatchingMe(
-                      myUserId: currentUserId,
-                      otherUserId: p.userId,
-                    ),
+                    isWatchingMe:
+                        isCurrentUserCamLive &&
+                        roomState.isWatchingMe(
+                          myUserId: currentUserId,
+                          otherUserId: p.userId,
+                        ),
                     onSecretMessage: onSecretMessage == null
                         ? null
                         : () => onSecretMessage!(p),
@@ -6500,10 +6542,12 @@ class _RoomRosterSidebar extends StatelessWidget {
                               : null,
                           trailingColor: const Color(0xFFFFD700),
                           hasRecentChat: recentChatters.contains(p.userId),
-                          isWatchingMe: roomState.isWatchingMe(
-                            myUserId: currentUserId,
-                            otherUserId: p.userId,
-                          ),
+                          isWatchingMe:
+                              isCurrentUserCamLive &&
+                              roomState.isWatchingMe(
+                                myUserId: currentUserId,
+                                otherUserId: p.userId,
+                              ),
                           onSecretMessage: onSecretMessage == null
                               ? null
                               : () => onSecretMessage!(p),
@@ -6958,6 +7002,9 @@ class _InlineSecretComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final secretTextColor = Theme.of(context).colorScheme.onSurface;
+    final secretHintColor = secretTextColor.withValues(alpha: 0.68);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
       decoration: BoxDecoration(
@@ -7013,7 +7060,13 @@ class _InlineSecretComposer extends StatelessWidget {
                   autofocus: true,
                   enabled: !isSending,
                   maxLines: 1,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  textAlignVertical: TextAlignVertical.center,
+                  style: TextStyle(
+                    color: secretTextColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
                   cursorColor: const Color(0xFFD4A853),
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) {
@@ -7022,10 +7075,23 @@ class _InlineSecretComposer extends StatelessWidget {
                   },
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: 'Type secret message... ',
-                    hintStyle: const TextStyle(color: Colors.white38),
+                    hintText: 'Type secret message...',
+                    hintStyle: TextStyle(
+                      color: secretHintColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.edit_rounded,
+                      size: 16,
+                      color: Color(0xFFD4A853),
+                    ),
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 34,
+                      minHeight: 34,
+                    ),
                     filled: true,
-                    fillColor: const Color(0xFF0F0D11),
+                    fillColor: const Color(0xFF120E12),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 9,
@@ -7036,7 +7102,7 @@ class _InlineSecretComposer extends StatelessWidget {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0x44D4A853)),
+                      borderSide: const BorderSide(color: Color(0x55D4A853)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),

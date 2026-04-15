@@ -151,7 +151,10 @@ class RoomState {
 
   bool canManageStage(String userId) {
     final role = roleFor(userId);
-    return role == 'host' || role == 'owner' || role == 'cohost';
+    return role == 'host' ||
+        role == 'owner' ||
+        role == 'cohost' ||
+        role == 'moderator';
   }
 
   bool canModerate(String userId) {

@@ -132,6 +132,103 @@ void main() {
     );
 
     test(
+      'friendsListProvider resolves accepted friends from schema friend_links when legacy docs are absent',
+      () async {
+        final schemaOnlyFirestore = FakeFirebaseFirestore();
+        await schemaOnlyFirestore.collection('users').doc('user-1').set({
+          'uid': 'user-1',
+          'email': 'user1@mixvy.dev',
+          'username': 'User One',
+          'usernameLower': 'user one',
+          'createdAt': DateTime(2026, 1, 1),
+        });
+        await schemaOnlyFirestore.collection('users').doc('user-2').set({
+          'uid': 'user-2',
+          'email': 'user2@mixvy.dev',
+          'username': 'User Two',
+          'usernameLower': 'user two',
+          'createdAt': DateTime(2026, 1, 2),
+        });
+        await schemaOnlyFirestore.collection('friend_links').doc('user-1_user-2').set({
+          'users': ['user-1', 'user-2'],
+          'status': 'accepted',
+          'requestedBy': 'user-1',
+          'createdAt': DateTime(2026, 1, 2),
+          'updatedAt': DateTime(2026, 1, 2),
+        });
+
+        final schemaContainer = ProviderContainer(
+          overrides: [
+            friendFirestoreProvider.overrideWithValue(schemaOnlyFirestore),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.dev',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+        );
+        addTearDown(schemaContainer.dispose);
+
+        final friends = await schemaContainer.read(friendsListProvider.future);
+
+        expect(friends, hasLength(1));
+        expect(friends.single.id, 'user-2');
+      },
+    );
+
+    test(
+      'incomingFriendRequestsProvider resolves schema pending friend links when legacy docs are absent',
+      () async {
+        final schemaOnlyFirestore = FakeFirebaseFirestore();
+        await schemaOnlyFirestore.collection('users').doc('user-1').set({
+          'uid': 'user-1',
+          'email': 'user1@mixvy.dev',
+          'username': 'User One',
+          'usernameLower': 'user one',
+          'createdAt': DateTime(2026, 1, 1),
+        });
+        await schemaOnlyFirestore.collection('users').doc('user-3').set({
+          'uid': 'user-3',
+          'email': 'search@mixvy.dev',
+          'username': 'Searchable Person',
+          'usernameLower': 'searchable person',
+          'createdAt': DateTime(2026, 1, 3),
+        });
+        await schemaOnlyFirestore.collection('friend_links').doc('user-1_user-3').set({
+          'users': ['user-1', 'user-3'],
+          'status': 'pending',
+          'requestedBy': 'user-3',
+          'createdAt': DateTime(2026, 1, 3),
+          'updatedAt': DateTime(2026, 1, 3),
+        });
+
+        final schemaContainer = ProviderContainer(
+          overrides: [
+            friendFirestoreProvider.overrideWithValue(schemaOnlyFirestore),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.dev',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+        );
+        addTearDown(schemaContainer.dispose);
+
+        final requests = await schemaContainer.read(incomingFriendRequestsProvider.future);
+
+        expect(requests, hasLength(1));
+        expect(requests.single.request.id, 'user-1_user-3');
+        expect(requests.single.fromUser?.id, 'user-3');
+      },
+    );
+
+    test(
       'sendFriendRequest mirrors pending links into schema collection',
       () async {
         final service = container.read(friendServiceProvider);

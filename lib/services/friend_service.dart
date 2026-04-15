@@ -58,6 +58,9 @@ class FriendService {
   CollectionReference<Map<String, dynamic>> get _friendshipsCollection =>
       _firestore.collection('friendships');
 
+  CollectionReference<Map<String, dynamic>> get _friendLinksCollection =>
+      _firestore.collection('friend_links');
+
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _firestore.collection('users');
 
@@ -85,6 +88,40 @@ class FriendService {
     return chunks;
   }
 
+  DateTime? _asDateTime(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    return null;
+  }
+
+  FriendshipModel _friendshipFromSchemaDoc(
+    String id,
+    Map<String, dynamic> data,
+  ) {
+    final users = _asStringList(data['users'])..sort();
+    final userA = users.isNotEmpty ? users.first : '';
+    final userB = users.length > 1 ? users[1] : '';
+    return FriendshipModel(
+      id: id,
+      userA: userA,
+      userB: userB,
+      status: (data['status'] as String?)?.trim().toLowerCase() ?? 'pending',
+      requestedBy: (data['requestedBy'] as String?)?.trim(),
+      createdAt:
+          _asDateTime(data['createdAt']) ??
+          _asDateTime(data['updatedAt']) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: _asDateTime(data['updatedAt']),
+    );
+  }
+
   String friendshipIdFor(String firstUserId, String secondUserId) {
     return FriendshipModel.canonicalIdFor(firstUserId, secondUserId);
   }
@@ -106,11 +143,20 @@ class FriendService {
     return Stream.multi((controller) {
       List<FriendshipModel> userAFriendships = const <FriendshipModel>[];
       List<FriendshipModel> userBFriendships = const <FriendshipModel>[];
+      List<FriendshipModel> schemaFriendships = const <FriendshipModel>[];
+      var userAReady = false;
+      var userBReady = false;
+      var schemaReady = false;
 
       void emit() {
+        if (!userAReady || !userBReady || !schemaReady) {
+          return;
+        }
+
         final merged = <String, FriendshipModel>{
           for (final friendship in userAFriendships) friendship.id: friendship,
           for (final friendship in userBFriendships) friendship.id: friendship,
+          for (final friendship in schemaFriendships) friendship.id: friendship,
         };
 
         final friendships = merged.values.toList(growable: false)
@@ -122,7 +168,7 @@ class FriendService {
         controller.add(friendships);
       }
 
-      Query<Map<String, dynamic>> buildQuery(String field) {
+      Query<Map<String, dynamic>> buildLegacyQuery(String field) {
         var query = _friendshipsCollection.where(
           field,
           isEqualTo: normalizedUserId,
@@ -138,16 +184,34 @@ class FriendService {
         return query;
       }
 
-      final subA = buildQuery('userA').snapshots().listen(
+      Query<Map<String, dynamic>> buildSchemaQuery() {
+        var query = _friendLinksCollection.where(
+          'users',
+          arrayContains: normalizedUserId,
+        );
+        if (normalizedStatuses.length == 1) {
+          query = query.where('status', isEqualTo: normalizedStatuses.first);
+        } else if (normalizedStatuses.length > 1) {
+          query = query.where(
+            'status',
+            whereIn: normalizedStatuses.toList(growable: false),
+          );
+        }
+        return query;
+      }
+
+      final subA = buildLegacyQuery('userA').snapshots().listen(
         (snapshot) {
           userAFriendships = snapshot.docs
               .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
               .toList(growable: false);
+          userAReady = true;
           emit();
         },
         onError: (error, stackTrace) {
           if (_isPermissionDenied(error)) {
             userAFriendships = const <FriendshipModel>[];
+            userAReady = true;
             emit();
             return;
           }
@@ -155,16 +219,38 @@ class FriendService {
         },
       );
 
-      final subB = buildQuery('userB').snapshots().listen(
+      final subB = buildLegacyQuery('userB').snapshots().listen(
         (snapshot) {
           userBFriendships = snapshot.docs
               .map((doc) => FriendshipModel.fromJson(doc.id, doc.data()))
               .toList(growable: false);
+          userBReady = true;
           emit();
         },
         onError: (error, stackTrace) {
           if (_isPermissionDenied(error)) {
             userBFriendships = const <FriendshipModel>[];
+            userBReady = true;
+            emit();
+            return;
+          }
+          controller.addError(error, stackTrace);
+        },
+      );
+
+      final schemaSub = buildSchemaQuery().snapshots().listen(
+        (snapshot) {
+          schemaFriendships = snapshot.docs
+              .map((doc) => _friendshipFromSchemaDoc(doc.id, doc.data()))
+              .where((friendship) => friendship.involvesUser(normalizedUserId))
+              .toList(growable: false);
+          schemaReady = true;
+          emit();
+        },
+        onError: (error, stackTrace) {
+          if (_isPermissionDenied(error)) {
+            schemaFriendships = const <FriendshipModel>[];
+            schemaReady = true;
             emit();
             return;
           }
@@ -175,6 +261,7 @@ class FriendService {
       controller.onCancel = () async {
         await subA.cancel();
         await subB.cancel();
+        await schemaSub.cancel();
       };
     });
   }
@@ -188,23 +275,64 @@ class FriendService {
     return Stream.multi((controller) {
       StreamSubscription<List<FriendshipModel>>? primarySub;
       StreamSubscription<List<FriendshipModel>>? fallbackSub;
+      List<FriendshipModel> primaryFriendships = const <FriendshipModel>[];
+      List<FriendshipModel> fallbackFriendships = const <FriendshipModel>[];
+      var primaryReady = false;
+      var fallbackReady = false;
 
-      void startFallback() {
-        if (fallbackSub != null) return;
-        fallbackSub = _watchAcceptedFriendshipsFromUserDoc(
-          normalizedUserId,
-        ).listen(controller.add, onError: controller.addError);
+      void emit() {
+        if (!primaryReady || !fallbackReady) {
+          return;
+        }
+
+        final merged = <String, FriendshipModel>{
+          for (final friendship in primaryFriendships)
+            friendship.id: friendship,
+          for (final friendship in fallbackFriendships)
+            friendship.id: friendship,
+        };
+        final friendships = merged.values.toList(growable: false)
+          ..sort((left, right) {
+            final createdCompare = right.createdAt.compareTo(left.createdAt);
+            if (createdCompare != 0) return createdCompare;
+            return left.id.compareTo(right.id);
+          });
+        controller.add(friendships);
       }
+
+      fallbackSub = _watchAcceptedFriendshipsFromUserDoc(normalizedUserId)
+          .listen(
+            (friendships) {
+              fallbackFriendships = friendships;
+              fallbackReady = true;
+              emit();
+            },
+            onError: (error, stackTrace) {
+              if (_isPermissionDenied(error)) {
+                fallbackFriendships = const <FriendshipModel>[];
+                fallbackReady = true;
+                emit();
+                return;
+              }
+              controller.addError(error, stackTrace);
+            },
+          );
 
       primarySub =
           watchFriendships(
             normalizedUserId,
             statuses: const <String>{'accepted'},
           ).listen(
-            controller.add,
+            (friendships) {
+              primaryFriendships = friendships;
+              primaryReady = true;
+              emit();
+            },
             onError: (error, stackTrace) {
               if (_isPermissionDenied(error)) {
-                startFallback();
+                primaryFriendships = const <FriendshipModel>[];
+                primaryReady = true;
+                emit();
                 return;
               }
               controller.addError(error, stackTrace);
@@ -947,31 +1075,105 @@ class FriendService {
       return const <FriendshipModel>[];
     }
 
-    Query<Map<String, dynamic>> buildQuery(String field) {
+    final normalizedStatuses = statuses
+        .map((status) => status.trim().toLowerCase())
+        .where((status) => status.isNotEmpty)
+        .toSet();
+
+    Query<Map<String, dynamic>> buildLegacyQuery(String field) {
       var query = _friendshipsCollection.where(
         field,
         isEqualTo: normalizedUserId,
       );
-      if (statuses.length == 1) {
-        query = query.where('status', isEqualTo: statuses.first);
-      } else if (statuses.length > 1) {
+      if (normalizedStatuses.length == 1) {
+        query = query.where('status', isEqualTo: normalizedStatuses.first);
+      } else if (normalizedStatuses.length > 1) {
         query = query.where(
           'status',
-          whereIn: statuses.toList(growable: false),
+          whereIn: normalizedStatuses.toList(growable: false),
         );
       }
       return query;
     }
 
-    final results = await Future.wait([
-      buildQuery('userA').get(),
-      buildQuery('userB').get(),
-    ]);
+    Query<Map<String, dynamic>> buildSchemaQuery() {
+      var query = _friendLinksCollection.where(
+        'users',
+        arrayContains: normalizedUserId,
+      );
+      if (normalizedStatuses.length == 1) {
+        query = query.where('status', isEqualTo: normalizedStatuses.first);
+      } else if (normalizedStatuses.length > 1) {
+        query = query.where(
+          'status',
+          whereIn: normalizedStatuses.toList(growable: false),
+        );
+      }
+      return query;
+    }
 
     final merged = <String, FriendshipModel>{};
-    for (final snapshot in results) {
-      for (final doc in snapshot.docs) {
-        merged[doc.id] = FriendshipModel.fromJson(doc.id, doc.data());
+
+    Future<void> collectLegacy(Query<Map<String, dynamic>> query) async {
+      try {
+        final snapshot = await query.get();
+        for (final doc in snapshot.docs) {
+          merged[doc.id] = FriendshipModel.fromJson(doc.id, doc.data());
+        }
+      } catch (error) {
+        if (!_isPermissionDenied(error)) {
+          rethrow;
+        }
+      }
+    }
+
+    Future<void> collectSchema() async {
+      try {
+        final snapshot = await buildSchemaQuery().get();
+        for (final doc in snapshot.docs) {
+          final friendship = _friendshipFromSchemaDoc(doc.id, doc.data());
+          if (friendship.involvesUser(normalizedUserId)) {
+            merged[doc.id] = friendship;
+          }
+        }
+      } catch (error) {
+        if (!_isPermissionDenied(error)) {
+          rethrow;
+        }
+      }
+    }
+
+    await Future.wait<void>([
+      collectLegacy(buildLegacyQuery('userA')),
+      collectLegacy(buildLegacyQuery('userB')),
+      collectSchema(),
+    ]);
+
+    if (normalizedStatuses.length == 1 &&
+        normalizedStatuses.contains('accepted')) {
+      try {
+        final userDoc = await _usersCollection.doc(normalizedUserId).get();
+        final data = userDoc.data() ?? const <String, dynamic>{};
+        final friendIds = _asStringList(data['friends']);
+        for (final friendId in friendIds) {
+          final sorted = FriendshipModel.sortedPair(normalizedUserId, friendId);
+          final id = FriendshipModel.canonicalIdFor(normalizedUserId, friendId);
+          merged.putIfAbsent(
+            id,
+            () => FriendshipModel(
+              id: id,
+              userA: sorted.userA,
+              userB: sorted.userB,
+              status: 'accepted',
+              requestedBy: null,
+              createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+            ),
+          );
+        }
+      } catch (error) {
+        if (!_isPermissionDenied(error)) {
+          rethrow;
+        }
       }
     }
 

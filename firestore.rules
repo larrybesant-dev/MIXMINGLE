@@ -625,6 +625,40 @@ service cloud.firestore {
       allow delete: if isFriendParticipant(resource.data);
     }
 
+    match /friend_links/{linkId} {
+      allow read: if signedIn()
+        && resource.data.users is list
+        && resource.data.users.hasAny([request.auth.uid]);
+      allow create: if signedIn()
+        && request.resource.data.users is list
+        && request.resource.data.users.hasAny([request.auth.uid])
+        && request.resource.data.users.size() == 2
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedBy == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'users',
+          'status',
+          'requestedBy',
+          'createdAt',
+          'updatedAt'
+        ]);
+      allow update: if signedIn()
+        && resource.data.users is list
+        && resource.data.users.hasAny([request.auth.uid])
+        && request.resource.data.users == resource.data.users
+        && request.resource.data.requestedBy == resource.data.requestedBy
+        && request.resource.data.keys().hasOnly([
+          'users',
+          'status',
+          'requestedBy',
+          'createdAt',
+          'updatedAt'
+        ]);
+      allow delete: if signedIn()
+        && resource.data.users is list
+        && resource.data.users.hasAny([request.auth.uid]);
+    }
+
     match /friend_requests/{requestId} {
       allow read: if signedIn()
         && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);

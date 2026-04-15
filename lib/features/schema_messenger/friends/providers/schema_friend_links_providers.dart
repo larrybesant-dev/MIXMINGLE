@@ -19,36 +19,42 @@ final schemaAuthUserIdProvider = StreamProvider<String?>((ref) {
 
 final schemaFriendLinksProvider =
     StreamProvider.autoDispose<List<SchemaFriendLink>>((ref) {
-      final firestore = ref.watch(schemaFriendFirestoreProvider);
       final userId = ref.watch(schemaAuthUserIdProvider).value;
 
       if (userId == null || userId.isEmpty) {
         return const Stream<List<SchemaFriendLink>>.empty();
       }
 
-      return firestore
-          .collection('friend_links')
-          .where('users', arrayContains: userId)
-          .snapshots()
-          .map((snapshot) {
-            final links =
-                snapshot.docs
-                    .map(SchemaFriendLink.fromDoc)
-                    .where((link) => link.includesUser(userId))
-                    .toList(growable: false)
-                  ..sort((a, b) {
-                    final right =
-                        b.updatedAt ??
-                        b.createdAt ??
-                        DateTime.fromMillisecondsSinceEpoch(0);
-                    final left =
-                        a.updatedAt ??
-                        a.createdAt ??
-                        DateTime.fromMillisecondsSinceEpoch(0);
-                    return right.compareTo(left);
-                  });
-            return links;
-          });
+      return ref.watch(friendServiceProvider).watchFriendships(userId).map((
+        friendships,
+      ) {
+        final links =
+            friendships
+                .map(
+                  (friendship) => SchemaFriendLink(
+                    id: friendship.id,
+                    users: <String>[friendship.userA, friendship.userB],
+                    status: friendship.status,
+                    requestedBy: friendship.requestedBy ?? friendship.userA,
+                    createdAt: friendship.createdAt,
+                    updatedAt: friendship.updatedAt,
+                  ),
+                )
+                .where((link) => link.includesUser(userId))
+                .toList(growable: false)
+              ..sort((a, b) {
+                final right =
+                    b.updatedAt ??
+                    b.createdAt ??
+                    DateTime.fromMillisecondsSinceEpoch(0);
+                final left =
+                    a.updatedAt ??
+                    a.createdAt ??
+                    DateTime.fromMillisecondsSinceEpoch(0);
+                return right.compareTo(left);
+              });
+        return links;
+      });
     });
 
 final schemaAcceptedFriendLinksProvider =
