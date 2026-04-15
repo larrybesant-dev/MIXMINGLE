@@ -1,12 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum LiveRoomMediaPhase {
-  idle,
-  connecting,
-  ready,
-  reconnecting,
-  failed,
-}
+import 'room_state.dart';
+
+enum LiveRoomMediaPhase { idle, connecting, ready, reconnecting, failed }
 
 class LiveRoomMediaState {
   const LiveRoomMediaState({
@@ -23,6 +19,7 @@ class LiveRoomMediaState {
     this.currentRtcUid,
     this.claimedSlotId,
     this.appliedMediaRole,
+    this.appliedAudioState,
     this.requestedHighQualityRemoteUids = const <int>{},
     this.requestedLowQualityRemoteUids = const <int>{},
     this.localViewEpoch = 0,
@@ -41,6 +38,7 @@ class LiveRoomMediaState {
   final int? currentRtcUid;
   final String? claimedSlotId;
   final String? appliedMediaRole;
+  final RoomAudioState? appliedAudioState;
   final Set<int> requestedHighQualityRemoteUids;
   final Set<int> requestedLowQualityRemoteUids;
   final int localViewEpoch;
@@ -65,6 +63,7 @@ class LiveRoomMediaState {
     Object? currentRtcUid = _unset,
     Object? claimedSlotId = _unset,
     Object? appliedMediaRole = _unset,
+    Object? appliedAudioState = _unset,
     Set<int>? requestedHighQualityRemoteUids,
     Set<int>? requestedLowQualityRemoteUids,
     int? localViewEpoch,
@@ -75,8 +74,7 @@ class LiveRoomMediaState {
       isMicMuted: isMicMuted ?? this.isMicMuted,
       isVideoEnabled: isVideoEnabled ?? this.isVideoEnabled,
       isSharingSystemAudio: isSharingSystemAudio ?? this.isSharingSystemAudio,
-      isMicActionInFlight:
-          isMicActionInFlight ?? this.isMicActionInFlight,
+      isMicActionInFlight: isMicActionInFlight ?? this.isMicActionInFlight,
       isVideoActionInFlight:
           isVideoActionInFlight ?? this.isVideoActionInFlight,
       isSystemAudioActionInFlight:
@@ -96,6 +94,9 @@ class LiveRoomMediaState {
       appliedMediaRole: identical(appliedMediaRole, _unset)
           ? this.appliedMediaRole
           : appliedMediaRole as String?,
+      appliedAudioState: identical(appliedAudioState, _unset)
+          ? this.appliedAudioState
+          : appliedAudioState as RoomAudioState?,
       requestedHighQualityRemoteUids:
           requestedHighQualityRemoteUids ?? this.requestedHighQualityRemoteUids,
       requestedLowQualityRemoteUids:
@@ -109,8 +110,8 @@ const Object _unset = Object();
 
 final liveRoomMediaControllerProvider = NotifierProvider.family
     .autoDispose<LiveRoomMediaController, LiveRoomMediaState, String>(
-  LiveRoomMediaController.new,
-);
+      LiveRoomMediaController.new,
+    );
 
 class LiveRoomMediaController
     extends AutoDisposeFamilyNotifier<LiveRoomMediaState, String> {
@@ -207,10 +208,7 @@ class LiveRoomMediaController
   }
 
   void finishMicAction({required bool isMuted}) {
-    state = state.copyWith(
-      isMicMuted: isMuted,
-      isMicActionInFlight: false,
-    );
+    state = state.copyWith(isMicMuted: isMuted, isMicActionInFlight: false);
   }
 
   void endMicAction() {
@@ -241,10 +239,7 @@ class LiveRoomMediaController
   }
 
   void beginVideoAction(String status) {
-    state = state.copyWith(
-      isVideoActionInFlight: true,
-      cameraStatus: status,
-    );
+    state = state.copyWith(isVideoActionInFlight: true, cameraStatus: status);
   }
 
   void blockVideoAction(String status) {
@@ -259,6 +254,10 @@ class LiveRoomMediaController
     state = state.copyWith(appliedMediaRole: role);
   }
 
+  void setAppliedAudioState(RoomAudioState? audioState) {
+    state = state.copyWith(appliedAudioState: audioState);
+  }
+
   void finishVideoAction({
     required bool isVideoEnabled,
     required String cameraStatus,
@@ -268,17 +267,16 @@ class LiveRoomMediaController
     state = state.copyWith(
       isVideoEnabled: isVideoEnabled,
       cameraStatus: cameraStatus,
-      claimedSlotId: isVideoEnabled ? claimedSlotId ?? state.claimedSlotId : null,
+      claimedSlotId: isVideoEnabled
+          ? claimedSlotId ?? state.claimedSlotId
+          : null,
       appliedMediaRole: appliedMediaRole ?? state.appliedMediaRole,
       isVideoActionInFlight: false,
     );
   }
 
   void failVideoAction(String status) {
-    state = state.copyWith(
-      cameraStatus: status,
-      isVideoActionInFlight: false,
-    );
+    state = state.copyWith(cameraStatus: status, isVideoActionInFlight: false);
   }
 
   void endVideoAction() {

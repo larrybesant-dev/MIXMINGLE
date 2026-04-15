@@ -5,6 +5,7 @@ import '../../../models/mic_access_request_model.dart';
 import '../../../models/room_participant_model.dart';
 import '../../../core/theme.dart';
 import '../controllers/live_room_controller.dart';
+import '../controllers/room_state.dart';
 import '../providers/mic_access_provider.dart';
 import '../providers/room_policy_provider.dart';
 import '../providers/participant_providers.dart';
@@ -937,7 +938,7 @@ class _ParticipantTile extends ConsumerWidget {
                       dense: true,
                     ),
                   ),
-                if (participant.role != 'moderator')
+                if (normalizeRoomRole(participant.role) != roomRoleModerator)
                   const PopupMenuItem(
                     value: _ParticipantAction.promote,
                     child: ListTile(
@@ -946,8 +947,10 @@ class _ParticipantTile extends ConsumerWidget {
                       dense: true,
                     ),
                   ),
-                if (participant.role == 'moderator' ||
-                    participant.role == 'cohost')
+                if ({
+                  roomRoleModerator,
+                  roomRoleCohost,
+                }.contains(normalizeRoomRole(participant.role)))
                   const PopupMenuItem(
                     value: _ParticipantAction.demote,
                     child: ListTile(
@@ -956,7 +959,7 @@ class _ParticipantTile extends ConsumerWidget {
                       dense: true,
                     ),
                   ),
-                if (participant.role != 'host')
+                if (!isHostLikeRole(participant.role))
                   const PopupMenuItem(
                     value: _ParticipantAction.kick,
                     child: ListTile(
@@ -1047,13 +1050,15 @@ class _ModeratorsTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator.adaptive()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (participants) {
-        final mods = participants
-            .where((p) => p.role == 'moderator' || p.role == 'cohost')
-            .toList();
+        final mods = participants.where((p) {
+          final role = normalizeRoomRole(p.role, fallbackRole: '');
+          return role == roomRoleModerator || role == roomRoleCohost;
+        }).toList();
         final eligible = participants
             .where(
               (p) =>
-                  p.role == 'audience' &&
+                  normalizeRoomRole(p.role, fallbackRole: roomRoleAudience) ==
+                      roomRoleAudience &&
                   !p.isBanned &&
                   p.userId != currentUserId,
             )
@@ -1077,15 +1082,20 @@ class _ModeratorsTab extends ConsumerWidget {
                 (p) => Card(
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: p.role == 'cohost'
+                      backgroundColor:
+                          normalizeRoomRole(p.role, fallbackRole: '') ==
+                              roomRoleCohost
                           ? const Color(0x337C5FFF)
                           : const Color(0x3300D4AA),
                       child: Icon(
-                        p.role == 'cohost'
+                        normalizeRoomRole(p.role, fallbackRole: '') ==
+                                roomRoleCohost
                             ? Icons.supervisor_account
                             : Icons.shield,
                         size: 18,
-                        color: p.role == 'cohost'
+                        color:
+                            normalizeRoomRole(p.role, fallbackRole: '') ==
+                                roomRoleCohost
                             ? const Color(0xFF7C5FFF)
                             : VelvetNoir.secondary,
                       ),
@@ -1099,7 +1109,8 @@ class _ModeratorsTab extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Transfer host button (only for cohosts)
-                        if (p.role == 'cohost')
+                        if (normalizeRoomRole(p.role, fallbackRole: '') ==
+                            roomRoleCohost)
                           IconButton(
                             tooltip: 'Transfer host',
                             icon: const Icon(

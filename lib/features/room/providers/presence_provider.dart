@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../models/room_participant_model.dart';
 import '../../../services/presence_repository.dart';
+import '../controllers/room_state.dart';
 import 'room_firestore_provider.dart';
 
 class RoomPresenceModel {
@@ -71,12 +72,10 @@ bool _isRoomParticipantActive(
   RoomParticipantModel participant, {
   DateTime? now,
 }) {
-  final normalizedRole = participant.role.trim().toLowerCase();
+  final normalizedRole = normalizeRoomRole(participant.role, fallbackRole: '');
   final hasActiveSeat =
-      normalizedRole == 'host' ||
-      normalizedRole == 'owner' ||
-      normalizedRole == 'cohost' ||
-      normalizedRole == 'stage' ||
+      canManageStageRole(normalizedRole) ||
+      normalizedRole == roomRoleStage ||
       participant.camOn ||
       participant.micOn;
   if (hasActiveSeat) {

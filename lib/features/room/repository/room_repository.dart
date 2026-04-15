@@ -7,6 +7,7 @@ import '../../../services/agora_service.dart';
 import '../../../services/friend_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../core/providers/firebase_providers.dart';
+import '../controllers/room_state.dart';
 import '../providers/room_firestore_provider.dart';
 
 final roomRepositoryProvider = Provider<RoomRepository>((ref) {
@@ -272,15 +273,17 @@ class RoomRepository {
       throw StateError('Room not found.');
     }
 
-    final participantSnapshot = await _participantRef(roomId, normalizedUserId)
-        .get();
+    final participantSnapshot = await _participantRef(
+      roomId,
+      normalizedUserId,
+    ).get();
     final memberSnapshot = await _memberRef(roomId, normalizedUserId).get();
     if (!participantSnapshot.exists && !memberSnapshot.exists) {
       throw StateError('Only joined users can take the mic.');
     }
 
-    final participantData = participantSnapshot.data() ??
-        const <String, dynamic>{};
+    final participantData =
+        participantSnapshot.data() ?? const <String, dynamic>{};
     if (participantData['isBanned'] == true) {
       throw StateError('Banned users cannot take the mic.');
     }
@@ -289,7 +292,10 @@ class RoomRepository {
       roomSnapshot.data()?['maxSpeakers'],
       fallback: 4,
     ).clamp(1, 4);
-    final existingSpeakerDoc = await _speakerRef(roomId, normalizedUserId).get();
+    final existingSpeakerDoc = await _speakerRef(
+      roomId,
+      normalizedUserId,
+    ).get();
     if (!existingSpeakerDoc.exists) {
       final speakersSnapshot = await _speakerCollection(roomId).get();
       if (speakersSnapshot.docs.length >= maxSpeakers) {
@@ -298,57 +304,42 @@ class RoomRepository {
     }
 
     final resolvedDisplayName = displayName?.trim() ?? '';
-    final resolvedRole = _asString(
-      role,
-      fallback: _asString(participantData['role'], fallback: 'speaker'),
-    ).toLowerCase();
-    final participantRole = resolvedRole == 'host' ||
-            resolvedRole == 'owner' ||
-            resolvedRole == 'cohost'
+    final resolvedRole = normalizeRoomRole(
+      _asString(
+        role,
+        fallback: _asString(participantData['role'], fallback: roomRoleStage),
+      ),
+      fallbackRole: roomRoleStage,
+    );
+    final participantRole = canManageStageRole(resolvedRole)
         ? resolvedRole
-        : 'stage';
+        : roomRoleStage;
 
     final batch = _firestore.batch();
-    batch.set(
-      _roomRef(roomId),
-      {
-        'maxSpeakers': maxSpeakers,
-        'speakerSyncVersion': 1,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-    batch.set(
-      _speakerRef(roomId, normalizedUserId),
-      {
-        'userId': normalizedUserId,
-        if (resolvedDisplayName.isNotEmpty) 'name': resolvedDisplayName,
-        'joinedAt': FieldValue.serverTimestamp(),
-        'role': participantRole == 'stage' ? 'speaker' : participantRole,
-      },
-      SetOptions(merge: true),
-    );
-    batch.set(
-      _participantRef(roomId, normalizedUserId),
-      {
-        'userId': normalizedUserId,
-        'role': participantRole,
-        'micOn': true,
-        'isMuted': false,
-        'lastActiveAt': FieldValue.serverTimestamp(),
-        if (resolvedDisplayName.isNotEmpty) 'displayName': resolvedDisplayName,
-      },
-      SetOptions(merge: true),
-    );
-    batch.set(
-      _memberRef(roomId, normalizedUserId),
-      {
-        'userId': normalizedUserId,
-        'lastActiveAt': FieldValue.serverTimestamp(),
-        if (resolvedDisplayName.isNotEmpty) 'displayName': resolvedDisplayName,
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_roomRef(roomId), {
+      'maxSpeakers': maxSpeakers,
+      'speakerSyncVersion': 1,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    batch.set(_speakerRef(roomId, normalizedUserId), {
+      'userId': normalizedUserId,
+      if (resolvedDisplayName.isNotEmpty) 'name': resolvedDisplayName,
+      'joinedAt': FieldValue.serverTimestamp(),
+      'role': participantRole == 'stage' ? 'speaker' : participantRole,
+    }, SetOptions(merge: true));
+    batch.set(_participantRef(roomId, normalizedUserId), {
+      'userId': normalizedUserId,
+      'role': participantRole,
+      'micOn': true,
+      'isMuted': false,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      if (resolvedDisplayName.isNotEmpty) 'displayName': resolvedDisplayName,
+    }, SetOptions(merge: true));
+    batch.set(_memberRef(roomId, normalizedUserId), {
+      'userId': normalizedUserId,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      if (resolvedDisplayName.isNotEmpty) 'displayName': resolvedDisplayName,
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 
@@ -361,42 +352,31 @@ class RoomRepository {
       return;
     }
 
-    final participantSnapshot = await _participantRef(roomId, normalizedUserId)
-        .get();
-    final participantData = participantSnapshot.data() ??
-        const <String, dynamic>{};
-    final currentRole = _asString(
-      participantData['role'],
-      fallback: 'member',
-    ).toLowerCase();
-    final nextRole = currentRole == 'host' ||
-            currentRole == 'owner' ||
-            currentRole == 'cohost' ||
-            currentRole == 'moderator'
-        ? currentRole
-        : 'member';
+    final participantSnapshot = await _participantRef(
+      roomId,
+      normalizedUserId,
+    ).get();
+    final participantData =
+        participantSnapshot.data() ?? const <String, dynamic>{};
+    final currentRole = normalizeRoomRole(
+      _asString(participantData['role'], fallback: roomRoleAudience),
+      fallbackRole: roomRoleAudience,
+    );
+    final nextRole = canModerateRole(currentRole) ? currentRole : 'member';
 
     final batch = _firestore.batch();
-    batch.set(
-      _roomRef(roomId),
-      {
-        'maxSpeakers': 4,
-        'speakerSyncVersion': 1,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_roomRef(roomId), {
+      'maxSpeakers': 4,
+      'speakerSyncVersion': 1,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     batch.delete(_speakerRef(roomId, normalizedUserId));
-    batch.set(
-      _participantRef(roomId, normalizedUserId),
-      {
-        'userId': normalizedUserId,
-        'role': nextRole,
-        'micOn': false,
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_participantRef(roomId, normalizedUserId), {
+      'userId': normalizedUserId,
+      'role': nextRole,
+      'micOn': false,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 

@@ -51,16 +51,16 @@ import 'rtc_room_service.dart';
 /// Raise this once an SFU (mediasoup / Livekit) replaces the mesh.
 const int _kMaxMeshPeers = 6;
 
-class WebRtcRoomService implements RtcRoomService {
+class WebRtcRoomService extends RtcRoomService {
   WebRtcRoomService({
     required FirebaseFirestore firestore,
     required String localUserId,
     int maxMeshPeers = _kMaxMeshPeers,
     List<Map<String, dynamic>>? iceServers,
-  })  : _firestore = firestore,
-        _localUserId = localUserId,
-        _maxMeshPeers = maxMeshPeers,
-        _iceServers = iceServers;
+  }) : _firestore = firestore,
+       _localUserId = localUserId,
+       _maxMeshPeers = maxMeshPeers,
+       _iceServers = iceServers;
 
   final FirebaseFirestore _firestore;
   final String _localUserId;
@@ -142,12 +142,18 @@ class WebRtcRoomService implements RtcRoomService {
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService callbacks
   // ──────────────────────────────────────────────────────────────────────────
-  @override VoidCallback? onRemoteUserJoined;
-  @override VoidCallback? onRemoteUserLeft;
-  @override VoidCallback? onSpeakerActivityChanged;
-  @override VoidCallback? onLocalVideoCaptureChanged;
-  @override VoidCallback? onTokenWillExpire;
-  @override VoidCallback? onConnectionLost;
+  @override
+  VoidCallback? onRemoteUserJoined;
+  @override
+  VoidCallback? onRemoteUserLeft;
+  @override
+  VoidCallback? onSpeakerActivityChanged;
+  @override
+  VoidCallback? onLocalVideoCaptureChanged;
+  @override
+  VoidCallback? onTokenWillExpire;
+  @override
+  VoidCallback? onConnectionLost;
 
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService: state getters
@@ -316,9 +322,7 @@ class WebRtcRoomService implements RtcRoomService {
     }
     // If the remote stream has no enabled video tracks the broadcaster has
     // camera off (mic-only). Show a placeholder instead of a black RTCVideoView.
-    final hasVideo = peer.remoteStream!
-        .getVideoTracks()
-        .any((t) => t.enabled);
+    final hasVideo = peer.remoteStream!.getVideoTracks().any((t) => t.enabled);
     if (!hasVideo) {
       return const ColoredBox(
         color: Color(0xFF241820),
@@ -452,7 +456,11 @@ class WebRtcRoomService implements RtcRoomService {
           // track. Close them and signal viewers to reconnect immediately via
           // a Firestore streamRefreshAt timestamp (avoids 10-30 s ICE timeout).
           _closeAllAnswerPcs();
-          await _updatePresence(isBroadcasting: true, streamRefresh: true, cameraActive: true);
+          await _updatePresence(
+            isBroadcasting: true,
+            streamRefresh: true,
+            cameraActive: true,
+          );
           // Also process any offers already waiting in Firestore.
           await _processExistingIncomingCalls();
         } else {
@@ -462,7 +470,9 @@ class WebRtcRoomService implements RtcRoomService {
         }
 
         onLocalVideoCaptureChanged?.call();
-        _log('camera enabled — broadcasting (wasAlreadyBroadcasting=$wasAlreadyBroadcasting, audio muted=${!publishMicrophoneTrack})');
+        _log(
+          'camera enabled — broadcasting (wasAlreadyBroadcasting=$wasAlreadyBroadcasting, audio muted=${!publishMicrophoneTrack})',
+        );
       } catch (error) {
         _localVideoCapturing = false;
         _broadcasterMode = false;
@@ -477,8 +487,9 @@ class WebRtcRoomService implements RtcRoomService {
       }
       _localVideoCapturing = false;
 
-      final activeAudio =
-          (_localStream?.getAudioTracks() ?? []).any((t) => t.enabled);
+      final activeAudio = (_localStream?.getAudioTracks() ?? []).any(
+        (t) => t.enabled,
+      );
       if (!activeAudio) {
         // No audio publishing — fully clean up and mark offline.
         await _stopLocalStream();
@@ -541,9 +552,10 @@ class WebRtcRoomService implements RtcRoomService {
         // reconnects and hears the new audio track.
         // cameraActive stays false: this is mic-only mode.
         await _updatePresence(
-            isBroadcasting: true,
-            streamRefresh: hadNoStream,
-            cameraActive: _localVideoCapturing);
+          isBroadcasting: true,
+          streamRefresh: hadNoStream,
+          cameraActive: _localVideoCapturing,
+        );
         // Answer any pending viewer offers now that we have a stream.
         await _processExistingIncomingCalls();
       }
@@ -576,10 +588,14 @@ class WebRtcRoomService implements RtcRoomService {
             await _localStream!.addTrack(track);
             // Also add to all active broadcaster peer connections.
             for (final peer in _peers.values) {
-              try { await peer.pc.addTrack(track, _localStream!); } catch (_) {}
+              try {
+                await peer.pc.addTrack(track, _localStream!);
+              } catch (_) {}
             }
           }
-          _log('publishLocalAudioStream: injected audio track into existing stream');
+          _log(
+            'publishLocalAudioStream: injected audio track into existing stream',
+          );
         } catch (error) {
           _throwMapped(error, 'access microphone');
         }
@@ -667,7 +683,8 @@ class WebRtcRoomService implements RtcRoomService {
           }
           throw AgoraServiceException(
             code: 'no-system-audio',
-            message: 'No system audio was shared. Check "Share system audio" in the picker.',
+            message:
+                'No system audio was shared. Check "Share system audio" in the picker.',
           );
         }
 
@@ -676,7 +693,9 @@ class WebRtcRoomService implements RtcRoomService {
         _systemAudioStream?.getTracks().forEach((t) => t.stop());
         _systemAudioStream = displayStream;
         _isSharingSystemAudio = true;
-        _log('system audio sharing started — ${sysAudioTracks.length} track(s)');
+        _log(
+          'system audio sharing started — ${sysAudioTracks.length} track(s)',
+        );
 
         // When the user dismisses the share bar, auto-stop.
         for (final track in sysAudioTracks) {
@@ -750,8 +769,11 @@ class WebRtcRoomService implements RtcRoomService {
     final micJs = _jsStream(micStream);
     final micJsTracks = micJs?.getAudioTracks();
 
-    if (micJs == null || micJsTracks == null || micJsTracks.length == 0 ||
-        sysJs == null || fallback == null) {
+    if (micJs == null ||
+        micJsTracks == null ||
+        micJsTracks.length == 0 ||
+        sysJs == null ||
+        fallback == null) {
       // No mic (or can't cast) — system audio only, no mixer needed.
       _log('system audio only (no mic to mix)');
       return fallback ?? sysJsTracks!.toDart[0];
@@ -783,7 +805,9 @@ class WebRtcRoomService implements RtcRoomService {
 
   /// Tears down the AudioContext mixer (called on stop or error).
   void _teardownMixer() {
-    try { _mixerCtx?.close(); } catch (_) {}
+    try {
+      _mixerCtx?.close();
+    } catch (_) {}
     _mixerCtx = null;
     _mixerDest = null;
   }
@@ -884,7 +908,9 @@ class WebRtcRoomService implements RtcRoomService {
     }
     _answerIceSubs.clear();
     for (final pc in _answerPcs.values) {
-      try { await pc.close(); } catch (_) {}
+      try {
+        await pc.close();
+      } catch (_) {}
     }
     _answerPcs.clear();
 
@@ -970,7 +996,8 @@ class WebRtcRoomService implements RtcRoomService {
       if (remoteBroadcasterId == _localUserId) continue; // skip self
 
       final data = change.doc.data() as Map<String, dynamic>?;
-      final remoteUid = (data?['uid'] as num?)?.toInt() ??
+      final remoteUid =
+          (data?['uid'] as num?)?.toInt() ??
           (remoteBroadcasterId.hashCode.abs() % 2147483647);
 
       if (change.type == DocumentChangeType.removed) {
@@ -986,15 +1013,19 @@ class WebRtcRoomService implements RtcRoomService {
         if (hbRaw is Timestamp) {
           final age = DateTime.now().difference(hbRaw.toDate());
           if (age > _kHeartbeatStaleDuration) {
-            _log('ignoring stale broadcaster $remoteBroadcasterId '
-                '(heartbeat ${age.inSeconds}s ago)');
+            _log(
+              'ignoring stale broadcaster $remoteBroadcasterId '
+              '(heartbeat ${age.inSeconds}s ago)',
+            );
             // Best-effort cleanup so subsequent viewers don't see the tile.
             _peersCol.doc(remoteBroadcasterId).delete().ignore();
             continue;
           }
         } else if (hbRaw == null) {
           // Legacy doc with no heartbeat field — treat as stale.
-          _log('ignoring broadcaster $remoteBroadcasterId (no heartbeat field)');
+          _log(
+            'ignoring broadcaster $remoteBroadcasterId (no heartbeat field)',
+          );
           continue;
         }
         // Detect a stream-refresh signal written by the broadcaster when they
@@ -1028,7 +1059,9 @@ class WebRtcRoomService implements RtcRoomService {
           onRemoteUserJoined?.call();
         } else if (streamRefreshed) {
           // Broadcaster already known but switched streams — force reconnect.
-          _log('stream refresh detected for broadcaster=$remoteBroadcasterId — reconnecting immediately');
+          _log(
+            'stream refresh detected for broadcaster=$remoteBroadcasterId — reconnecting immediately',
+          );
           _closePeer(remoteBroadcasterId);
           _uidToUserId[remoteUid] = remoteBroadcasterId;
           _userIdToUid[remoteBroadcasterId] = remoteUid;
@@ -1070,9 +1103,12 @@ class WebRtcRoomService implements RtcRoomService {
     // offer/answer stalled), drop the zombie connection so the screen tile
     // disappears rather than showing "Connecting cam…" indefinitely.
     Timer(const Duration(seconds: 15), () {
-      if (!identical(_peers[broadcasterId], peer)) return; // stale — new PC present
+      if (!identical(_peers[broadcasterId], peer))
+        return; // stale — new PC present
       if (peer.remoteStream == null && _isJoined && _roomId != null) {
-        _log('P2P stream timeout (15 s) for broadcaster=$broadcasterId — dropping zombie');
+        _log(
+          'P2P stream timeout (15 s) for broadcaster=$broadcasterId — dropping zombie',
+        );
         _closePeer(broadcasterId);
         onRemoteUserLeft?.call();
       }
@@ -1085,15 +1121,19 @@ class WebRtcRoomService implements RtcRoomService {
       } else {
         // Some browsers deliver tracks without an associated stream.
         // Build a synthetic one from the track so the renderer has a source.
-        createLocalMediaStream('remote_$broadcasterId').then((newStream) async {
-          await newStream.addTrack(event.track);
-          peer.remoteStream = newStream;
-          renderer.srcObject = newStream;
-          _unlockRendererAudio(renderer);
-          _startRemoteVad(broadcasterId, broadcasterUid, newStream);
-          _log('remote stream (synthetic) received from broadcaster=$broadcasterId');
-          onRemoteUserJoined?.call();
-        }).catchError((_) {});
+        createLocalMediaStream('remote_$broadcasterId')
+            .then((newStream) async {
+              await newStream.addTrack(event.track);
+              peer.remoteStream = newStream;
+              renderer.srcObject = newStream;
+              _unlockRendererAudio(renderer);
+              _startRemoteVad(broadcasterId, broadcasterUid, newStream);
+              _log(
+                'remote stream (synthetic) received from broadcaster=$broadcasterId',
+              );
+              onRemoteUserJoined?.call();
+            })
+            .catchError((_) {});
         return;
       }
       peer.remoteStream = stream;
@@ -1103,10 +1143,12 @@ class WebRtcRoomService implements RtcRoomService {
       // play() avoids the browser muting audio on the underlying <video> element.
       _unlockRendererAudio(renderer);
       _startRemoteVad(broadcasterId, broadcasterUid, stream);
-      _log('remote stream received from broadcaster=$broadcasterId '
-          'tracks=${stream.getTracks().length} '
-          'audio=${stream.getAudioTracks().length} '
-          'video=${stream.getVideoTracks().length}');
+      _log(
+        'remote stream received from broadcaster=$broadcasterId '
+        'tracks=${stream.getTracks().length} '
+        'audio=${stream.getAudioTracks().length} '
+        'video=${stream.getVideoTracks().length}',
+      );
       onRemoteUserJoined?.call();
     };
 
@@ -1156,13 +1198,15 @@ class WebRtcRoomService implements RtcRoomService {
 
     // Gather ICE candidates and write them to Firestore
     pc.onIceCandidate = (RTCIceCandidate candidate) {
-      unawaited(_writeIceCandidate(
-        callRef: callRef,
-        subcollection: 'viewer_ice',
-        candidate: candidate,
-        scopeKey: viewerIceScope,
-        logLabel: 'viewer',
-      ));
+      unawaited(
+        _writeIceCandidate(
+          callRef: callRef,
+          subcollection: 'viewer_ice',
+          candidate: candidate,
+          scopeKey: viewerIceScope,
+          logLabel: 'viewer',
+        ),
+      );
     };
 
     // Write offer to Firestore to trigger the broadcaster
@@ -1181,7 +1225,8 @@ class WebRtcRoomService implements RtcRoomService {
       final callData = snap.data();
       final answerMap = callData?['answer'] as Map<String, dynamic>?;
       if (answerMap == null) return;
-      if (pc.signalingState == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+      if (pc.signalingState ==
+          RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
         try {
           await pc.setRemoteDescription(
             RTCSessionDescription(
@@ -1191,22 +1236,28 @@ class WebRtcRoomService implements RtcRoomService {
           );
           _log('set remote answer from broadcaster=$broadcasterId');
         } catch (e) {
-          _log('setRemoteDescription failed for broadcaster=$broadcasterId: $e');
+          _log(
+            'setRemoteDescription failed for broadcaster=$broadcasterId: $e',
+          );
         }
       }
     });
 
     // Receive broadcaster's ICE candidates
-    peer.iceSub = callRef.collection('broadcaster_ice').snapshots().listen((snap) {
+    peer.iceSub = callRef.collection('broadcaster_ice').snapshots().listen((
+      snap,
+    ) {
       for (final change in snap.docChanges) {
         if (change.type == DocumentChangeType.added) {
           final d = change.doc.data();
           if (d == null) continue;
-          pc.addCandidate(RTCIceCandidate(
-            d['candidate'] as String?,
-            d['sdpMid'] as String?,
-            (d['sdpMLineIndex'] as num?)?.toInt(),
-          ));
+          pc.addCandidate(
+            RTCIceCandidate(
+              d['candidate'] as String?,
+              d['sdpMid'] as String?,
+              (d['sdpMLineIndex'] as num?)?.toInt(),
+            ),
+          );
         }
       }
     });
@@ -1255,7 +1306,8 @@ class WebRtcRoomService implements RtcRoomService {
       if (_answeredCalls.contains(callId)) continue;
       final data = doc.data();
       if (data['offer'] == null) continue;
-      if (data['answer'] != null) continue; // already answered by another session
+      if (data['answer'] != null)
+        continue; // already answered by another session
       _answeredCalls.add(callId);
       _answerViewerOffer(callId, data);
     }
@@ -1284,12 +1336,14 @@ class WebRtcRoomService implements RtcRoomService {
     await _answerIceSubs.remove(callId)?.cancel();
     final stalePc = _answerPcs.remove(callId);
     if (stalePc != null) {
-      try { await stalePc.close(); } catch (_) {}
+      try {
+        await stalePc.close();
+      } catch (_) {}
     }
 
     final callRef = _callsCol.doc(callId);
     final pc = await createPeerConnection(_iceConfig);
-  final broadcasterIceScope = 'broadcaster:$callId';
+    final broadcasterIceScope = 'broadcaster:$callId';
     // Store immediately — prevents GC from collecting this PC while ICE gathers.
     _answerPcs[callId] = pc;
 
@@ -1300,13 +1354,15 @@ class WebRtcRoomService implements RtcRoomService {
 
     // Gather broadcaster ICE candidates
     pc.onIceCandidate = (RTCIceCandidate candidate) {
-      unawaited(_writeIceCandidate(
-        callRef: callRef,
-        subcollection: 'broadcaster_ice',
-        candidate: candidate,
-        scopeKey: broadcasterIceScope,
-        logLabel: 'broadcaster',
-      ));
+      unawaited(
+        _writeIceCandidate(
+          callRef: callRef,
+          subcollection: 'broadcaster_ice',
+          candidate: candidate,
+          scopeKey: broadcasterIceScope,
+          logLabel: 'broadcaster',
+        ),
+      );
     };
 
     final offerMap = callData['offer'] as Map<String, dynamic>;
@@ -1325,19 +1381,24 @@ class WebRtcRoomService implements RtcRoomService {
     });
 
     // Read viewer's ICE candidates — store subscription to keep it alive.
-    _answerIceSubs[callId] = callRef.collection('viewer_ice').snapshots().listen((snap) {
-      for (final change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final d = change.doc.data();
-          if (d == null) continue;
-          pc.addCandidate(RTCIceCandidate(
-            d['candidate'] as String?,
-            d['sdpMid'] as String?,
-            (d['sdpMLineIndex'] as num?)?.toInt(),
-          ));
-        }
-      }
-    });
+    _answerIceSubs[callId] = callRef
+        .collection('viewer_ice')
+        .snapshots()
+        .listen((snap) {
+          for (final change in snap.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              final d = change.doc.data();
+              if (d == null) continue;
+              pc.addCandidate(
+                RTCIceCandidate(
+                  d['candidate'] as String?,
+                  d['sdpMid'] as String?,
+                  (d['sdpMLineIndex'] as num?)?.toInt(),
+                ),
+              );
+            }
+          }
+        });
 
     // Clean up this answer PC when the connection ultimately closes.
     // Guard: only remove/cancel entries that belong to THIS pc instance.
@@ -1364,18 +1425,17 @@ class WebRtcRoomService implements RtcRoomService {
 
   static const List<Map<String, dynamic>> _defaultIceServers = [
     {
-      'urls': [
-        'stun:stun.l.google.com:19302',
-        'stun:stun1.l.google.com:19302',
-      ],
+      'urls': ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'],
     },
   ];
 
-  Map<String, dynamic> get _iceConfig =>
-      {'iceServers': _iceServers ?? _defaultIceServers};
+  Map<String, dynamic> get _iceConfig => {
+    'iceServers': _iceServers ?? _defaultIceServers,
+  };
 
   String _iceCandidateFingerprint(RTCIceCandidate candidate) {
-    final raw = '${candidate.sdpMid}|${candidate.sdpMLineIndex}|${candidate.candidate}';
+    final raw =
+        '${candidate.sdpMid}|${candidate.sdpMLineIndex}|${candidate.candidate}';
     return raw.hashCode.toUnsigned(32).toRadixString(16);
   }
 
@@ -1402,7 +1462,10 @@ class WebRtcRoomService implements RtcRoomService {
     }
 
     try {
-      await callRef.collection(subcollection).doc(fingerprint).set(candidate.toMap());
+      await callRef
+          .collection(subcollection)
+          .doc(fingerprint)
+          .set(candidate.toMap());
     } catch (error) {
       seen.remove(fingerprint);
       _log('failed to write $logLabel ICE candidate: $error');
@@ -1419,7 +1482,9 @@ class WebRtcRoomService implements RtcRoomService {
       final pc = _answerPcs.remove(callId);
       _answeredCalls.remove(callId); // allow re-answer on viewer reconnect
       _clearIceCandidateScope('broadcaster:$callId');
-      try { pc?.close(); } catch (_) {}
+      try {
+        pc?.close();
+      } catch (_) {}
     }
     _log('closed ${staleCallIds.length} stale answer PC(s) for stream handoff');
   }
@@ -1549,7 +1614,8 @@ class WebRtcRoomService implements RtcRoomService {
 
   Never _throwMapped(Object error, String operation) {
     final raw = error.toString().toLowerCase();
-    if (raw.contains('notallowederror') || raw.contains('permission denied') ||
+    if (raw.contains('notallowederror') ||
+        raw.contains('permission denied') ||
         raw.contains('invalid state') && operation.contains('system audio')) {
       throw AgoraServiceException(
         code: operation.contains('system audio')
@@ -1623,8 +1689,12 @@ class _PeerEntry {
     remoteStream?.getTracks().forEach((t) => t.stop());
     remoteStream = null;
     renderer.srcObject = null;
-    try { await renderer.dispose(); } catch (_) {}
-    try { await pc.close(); } catch (_) {}
+    try {
+      await renderer.dispose();
+    } catch (_) {}
+    try {
+      await pc.close();
+    } catch (_) {}
   }
 }
 
@@ -1644,6 +1714,7 @@ class _VadMonitor {
   web.AudioContext? _ctx;
   web.AnalyserNode? _analyser;
   Timer? _timer;
+
   /// Delays the speaking→not-speaking transition so brief pauses in speech
   /// (swallowing, breath, mid-sentence pause) don't flicker the "Talking Now"
   /// strip.  Only relevant when transitioning OFF; transitions ON are instant.
@@ -1742,7 +1813,9 @@ class _VadMonitor {
     _offHoldTimer?.cancel();
     _offHoldTimer = null;
     _currentLevel = 0.0;
-    try { _ctx?.close(); } catch (_) {}
+    try {
+      _ctx?.close();
+    } catch (_) {}
     _ctx = null;
     _analyser = null;
   }

@@ -3,7 +3,7 @@ import 'room_state.dart';
 
 export '../room_controller.dart'
     show RoomController, MicRequestResult, roomControllerProvider;
-export 'room_state.dart' show LiveRoomPhase, RoomState;
+export 'room_state.dart' show LiveRoomPhase, RoomAudioState, RoomState;
 
 typedef LiveRoomController = RoomController;
 typedef LiveRoomState = RoomState;

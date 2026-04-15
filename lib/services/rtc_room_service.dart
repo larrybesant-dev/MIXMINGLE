@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../features/room/controllers/room_state.dart';
+
 /// Abstract interface shared by [AgoraService] (native/web Agora SDK) and
 /// [WebRtcRoomService] (browser-native WebRTC with Firestore signaling).
 ///
@@ -88,6 +90,45 @@ abstract class RtcRoomService {
   /// Default no-op for Agora; only implemented on web via [WebRtcRoomService].
   Future<void> shareSystemAudio(bool enabled) async {}
 
+  Future<void> holdLocalAudio() async {
+    await publishLocalAudioStream(false);
+    await mute(true);
+  }
+
+  Future<void> muteAndLock() async {
+    await holdLocalAudio();
+    if (isBroadcaster && !isLocalVideoCapturing) {
+      await setBroadcaster(false);
+    }
+  }
+
+  Future<void> syncAudio(
+    RoomAudioState state, {
+    bool shouldMute = false,
+  }) async {
+    switch (state) {
+      case RoomAudioState.speaking:
+      case RoomAudioState.cohostSpeaking:
+        if (!isBroadcaster) {
+          await ensureDeviceAccess(video: false, audio: true);
+          await setBroadcaster(true);
+        }
+        await publishLocalAudioStream(true);
+        await mute(shouldMute);
+        break;
+      case RoomAudioState.requestingMic:
+      case RoomAudioState.muted:
+        await holdLocalAudio();
+        if (isBroadcaster && !isLocalVideoCapturing) {
+          await setBroadcaster(false);
+        }
+        break;
+      case RoomAudioState.denied:
+        await muteAndLock();
+        break;
+    }
+  }
+
   /// Set local microphone input gain.
   ///
   /// [volume] is in the range [0.0, 2.0] where 1.0 is the default (100%).
@@ -103,8 +144,5 @@ abstract class RtcRoomService {
 
   Future<void> dispose();
 
-  Future<void> ensureDeviceAccess({
-    required bool video,
-    required bool audio,
-  });
+  Future<void> ensureDeviceAccess({required bool video, required bool audio});
 }

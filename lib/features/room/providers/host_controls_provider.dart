@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/notification_service.dart';
+import '../controllers/room_state.dart';
 import 'room_firestore_provider.dart';
 
 class HostControls {
@@ -92,7 +93,10 @@ class HostControls {
   Future<void> toggleAllowGifts(String roomId) async {
     final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
-    final currentValue = _asBool(snapshot.data()?['allowGifts'], fallback: true);
+    final currentValue = _asBool(
+      snapshot.data()?['allowGifts'],
+      fallback: true,
+    );
     await policyRef.set({'allowGifts': !currentValue}, SetOptions(merge: true));
   }
 
@@ -136,31 +140,32 @@ class HostControls {
     final maxSpeakers = rawMaxSpeakers is num
         ? rawMaxSpeakers.toInt().clamp(1, 4)
         : 4;
-    final speakersSnapshot = await _roomRef(roomId).collection('speakers').get();
-    final alreadySpeaker = speakersSnapshot.docs.any((doc) => doc.id == normalizedUserId);
+    final speakersSnapshot = await _roomRef(
+      roomId,
+    ).collection('speakers').get();
+    final alreadySpeaker = speakersSnapshot.docs.any(
+      (doc) => doc.id == normalizedUserId,
+    );
     if (!alreadySpeaker && speakersSnapshot.docs.length >= maxSpeakers) {
       throw StateError('The stage already has $maxSpeakers speakers.');
     }
 
-    final participantSnapshot = await _participantRef(roomId, normalizedUserId).get();
-    final role = _asString(
-      participantSnapshot.data()?['role'],
-      fallback: 'stage',
-    ).toLowerCase();
-    final participantRole = role == 'host' || role == 'owner' || role == 'cohost'
-        ? role
-        : 'stage';
+    final participantSnapshot = await _participantRef(
+      roomId,
+      normalizedUserId,
+    ).get();
+    final role = normalizeRoomRole(
+      _asString(participantSnapshot.data()?['role'], fallback: roomRoleStage),
+      fallbackRole: roomRoleStage,
+    );
+    final participantRole = canManageStageRole(role) ? role : roomRoleStage;
 
     final batch = _db.batch();
-    batch.set(
-      _roomRef(roomId),
-      {
-        'maxSpeakers': maxSpeakers,
-        'speakerSyncVersion': 1,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_roomRef(roomId), {
+      'maxSpeakers': maxSpeakers,
+      'speakerSyncVersion': 1,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     batch.set(
       _roomRef(roomId).collection('speakers').doc(normalizedUserId),
       {
@@ -170,56 +175,45 @@ class HostControls {
       },
       SetOptions(merge: true),
     );
-    batch.set(
-      _participantRef(roomId, normalizedUserId),
-      {
-        'userId': normalizedUserId,
-        'role': participantRole,
-        'micOn': true,
-        'isMuted': false,
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_participantRef(roomId, normalizedUserId), {
+      'userId': normalizedUserId,
+      'role': participantRole,
+      'micOn': true,
+      'isMuted': false,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 
   /// Force-releases [userId] from the stage mic while preserving staff roles.
   Future<void> forceReleaseMic(String roomId, String userId) async {
     final normalizedUserId = userId.trim();
-    final participantSnapshot = await _participantRef(roomId, normalizedUserId).get();
-    final currentRole = _asString(
-      participantSnapshot.data()?['role'],
-      fallback: 'member',
-    ).toLowerCase();
-    final nextRole = currentRole == 'host' ||
-            currentRole == 'owner' ||
-            currentRole == 'cohost' ||
-            currentRole == 'moderator'
-        ? currentRole
-        : 'member';
+    final participantSnapshot = await _participantRef(
+      roomId,
+      normalizedUserId,
+    ).get();
+    final currentRole = normalizeRoomRole(
+      _asString(
+        participantSnapshot.data()?['role'],
+        fallback: roomRoleAudience,
+      ),
+      fallbackRole: roomRoleAudience,
+    );
+    final nextRole = canModerateRole(currentRole) ? currentRole : 'member';
 
     final batch = _db.batch();
     batch.delete(_roomRef(roomId).collection('speakers').doc(normalizedUserId));
-    batch.set(
-      _roomRef(roomId),
-      {
-        'maxSpeakers': 4,
-        'speakerSyncVersion': 1,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-    batch.set(
-      _participantRef(roomId, normalizedUserId),
-      {
-        'userId': normalizedUserId,
-        'role': nextRole,
-        'micOn': false,
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_roomRef(roomId), {
+      'maxSpeakers': 4,
+      'speakerSyncVersion': 1,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    batch.set(_participantRef(roomId, normalizedUserId), {
+      'userId': normalizedUserId,
+      'role': nextRole,
+      'micOn': false,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 
@@ -248,13 +242,18 @@ class HostControls {
       throw StateError('Only the current room host can transfer ownership.');
     }
 
-    final targetParticipantSnapshot = await _participantRef(roomId, toUserId).get();
+    final targetParticipantSnapshot = await _participantRef(
+      roomId,
+      toUserId,
+    ).get();
     final targetIsBanned = _asBool(
       targetParticipantSnapshot.data()?['isBanned'],
       fallback: false,
     );
     if (targetIsBanned) {
-      throw StateError('Cannot transfer host ownership to a banned participant.');
+      throw StateError(
+        'Cannot transfer host ownership to a banned participant.',
+      );
     }
 
     final batch = _db.batch();
@@ -263,24 +262,16 @@ class HostControls {
       'hostId': toUserId,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    batch.set(
-      _participantRef(roomId, toUserId),
-      {
-        'userId': toUserId,
-        'role': 'host',
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-    batch.set(
-      _participantRef(roomId, fromUserId),
-      {
-        'userId': fromUserId,
-        'role': 'cohost',
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_participantRef(roomId, toUserId), {
+      'userId': toUserId,
+      'role': 'host',
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    batch.set(_participantRef(roomId, fromUserId), {
+      'userId': fromUserId,
+      'role': 'cohost',
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
 
     final notifier = NotificationService(firestore: _db);
@@ -317,11 +308,10 @@ class HostControls {
       'maxSpeakers': max,
       'speakerSyncVersion': 1,
     });
-    batch.set(
-      _policyRef(roomId),
-      {'micLimit': max, 'updatedAt': FieldValue.serverTimestamp()},
-      SetOptions(merge: true),
-    );
+    batch.set(_policyRef(roomId), {
+      'micLimit': max,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 

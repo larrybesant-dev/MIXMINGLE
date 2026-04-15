@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../controllers/room_state.dart';
+
 // ── Colour constants ──────────────────────────────────────────────────────────
 const Color _kGold = Color(0xFFD4AF37);
 const Color _kWineRed = Color(0xFF722F37);
@@ -78,9 +80,11 @@ class _RoomUserTileState extends State<RoomUserTile>
   int _secondsLeft = 0;
 
   bool get _isSpeaking => widget.isMicOn && !widget.isMuted;
-  bool get _isHost => widget.role == 'host' || widget.role == 'owner';
-  bool get _isCohost => widget.role == 'cohost';
-  bool get _isSpeaker => widget.role == 'stage';
+  String get _normalizedRole =>
+      normalizeRoomRole(widget.role, fallbackRole: '');
+  bool get _isHost => isHostLikeRole(_normalizedRole);
+  bool get _isCohost => _normalizedRole == roomRoleCohost;
+  bool get _isSpeaker => _normalizedRole == roomRoleStage;
   bool get _hasRing => _isHost || _isCohost || _isSpeaker;
 
   double get _avatarRadius {
@@ -110,15 +114,15 @@ class _RoomUserTileState extends State<RoomUserTile>
   }
 
   String get _roleLabel {
-    switch (widget.role) {
-      case 'host':
-      case 'owner':
+    switch (_normalizedRole) {
+      case roomRoleHost:
+      case roomRoleOwner:
         return 'HOST';
-      case 'cohost':
+      case roomRoleCohost:
         return 'CO-HOST';
-      case 'stage':
+      case roomRoleStage:
         return 'MIC';
-      case 'moderator':
+      case roomRoleModerator:
         return 'MOD';
       default:
         return '';
@@ -138,9 +142,10 @@ class _RoomUserTileState extends State<RoomUserTile>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.08,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
     if (_isSpeaking) _pulseCtrl.repeat(reverse: true);
     _startTimer();
   }
@@ -208,26 +213,20 @@ class _RoomUserTileState extends State<RoomUserTile>
             _buildAvatar(),
             const SizedBox(height: 4),
             Text(
-              widget.isMe
-                  ? '${widget.displayName} (you)'
-                  : widget.displayName,
+              widget.isMe ? '${widget.displayName} (you)' : widget.displayName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GoogleFonts.raleway(
                 fontSize: widget.compact ? 9 : 10,
-                fontWeight:
-                    widget.isMe ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: widget.isMe ? FontWeight.w700 : FontWeight.w500,
                 color: widget.isMe
                     ? _kGold
                     : Colors.white.withValues(alpha: 0.9),
               ),
             ),
             const SizedBox(height: 2),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: _buildBadgeRow(),
-            ),
+            FittedBox(fit: BoxFit.scaleDown, child: _buildBadgeRow()),
           ],
         ),
       ),
@@ -243,9 +242,7 @@ class _RoomUserTileState extends State<RoomUserTile>
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              color: Colors.white.withValues(alpha: 0.04),
-            ),
+            bottom: BorderSide(color: Colors.white.withValues(alpha: 0.04)),
           ),
         ),
         child: Row(
@@ -261,8 +258,7 @@ class _RoomUserTileState extends State<RoomUserTile>
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.raleway(
                   fontSize: 12,
-                  fontWeight:
-                      widget.isMe ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: widget.isMe ? FontWeight.w700 : FontWeight.w500,
                   color: widget.isMe
                       ? _kGold
                       : Colors.white.withValues(alpha: 0.85),
@@ -270,9 +266,7 @@ class _RoomUserTileState extends State<RoomUserTile>
               ),
             ),
             Icon(
-              widget.isMuted || !widget.isMicOn
-                  ? Icons.mic_off
-                  : Icons.mic,
+              widget.isMuted || !widget.isMicOn ? Icons.mic_off : Icons.mic,
               size: 13,
               color: widget.isMuted || !widget.isMicOn
                   ? _kRed.withValues(alpha: 0.65)
@@ -324,9 +318,7 @@ class _RoomUserTileState extends State<RoomUserTile>
             shape: BoxShape.circle,
           ),
           child: Icon(
-            widget.isMuted || !widget.isMicOn
-                ? Icons.mic_off
-                : Icons.mic,
+            widget.isMuted || !widget.isMicOn ? Icons.mic_off : Icons.mic,
             size: r * 0.40,
             color: widget.isMuted || !widget.isMicOn ? _kRed : _kGreen,
           ),
@@ -355,13 +347,7 @@ class _RoomUserTileState extends State<RoomUserTile>
           : null,
       child: Padding(
         padding: EdgeInsets.all(ringColor != null ? 2.0 : 0.0),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            avatar,
-            ?micOverlay,
-          ],
-        ),
+        child: Stack(clipBehavior: Clip.none, children: [avatar, ?micOverlay]),
       ),
     );
 

@@ -95,6 +95,7 @@ void main() {
 
     test('keeps authority gated until the room is hydrated', () {
       const state = RoomState(
+        phase: LiveRoomPhase.joining,
         lifecycleState: RoomLifecycleState.hydrating,
         roomId: 'room-a',
         currentUserId: 'host-1',
@@ -106,6 +107,63 @@ void main() {
       expect(
         state.canExecute(RoomAction.manageRoom, userId: 'host-1'),
         isFalse,
+      );
+    });
+
+    test('resolves audio authority from the room state machine', () {
+      expect(
+        RoomStateMachine.resolveAudioState(
+          roomState: RoomLifecycleState.hydrating,
+          isHost: false,
+          isCohost: false,
+          micRequested: true,
+          hasMicPermission: true,
+        ),
+        RoomAudioState.muted,
+      );
+
+      expect(
+        RoomStateMachine.resolveAudioState(
+          roomState: RoomLifecycleState.active,
+          isHost: false,
+          isCohost: false,
+          micRequested: false,
+          hasMicPermission: false,
+        ),
+        RoomAudioState.denied,
+      );
+
+      expect(
+        RoomStateMachine.resolveAudioState(
+          roomState: RoomLifecycleState.active,
+          isHost: true,
+          isCohost: false,
+          micRequested: false,
+          hasMicPermission: true,
+        ),
+        RoomAudioState.speaking,
+      );
+
+      expect(
+        RoomStateMachine.resolveAudioState(
+          roomState: RoomLifecycleState.active,
+          isHost: false,
+          isCohost: true,
+          micRequested: false,
+          hasMicPermission: true,
+        ),
+        RoomAudioState.cohostSpeaking,
+      );
+
+      expect(
+        RoomStateMachine.resolveAudioState(
+          roomState: RoomLifecycleState.active,
+          isHost: false,
+          isCohost: false,
+          micRequested: true,
+          hasMicPermission: true,
+        ),
+        RoomAudioState.requestingMic,
       );
     });
   });

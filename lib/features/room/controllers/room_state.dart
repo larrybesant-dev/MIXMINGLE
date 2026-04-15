@@ -4,6 +4,8 @@ enum LiveRoomPhase { idle, joining, joined, leaving, error }
 
 enum RoomLifecycleState { initializing, hydrating, active, degraded, ended }
 
+enum RoomAudioState { muted, requestingMic, speaking, cohostSpeaking, denied }
+
 enum RoomAction {
   requestMic,
   manageStage,
@@ -120,6 +122,35 @@ class RoomStateMachine {
 
     return normalizeRoomRole(fallbackRole);
   }
+
+  static RoomAudioState resolveAudioState({
+    required RoomLifecycleState roomState,
+    required bool isHost,
+    required bool isCohost,
+    required bool micRequested,
+    required bool hasMicPermission,
+    bool hasSpeakerSeat = false,
+  }) {
+    if (roomState != RoomLifecycleState.active) {
+      return RoomAudioState.muted;
+    }
+    if (!hasMicPermission) {
+      return RoomAudioState.denied;
+    }
+    if (isHost) {
+      return RoomAudioState.speaking;
+    }
+    if (isCohost) {
+      return RoomAudioState.cohostSpeaking;
+    }
+    if (hasSpeakerSeat) {
+      return RoomAudioState.speaking;
+    }
+    if (micRequested) {
+      return RoomAudioState.requestingMic;
+    }
+    return RoomAudioState.muted;
+  }
 }
 
 RoomLifecycleState resolveRoomLifecycleState({
@@ -216,7 +247,12 @@ bool canUseMicRole(String role) {
 }
 
 bool canUseCameraRole(String role) {
-  return normalizeRoomRole(role, fallbackRole: '').isNotEmpty;
+  return role.trim().isNotEmpty;
+}
+
+bool liveRoomAudioCanPublish(RoomAudioState state) {
+  return state == RoomAudioState.speaking ||
+      state == RoomAudioState.cohostSpeaking;
 }
 
 String resolveParticipantRole({
@@ -236,11 +272,11 @@ String resolveParticipantRole({
   );
 }
 
-
 class RoomState {
   const RoomState({
     this.phase = LiveRoomPhase.idle,
     RoomLifecycleState lifecycleState = RoomLifecycleState.initializing,
+    this.audioState = RoomAudioState.muted,
     this.roomId = '',
     this.currentUserId,
     this.errorMessage,
@@ -254,12 +290,16 @@ class RoomState {
     this.camViewersByUser = const <String, List<String>>{},
     this.participantRolesByUser = const <String, String>{},
     this.sessionSnapshotsByUser = const <String, RoomSessionSnapshot>{},
+    this.micRequested = false,
+    this.hasMicPermission = true,
+    this.hasSpeakerSeat = false,
   }) : _lifecycleState = lifecycleState;
 
   static const int maxSpeakers = 4;
 
   final LiveRoomPhase phase;
   final RoomLifecycleState _lifecycleState;
+  final RoomAudioState audioState;
   final String roomId;
   final String? currentUserId;
   final String? errorMessage;
@@ -273,6 +313,9 @@ class RoomState {
   final Map<String, List<String>> camViewersByUser;
   final Map<String, String> participantRolesByUser;
   final Map<String, RoomSessionSnapshot> sessionSnapshotsByUser;
+  final bool micRequested;
+  final bool hasMicPermission;
+  final bool hasSpeakerSeat;
 
   String? get userId => currentUserId;
 
@@ -304,6 +347,10 @@ class RoomState {
 
   bool get isDegraded => lifecycleState == RoomLifecycleState.degraded;
 
+  bool get isRequestingMic => audioState == RoomAudioState.requestingMic;
+
+  bool get canPublishAudio => liveRoomAudioCanPublish(audioState);
+
   bool get isRoomFullyHydrated {
     final normalizedCurrentUserId = currentUserId?.trim() ?? '';
     if (normalizedCurrentUserId.isEmpty) {
@@ -319,7 +366,6 @@ class RoomState {
         snapshotRole.isNotEmpty && snapshotRole != 'audience';
 
     if (pendingUserIds.contains(normalizedCurrentUserId) &&
-        hostId.trim() != normalizedCurrentUserId &&
         !hasExplicitAuthorityRole) {
       return false;
     }
@@ -445,22 +491,35 @@ class RoomState {
     String? targetUserId,
   }) {
     final normalizedUserId = userId.trim();
-    if (normalizedUserId.isEmpty ||
-        lifecycleState != RoomLifecycleState.active) {
+    if (normalizedUserId.isEmpty) {
       return false;
     }
 
     switch (action) {
       case RoomAction.requestMic:
-        return isUserInRoom(normalizedUserId);
+        return isJoined &&
+            isUserInRoom(normalizedUserId) &&
+            audioState != RoomAudioState.denied;
       case RoomAction.manageStage:
       case RoomAction.manageMicQueue:
+        if (lifecycleState != RoomLifecycleState.active) {
+          return false;
+        }
         return canManageStage(normalizedUserId);
       case RoomAction.moderateParticipants:
+        if (lifecycleState != RoomLifecycleState.active) {
+          return false;
+        }
         return canModerate(normalizedUserId);
       case RoomAction.manageRoom:
+        if (lifecycleState != RoomLifecycleState.active) {
+          return false;
+        }
         return isHost(normalizedUserId);
       case RoomAction.manageCameraViewer:
+        if (lifecycleState != RoomLifecycleState.active) {
+          return false;
+        }
         final normalizedTargetUserId = targetUserId?.trim() ?? '';
         if (normalizedTargetUserId.isEmpty) {
           return false;
@@ -514,6 +573,7 @@ class RoomState {
   RoomState copyWith({
     LiveRoomPhase? phase,
     RoomLifecycleState? lifecycleState,
+    RoomAudioState? audioState,
     Object? currentUserId = _unset,
     Object? errorMessage = _unset,
     Object? joinedAt = _unset,
@@ -526,10 +586,14 @@ class RoomState {
     Map<String, List<String>>? camViewersByUser,
     Map<String, String>? participantRolesByUser,
     Map<String, RoomSessionSnapshot>? sessionSnapshotsByUser,
+    bool? micRequested,
+    bool? hasMicPermission,
+    bool? hasSpeakerSeat,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
       lifecycleState: lifecycleState ?? _lifecycleState,
+      audioState: audioState ?? this.audioState,
       roomId: roomId,
       currentUserId: identical(currentUserId, _unset)
           ? this.currentUserId
@@ -551,6 +615,9 @@ class RoomState {
           participantRolesByUser ?? this.participantRolesByUser,
       sessionSnapshotsByUser:
           sessionSnapshotsByUser ?? this.sessionSnapshotsByUser,
+      micRequested: micRequested ?? this.micRequested,
+      hasMicPermission: hasMicPermission ?? this.hasMicPermission,
+      hasSpeakerSeat: hasSpeakerSeat ?? this.hasSpeakerSeat,
     );
   }
 }

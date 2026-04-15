@@ -206,7 +206,8 @@ final isHostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>(
 
 final isCohostProvider = Provider.autoDispose
     .family<bool, RoomParticipantModel?>((ref, participant) {
-      return participant?.role == 'cohost';
+      return normalizeRoomRole(participant?.role, fallbackRole: '') ==
+          roomRoleCohost;
     });
 
 /// Streams participants who are currently active on the mic.
@@ -224,7 +225,8 @@ final onMicParticipantsProvider = StreamProvider.autoDispose
             const <String>[];
         final roomDoc = ref.read(roomDocStreamProvider(roomId)).valueOrNull;
         final useSpeakerDocs =
-            roomDoc?['speakerSyncVersion'] is num || roomDoc?['maxSpeakers'] is num;
+            roomDoc?['speakerSyncVersion'] is num ||
+            roomDoc?['maxSpeakers'] is num;
 
         if (useSpeakerDocs) {
           final participantsByUser = {
@@ -242,12 +244,10 @@ final onMicParticipantsProvider = StreamProvider.autoDispose
 
         controller.add(
           participants
-              .where(
-                (p) {
-                  final role = normalizeRoomRole(p.role, fallbackRole: '');
-                  return canManageStageRole(role) || role == roomRoleStage;
-                },
-              )
+              .where((p) {
+                final role = normalizeRoomRole(p.role, fallbackRole: '');
+                return canManageStageRole(role) || role == roomRoleStage;
+              })
               .toList(growable: false),
         );
       }

@@ -2,6 +2,15 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+export 'controllers/room_state.dart'
+    show
+        LiveRoomPhase,
+        RoomLifecycleState,
+        RoomAudioState,
+        RoomState,
+        RoomStateMachine,
+        RoomAction;
+
 import '../../core/events/app_event.dart';
 import '../../core/events/app_event_bus.dart';
 import '../../models/mic_access_request_model.dart';
@@ -39,6 +48,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   String? _errorMessage;
   DateTime? _joinedAt;
   Set<String> _excludedUserIds = const <String>{};
+  bool _micRequested = false;
+  bool _hasMicPermission = true;
   final Map<String, RoomSessionSnapshot> _sessionSnapshotsByUser =
       <String, RoomSessionSnapshot>{};
   final Set<String> _pendingUserIds = <String>{};
@@ -111,6 +122,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
         sessionSnapshotsByUser,
       ),
+      micRequested: _micRequested,
+      hasMicPermission: _hasMicPermission,
     );
 
     _lifecycleState = RoomStateMachine.resolveLifecycleState(
@@ -121,7 +134,33 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       errorMessage: nextState.errorMessage,
     );
 
-    return nextState.copyWith(lifecycleState: _lifecycleState);
+    final currentUserId = nextState.currentUserId?.trim() ?? '';
+    final resolvedRole = currentUserId.isEmpty
+        ? roomRoleAudience
+        : nextState.roleFor(currentUserId);
+    final normalizedRole = normalizeRoomRole(
+      resolvedRole,
+      fallbackRole: roomRoleAudience,
+    );
+    final hasSpeakerSeat =
+        currentUserId.isNotEmpty &&
+        (nextState.isSpeaker(currentUserId) || normalizedRole == roomRoleStage);
+    final resolvedAudioState = RoomStateMachine.resolveAudioState(
+      roomState: _lifecycleState,
+      isHost: isHostLikeRole(normalizedRole),
+      isCohost: normalizedRole == roomRoleCohost,
+      micRequested: _micRequested,
+      hasMicPermission: _hasMicPermission,
+      hasSpeakerSeat: hasSpeakerSeat,
+    );
+
+    return nextState.copyWith(
+      lifecycleState: _lifecycleState,
+      audioState: resolvedAudioState,
+      micRequested: _micRequested,
+      hasMicPermission: _hasMicPermission,
+      hasSpeakerSeat: hasSpeakerSeat,
+    );
   }
 
   String _resolveHostId(
@@ -230,27 +269,28 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       return false;
     }
 
-    final normalizedRole = participant.role.trim().toLowerCase();
+    final normalizedRole = normalizeRoomRole(
+      participant.role,
+      fallbackRole: '',
+    );
     final stageRole =
-        normalizedRole == 'host' ||
-        normalizedRole == 'owner' ||
-        normalizedRole == 'cohost' ||
-        normalizedRole == 'stage';
+        canManageStageRole(normalizedRole) || normalizedRole == roomRoleStage;
 
     return stageRole || (participant.micOn && !participant.isMuted);
   }
 
   int _speakerRank(RoomParticipantModel participant, {required String hostId}) {
-    final normalizedRole = participant.role.trim().toLowerCase();
-    if (participant.userId == hostId ||
-        normalizedRole == 'host' ||
-        normalizedRole == 'owner') {
+    final normalizedRole = normalizeRoomRole(
+      participant.role,
+      fallbackRole: '',
+    );
+    if (participant.userId == hostId || isHostLikeRole(normalizedRole)) {
       return 0;
     }
-    if (normalizedRole == 'cohost') {
+    if (normalizedRole == roomRoleCohost) {
       return 1;
     }
-    if (normalizedRole == 'stage') {
+    if (normalizedRole == roomRoleStage) {
       return 2;
     }
     return 3;
@@ -509,6 +549,25 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _publishSessionState();
   }
 
+  void updateAudioContext({
+    required bool micRequested,
+    required bool hasMicPermission,
+  }) {
+    final nextMicRequested = hasMicPermission ? micRequested : false;
+    if (_micRequested == nextMicRequested &&
+        _hasMicPermission == hasMicPermission) {
+      return;
+    }
+    _micRequested = nextMicRequested;
+    _hasMicPermission = hasMicPermission;
+    _emitState(
+      state.copyWith(
+        micRequested: _micRequested,
+        hasMicPermission: _hasMicPermission,
+      ),
+    );
+  }
+
   String get _actorUserId => state.currentUserId?.trim() ?? '';
 
   void _requireActiveLifecycle() {
@@ -562,17 +621,17 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _phase = LiveRoomPhase.joining;
     _currentUserId = normalizedUserId;
     _errorMessage = null;
+    _micRequested = false;
+    _hasMicPermission = true;
     _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
       userId: normalizedUserId,
       displayName: normalizedDisplayName.isNotEmpty
           ? normalizedDisplayName
           : (_sessionSnapshotsByUser[normalizedUserId]?.displayName ??
                 normalizedUserId),
-      role: resolveParticipantRole(
-        userId: normalizedUserId,
-        hostId: state.hostId,
-        participantRolesByUser: state.participantRolesByUser,
-        sessionSnapshotsByUser: _sessionSnapshotsByUser,
+      role: normalizeRoomRole(
+        _sessionSnapshotsByUser[normalizedUserId]?.role,
+        fallbackRole: roomRoleAudience,
       ),
       joinedAt: DateTime.now(),
     );
@@ -603,6 +662,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _errorMessage = result.errorMessage;
       _joinedAt = null;
       _excludedUserIds = result.excludedUserIds;
+      _micRequested = false;
+      _hasMicPermission = true;
       _emitState(
         state.copyWith(
           phase: _phase,
@@ -626,11 +687,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       displayName: normalizedDisplayName.isNotEmpty
           ? normalizedDisplayName
           : (existingSnapshot?.displayName ?? normalizedUserId),
-      role: resolveParticipantRole(
-        userId: normalizedUserId,
-        hostId: state.hostId,
-        participantRolesByUser: state.participantRolesByUser,
-        sessionSnapshotsByUser: _sessionSnapshotsByUser,
+      role: normalizeRoomRole(
+        existingSnapshot?.role,
+        fallbackRole: roomRoleAudience,
       ),
       joinedAt: _joinedAt,
     );
@@ -676,6 +735,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _joinedAt = null;
       _errorMessage = null;
       _excludedUserIds = const <String>{};
+      _micRequested = false;
+      _hasMicPermission = true;
       _pendingUserIds.clear();
       _stableUserIds.clear();
       _sessionSnapshotsByUser.clear();
@@ -703,6 +764,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _joinedAt = null;
     _errorMessage = null;
     _excludedUserIds = const <String>{};
+    _micRequested = false;
+    _hasMicPermission = true;
     _pendingUserIds.clear();
     _stableUserIds.clear();
     _sessionSnapshotsByUser.clear();
@@ -761,7 +824,6 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   Future<MicRequestResult> requestMic({required String userId}) async {
     final normalizedUserId = userId.trim();
-    _requireActiveLifecycle();
     if (!state.canExecute(RoomAction.requestMic, userId: normalizedUserId)) {
       throw StateError('Only joined users can request the mic.');
     }
@@ -801,6 +863,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
           isSpeaker: true,
         ),
       );
+      updateAudioContext(micRequested: false, hasMicPermission: true);
       return MicRequestResult.grabbed;
     }
 
@@ -812,6 +875,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         displayName: state.snapshotFor(normalizedUserId)?.displayName,
         role: state.roleFor(normalizedUserId),
       );
+      updateAudioContext(micRequested: false, hasMicPermission: true);
       return MicRequestResult.grabbed;
     }
 
@@ -820,6 +884,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       requesterId: normalizedUserId,
       hostId: hostId,
     );
+    updateAudioContext(micRequested: true, hasMicPermission: true);
     return MicRequestResult.queued;
   }
 
@@ -841,10 +906,10 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   Future<void> cancelMicRequest(String requestId) {
     final actorUserId = _actorUserId;
-    _requireActiveLifecycle();
     if (!state.canExecute(RoomAction.requestMic, userId: actorUserId)) {
       throw StateError('You must be in the room to cancel a mic request.');
     }
+    updateAudioContext(micRequested: false, hasMicPermission: true);
     return _micAccess.cancelRequest(arg, requestId);
   }
 
@@ -857,6 +922,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _requireStageAuthority();
     }
     await _roomRepository.releaseMic(roomId: arg, userId: normalizedUserId);
+    if (actorUserId == normalizedUserId) {
+      updateAudioContext(micRequested: false, hasMicPermission: true);
+    }
     AppEventBus.instance.emit(
       MicStateChangedEvent(
         id: 'mic-release:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',

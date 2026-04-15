@@ -270,6 +270,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   int? get _currentRtcUid => _mediaState.currentRtcUid;
   String? get _claimedSlotId => _mediaState.claimedSlotId;
   String? get _appliedMediaRole => _mediaState.appliedMediaRole;
+  RoomAudioState? get _appliedAudioState => _mediaState.appliedAudioState;
   Set<int> get _requestedHighQualityRemoteUids =>
       _mediaState.requestedHighQualityRemoteUids;
   Set<int> get _requestedLowQualityRemoteUids =>
@@ -896,26 +897,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   Future<void> _toggleMic() async {
     final service = _agoraService;
-    final currentUserId = _joinedUserId ?? ref.read(userProvider)?.id ?? '';
-    final currentRole = currentUserId.isEmpty
-        ? 'audience'
-        : ref
-                  .read(
-                    currentParticipantProvider(
-                      CurrentParticipantParams(
-                        roomId: widget.roomId,
-                        userId: currentUserId,
-                      ),
-                    ),
-                  )
-                  .valueOrNull
-                  ?.role ??
-              'audience';
+    final liveRoomState = ref.read(liveRoomControllerProvider(widget.roomId));
     if (service == null || !_isCallReady || _isMicActionInFlight) return;
-    if (!RoomPermissions.canUseMic(currentRole)) {
+
+    final audioState = liveRoomState.audioState;
+    if (audioState == RoomAudioState.requestingMic) {
+      _showSnackBar('Your mic request is still pending.');
+      return;
+    }
+    if (audioState == RoomAudioState.denied || !liveRoomState.canPublishAudio) {
       _showSnackBar('Grab Mic first to speak in the room.');
       return;
     }
+
     final next = !_isMicMuted;
     AppTelemetry.logAction(
       domain: 'room',
@@ -927,18 +921,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
     _mediaController.beginMicAction();
     try {
-      if (!next) {
-        await service.ensureDeviceAccess(video: false, audio: true);
-        await service.setBroadcaster(true);
-        await service.publishLocalAudioStream(true);
-      }
-      await service.mute(next);
+      await service.syncAudio(audioState, shouldMute: next);
       if (mounted) {
         _mediaController.finishMicAction(isMuted: next);
       }
       _syncMediaUiFromService();
-      // Mirror mic state to RTDB so onDisconnect clears it automatically.
-      // next=true means muted, so mic_on = !next.
       final micUserId = _joinedUserId;
       if (micUserId != null) {
         unawaited(
@@ -947,7 +934,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               .setMicOn(micUserId, micOn: !next),
         );
       }
-      // Keep the mic meter refreshing whenever live audio is available.
       _syncMicLevelPolling();
       AppTelemetry.logAction(
         domain: 'room',
@@ -2014,62 +2000,54 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
   }
 
-  Future<void> _applyRoleMediaState(String role) async {
+  Future<void> _applyRoleMediaState({
+    required String role,
+    required RoomAudioState audioState,
+  }) async {
     final service = _agoraService;
     if (service == null ||
         !_isCallReady ||
-        _appliedMediaRole == role ||
+        (_appliedMediaRole == role && _appliedAudioState == audioState) ||
         _isMicActionInFlight ||
         _isVideoActionInFlight) {
       return;
     }
 
     try {
-      // When promoted to stage or cohost: ensure we are in broadcaster mode
-      // and publish audio. Skip ensureDeviceAccess when the camera is already
-      // on — the stream already holds an audio track and re-acquiring the mic
-      // via a separate getUserMedia call would disrupt the existing track.
-      if (role == 'stage' || role == 'cohost') {
-        if (!service.isBroadcaster) {
-          // No stream yet — need device access before going broadcaster.
-          await service.ensureDeviceAccess(video: false, audio: true);
-          await service.setBroadcaster(true);
-        }
-        await service.publishLocalAudioStream(true);
-        if (mounted) {
-          _mediaController.setMicMuted(false);
-          if (role == 'cohost') {
-            _showSnackBar('You are now a co-host — your mic is live!');
-          }
-        }
+      await service.syncAudio(audioState, shouldMute: _isMicMuted);
+      if (_isVideoEnabled && _claimedSlotId == null) {
+        await service.enableVideo(
+          true,
+          publishMicrophoneTrack:
+              (audioState == RoomAudioState.speaking ||
+                  audioState == RoomAudioState.cohostSpeaking) &&
+              !_isMicMuted,
+        );
       }
-      // When demoted back to audience or member: stop publishing and downgrade
-      // Agora client role so this user no longer occupies a broadcaster slot.
-      // Skip if the user has an active camera slot (already broadcaster).
-      if ((role == 'audience' || role == 'member') &&
-          service.isBroadcaster &&
-          _claimedSlotId == null) {
-        await service.setBroadcaster(false);
-        if (mounted) _mediaController.setMicMuted(true);
-        // If demoted from stage the user was displaced by someone grabbing the
-        // mic — show a brief notice so they are not confused.
-        if (mounted && _appliedMediaRole == 'stage') {
+
+      if (mounted) {
+        if (audioState == RoomAudioState.denied ||
+            audioState == RoomAudioState.requestingMic ||
+            audioState == RoomAudioState.muted) {
+          _mediaController.setMicMuted(true);
+        }
+        if (audioState == RoomAudioState.cohostSpeaking &&
+            _appliedAudioState != RoomAudioState.cohostSpeaking) {
+          _showSnackBar('You are now a co-host — your mic is live!');
+        }
+        if (audioState == RoomAudioState.muted &&
+            _appliedAudioState == RoomAudioState.speaking &&
+            _claimedSlotId == null) {
           _showSnackBar('Your mic was taken — someone else grabbed it.');
         }
-      }
-      await service.mute(_isMicMuted);
-      // Do NOT call enableVideo again if the camera is already running.
-      // The track is already in broadcaster state; a duplicate call on web
-      // stops and restarts the preview, causing a visible camera-off flicker.
-      if (_isVideoEnabled && _claimedSlotId == null) {
-        await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
       }
     } catch (e) {
       if (mounted) {
         _showSnackBar(_mapMediaError(e, canBroadcast: true));
+        _mediaController
+          ..setAppliedMediaRole(role)
+          ..setAppliedAudioState(audioState);
       }
-      // Still update _appliedMediaRole so we don't loop infinitely.
-      if (mounted) _mediaController.setAppliedMediaRole(role);
       return;
     }
 
@@ -2077,7 +2055,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       return;
     }
 
-    _mediaController.setAppliedMediaRole(role);
+    _mediaController
+      ..setAppliedMediaRole(role)
+      ..setAppliedAudioState(audioState);
   }
 
   void _exitRoom() {
@@ -3697,6 +3677,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         );
         final activeMicRequest = myMicRequestAsync.valueOrNull;
         final hasPendingMicRequest = activeMicRequest?.isPending ?? false;
+        final hasMicPermission = activeMicRequest?.status != 'denied';
+        if (liveRoomState.micRequested != hasPendingMicRequest ||
+            liveRoomState.hasMicPermission != hasMicPermission) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref
+                  .read(liveRoomControllerProvider(widget.roomId).notifier)
+                  .updateAudioContext(
+                    micRequested: hasPendingMicRequest,
+                    hasMicPermission: hasMicPermission,
+                  );
+            }
+          });
+        }
         // Skip role-media sync when the user has an active camera slot.
         // They are already in broadcaster state; re-applying would call
         // enableVideo() a second time and disrupt the live camera track.
@@ -3706,12 +3700,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         // guards enableVideo internally, so running it while camera is on is
         // safe and necessary (e.g. user grabs mic while camera is active).
         if (_isCallReady &&
-            _appliedMediaRole != role &&
+            (_appliedMediaRole != role ||
+                _appliedAudioState != liveRoomState.audioState) &&
             !_roleMediaStatePending) {
           _roleMediaStatePending = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _roleMediaStatePending = false;
-            _applyRoleMediaState(role);
+            _applyRoleMediaState(
+              role: role,
+              audioState: liveRoomState.audioState,
+            );
           });
         }
         // ── Mic play-time auto-release ──────────────────────────────────────
@@ -4030,8 +4028,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 .read(liveRoomControllerProvider(widget.roomId).notifier)
                 .releaseMic(userId: user.id);
             final svc = _agoraService;
-            if (svc != null && _isCallReady && !_isMicMuted) {
-              await svc.mute(true);
+            if (svc != null && _isCallReady) {
+              await svc.syncAudio(RoomAudioState.muted, shouldMute: true);
               if (mounted) {
                 _mediaController.setMicMuted(true);
               }
@@ -4083,6 +4081,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         }
 
         final canRequestMic =
+            liveRoomState.audioState != RoomAudioState.denied &&
             (allowMicRequests || onMicCount < RoomState.maxSpeakers) &&
             !hasPendingMicRequest;
         final VoidCallback? onGrabMicAction = isOnMic
