@@ -8,7 +8,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: SocialPulseSection(
             pulseItems: [
@@ -35,30 +35,32 @@ void main() {
     );
 
     expect(find.text('Social Pulse'), findsOneWidget);
-    expect(find.text('Velvet Lounge'), findsOneWidget);
+    expect(find.text('Velvet Lounge is hot right now'), findsOneWidget);
+    expect(find.text('12 inside • 3 on mic'), findsOneWidget);
     expect(find.text('@midnightmuse'), findsOneWidget);
     expect(find.text('Join a room'), findsOneWidget);
     expect(find.text('Find people'), findsOneWidget);
   });
 
-  testWidgets('SocialPulseSection shows quiet-state prompt when no activity exists', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: SocialPulseSection(
-            pulseItems: const [],
-            onOpenRooms: _noop,
-            onOpenDiscover: _noop,
+  testWidgets(
+    'SocialPulseSection shows quiet-state prompt when no activity exists',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SocialPulseSection(
+              pulseItems: const [],
+              onOpenRooms: _noop,
+              onOpenDiscover: _noop,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Your circle is quiet right now.'), findsOneWidget);
-    expect(find.text('Start the vibe'), findsOneWidget);
-  });
+      expect(find.text('Your circle is quiet right now.'), findsWidgets);
+      expect(find.text('Start the vibe'), findsOneWidget);
+    },
+  );
 }
 
 void _noop() {}

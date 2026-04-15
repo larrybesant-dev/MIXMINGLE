@@ -4,6 +4,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/core/events/app_event.dart';
 import 'package:mixvy/core/events/app_event_bus.dart';
+import 'package:mixvy/core/events/event_inspector.dart';
 import 'package:mixvy/core/events/event_pipeline.dart';
 import 'package:mixvy/services/notification_service.dart';
 import 'package:mixvy/services/social_activity_service.dart';
@@ -17,6 +18,7 @@ void main() {
     late EventPipeline pipeline;
 
     setUp(() {
+      AppEventInspector.instance.clear();
       firestore = FakeFirebaseFirestore();
       socialActivityService = SocialActivityService(firestore: firestore);
       notificationService = NotificationService(firestore: firestore);
@@ -60,6 +62,14 @@ void main() {
       expect(notificationDocs.docs, hasLength(1));
       expect(notificationDocs.docs.first.data()['userId'], 'bob');
       expect(notificationDocs.docs.first.data()['type'], 'follow');
+
+      final latest = AppEventInspector.instance.latest;
+      expect(latest, isNotNull);
+      expect(latest!.eventType, 'FollowEvent');
+      expect(
+        latest.consumerTraces.where((trace) => trace.status == 'success'),
+        hasLength(3),
+      );
     });
 
     test(
@@ -88,7 +98,7 @@ void main() {
     );
 
     test('ignores duplicated event ids to prevent double fan-out', () async {
-      const event = FollowEvent(
+      final event = FollowEvent(
         id: 'evt-dup-1',
         timestamp: DateTime(2026, 4, 14, 23, 15),
         fromUserId: 'ivy',
@@ -110,6 +120,11 @@ void main() {
 
       expect(activityDocs.docs, hasLength(1));
       expect(notificationDocs.docs, hasLength(1));
+
+      final droppedEntries = AppEventInspector.instance.entries
+          .where((entry) => entry.eventId == 'evt-dup-1' && entry.dropped)
+          .toList(growable: false);
+      expect(droppedEntries, isNotEmpty);
     });
   });
 }

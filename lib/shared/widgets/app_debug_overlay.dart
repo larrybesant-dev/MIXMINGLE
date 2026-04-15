@@ -7,6 +7,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/events/app_event_bus.dart';
+import '../../core/events/event_inspector.dart';
 import '../../core/telemetry/app_telemetry.dart';
 
 class AppDebugOverlay extends StatefulWidget {
@@ -23,7 +25,8 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
   int _secretTapCount = 0;
   Timer? _secretTapTimer;
   Timer? _lastSeenTicker;
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _firestorePresenceSub;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+  _firestorePresenceSub;
   StreamSubscription<DatabaseEvent>? _rtdbSessionsSub;
 
   String? _watchedUserId;
@@ -41,6 +44,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
   int? _lastFirestoreRtdbUpdatedAtMs;
   int? _rtdbToFirestoreDelayMs;
   int? _firestoreToUiDelayMs;
+  int _selectedTimelineIndex = 1;
 
   @override
   void dispose() {
@@ -84,97 +88,102 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
         .doc(uid)
         .snapshots()
         .listen((doc) {
-      final observedAt = DateTime.now();
-      final data = doc.data();
-      final currentUpdatedAtMs = _asEpochMillis(data?['rtdbUpdatedAt']);
-      final shouldUpdateRtdbDelay = currentUpdatedAtMs != null &&
-          currentUpdatedAtMs != _lastFirestoreRtdbUpdatedAtMs;
-      final rtdbDelay = shouldUpdateRtdbDelay && _lastRtdbObservedAt != null
-          ? observedAt.difference(_lastRtdbObservedAt!).inMilliseconds
-          : _rtdbToFirestoreDelayMs;
+          final observedAt = DateTime.now();
+          final data = doc.data();
+          final currentUpdatedAtMs = _asEpochMillis(data?['rtdbUpdatedAt']);
+          final shouldUpdateRtdbDelay =
+              currentUpdatedAtMs != null &&
+              currentUpdatedAtMs != _lastFirestoreRtdbUpdatedAtMs;
+          final rtdbDelay = shouldUpdateRtdbDelay && _lastRtdbObservedAt != null
+              ? observedAt.difference(_lastRtdbObservedAt!).inMilliseconds
+              : _rtdbToFirestoreDelayMs;
 
-      if (!mounted) {
-        return;
-      }
+          if (!mounted) {
+            return;
+          }
 
-      setState(() {
-        _firestorePresence = data;
-        _lastFirestoreObservedAt = observedAt;
-        _lastFirestoreRtdbUpdatedAtMs = currentUpdatedAtMs;
-        _rtdbToFirestoreDelayMs = rtdbDelay;
-      });
+          setState(() {
+            _firestorePresence = data;
+            _lastFirestoreObservedAt = observedAt;
+            _lastFirestoreRtdbUpdatedAtMs = currentUpdatedAtMs;
+            _rtdbToFirestoreDelayMs = rtdbDelay;
+          });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        final base = _lastFirestoreObservedAt;
-        if (base == null) {
-          return;
-        }
-        setState(() {
-          _firestoreToUiDelayMs = DateTime.now().difference(base).inMilliseconds;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) {
+              return;
+            }
+            final base = _lastFirestoreObservedAt;
+            if (base == null) {
+              return;
+            }
+            setState(() {
+              _firestoreToUiDelayMs = DateTime.now()
+                  .difference(base)
+                  .inMilliseconds;
+            });
+          });
         });
-      });
-    });
 
     _rtdbSessionsSub = FirebaseDatabase.instance
         .ref('status/$uid/sessions')
         .onValue
         .listen((event) {
-      final observedAt = DateTime.now();
-      final raw = event.snapshot.value;
-      var sessionCount = 0;
-      var anyOnline = false;
-      var anyCamOn = false;
-      var anyMicOn = false;
-      String? anyInRoom;
-      int? latestSeen;
+          final observedAt = DateTime.now();
+          final raw = event.snapshot.value;
+          var sessionCount = 0;
+          var anyOnline = false;
+          var anyCamOn = false;
+          var anyMicOn = false;
+          String? anyInRoom;
+          int? latestSeen;
 
-      if (raw is Map) {
-        for (final entry in raw.entries) {
-          final value = entry.value;
-          if (value is! Map) {
-            continue;
-          }
-          sessionCount += 1;
-          final online = value['online'] == true;
-          if (online) {
-            anyOnline = true;
-          }
-          if (value['cam_on'] == true) {
-            anyCamOn = true;
-          }
-          if (value['mic_on'] == true) {
-            anyMicOn = true;
-          }
-          final inRoomValue = value['in_room'];
-          if (anyInRoom == null && inRoomValue is String && inRoomValue.trim().isNotEmpty) {
-            anyInRoom = inRoomValue.trim();
-          }
-          final lastSeenRaw = value['last_seen'];
-          if (lastSeenRaw is int) {
-            if (latestSeen == null || lastSeenRaw > latestSeen) {
-              latestSeen = lastSeenRaw;
+          if (raw is Map) {
+            for (final entry in raw.entries) {
+              final value = entry.value;
+              if (value is! Map) {
+                continue;
+              }
+              sessionCount += 1;
+              final online = value['online'] == true;
+              if (online) {
+                anyOnline = true;
+              }
+              if (value['cam_on'] == true) {
+                anyCamOn = true;
+              }
+              if (value['mic_on'] == true) {
+                anyMicOn = true;
+              }
+              final inRoomValue = value['in_room'];
+              if (anyInRoom == null &&
+                  inRoomValue is String &&
+                  inRoomValue.trim().isNotEmpty) {
+                anyInRoom = inRoomValue.trim();
+              }
+              final lastSeenRaw = value['last_seen'];
+              if (lastSeenRaw is int) {
+                if (latestSeen == null || lastSeenRaw > latestSeen) {
+                  latestSeen = lastSeenRaw;
+                }
+              }
             }
           }
-        }
-      }
 
-      if (!mounted) {
-        return;
-      }
+          if (!mounted) {
+            return;
+          }
 
-      setState(() {
-        _lastRtdbObservedAt = observedAt;
-        _rtdbSessionCount = sessionCount;
-        _rtdbAnyOnline = anyOnline;
-        _rtdbAnyCamOn = anyCamOn;
-        _rtdbAnyMicOn = anyMicOn;
-        _rtdbAnyInRoom = anyInRoom;
-        _latestRtdbLastSeenMs = latestSeen;
-      });
-    });
+          setState(() {
+            _lastRtdbObservedAt = observedAt;
+            _rtdbSessionCount = sessionCount;
+            _rtdbAnyOnline = anyOnline;
+            _rtdbAnyCamOn = anyCamOn;
+            _rtdbAnyMicOn = anyMicOn;
+            _rtdbAnyInRoom = anyInRoom;
+            _latestRtdbLastSeenMs = latestSeen;
+          });
+        });
   }
 
   void _stopPresenceDebugWatch({required bool resetData}) {
@@ -322,6 +331,32 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
     );
   }
 
+  Future<void> _copyEventTimeline() async {
+    await Clipboard.setData(
+      ClipboardData(text: AppEventInspector.instance.exportJson()),
+    );
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Event timeline copied to clipboard.')),
+    );
+  }
+
+  void _replayLatestEvent() {
+    final latest = AppEventInspector.instance.latest;
+    if (latest == null) {
+      return;
+    }
+    AppEventBus.instance.emit(latest.createReplayEvent(), isReplay: true);
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Replayed ${latest.eventType}.')));
+  }
+
   void _registerSecretTap() {
     _secretTapCount += 1;
     _secretTapTimer?.cancel();
@@ -397,16 +432,19 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                     valueListenable: AppTelemetry.notifier,
                     builder: (context, state, _) {
                       final duplicateListeners = state.duplicateListenerKeys;
-                      final firestore = _firestorePresence ?? const <String, dynamic>{};
+                      final firestore =
+                          _firestorePresence ?? const <String, dynamic>{};
                       final firestoreOnline =
-                          _asBool(firestore['isOnline']) || _asBool(firestore['online']);
+                          _asBool(firestore['isOnline']) ||
+                          _asBool(firestore['online']);
                       final firestoreCamOn = _asBool(firestore['camOn']);
                       final firestoreMicOn = _asBool(firestore['micOn']);
                       final firestoreInRoom = _asTrimmedString(
                         firestore['inRoom'] ?? firestore['roomId'],
                       );
 
-                      final uiOnline = state.globalPresenceOnline ??
+                      final uiOnline =
+                          state.globalPresenceOnline ??
                           (state.presenceStatus != null &&
                               state.presenceStatus!.toLowerCase() != 'offline');
                       final uiCamOn = state.videoEnabled;
@@ -414,17 +452,27 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                       final uiInRoom = (state.inRoom ?? '').trim();
 
                       final onlineMismatch =
-                          (_rtdbAnyOnline != firestoreOnline) || (firestoreOnline != uiOnline);
+                          (_rtdbAnyOnline != firestoreOnline) ||
+                          (firestoreOnline != uiOnline);
                       final camMismatch =
-                          (_rtdbAnyCamOn != firestoreCamOn) || (firestoreCamOn != uiCamOn);
+                          (_rtdbAnyCamOn != firestoreCamOn) ||
+                          (firestoreCamOn != uiCamOn);
                       final micMismatch =
-                          (_rtdbAnyMicOn != firestoreMicOn) || (firestoreMicOn != uiMicOn);
+                          (_rtdbAnyMicOn != firestoreMicOn) ||
+                          (firestoreMicOn != uiMicOn);
                       final roomMismatch =
-                          (_rtdbAnyInRoom ?? '') != firestoreInRoom || firestoreInRoom != uiInRoom;
-                      final stalePresence = _latestRtdbLastSeenMs != null &&
-                          DateTime.now().difference(
-                            DateTime.fromMillisecondsSinceEpoch(_latestRtdbLastSeenMs!),
-                          ).inSeconds > 60;
+                          (_rtdbAnyInRoom ?? '') != firestoreInRoom ||
+                          firestoreInRoom != uiInRoom;
+                      final stalePresence =
+                          _latestRtdbLastSeenMs != null &&
+                          DateTime.now()
+                                  .difference(
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                      _latestRtdbLastSeenMs!,
+                                    ),
+                                  )
+                                  .inSeconds >
+                              60;
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,13 +499,19 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          _DebugLine(label: 'Auth', value: state.authUserId ?? 'anonymous'),
+                          _DebugLine(
+                            label: 'Auth',
+                            value: state.authUserId ?? 'anonymous',
+                          ),
                           _DebugLine(
                             label: 'Auth load',
                             value: state.authLoading ? 'loading' : 'idle',
                           ),
                           _DebugLine(label: 'Room', value: state.roomId ?? '-'),
-                          _DebugLine(label: 'Phase', value: state.roomPhase ?? '-'),
+                          _DebugLine(
+                            label: 'Phase',
+                            value: state.roomPhase ?? '-',
+                          ),
                           _DebugLine(
                             label: 'Participants',
                             value: state.participantCount.toString(),
@@ -472,9 +526,15 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                           ),
                           _DebugLine(
                             label: 'Presence',
-                            value: state.presenceStatus ?? state.roomPresenceStatus ?? '-',
+                            value:
+                                state.presenceStatus ??
+                                state.roomPresenceStatus ??
+                                '-',
                           ),
-                          _DebugLine(label: 'In room', value: state.inRoom ?? '-'),
+                          _DebugLine(
+                            label: 'In room',
+                            value: state.inRoom ?? '-',
+                          ),
                           const SizedBox(height: 8),
                           const Text(
                             'Presence Debug',
@@ -506,10 +566,15 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: const Color(0xFFF7EDE2),
                                 side: BorderSide(
-                                  color: const Color(0xFFD4AF37).withValues(alpha: 0.65),
+                                  color: const Color(
+                                    0xFFD4AF37,
+                                  ).withValues(alpha: 0.65),
                                 ),
                               ),
-                              icon: const Icon(Icons.copy_all_rounded, size: 14),
+                              icon: const Icon(
+                                Icons.copy_all_rounded,
+                                size: 14,
+                              ),
                               label: const Text('Copy Snapshot'),
                             ),
                           ),
@@ -517,11 +582,26 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             label: 'RTDB sessions',
                             value: _rtdbSessionCount.toString(),
                           ),
-                          _DebugLine(label: 'RTDB online', value: _rtdbAnyOnline ? 'true' : 'false'),
-                          _DebugLine(label: 'RTDB cam_on', value: _rtdbAnyCamOn ? 'true' : 'false'),
-                          _DebugLine(label: 'RTDB mic_on', value: _rtdbAnyMicOn ? 'true' : 'false'),
-                          _DebugLine(label: 'RTDB in_room', value: _rtdbAnyInRoom ?? '-'),
-                          _DebugLine(label: 'RTDB last_seen', value: _formatLastSeenAge()),
+                          _DebugLine(
+                            label: 'RTDB online',
+                            value: _rtdbAnyOnline ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'RTDB cam_on',
+                            value: _rtdbAnyCamOn ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'RTDB mic_on',
+                            value: _rtdbAnyMicOn ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'RTDB in_room',
+                            value: _rtdbAnyInRoom ?? '-',
+                          ),
+                          _DebugLine(
+                            label: 'RTDB last_seen',
+                            value: _formatLastSeenAge(),
+                          ),
                           _DebugLine(
                             label: 'RTDB -> Firestore',
                             value: _formatLatency(_rtdbToFirestoreDelayMs),
@@ -545,13 +625,27 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                           ),
                           _DebugLine(
                             label: 'Firestore inRoom',
-                            value: firestoreInRoom.isEmpty ? '-' : firestoreInRoom,
+                            value: firestoreInRoom.isEmpty
+                                ? '-'
+                                : firestoreInRoom,
                           ),
                           const SizedBox(height: 4),
-                          _DebugLine(label: 'UI online', value: uiOnline ? 'true' : 'false'),
-                          _DebugLine(label: 'UI cam', value: uiCamOn ? 'true' : 'false'),
-                          _DebugLine(label: 'UI mic', value: uiMicOn ? 'true' : 'false'),
-                          _DebugLine(label: 'UI inRoom', value: uiInRoom.isEmpty ? '-' : uiInRoom),
+                          _DebugLine(
+                            label: 'UI online',
+                            value: uiOnline ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'UI cam',
+                            value: uiCamOn ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'UI mic',
+                            value: uiMicOn ? 'true' : 'false',
+                          ),
+                          _DebugLine(
+                            label: 'UI inRoom',
+                            value: uiInRoom.isEmpty ? '-' : uiInRoom,
+                          ),
                           _DebugLine(
                             label: 'Listeners',
                             value: state.activeListenerCount.toString(),
@@ -561,78 +655,225 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             value:
                                 '${state.firestoreReadCount}/${state.firestoreWriteCount}/${state.firestoreSnapshotCount}',
                           ),
-                          if (state.cameraStatus != null && state.cameraStatus!.isNotEmpty)
-                            _DebugLine(label: 'Camera status', value: state.cameraStatus!),
-                          if (state.callError != null && state.callError!.isNotEmpty)
-                            _DebugLine(label: 'Call error', value: state.callError!),
-                          if (state.authError != null && state.authError!.isNotEmpty)
-                            _DebugLine(label: 'Auth error', value: state.authError!),
-                          if (state.roomError != null && state.roomError!.isNotEmpty)
-                            _DebugLine(label: 'Room error', value: state.roomError!),
+                          if (state.cameraStatus != null &&
+                              state.cameraStatus!.isNotEmpty)
+                            _DebugLine(
+                              label: 'Camera status',
+                              value: state.cameraStatus!,
+                            ),
+                          if (state.callError != null &&
+                              state.callError!.isNotEmpty)
+                            _DebugLine(
+                              label: 'Call error',
+                              value: state.callError!,
+                            ),
+                          if (state.authError != null &&
+                              state.authError!.isNotEmpty)
+                            _DebugLine(
+                              label: 'Auth error',
+                              value: state.authError!,
+                            ),
+                          if (state.roomError != null &&
+                              state.roomError!.isNotEmpty)
+                            _DebugLine(
+                              label: 'Room error',
+                              value: state.roomError!,
+                            ),
                           if (state.cameraMismatch)
-                            const _AlertLine(text: 'Camera mismatch: UI on, Firestore off'),
+                            const _AlertLine(
+                              text: 'Camera mismatch: UI on, Firestore off',
+                            ),
                           if (state.presenceMismatch)
-                            const _AlertLine(text: 'Presence mismatch: offline or wrong room'),
+                            const _AlertLine(
+                              text: 'Presence mismatch: offline or wrong room',
+                            ),
                           if (onlineMismatch)
                             const _AlertLine(
-                              text: 'ONLINE mismatch: RTDB / Firestore / UI disagree',
+                              text:
+                                  'ONLINE mismatch: RTDB / Firestore / UI disagree',
                             ),
                           if (camMismatch)
                             const _AlertLine(
-                              text: 'CAM mismatch: RTDB / Firestore / UI disagree',
+                              text:
+                                  'CAM mismatch: RTDB / Firestore / UI disagree',
                             ),
                           if (micMismatch)
                             const _AlertLine(
-                              text: 'MIC mismatch: RTDB / Firestore / UI disagree',
+                              text:
+                                  'MIC mismatch: RTDB / Firestore / UI disagree',
                             ),
                           if (roomMismatch)
                             const _AlertLine(
-                              text: 'ROOM mismatch: RTDB / Firestore / UI disagree',
+                              text:
+                                  'ROOM mismatch: RTDB / Firestore / UI disagree',
                             ),
                           if (stalePresence)
                             const _AlertLine(
-                              text: 'STALE PRESENCE: last_seen is older than 60s',
+                              text:
+                                  'STALE PRESENCE: last_seen is older than 60s',
                             ),
                           if (state.staleParticipantIds.isNotEmpty)
                             _AlertLine(
-                              text: 'Stale users: ${state.staleParticipantIds.join(', ')}',
+                              text:
+                                  'Stale users: ${state.staleParticipantIds.join(', ')}',
                             ),
                           if (duplicateListeners.isNotEmpty)
                             _AlertLine(
-                              text: 'Duplicate listeners: ${duplicateListeners.join(', ')}',
+                              text:
+                                  'Duplicate listeners: ${duplicateListeners.join(', ')}',
                             ),
                           const SizedBox(height: 10),
-                          const Text(
-                            'Recent Events',
-                            style: TextStyle(
-                              color: Color(0xFFD4AF37),
-                              fontWeight: FontWeight.w700,
-                            ),
+                          Row(
+                            children: [
+                              const Text(
+                                'System Timeline',
+                                style: TextStyle(
+                                  color: Color(0xFFD4AF37),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const Spacer(),
+                              ToggleButtons(
+                                isSelected: [
+                                  _selectedTimelineIndex == 0,
+                                  _selectedTimelineIndex == 1,
+                                ],
+                                onPressed: (index) {
+                                  setState(
+                                    () => _selectedTimelineIndex = index,
+                                  );
+                                },
+                                constraints: const BoxConstraints(
+                                  minHeight: 28,
+                                  minWidth: 64,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                selectedColor: const Color(0xFF0B0B0B),
+                                fillColor: const Color(0xFFD4AF37),
+                                color: const Color(0xFFF7EDE2),
+                                children: const [Text('App'), Text('Bus')],
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           Flexible(
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: state.recentEvents.length,
-                              itemBuilder: (context, index) {
-                                final event = state.recentEvents[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Text(
-                                    '${event.timestamp.toIso8601String().substring(11, 19)} '
-                                    '[${event.level.toUpperCase()}] '
-                                    '${event.domain}/${event.action} '
-                                    '${event.result ?? ''} '
-                                    '${event.message}',
-                                    style: const TextStyle(
-                                      color: Color(0xFFF7EDE2),
-                                      fontSize: 11,
-                                      height: 1.3,
-                                    ),
+                            child: _selectedTimelineIndex == 0
+                                ? ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: state.recentEvents.length,
+                                    itemBuilder: (context, index) {
+                                      final event = state.recentEvents[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        child: Text(
+                                          '${event.timestamp.toIso8601String().substring(11, 19)} '
+                                          '[${event.level.toUpperCase()}] '
+                                          '${event.domain}/${event.action} '
+                                          '${event.result ?? ''} '
+                                          '${event.message}',
+                                          style: const TextStyle(
+                                            color: Color(0xFFF7EDE2),
+                                            fontSize: 11,
+                                            height: 1.3,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : AnimatedBuilder(
+                                    animation: AppEventInspector.instance,
+                                    builder: (context, _) {
+                                      final entries =
+                                          AppEventInspector.instance.entries;
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '${entries.length} captured',
+                                                style: const TextStyle(
+                                                  color: Color(0xFFF7EDE2),
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              IconButton(
+                                                onPressed: entries.isEmpty
+                                                    ? null
+                                                    : _copyEventTimeline,
+                                                icon: const Icon(
+                                                  Icons.copy_all_rounded,
+                                                  size: 16,
+                                                ),
+                                                color: const Color(0xFFF7EDE2),
+                                                splashRadius: 16,
+                                              ),
+                                              IconButton(
+                                                onPressed: entries.isEmpty
+                                                    ? null
+                                                    : _replayLatestEvent,
+                                                icon: const Icon(
+                                                  Icons.replay_rounded,
+                                                  size: 16,
+                                                ),
+                                                color: const Color(0xFFF7EDE2),
+                                                splashRadius: 16,
+                                              ),
+                                              IconButton(
+                                                onPressed: entries.isEmpty
+                                                    ? null
+                                                    : AppEventInspector
+                                                          .instance
+                                                          .clear,
+                                                icon: const Icon(
+                                                  Icons.delete_sweep_outlined,
+                                                  size: 16,
+                                                ),
+                                                color: const Color(0xFFF7EDE2),
+                                                splashRadius: 16,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Expanded(
+                                            child: entries.isEmpty
+                                                ? const Center(
+                                                    child: Text(
+                                                      'No bus events captured yet.',
+                                                      style: TextStyle(
+                                                        color: Color(
+                                                          0xFFF7EDE2,
+                                                        ),
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : ListView.builder(
+                                                    itemCount: entries.length,
+                                                    itemBuilder: (context, index) {
+                                                      return Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              bottom: 8,
+                                                            ),
+                                                        child:
+                                                            _EventInspectorTile(
+                                                              entry:
+                                                                  entries[index],
+                                                            ),
+                                                      );
+                                                    },
+                                                  ),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                            ),
                           ),
                         ],
                       );
@@ -670,13 +911,83 @@ class _DebugLine extends StatelessWidget {
             ),
             TextSpan(
               text: value,
-              style: const TextStyle(
-                color: Color(0xFFF7EDE2),
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Color(0xFFF7EDE2), fontSize: 12),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EventInspectorTile extends StatelessWidget {
+  const _EventInspectorTile({required this.entry});
+
+  final EventInspectorEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = entry.dropped
+        ? const Color(0xFF9B2535)
+        : entry.isReplay
+        ? const Color(0xFFD4AF37)
+        : const Color(0xFF3FB27F);
+    final payloadSummary = entry.payload.entries
+        .where(
+          (item) =>
+              item.value != null && item.value.toString().trim().isNotEmpty,
+        )
+        .take(3)
+        .map((item) => '${item.key}=${item.value}')
+        .join(' • ');
+    final traceSummary = entry.consumerTraces
+        .map((trace) => '${trace.consumer}:${trace.status}')
+        .join(' • ');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '#${entry.sequence} ${entry.eventType}',
+            style: const TextStyle(
+              color: Color(0xFFF7EDE2),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            payloadSummary.isEmpty ? entry.eventId : payloadSummary,
+            style: const TextStyle(
+              color: Color(0xFFF7EDE2),
+              fontSize: 10,
+              height: 1.3,
+            ),
+          ),
+          if (traceSummary.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              traceSummary,
+              style: TextStyle(
+                color: accent,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if ((entry.note ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(entry.note!, style: TextStyle(color: accent, fontSize: 10)),
+          ],
+        ],
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../../services/notification_service.dart';
 import '../../services/social_activity_service.dart';
 import 'app_event.dart';
 import 'app_event_bus.dart';
+import 'event_inspector.dart';
 
 class EventPipeline {
   EventPipeline({
@@ -27,6 +28,7 @@ class EventPipeline {
   void start() {
     _subscription ??= eventBus.stream.listen((event) async {
       if (!_markSeen(event.id)) {
+        AppEventInspector.instance.markDropped(event);
         return;
       }
       try {
@@ -38,9 +40,45 @@ class EventPipeline {
   }
 
   Future<void> _route(AppEvent event) async {
-    homeFeedService.handle(event);
-    await socialActivityService.handleEvent(event);
-    await notificationService.handleEvent(event);
+    await _deliver(
+      event,
+      consumer: 'feed',
+      action: () async {
+        homeFeedService.handle(event);
+      },
+    );
+    await _deliver(
+      event,
+      consumer: 'social_activity',
+      action: () => socialActivityService.handleEvent(event),
+    );
+    await _deliver(
+      event,
+      consumer: 'notifications',
+      action: () => notificationService.handleEvent(event),
+    );
+  }
+
+  Future<void> _deliver(
+    AppEvent event, {
+    required String consumer,
+    required FutureOr<void> Function() action,
+  }) async {
+    AppEventInspector.instance.markConsumerStart(event.id, consumer: consumer);
+    try {
+      await Future.sync(action);
+      AppEventInspector.instance.markConsumerSuccess(
+        event.id,
+        consumer: consumer,
+      );
+    } catch (error) {
+      AppEventInspector.instance.markConsumerFailure(
+        event.id,
+        consumer: consumer,
+        message: error.toString(),
+      );
+      rethrow;
+    }
   }
 
   bool _markSeen(String eventId) {

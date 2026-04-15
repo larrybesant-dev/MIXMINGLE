@@ -48,7 +48,7 @@ void main() {
             createdAt: Timestamp.fromDate(DateTime(2026, 4, 14, 21, 55)),
           ),
         ],
-        suggestedUsers: const [
+        suggestedUsers: [
           UserModel(
             id: 's1',
             email: 'test@example.com',

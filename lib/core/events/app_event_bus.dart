@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'app_event.dart';
+import 'event_inspector.dart';
 
 class AppEventBus {
   AppEventBus._internal()
@@ -14,10 +15,11 @@ class AppEventBus {
 
   Stream<AppEvent> get stream => _controller.stream;
 
-  void emit(AppEvent event) {
+  void emit(AppEvent event, {bool isReplay = false}) {
     if (_controller.isClosed) {
       return;
     }
+    AppEventInspector.instance.recordEmission(event, isReplay: isReplay);
     _controller.add(event);
   }
 
