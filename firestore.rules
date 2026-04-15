@@ -335,19 +335,25 @@ service cloud.firestore {
           || (
             participantId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus'])
-          )
-          // Allow a participant to release the mic (self-demote back to member).
-          // Grabbing / inviting to stage must go through the grabMic /
-          // inviteToMic Cloud Functions, which enforce displacement + micLimit.
-          || (
-            participantId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['userId', 'role', 'lastActiveAt'])
-            && request.resource.data.role == 'member'
-            && resource.data.role == 'stage'
+                .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus', 'role'])
+            && request.resource.data.role in ['audience', 'member', 'stage']
           );
         allow delete: if isRoomHost(roomId) || participantId == request.auth.uid;
+      }
+
+      match /speakers/{speakerId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && isRoomParticipant(roomId)
+          && ((speakerId == request.auth.uid
+              && request.resource.data.userId == request.auth.uid)
+            || isRoomStaff(roomId));
+        allow update: if signedIn()
+          && (isRoomStaff(roomId)
+            || (speakerId == request.auth.uid
+              && request.resource.data.userId == request.auth.uid));
+        allow delete: if signedIn()
+          && (isRoomStaff(roomId) || speakerId == request.auth.uid);
       }
 
       match /presence/{userId} {
@@ -433,7 +439,7 @@ service cloud.firestore {
           || (signedIn()
             && resource.data.requesterId == request.auth.uid
             && (
-              // Re-queue own expired/denied request with valid new data.
+              // Re-queue own expired/denied/cancelled request with valid new data.
               (request.resource.data.requesterId == request.auth.uid
                 && request.resource.data.hostId is string
                 && request.resource.data.roomId == roomId
@@ -441,10 +447,10 @@ service cloud.firestore {
                 && request.resource.data.priority is int
                 && request.resource.data.priority >= 0
                 && request.resource.data.expiresAt is timestamp)
-              // Self-expire own stale request.
+              // Self-expire or cancel own request.
               || (request.resource.data.diff(resource.data).affectedKeys()
-                    .hasOnly(['status', 'updatedAt'])
-                  && request.resource.data.status == 'expired')
+                    .hasOnly(['status', 'updatedAt', 'expiresAt'])
+                  && request.resource.data.status in ['expired', 'cancelled'])
             ));
         allow delete: if false;
       }

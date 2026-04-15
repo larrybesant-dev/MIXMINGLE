@@ -28,6 +28,7 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
     this.showGrabMicButton = false,
     this.isOnMic = false,
     this.isMicFree = false,
+    this.hasPendingMicRequest = false,
     this.onGrabMicAction,
     this.showMicLevel = true,
     this.iconColor = Colors.white,
@@ -52,6 +53,7 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
   final bool showGrabMicButton;
   final bool isOnMic;
   final bool isMicFree;
+  final bool hasPendingMicRequest;
   final VoidCallback? onGrabMicAction;
   final bool showMicLevel;
   final Color iconColor;
@@ -116,17 +118,23 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
           IconButton(
             tooltip: isOnMic
                 ? 'Release mic'
+                : hasPendingMicRequest
+                ? 'Lower hand'
                 : isMicFree
                 ? 'Grab mic'
                 : 'Join mic queue',
             icon: Icon(
               isOnMic
                   ? Icons.mic_off_rounded
+                  : hasPendingMicRequest
+                  ? Icons.pan_tool_alt_outlined
                   : isMicFree
                   ? Icons.record_voice_over_rounded
                   : Icons.queue_rounded,
               color: isOnMic
                   ? mutedColor
+                  : hasPendingMicRequest
+                  ? const Color(0xFFD4A853)
                   : isMicFree
                   ? const Color(0xFF37D67A)
                   : const Color(0xFFD4A853),

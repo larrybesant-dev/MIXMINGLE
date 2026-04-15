@@ -45,7 +45,7 @@ class RoomModel {
     this.coHosts = const [],
     this.isLocked = false,
     this.slowModeSeconds,
-    this.maxBroadcasters = 6,
+    this.maxBroadcasters = 4,
     this.scheduledAt,
     this.isAdult = false,
   });
@@ -128,7 +128,7 @@ class RoomModel {
       coHosts: _asStringList(json['coHosts']),
       isLocked: _asBool(json['isLocked']),
       slowModeSeconds: json['slowModeSeconds'] is num ? (json['slowModeSeconds'] as num).toInt() : null,
-      maxBroadcasters: json['maxBroadcasters'] is num ? (json['maxBroadcasters'] as num).toInt() : 6,
+      maxBroadcasters: json['maxBroadcasters'] is num ? (json['maxBroadcasters'] as num).toInt() : 4,
       scheduledAt: _asTimestamp(json['scheduledAt']),
       isAdult: _asBool(json['isAdult']),
     );

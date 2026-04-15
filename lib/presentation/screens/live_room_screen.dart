@@ -210,7 +210,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _roleMediaStatePending = false;
 
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
-  int _maxBroadcasters = 6;
+  int _maxBroadcasters = 4;
   static const List<String> _quickEmojis = <String>[
     '😀',
     '😂',
@@ -3695,8 +3695,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             requesterId: user.id,
           )),
         );
-        // ignore: unused_local_variable -- kept for potential future use
-        final micRequestStatus = myMicRequestAsync.valueOrNull?.status;
+        final activeMicRequest = myMicRequestAsync.valueOrNull;
+        final hasPendingMicRequest = activeMicRequest?.isPending ?? false;
         // Skip role-media sync when the user has an active camera slot.
         // They are already in broadcaster state; re-applying would call
         // enableVideo() a second time and disrupt the live camera track.
@@ -4053,7 +4053,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               _showSnackBar(
                 result == MicRequestResult.grabbed
                     ? 'You are now on mic.'
-                    : 'Mic request sent to the stage.',
+                    : 'Your hand is raised. You are in the mic queue.',
               );
             }
           } catch (e) {
@@ -4063,10 +4063,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           }
         }
 
+        Future<void> handleCancelMicRequest() async {
+          final pendingRequestId = activeMicRequest?.id ?? '';
+          if (pendingRequestId.isEmpty) {
+            return;
+          }
+          try {
+            await ref
+                .read(liveRoomControllerProvider(widget.roomId).notifier)
+                .cancelMicRequest(pendingRequestId);
+            if (mounted) {
+              _showSnackBar('You left the mic queue.');
+            }
+          } catch (e) {
+            if (mounted) {
+              _showSnackBar('Could not update your mic request: $e');
+            }
+          }
+        }
+
         final canRequestMic =
-            allowMicRequests || onMicCount < RoomState.maxSpeakers;
+            (allowMicRequests || onMicCount < RoomState.maxSpeakers) &&
+            !hasPendingMicRequest;
         final VoidCallback? onGrabMicAction = isOnMic
             ? () => unawaited(handleReleaseMic())
+            : hasPendingMicRequest
+            ? () => unawaited(handleCancelMicRequest())
             : canRequestMic
             ? () => unawaited(handleRequestMic())
             : null;
@@ -4212,6 +4234,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 coinBalance: walletAsync.valueOrNull?.coinBalance,
                 isOnMic: isOnMic,
                 isMicFree: isMicFree,
+                hasPendingMicRequest: hasPendingMicRequest,
                 onToggleMic: RoomPermissions.canUseMic(role)
                     ? _toggleMic
                     : null,
@@ -5130,6 +5153,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                         ).notifier,
                                       )
                                       .denyMicRequest(request.id)
+                                      .ignore();
+                                },
+                                onWithdraw: (request) {
+                                  ref
+                                      .read(
+                                        liveRoomControllerProvider(
+                                          widget.roomId,
+                                        ).notifier,
+                                      )
+                                      .cancelMicRequest(request.id)
                                       .ignore();
                                 },
                               ),

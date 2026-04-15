@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +13,7 @@ class _SpyMicAccessController extends MicAccessController {
 
   bool queued = false;
   bool grabbed = false;
+  bool cancelled = false;
 
   @override
   Future<void> requestAccess({
@@ -29,6 +31,11 @@ class _SpyMicAccessController extends MicAccessController {
     required String userId,
   }) async {
     grabbed = true;
+  }
+
+  @override
+  Future<void> cancelRequest(String roomId, String requestId) async {
+    cancelled = true;
   }
 }
 
@@ -138,5 +145,90 @@ void main() {
         expect(micAccess.grabbed, isFalse);
       },
     );
+
+    test('cancelMicRequest lets a listener lower their hand', () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+      });
+
+      final micAccess = _SpyMicAccessController();
+      final scopedContainer = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          roomDocStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value({'hostId': 'host-1'}),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomParticipantModel(
+                userId: 'host-1',
+                role: 'host',
+                micOn: true,
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime.now(),
+              ),
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                micOn: false,
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime.now(),
+              ),
+            ]),
+          ),
+          roomMemberUserIdsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <String>['host-1', 'user-1']),
+          ),
+          micAccessControllerProvider.overrideWithValue(micAccess),
+        ],
+      );
+      addTearDown(scopedContainer.dispose);
+
+      final controller = scopedContainer.read(
+        roomControllerProvider('room-a').notifier,
+      );
+      await controller.joinRoom('user-1', displayName: 'User One');
+      await controller.cancelMicRequest('user-1_host-1');
+
+      expect(micAccess.cancelled, isTrue);
+    });
+
+    test('MicAccessController prevents rapid requeue spam after denial', () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+      });
+      await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('mic_access_requests')
+          .doc('user-1_host-1')
+          .set({
+            'id': 'user-1_host-1',
+            'roomId': 'room-a',
+            'requesterId': 'user-1',
+            'hostId': 'host-1',
+            'status': 'denied',
+            'priority': 1,
+            'expiresAt': Timestamp.fromDate(
+              DateTime.now().add(const Duration(minutes: 5)),
+            ),
+            'createdAt': Timestamp.fromDate(DateTime.now()),
+            'updatedAt': Timestamp.fromDate(DateTime.now()),
+          });
+
+      final controller = MicAccessController(firestore);
+
+      await expectLater(
+        controller.requestAccess(
+          roomId: 'room-a',
+          requesterId: 'user-1',
+          hostId: 'host-1',
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
   });
 }

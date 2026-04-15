@@ -71,4 +71,12 @@ class MicAccessRequestModel {
   }
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
+
+  bool get isPending => status == 'pending' && !isExpired;
+
+  bool get isClosed =>
+      status == 'approved' ||
+      status == 'denied' ||
+      status == 'expired' ||
+      status == 'cancelled';
 }

@@ -18,6 +18,7 @@ class MicQueuePanel extends ConsumerStatefulWidget {
     required this.displayNameById,
     this.onApprove,
     this.onDeny,
+    this.onWithdraw,
   });
 
   final String roomId;
@@ -34,6 +35,9 @@ class MicQueuePanel extends ConsumerStatefulWidget {
 
   /// Called when the host taps Deny on a request.
   final void Function(MicAccessRequestModel request)? onDeny;
+
+  /// Called when the requester lowers their own hand.
+  final void Function(MicAccessRequestModel request)? onWithdraw;
 
   @override
   ConsumerState<MicQueuePanel> createState() => _MicQueuePanelState();
@@ -195,8 +199,15 @@ class _MicQueuePanelState extends ConsumerState<MicQueuePanel> {
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
-                          // Host approve/deny buttons
-                          if (widget.isHost) ...[
+                          if (isMe && !widget.isHost) ...[
+                            const SizedBox(width: 8),
+                            _IconBtn(
+                              icon: Icons.pan_tool_alt_outlined,
+                              color: const Color(0xFFFFD166),
+                              tooltip: 'Lower hand',
+                              onTap: () => widget.onWithdraw?.call(req),
+                            ),
+                          ] else if (widget.isHost) ...[
                             const SizedBox(width: 8),
                             _IconBtn(
                               icon: Icons.check,

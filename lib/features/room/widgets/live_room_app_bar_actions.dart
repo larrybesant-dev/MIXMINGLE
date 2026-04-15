@@ -23,6 +23,7 @@ class LiveRoomAppBarActions extends StatelessWidget {
     required this.pendingMicCount,
     required this.isOnMic,
     required this.isMicFree,
+    this.hasPendingMicRequest = false,
     required this.onToggleMic,
     required this.onToggleVideo,
     required this.onLongPressVideo,
@@ -55,6 +56,7 @@ class LiveRoomAppBarActions extends StatelessWidget {
   final int pendingMicCount;
   final bool isOnMic;
   final bool isMicFree;
+  final bool hasPendingMicRequest;
   final VoidCallback? onToggleMic;
   final Future<void> Function() onToggleVideo;
   final VoidCallback? onLongPressVideo;
@@ -94,6 +96,7 @@ class LiveRoomAppBarActions extends StatelessWidget {
           showGrabMicButton: true,
           isOnMic: isOnMic,
           isMicFree: isMicFree,
+          hasPendingMicRequest: hasPendingMicRequest,
           onGrabMicAction: onGrabMicAction,
           onToggleSystemAudio: onToggleSystemAudio,
         ),

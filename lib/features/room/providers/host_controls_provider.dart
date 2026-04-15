@@ -124,20 +124,103 @@ class HostControls {
     return _participantRef(roomId, userId).update({'role': 'audience'});
   }
 
-  /// Pushes [userId] onto the stage mic via the `inviteToMic` Cloud Function.
-  /// Displaces any current stage holder if `micLimit` is already reached.
+  /// Pushes [userId] onto the shared speaker list for the room.
   Future<void> inviteToMic(String roomId, String userId) async {
-    await FirebaseFunctions.instance
-        .httpsCallable('inviteToMic')
-        .call<Map<String, dynamic>>({'roomId': roomId, 'targetId': userId});
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      throw ArgumentError('A valid user is required to invite to mic.');
+    }
+
+    final roomSnapshot = await _roomRef(roomId).get();
+    final rawMaxSpeakers = roomSnapshot.data()?['maxSpeakers'];
+    final maxSpeakers = rawMaxSpeakers is num
+        ? rawMaxSpeakers.toInt().clamp(1, 4)
+        : 4;
+    final speakersSnapshot = await _roomRef(roomId).collection('speakers').get();
+    final alreadySpeaker = speakersSnapshot.docs.any((doc) => doc.id == normalizedUserId);
+    if (!alreadySpeaker && speakersSnapshot.docs.length >= maxSpeakers) {
+      throw StateError('The stage already has $maxSpeakers speakers.');
+    }
+
+    final participantSnapshot = await _participantRef(roomId, normalizedUserId).get();
+    final role = _asString(
+      participantSnapshot.data()?['role'],
+      fallback: 'stage',
+    ).toLowerCase();
+    final participantRole = role == 'host' || role == 'owner' || role == 'cohost'
+        ? role
+        : 'stage';
+
+    final batch = _db.batch();
+    batch.set(
+      _roomRef(roomId),
+      {
+        'maxSpeakers': maxSpeakers,
+        'speakerSyncVersion': 1,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    batch.set(
+      _roomRef(roomId).collection('speakers').doc(normalizedUserId),
+      {
+        'userId': normalizedUserId,
+        'joinedAt': FieldValue.serverTimestamp(),
+        'role': participantRole == 'stage' ? 'speaker' : participantRole,
+      },
+      SetOptions(merge: true),
+    );
+    batch.set(
+      _participantRef(roomId, normalizedUserId),
+      {
+        'userId': normalizedUserId,
+        'role': participantRole,
+        'micOn': true,
+        'isMuted': false,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    await batch.commit();
   }
 
-  /// Force-releases [userId] from the stage mic (demotes to member).
-  Future<void> forceReleaseMic(String roomId, String userId) {
-    return _participantRef(roomId, userId).update({
-      'role': 'member',
-      'lastActiveAt': FieldValue.serverTimestamp(),
-    });
+  /// Force-releases [userId] from the stage mic while preserving staff roles.
+  Future<void> forceReleaseMic(String roomId, String userId) async {
+    final normalizedUserId = userId.trim();
+    final participantSnapshot = await _participantRef(roomId, normalizedUserId).get();
+    final currentRole = _asString(
+      participantSnapshot.data()?['role'],
+      fallback: 'member',
+    ).toLowerCase();
+    final nextRole = currentRole == 'host' ||
+            currentRole == 'owner' ||
+            currentRole == 'cohost' ||
+            currentRole == 'moderator'
+        ? currentRole
+        : 'member';
+
+    final batch = _db.batch();
+    batch.delete(_roomRef(roomId).collection('speakers').doc(normalizedUserId));
+    batch.set(
+      _roomRef(roomId),
+      {
+        'maxSpeakers': 4,
+        'speakerSyncVersion': 1,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    batch.set(
+      _participantRef(roomId, normalizedUserId),
+      {
+        'userId': normalizedUserId,
+        'role': nextRole,
+        'micOn': false,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    await batch.commit();
   }
 
   Future<void> removeUser(String roomId, String userId) {
@@ -225,11 +308,15 @@ class HostControls {
   /// Updates both the room doc (`maxBroadcasters`) and the policy doc
   /// (`micLimit`) so the slot service and mic-queue logic stay in sync.
   Future<void> setMaxBroadcasters(String roomId, int max) async {
-    if (max < 1 || max > 20) {
-      throw ArgumentError('maxBroadcasters must be between 1 and 20.');
+    if (max < 1 || max > 4) {
+      throw ArgumentError('maxBroadcasters must be between 1 and 4.');
     }
     final batch = _db.batch();
-    batch.update(_roomRef(roomId), {'maxBroadcasters': max});
+    batch.update(_roomRef(roomId), {
+      'maxBroadcasters': max,
+      'maxSpeakers': max,
+      'speakerSyncVersion': 1,
+    });
     batch.set(
       _policyRef(roomId),
       {'micLimit': max, 'updatedAt': FieldValue.serverTimestamp()},

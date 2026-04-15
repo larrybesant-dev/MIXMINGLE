@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/feed/providers/host_controls_providers.dart';
 import 'package:mixvy/features/room/providers/host_provider.dart';
+import 'package:mixvy/features/room/room_controller.dart';
 import 'package:mixvy/features/room/providers/message_providers.dart';
 import 'package:mixvy/features/room/providers/mic_access_provider.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
@@ -225,6 +226,61 @@ void main() {
     // Drain the _preWarmAgora Future.delayed(2s) timer so the test ends cleanly.
     await tester.pump(const Duration(seconds: 3));
   });
+
+  test(
+    'RoomController on-mic state follows shared speaker docs, not stale stage roles',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          roomDocStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value({
+              'hostId': 'host-1',
+              'maxSpeakers': 4,
+              'speakerSyncVersion': 1,
+            }),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomParticipantModel(
+                userId: 'host-1',
+                role: 'host',
+                micOn: true,
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'stage',
+                micOn: true,
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ]),
+          ),
+          roomMemberUserIdsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <String>['host-1', 'user-1']),
+          ),
+          roomSpeakerUserIdsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <String>['host-1']),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.listen(
+        roomControllerProvider('room-a'),
+        (_, __) {},
+        fireImmediately: true,
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      final state = container.read(roomControllerProvider('room-a'));
+      expect(state.speakerIds, const <String>['host-1']);
+      expect(state.isSpeaker('user-1'), isFalse);
+      expect(state.isSpeaker('host-1'), isTrue);
+    },
+  );
 
   testWidgets(
     'LiveRoomScreen shows the current user in the sidebar when live',

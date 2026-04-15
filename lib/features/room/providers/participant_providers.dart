@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../models/room_participant_model.dart';
+import '../repository/room_repository.dart';
 import 'room_firestore_provider.dart';
 
 /// Streams the raw room document map. Used outside of `currentParticipantAsync`
@@ -52,6 +53,18 @@ final roomMemberUserIdsProvider = StreamProvider.autoDispose
                   .toSet()
                   .toList(growable: false);
             }),
+      );
+    });
+
+final roomSpeakerUserIdsProvider = StreamProvider.autoDispose
+    .family<List<String>, String>((ref, roomId) {
+      final repository = ref.watch(roomRepositoryProvider);
+      return traceFirestoreStream<List<String>>(
+        key: 'room_speakers/$roomId',
+        query: 'rooms/$roomId/speakers',
+        roomId: roomId,
+        itemCount: (value) => value.length,
+        stream: repository.watchSpeakerUserIds(roomId),
       );
     });
 
@@ -200,27 +213,62 @@ final isCohostProvider = Provider.autoDispose
       return participant?.role == 'cohost';
     });
 
-/// Streams participants who are currently active on the mic:
-/// host, cohost, and stage roles, using the same fresh-only room roster.
+/// Streams participants who are currently active on the mic.
+/// For migrated rooms, the shared `speakers` collection is authoritative.
 final onMicParticipantsProvider = StreamProvider.autoDispose
     .family<List<RoomParticipantModel>, String>((ref, roomId) {
       final controller = StreamController<List<RoomParticipantModel>>();
+
+      void publish() {
+        final participants =
+            ref.read(participantsStreamProvider(roomId)).valueOrNull ??
+            const <RoomParticipantModel>[];
+        final speakerUserIds =
+            ref.read(roomSpeakerUserIdsProvider(roomId)).valueOrNull ??
+            const <String>[];
+        final roomDoc = ref.read(roomDocStreamProvider(roomId)).valueOrNull;
+        final useSpeakerDocs =
+            roomDoc?['speakerSyncVersion'] is num || roomDoc?['maxSpeakers'] is num;
+
+        if (useSpeakerDocs) {
+          final participantsByUser = {
+            for (final participant in participants)
+              participant.userId.trim(): participant,
+          };
+          controller.add(
+            speakerUserIds
+                .map((userId) => participantsByUser[userId.trim()])
+                .whereType<RoomParticipantModel>()
+                .toList(growable: false),
+          );
+          return;
+        }
+
+        controller.add(
+          participants
+              .where(
+                (p) =>
+                    p.role == 'host' ||
+                    p.role == 'cohost' ||
+                    p.role == 'stage',
+              )
+              .toList(growable: false),
+        );
+      }
+
       ref.listen<AsyncValue<List<RoomParticipantModel>>>(
         participantsStreamProvider(roomId),
-        (_, next) {
-          next.whenData((participants) {
-            controller.add(
-              participants
-                  .where(
-                    (p) =>
-                        p.role == 'host' ||
-                        p.role == 'cohost' ||
-                        p.role == 'stage',
-                  )
-                  .toList(growable: false),
-            );
-          });
-        },
+        (_, __) => publish(),
+        fireImmediately: true,
+      );
+      ref.listen<AsyncValue<List<String>>>(
+        roomSpeakerUserIdsProvider(roomId),
+        (_, __) => publish(),
+        fireImmediately: true,
+      );
+      ref.listen<AsyncValue<Map<String, dynamic>?>>(
+        roomDocStreamProvider(roomId),
+        (_, __) => publish(),
         fireImmediately: true,
       );
       ref.onDispose(controller.close);

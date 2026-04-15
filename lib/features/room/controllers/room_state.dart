@@ -139,12 +139,15 @@ class RoomState {
     if (role != null && role.isNotEmpty) {
       return role;
     }
+    if (hostId.trim() == normalized) {
+      return 'host';
+    }
     final snapshotRole =
         snapshotFor(normalized)?.role.trim().toLowerCase() ?? '';
     if (snapshotRole.isNotEmpty) {
       return snapshotRole;
     }
-    return hostId.trim() == normalized ? 'host' : 'audience';
+    return 'audience';
   }
 
   bool isHost(String userId) {

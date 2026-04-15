@@ -10,6 +10,7 @@ import 'controllers/room_state.dart';
 import 'providers/host_controls_provider.dart';
 import 'providers/mic_access_provider.dart';
 import 'providers/participant_providers.dart';
+import 'repository/room_repository.dart';
 import 'providers/room_policy_provider.dart';
 import 'providers/user_cam_permissions_provider.dart';
 import 'services/room_session_service.dart';
@@ -24,6 +25,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       ref.read(roomSessionServiceProvider);
   HostControls get _hostControls => ref.read(hostControlsProvider);
   MicAccessController get _micAccess => ref.read(micAccessControllerProvider);
+  RoomRepository get _roomRepository => ref.read(roomRepositoryProvider);
   RoomPolicyController get _roomPolicy =>
       ref.read(roomPolicyControllerProvider);
   UserCamPermissionsController get _camPermissions =>
@@ -60,10 +62,18 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final memberUserIds =
         ref.watch(roomMemberUserIdsProvider(roomId)).valueOrNull ??
         const <String>[];
+    final speakerUserIds =
+        ref.watch(roomSpeakerUserIdsProvider(roomId)).valueOrNull ??
+        const <String>[];
 
     final hostId = _resolveHostId(roomDoc, participants);
     final userIds = _resolveUserIds(participants, memberUserIds: memberUserIds);
-    final speakerIds = _resolveSpeakerIds(participants, hostId: hostId);
+    final speakerIds = _resolveSpeakerIds(
+      participants,
+      hostId: hostId,
+      speakerUserIds: speakerUserIds,
+      useSpeakerDocs: _shouldUseSpeakerDocs(roomDoc),
+    );
     final camViewersByUser = _resolveCamViewers(userIds);
     final participantRolesByUser = _resolveParticipantRoles(
       participants,
@@ -134,10 +144,63 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }.where((userId) => userId.isNotEmpty).toList(growable: false);
   }
 
+  bool _shouldUseSpeakerDocs(Map<String, dynamic>? roomDoc) {
+    final rawVersion = roomDoc?['speakerSyncVersion'];
+    final rawMaxSpeakers = roomDoc?['maxSpeakers'];
+    return rawVersion is num || rawMaxSpeakers is num;
+  }
+
   List<String> _resolveSpeakerIds(
     List<RoomParticipantModel> participants, {
     required String hostId,
+    List<String> speakerUserIds = const <String>[],
+    required bool useSpeakerDocs,
   }) {
+    if (useSpeakerDocs) {
+      final participantsByUser = {
+        for (final participant in participants)
+          participant.userId.trim(): participant,
+      };
+      final resolvedUserIds = speakerUserIds
+          .map((userId) => userId.trim())
+          .where((userId) => userId.isNotEmpty)
+          .toSet()
+          .toList(growable: false)
+        ..sort((left, right) {
+          final leftParticipant = participantsByUser[left];
+          final rightParticipant = participantsByUser[right];
+          final leftRank = _speakerRank(
+            leftParticipant ??
+                RoomParticipantModel(
+                  userId: left,
+                  role: left == hostId ? 'host' : 'stage',
+                  joinedAt: DateTime.fromMillisecondsSinceEpoch(0),
+                  lastActiveAt: DateTime.fromMillisecondsSinceEpoch(0),
+                ),
+            hostId: hostId,
+          );
+          final rightRank = _speakerRank(
+            rightParticipant ??
+                RoomParticipantModel(
+                  userId: right,
+                  role: right == hostId ? 'host' : 'stage',
+                  joinedAt: DateTime.fromMillisecondsSinceEpoch(0),
+                  lastActiveAt: DateTime.fromMillisecondsSinceEpoch(0),
+                ),
+            hostId: hostId,
+          );
+          if (leftRank != rightRank) {
+            return leftRank.compareTo(rightRank);
+          }
+          final leftJoinedAt =
+              leftParticipant?.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final rightJoinedAt =
+              rightParticipant?.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return leftJoinedAt.compareTo(rightJoinedAt);
+        });
+      return resolvedUserIds.take(RoomState.maxSpeakers).toList(growable: false);
+    }
+
     final speakers =
         participants.where(_isSpeakerParticipant).toList(growable: false)
           ..sort((left, right) {
@@ -343,6 +406,38 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     } catch (_) {
       // Best-effort roster freshness sync.
     }
+  }
+
+  void hydrateCurrentUser(
+    String userId, {
+    String? displayName,
+    String? role,
+  }) {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      return;
+    }
+
+    _currentUserId = normalizedUserId;
+    final existing = _sessionSnapshotsByUser[normalizedUserId];
+    final resolvedRole = role?.trim().toLowerCase();
+    _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
+      userId: normalizedUserId,
+      displayName: displayName?.trim().isNotEmpty == true
+          ? displayName!.trim()
+          : (existing?.displayName ?? normalizedUserId),
+      role: (resolvedRole != null && resolvedRole.isNotEmpty)
+          ? resolvedRole
+          : (existing?.role ?? state.roleFor(normalizedUserId)),
+      joinedAt: existing?.joinedAt ?? _joinedAt,
+    );
+    state = state.copyWith(
+      currentUserId: normalizedUserId,
+      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+        _sessionSnapshotsByUser,
+      ),
+      stableUserIds: _resolveStableUserIds(state.userIds),
+    );
   }
 
   void cacheDisplayName({
@@ -621,7 +716,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         state.speakerIds.length < RoomState.maxSpeakers;
 
     if (canGrabDirectly) {
-      await _micAccess.grabMicDirectly(roomId: arg, userId: normalizedUserId);
+      await _roomRepository.requestMic(
+        roomId: arg,
+        userId: normalizedUserId,
+        displayName: state.snapshotFor(normalizedUserId)?.displayName,
+        role: state.roleFor(normalizedUserId),
+      );
       AppEventBus.instance.emit(
         MicStateChangedEvent(
           id: 'mic-grab:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
@@ -643,8 +743,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
 
     final hostId = state.hostId.trim();
-    if (hostId.isEmpty) {
-      throw StateError('No active host was found for this room.');
+    if (hostId.isEmpty || hostId == normalizedUserId) {
+      await _roomRepository.requestMic(
+        roomId: arg,
+        userId: normalizedUserId,
+        displayName: state.snapshotFor(normalizedUserId)?.displayName,
+        role: state.roleFor(normalizedUserId),
+      );
+      return MicRequestResult.grabbed;
     }
 
     await _micAccess.requestAccess(
@@ -657,17 +763,26 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   Future<void> approveMicRequest(MicAccessRequestModel request) async {
     _requireStageAuthority();
-    if (!state.canAddSpeaker(request.requesterId)) {
-      throw StateError(
-        'The stage already has ${RoomState.maxSpeakers} speakers.',
-      );
-    }
+    await _roomRepository.requestMic(
+      roomId: arg,
+      userId: request.requesterId,
+      displayName: state.snapshotFor(request.requesterId)?.displayName,
+      role: state.roleFor(request.requesterId),
+    );
     await _micAccess.approveRequest(arg, request);
   }
 
   Future<void> denyMicRequest(String requestId) {
     _requireStageAuthority();
     return _micAccess.denyRequest(arg, requestId);
+  }
+
+  Future<void> cancelMicRequest(String requestId) {
+    final actorUserId = _actorUserId;
+    if (actorUserId.isEmpty) {
+      throw StateError('You must be in the room to cancel a mic request.');
+    }
+    return _micAccess.cancelRequest(arg, requestId);
   }
 
   Future<void> releaseMic({required String userId}) async {
@@ -678,7 +793,10 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     if (!isSelfRelease) {
       _requireStageAuthority();
     }
-    await _micAccess.releaseMic(roomId: arg, userId: normalizedUserId);
+    await _roomRepository.releaseMic(
+      roomId: arg,
+      userId: normalizedUserId,
+    );
     AppEventBus.instance.emit(
       MicStateChangedEvent(
         id: 'mic-release:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
@@ -723,7 +841,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         'The stage already has ${RoomState.maxSpeakers} speakers.',
       );
     }
-    await _hostControls.inviteToMic(arg, normalizedTargetUserId);
+    await _roomRepository.requestMic(
+      roomId: arg,
+      userId: normalizedTargetUserId,
+      displayName: state.snapshotFor(normalizedTargetUserId)?.displayName,
+      role: state.roleFor(normalizedTargetUserId),
+    );
   }
 
   Future<void> demoteSpeaker(String targetUserId) async {
@@ -735,7 +858,10 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     if (!state.isSpeaker(normalizedTargetUserId)) {
       return;
     }
-    await _hostControls.forceReleaseMic(arg, normalizedTargetUserId);
+    await _roomRepository.forceRemoveSpeaker(
+      roomId: arg,
+      userId: normalizedTargetUserId,
+    );
   }
 
   Future<void> muteUser(String userId) {

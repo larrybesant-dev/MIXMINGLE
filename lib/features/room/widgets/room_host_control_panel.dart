@@ -86,6 +86,17 @@ class _RoomHostControlPanelSheetState
     super.initState();
     _micVolume = widget.micVolume;
     _speakerVolume = widget.speakerVolume;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .hydrateCurrentUser(
+            widget.currentUserId,
+            role: widget.isOwner ? 'host' : null,
+          );
+    });
     // Owners get all 5 tabs; mods/cohosts skip the Moderators tab.
     final tabCount = widget.isOwner ? 5 : 4;
     _tabs = TabController(
@@ -179,6 +190,8 @@ class _RoomHostControlPanelSheetState
                     ),
                     _StageControlsTab(
                       roomId: widget.roomId,
+                      currentUserId: widget.currentUserId,
+                      isOwner: widget.isOwner,
                       scrollController: scrollController,
                     ),
                     _AudioControlsTab(
@@ -396,10 +409,14 @@ class _RoomSettingsTab extends ConsumerWidget {
 class _StageControlsTab extends ConsumerStatefulWidget {
   const _StageControlsTab({
     required this.roomId,
+    required this.currentUserId,
+    required this.isOwner,
     required this.scrollController,
   });
 
   final String roomId;
+  final String currentUserId;
+  final bool isOwner;
   final ScrollController scrollController;
 
   @override
@@ -411,6 +428,22 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
   // ignore: prefer_final_fields
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      ref
+          .read(liveRoomControllerProvider(widget.roomId).notifier)
+          .hydrateCurrentUser(
+            widget.currentUserId,
+            role: widget.isOwner ? 'host' : null,
+          );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final roomController = ref.read(
       liveRoomControllerProvider(widget.roomId).notifier,
@@ -420,7 +453,7 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
       roomMicAccessRequestsProvider(widget.roomId),
     );
 
-    final micLimit = roomPolicyAsync.valueOrNull?.micLimit ?? 6;
+    final micLimit = roomPolicyAsync.valueOrNull?.micLimit ?? 4;
     final camLimit = roomPolicyAsync.valueOrNull?.camLimit ?? 6;
     final micTimerSeconds = roomPolicyAsync.valueOrNull?.micTimerSeconds;
 
@@ -447,11 +480,15 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
               Slider.adaptive(
                 value: micLimit.toDouble(),
                 min: 1,
-                max: 12,
-                divisions: 11,
+                max: 4,
+                divisions: 3,
                 label: '$micLimit',
                 onChanged: (v) {
                   final val = v.round();
+                  roomController.hydrateCurrentUser(
+                    widget.currentUserId,
+                    role: widget.isOwner ? 'host' : null,
+                  );
                   roomController.setMaxBroadcasters(val);
                 },
               ),
@@ -486,6 +523,10 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
                 ],
                 selected: {micTimerSeconds},
                 onSelectionChanged: (selection) {
+                  roomController.hydrateCurrentUser(
+                    widget.currentUserId,
+                    role: widget.isOwner ? 'host' : null,
+                  );
                   roomController.setMicTimer(selection.first);
                 },
               ),
@@ -516,6 +557,10 @@ class _StageControlsTabState extends ConsumerState<_StageControlsTab> {
                 divisions: 11,
                 label: '$camLimit',
                 onChanged: (v) {
+                  roomController.hydrateCurrentUser(
+                    widget.currentUserId,
+                    role: widget.isOwner ? 'host' : null,
+                  );
                   roomController.setCamLimit(v.round());
                 },
               ),
