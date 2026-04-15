@@ -1,4 +1,142 @@
+import '../../../models/room_participant_model.dart';
+
 enum LiveRoomPhase { idle, joining, joined, leaving, error }
+
+enum RoomLifecycleState { initializing, hydrating, active, degraded, ended }
+
+enum RoomAction {
+  requestMic,
+  manageStage,
+  manageMicQueue,
+  moderateParticipants,
+  manageRoom,
+  manageCameraViewer,
+}
+
+class RoomStateMachine {
+  const RoomStateMachine._();
+
+  static RoomLifecycleState resolveLifecycleState({
+    required String roomId,
+    required LiveRoomPhase phase,
+    required bool isHydrated,
+    String? currentUserId,
+    String? errorMessage,
+  }) {
+    final normalizedRoomId = roomId.trim();
+    final hasCurrentUser = currentUserId?.trim().isNotEmpty == true;
+    final hasError = errorMessage?.trim().isNotEmpty == true;
+
+    switch (phase) {
+      case LiveRoomPhase.joining:
+        return RoomLifecycleState.hydrating;
+      case LiveRoomPhase.joined:
+        if (!hasCurrentUser || hasError) {
+          return RoomLifecycleState.degraded;
+        }
+        return isHydrated
+            ? RoomLifecycleState.active
+            : RoomLifecycleState.hydrating;
+      case LiveRoomPhase.error:
+        return RoomLifecycleState.degraded;
+      case LiveRoomPhase.leaving:
+        return RoomLifecycleState.ended;
+      case LiveRoomPhase.idle:
+        if (normalizedRoomId.isEmpty) {
+          return RoomLifecycleState.initializing;
+        }
+        if (!hasCurrentUser) {
+          return RoomLifecycleState.ended;
+        }
+        if (hasError) {
+          return RoomLifecycleState.degraded;
+        }
+        return isHydrated
+            ? RoomLifecycleState.active
+            : RoomLifecycleState.hydrating;
+    }
+  }
+
+  static String resolveHostId({
+    Map<String, dynamic>? roomDoc,
+    Iterable<RoomParticipantModel> participants =
+        const <RoomParticipantModel>[],
+  }) {
+    final ownerId = (roomDoc?['ownerId'] as String?)?.trim() ?? '';
+    if (ownerId.isNotEmpty) {
+      return ownerId;
+    }
+
+    final hostId = (roomDoc?['hostId'] as String?)?.trim() ?? '';
+    if (hostId.isNotEmpty) {
+      return hostId;
+    }
+
+    for (final participant in participants) {
+      final userId = participant.userId.trim();
+      if (userId.isEmpty) {
+        continue;
+      }
+      if (isHostLikeRole(participant.role)) {
+        return userId;
+      }
+    }
+
+    return '';
+  }
+
+  static String resolveParticipantRole({
+    required String userId,
+    String hostId = '',
+    Map<String, String> participantRolesByUser = const <String, String>{},
+    Map<String, RoomSessionSnapshot> sessionSnapshotsByUser =
+        const <String, RoomSessionSnapshot>{},
+    String fallbackRole = roomRoleAudience,
+  }) {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      return fallbackRole;
+    }
+
+    final participantRole = normalizeRoomRole(
+      participantRolesByUser[normalizedUserId],
+      fallbackRole: '',
+    );
+    if (participantRole.isNotEmpty) {
+      return participantRole;
+    }
+
+    if (hostId.trim() == normalizedUserId) {
+      return roomRoleHost;
+    }
+
+    final snapshotRole = normalizeRoomRole(
+      sessionSnapshotsByUser[normalizedUserId]?.role,
+      fallbackRole: '',
+    );
+    if (snapshotRole.isNotEmpty) {
+      return snapshotRole;
+    }
+
+    return normalizeRoomRole(fallbackRole);
+  }
+}
+
+RoomLifecycleState resolveRoomLifecycleState({
+  required String roomId,
+  required LiveRoomPhase phase,
+  required bool isHydrated,
+  String? currentUserId,
+  String? errorMessage,
+}) {
+  return RoomStateMachine.resolveLifecycleState(
+    roomId: roomId,
+    phase: phase,
+    isHydrated: isHydrated,
+    currentUserId: currentUserId,
+    errorMessage: errorMessage,
+  );
+}
 
 class RoomSessionSnapshot {
   const RoomSessionSnapshot({
@@ -89,37 +227,20 @@ String resolveParticipantRole({
       const <String, RoomSessionSnapshot>{},
   String fallbackRole = roomRoleAudience,
 }) {
-  final normalizedUserId = userId.trim();
-  if (normalizedUserId.isEmpty) {
-    return fallbackRole;
-  }
-
-  final participantRole = normalizeRoomRole(
-    participantRolesByUser[normalizedUserId],
-    fallbackRole: '',
+  return RoomStateMachine.resolveParticipantRole(
+    userId: userId,
+    hostId: hostId,
+    participantRolesByUser: participantRolesByUser,
+    sessionSnapshotsByUser: sessionSnapshotsByUser,
+    fallbackRole: fallbackRole,
   );
-  if (participantRole.isNotEmpty) {
-    return participantRole;
-  }
-
-  if (hostId.trim() == normalizedUserId) {
-    return roomRoleHost;
-  }
-
-  final snapshotRole = normalizeRoomRole(
-    sessionSnapshotsByUser[normalizedUserId]?.role,
-    fallbackRole: '',
-  );
-  if (snapshotRole.isNotEmpty) {
-    return snapshotRole;
-  }
-
-  return normalizeRoomRole(fallbackRole);
 }
+
 
 class RoomState {
   const RoomState({
     this.phase = LiveRoomPhase.idle,
+    RoomLifecycleState lifecycleState = RoomLifecycleState.initializing,
     this.roomId = '',
     this.currentUserId,
     this.errorMessage,
@@ -133,11 +254,12 @@ class RoomState {
     this.camViewersByUser = const <String, List<String>>{},
     this.participantRolesByUser = const <String, String>{},
     this.sessionSnapshotsByUser = const <String, RoomSessionSnapshot>{},
-  });
+  }) : _lifecycleState = lifecycleState;
 
   static const int maxSpeakers = 4;
 
   final LiveRoomPhase phase;
+  final RoomLifecycleState _lifecycleState;
   final String roomId;
   final String? currentUserId;
   final String? errorMessage;
@@ -158,10 +280,29 @@ class RoomState {
 
   List<String> get speakers => List<String>.unmodifiable(speakerIds);
 
+  RoomLifecycleState get lifecycleState {
+    final resolvedLifecycleState = resolveRoomLifecycleState(
+      roomId: roomId,
+      phase: phase,
+      isHydrated: isRoomFullyHydrated,
+      currentUserId: currentUserId,
+      errorMessage: errorMessage,
+    );
+    if (_lifecycleState == RoomLifecycleState.ended &&
+        resolvedLifecycleState == RoomLifecycleState.initializing) {
+      return _lifecycleState;
+    }
+    return resolvedLifecycleState;
+  }
+
   bool get isConnected => phase == LiveRoomPhase.joined;
 
   bool get isJoined =>
       phase == LiveRoomPhase.joined && (currentUserId?.isNotEmpty == true);
+
+  bool get isActive => lifecycleState == RoomLifecycleState.active;
+
+  bool get isDegraded => lifecycleState == RoomLifecycleState.degraded;
 
   bool get isRoomFullyHydrated {
     final normalizedCurrentUserId = currentUserId?.trim() ?? '';
@@ -298,6 +439,37 @@ class RoomState {
     return canModerateRole(roleFor(userId));
   }
 
+  bool canExecute(
+    RoomAction action, {
+    required String userId,
+    String? targetUserId,
+  }) {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty ||
+        lifecycleState != RoomLifecycleState.active) {
+      return false;
+    }
+
+    switch (action) {
+      case RoomAction.requestMic:
+        return isUserInRoom(normalizedUserId);
+      case RoomAction.manageStage:
+      case RoomAction.manageMicQueue:
+        return canManageStage(normalizedUserId);
+      case RoomAction.moderateParticipants:
+        return canModerate(normalizedUserId);
+      case RoomAction.manageRoom:
+        return isHost(normalizedUserId);
+      case RoomAction.manageCameraViewer:
+        final normalizedTargetUserId = targetUserId?.trim() ?? '';
+        if (normalizedTargetUserId.isEmpty) {
+          return false;
+        }
+        return normalizedUserId == normalizedTargetUserId ||
+            isHost(normalizedUserId);
+    }
+  }
+
   bool canAddSpeaker(String userId) {
     final normalized = userId.trim();
     if (normalized.isEmpty) {
@@ -341,6 +513,7 @@ class RoomState {
 
   RoomState copyWith({
     LiveRoomPhase? phase,
+    RoomLifecycleState? lifecycleState,
     Object? currentUserId = _unset,
     Object? errorMessage = _unset,
     Object? joinedAt = _unset,
@@ -356,6 +529,7 @@ class RoomState {
   }) {
     return RoomState(
       phase: phase ?? this.phase,
+      lifecycleState: lifecycleState ?? _lifecycleState,
       roomId: roomId,
       currentUserId: identical(currentUserId, _unset)
           ? this.currentUserId

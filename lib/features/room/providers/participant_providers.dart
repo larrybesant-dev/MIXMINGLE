@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../models/room_participant_model.dart';
+import '../controllers/room_state.dart';
 import '../repository/room_repository.dart';
 import 'room_firestore_provider.dart';
 
@@ -138,12 +139,10 @@ final currentParticipantProvider = StreamProvider.autoDispose
 const Duration _kParticipantFreshnessWindow = Duration(seconds: 90);
 
 bool _isParticipantFresh(RoomParticipantModel participant, {DateTime? now}) {
-  final normalizedRole = participant.role.trim().toLowerCase();
+  final normalizedRole = normalizeRoomRole(participant.role, fallbackRole: '');
   final shouldKeepActiveSeatVisible =
-      normalizedRole == 'host' ||
-      normalizedRole == 'owner' ||
-      normalizedRole == 'cohost' ||
-      normalizedRole == 'stage' ||
+      canManageStageRole(normalizedRole) ||
+      normalizedRole == roomRoleStage ||
       participant.camOn ||
       participant.micOn;
   if (shouldKeepActiveSeatVisible) {
@@ -202,10 +201,7 @@ final participantCountProvider = StreamProvider.autoDispose.family<int, String>(
 );
 
 final isHostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>(
-  (ref, participant) {
-    final role = participant?.role;
-    return role == 'host' || role == 'owner';
-  },
+  (ref, participant) => isHostLikeRole(participant?.role ?? ''),
 );
 
 final isCohostProvider = Provider.autoDispose
@@ -247,10 +243,10 @@ final onMicParticipantsProvider = StreamProvider.autoDispose
         controller.add(
           participants
               .where(
-                (p) =>
-                    p.role == 'host' ||
-                    p.role == 'cohost' ||
-                    p.role == 'stage',
+                (p) {
+                  final role = normalizeRoomRole(p.role, fallbackRole: '');
+                  return canManageStageRole(role) || role == roomRoleStage;
+                },
               )
               .toList(growable: false),
         );

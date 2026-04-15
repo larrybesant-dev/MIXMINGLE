@@ -265,11 +265,18 @@ void main() {
       );
 
       await controller.joinRoom('host-1', displayName: 'Host One');
+
+      final hydratingState = container.read(roomControllerProvider('room-a'));
+      expect(hydratingState.lifecycleState, RoomLifecycleState.hydrating);
+
       controller.hydrateCurrentUser(
         'host-1',
         displayName: 'Host One',
         role: 'host',
       );
+
+      final activeState = container.read(roomControllerProvider('room-a'));
+      expect(activeState.lifecycleState, RoomLifecycleState.active);
 
       await expectLater(controller.setMicTimer(60), completes);
 

@@ -34,6 +34,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   static const Duration _kJoinStabilizationDelay = Duration(milliseconds: 350);
 
   LiveRoomPhase _phase = LiveRoomPhase.idle;
+  RoomLifecycleState _lifecycleState = RoomLifecycleState.initializing;
   String? _currentUserId;
   String? _errorMessage;
   DateTime? _joinedAt;
@@ -90,8 +91,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       mergedUserIds.add(normalizedCurrentUserId);
     }
 
-    return RoomState(
+    final nextState = RoomState(
       phase: _phase,
+      lifecycleState: _lifecycleState,
       roomId: roomId,
       currentUserId: _currentUserId,
       errorMessage: _errorMessage,
@@ -110,28 +112,26 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         sessionSnapshotsByUser,
       ),
     );
+
+    _lifecycleState = RoomStateMachine.resolveLifecycleState(
+      roomId: roomId,
+      phase: nextState.phase,
+      isHydrated: nextState.isRoomFullyHydrated,
+      currentUserId: nextState.currentUserId,
+      errorMessage: nextState.errorMessage,
+    );
+
+    return nextState.copyWith(lifecycleState: _lifecycleState);
   }
 
   String _resolveHostId(
     Map<String, dynamic>? roomDoc,
     List<RoomParticipantModel> participants,
   ) {
-    final ownerId = (roomDoc?['ownerId'] as String?)?.trim() ?? '';
-    if (ownerId.isNotEmpty) {
-      return ownerId;
-    }
-
-    final hostId = (roomDoc?['hostId'] as String?)?.trim() ?? '';
-    if (hostId.isNotEmpty) {
-      return hostId;
-    }
-
-    for (final participant in participants) {
-      if (participant.role == 'host' || participant.role == 'owner') {
-        return participant.userId.trim();
-      }
-    }
-    return '';
+    return RoomStateMachine.resolveHostId(
+      roomDoc: roomDoc,
+      participants: participants,
+    );
   }
 
   List<String> _resolveUserIds(
@@ -349,12 +349,25 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return stable.toList(growable: false);
   }
 
+  void _emitState(RoomState nextState) {
+    _lifecycleState = resolveRoomLifecycleState(
+      roomId: nextState.roomId,
+      phase: nextState.phase,
+      isHydrated: nextState.isRoomFullyHydrated,
+      currentUserId: nextState.currentUserId,
+      errorMessage: nextState.errorMessage,
+    );
+    state = nextState.copyWith(lifecycleState: _lifecycleState);
+  }
+
   void _publishSessionState() {
-    state = state.copyWith(
-      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
-      stableUserIds: _resolveStableUserIds(state.userIds),
-      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
-        _sessionSnapshotsByUser,
+    _emitState(
+      state.copyWith(
+        pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+        stableUserIds: _resolveStableUserIds(state.userIds),
+        sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+          _sessionSnapshotsByUser,
+        ),
       ),
     );
   }
@@ -408,8 +421,13 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         lastParticipantSyncAt: _lastParticipantSyncAt,
         forceParticipantSync: forceSync,
       );
+      if ((_errorMessage?.trim().isNotEmpty ?? false)) {
+        _errorMessage = null;
+        _emitState(state.copyWith(errorMessage: null));
+      }
     } catch (_) {
-      // Best-effort roster freshness sync.
+      _errorMessage = 'Room state is reconnecting. Try again in a moment.';
+      _emitState(state.copyWith(errorMessage: _errorMessage));
     }
   }
 
@@ -437,12 +455,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
             ),
       joinedAt: existing?.joinedAt ?? _joinedAt,
     );
-    state = state.copyWith(
-      currentUserId: normalizedUserId,
-      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
-        _sessionSnapshotsByUser,
+    _emitState(
+      state.copyWith(
+        currentUserId: normalizedUserId,
+        sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+          _sessionSnapshotsByUser,
+        ),
+        stableUserIds: _resolveStableUserIds(state.userIds),
       ),
-      stableUserIds: _resolveStableUserIds(state.userIds),
     );
   }
 
@@ -491,39 +511,35 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   String get _actorUserId => state.currentUserId?.trim() ?? '';
 
+  void _requireActiveLifecycle() {
+    if (state.lifecycleState != RoomLifecycleState.active) {
+      throw StateError('Room state is still syncing. Try again in a moment.');
+    }
+  }
+
   void _requireStageAuthority() {
     final actorUserId = _actorUserId;
-    if (!state.isRoomFullyHydrated) {
-      throw StateError(
-        'Room permissions are still syncing. Try again in a moment.',
-      );
-    }
-    if (!state.canManageStage(actorUserId)) {
+    _requireActiveLifecycle();
+    if (!state.canExecute(RoomAction.manageStage, userId: actorUserId)) {
       throw StateError('Only room staff can manage the stage.');
     }
   }
 
   void _requireModerationAuthority() {
     final actorUserId = _actorUserId;
-    if (!state.isRoomFullyHydrated) {
-      throw StateError(
-        'Room permissions are still syncing. Try again in a moment.',
-      );
-    }
-    if (!state.canModerate(actorUserId)) {
+    _requireActiveLifecycle();
+    if (!state.canExecute(
+      RoomAction.moderateParticipants,
+      userId: actorUserId,
+    )) {
       throw StateError('Only room staff can manage participants.');
     }
   }
 
   void _requireHostAuthority() {
     final actorUserId = _actorUserId;
-    if (!state.isRoomFullyHydrated) {
-      throw StateError(
-        'Room permissions are still syncing. Try again in a moment.',
-      );
-    }
-    final actorRole = state.roleFor(actorUserId);
-    if (actorRole != 'host' && actorRole != 'owner') {
+    _requireActiveLifecycle();
+    if (!state.canExecute(RoomAction.manageRoom, userId: actorUserId)) {
       throw StateError('Only the room host can perform this action.');
     }
   }
@@ -561,14 +577,16 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       joinedAt: DateTime.now(),
     );
     _scheduleStabilization(normalizedUserId);
-    state = state.copyWith(
-      phase: _phase,
-      currentUserId: _currentUserId,
-      errorMessage: null,
-      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
-      stableUserIds: _resolveStableUserIds(state.userIds),
-      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
-        _sessionSnapshotsByUser,
+    _emitState(
+      state.copyWith(
+        phase: _phase,
+        currentUserId: _currentUserId,
+        errorMessage: null,
+        pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+        stableUserIds: _resolveStableUserIds(state.userIds),
+        sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+          _sessionSnapshotsByUser,
+        ),
       ),
     );
 
@@ -585,12 +603,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _errorMessage = result.errorMessage;
       _joinedAt = null;
       _excludedUserIds = result.excludedUserIds;
-      state = state.copyWith(
-        phase: _phase,
-        currentUserId: null,
-        errorMessage: _errorMessage,
-        joinedAt: null,
-        excludedUserIds: _excludedUserIds,
+      _emitState(
+        state.copyWith(
+          phase: _phase,
+          currentUserId: null,
+          errorMessage: _errorMessage,
+          joinedAt: null,
+          excludedUserIds: _excludedUserIds,
+        ),
       );
       return result;
     }
@@ -614,16 +634,18 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       ),
       joinedAt: _joinedAt,
     );
-    state = state.copyWith(
-      phase: _phase,
-      currentUserId: normalizedUserId,
-      errorMessage: null,
-      joinedAt: _joinedAt,
-      excludedUserIds: _excludedUserIds,
-      pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
-      stableUserIds: _resolveStableUserIds(state.userIds),
-      sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
-        _sessionSnapshotsByUser,
+    _emitState(
+      state.copyWith(
+        phase: _phase,
+        currentUserId: normalizedUserId,
+        errorMessage: null,
+        joinedAt: _joinedAt,
+        excludedUserIds: _excludedUserIds,
+        pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+        stableUserIds: _resolveStableUserIds(state.userIds),
+        sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+          _sessionSnapshotsByUser,
+        ),
       ),
     );
     AppEventBus.instance.emit(
@@ -657,13 +679,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _pendingUserIds.clear();
       _stableUserIds.clear();
       _sessionSnapshotsByUser.clear();
-      state = const RoomState();
+      _lifecycleState = RoomLifecycleState.ended;
+      state = const RoomState(lifecycleState: RoomLifecycleState.ended);
       return;
     }
 
     _stopRoomHeartbeat();
     _phase = LiveRoomPhase.leaving;
-    state = state.copyWith(phase: _phase, errorMessage: null);
+    _emitState(state.copyWith(phase: _phase, errorMessage: null));
     await _sessionService.leaveRoom(roomId: arg, userId: userId);
     AppEventBus.instance.emit(
       RoomLeftEvent(
@@ -683,7 +706,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _pendingUserIds.clear();
     _stableUserIds.clear();
     _sessionSnapshotsByUser.clear();
-    state = const RoomState();
+    _lifecycleState = RoomLifecycleState.ended;
+    state = const RoomState(lifecycleState: RoomLifecycleState.ended);
   }
 
   Future<void> pausePresence() async {
@@ -705,7 +729,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _phase = LiveRoomPhase.joined;
     _errorMessage = null;
     _startRoomHeartbeat();
-    state = state.copyWith(phase: _phase, errorMessage: null);
+    _emitState(state.copyWith(phase: _phase, errorMessage: null));
   }
 
   Future<void> postSystemEvent(String content) {
@@ -737,7 +761,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   Future<MicRequestResult> requestMic({required String userId}) async {
     final normalizedUserId = userId.trim();
-    if (!state.isUserInRoom(normalizedUserId)) {
+    _requireActiveLifecycle();
+    if (!state.canExecute(RoomAction.requestMic, userId: normalizedUserId)) {
       throw StateError('Only joined users can request the mic.');
     }
 
@@ -816,7 +841,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   Future<void> cancelMicRequest(String requestId) {
     final actorUserId = _actorUserId;
-    if (actorUserId.isEmpty) {
+    _requireActiveLifecycle();
+    if (!state.canExecute(RoomAction.requestMic, userId: actorUserId)) {
       throw StateError('You must be in the room to cancel a mic request.');
     }
     return _micAccess.cancelRequest(arg, requestId);
@@ -864,9 +890,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         'Stage mutations must come from the active room controller.',
       );
     }
-    if (!state.canManageStage(normalizedActorUserId)) {
-      throw StateError('Only the host or co-host can promote listeners.');
-    }
+    _requireStageAuthority();
     if (!state.isUserInRoom(normalizedTargetUserId)) {
       throw StateError('Only joined users can be added to the stage.');
     }
@@ -1039,8 +1063,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final normalizedOwnerUserId = ownerUserId.trim();
     final normalizedViewerUserId = viewerUserId.trim();
     final actorUserId = _actorUserId;
-    final canManageViewerAccess =
-        actorUserId == normalizedOwnerUserId || state.isHost(actorUserId);
+    _requireActiveLifecycle();
+    final canManageViewerAccess = state.canExecute(
+      RoomAction.manageCameraViewer,
+      userId: actorUserId,
+      targetUserId: normalizedOwnerUserId,
+    );
     if (!canManageViewerAccess) {
       throw StateError(
         'Only the camera owner or room host can manage viewers.',

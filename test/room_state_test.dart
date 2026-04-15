@@ -115,6 +115,63 @@ void main() {
     expect(state.displayNameFor('user-1'), 'VelvetHandle');
   });
 
+  test('RoomState lifecycle resolves deterministically by sync condition', () {
+    const hydratingState = RoomState(
+      roomId: 'room-life',
+      phase: LiveRoomPhase.joining,
+      currentUserId: 'host-1',
+      sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+        'host-1': RoomSessionSnapshot(
+          userId: 'host-1',
+          displayName: 'Host',
+          role: 'host',
+        ),
+      },
+    );
+
+    const activeState = RoomState(
+      roomId: 'room-life',
+      phase: LiveRoomPhase.joined,
+      currentUserId: 'host-1',
+      hostId: 'host-1',
+      stableUserIds: <String>['host-1'],
+      sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+        'host-1': RoomSessionSnapshot(
+          userId: 'host-1',
+          displayName: 'Host',
+          role: 'host',
+        ),
+      },
+    );
+
+    const degradedState = RoomState(
+      roomId: 'room-life',
+      phase: LiveRoomPhase.joined,
+      currentUserId: 'host-1',
+      hostId: 'host-1',
+      errorMessage: 'Room state is reconnecting.',
+      sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
+        'host-1': RoomSessionSnapshot(
+          userId: 'host-1',
+          displayName: 'Host',
+          role: 'host',
+        ),
+      },
+    );
+
+    expect(hydratingState.lifecycleState, RoomLifecycleState.hydrating);
+    expect(activeState.lifecycleState, RoomLifecycleState.active);
+    expect(degradedState.lifecycleState, RoomLifecycleState.degraded);
+    expect(
+      activeState.canExecute(RoomAction.manageStage, userId: 'host-1'),
+      isTrue,
+    );
+    expect(
+      hydratingState.canExecute(RoomAction.manageStage, userId: 'host-1'),
+      isFalse,
+    );
+  });
+
   test(
     'RoomState blocks current-user authority until hydration is resolved',
     () {
