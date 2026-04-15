@@ -46,6 +46,9 @@ class EventInspectorEntry {
 
   String get eventId => event.id;
   String get eventType => event.runtimeType.toString();
+  String get sessionId => event.normalizedSessionId;
+  String get correlationId => event.normalizedCorrelationId;
+  List<String> get tags => List<String>.unmodifiable(event.tags);
 
   Map<String, Object?> get payload => _payloadForEvent(event);
 
@@ -76,6 +79,9 @@ class EventInspectorEntry {
       return RoomJoinedEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         userId: typed.userId,
         roomId: typed.roomId,
         roomName: typed.roomName,
@@ -86,6 +92,9 @@ class EventInspectorEntry {
       return RoomLeftEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         userId: typed.userId,
         roomId: typed.roomId,
         roomName: typed.roomName,
@@ -96,6 +105,9 @@ class EventInspectorEntry {
       return MicStateChangedEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         userId: typed.userId,
         roomId: typed.roomId,
         isSpeaker: typed.isSpeaker,
@@ -106,6 +118,9 @@ class EventInspectorEntry {
       return CameraStateChangedEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         userId: typed.userId,
         roomId: typed.roomId,
         isCameraOn: typed.isCameraOn,
@@ -116,6 +131,9 @@ class EventInspectorEntry {
       return FollowEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         fromUserId: typed.fromUserId,
         toUserId: typed.toUserId,
         fromUsername: typed.fromUsername,
@@ -127,6 +145,9 @@ class EventInspectorEntry {
       return ProfileUpdatedEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         userId: typed.userId,
       );
     }
@@ -135,6 +156,9 @@ class EventInspectorEntry {
       return CamViewEvent(
         id: replayId,
         timestamp: replayTimestamp,
+        sessionId: typed.sessionId,
+        correlationId: typed.correlationId,
+        tags: typed.tags,
         viewerId: typed.viewerId,
         targetUserId: typed.targetUserId,
       );
@@ -149,6 +173,9 @@ class EventInspectorEntry {
     'eventType': eventType,
     'recordedAt': recordedAt.toIso8601String(),
     'eventTimestamp': event.timestamp.toIso8601String(),
+    'sessionId': sessionId,
+    'correlationId': correlationId,
+    'tags': tags,
     'isReplay': isReplay,
     'dropped': dropped,
     'note': note,

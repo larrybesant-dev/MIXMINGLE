@@ -45,6 +45,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
   int? _rtdbToFirestoreDelayMs;
   int? _firestoreToUiDelayMs;
   int _selectedTimelineIndex = 1;
+  bool _groupBusTimelineBySession = true;
 
   @override
   void dispose() {
@@ -801,6 +802,36 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
+                                              FilterChip(
+                                                selected:
+                                                    _groupBusTimelineBySession,
+                                                onSelected: (value) {
+                                                  setState(() {
+                                                    _groupBusTimelineBySession =
+                                                        value;
+                                                  });
+                                                },
+                                                label: const Text(
+                                                  'Group by session',
+                                                ),
+                                                labelStyle: const TextStyle(
+                                                  fontSize: 10,
+                                                ),
+                                                selectedColor: const Color(
+                                                  0xFFD4AF37,
+                                                ),
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                checkmarkColor: const Color(
+                                                  0xFF0B0B0B,
+                                                ),
+                                                side: BorderSide(
+                                                  color: const Color(
+                                                    0xFFD4AF37,
+                                                  ).withValues(alpha: 0.5),
+                                                ),
+                                              ),
                                               const Spacer(),
                                               IconButton(
                                                 onPressed: entries.isEmpty
@@ -856,16 +887,44 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                                                 : ListView.builder(
                                                     itemCount: entries.length,
                                                     itemBuilder: (context, index) {
+                                                      final entry =
+                                                          entries[index];
+                                                      final previous = index > 0
+                                                          ? entries[index - 1]
+                                                          : null;
+                                                      final showGroupHeader =
+                                                          _groupBusTimelineBySession &&
+                                                          (previous == null ||
+                                                              previous.sessionId !=
+                                                                  entry
+                                                                      .sessionId);
                                                       return Padding(
                                                         padding:
                                                             const EdgeInsets.only(
                                                               bottom: 8,
                                                             ),
-                                                        child:
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            if (showGroupHeader)
+                                                              Padding(
+                                                                padding:
+                                                                    const EdgeInsets.only(
+                                                                      bottom: 6,
+                                                                    ),
+                                                                child:
+                                                                    _EventGroupHeader(
+                                                                      entry:
+                                                                          entry,
+                                                                    ),
+                                                              ),
                                                             _EventInspectorTile(
-                                                              entry:
-                                                                  entries[index],
+                                                              entry: entry,
                                                             ),
+                                                          ],
+                                                        ),
                                                       );
                                                     },
                                                   ),
@@ -920,6 +979,32 @@ class _DebugLine extends StatelessWidget {
   }
 }
 
+class _EventGroupHeader extends StatelessWidget {
+  const _EventGroupHeader({required this.entry});
+
+  final EventInspectorEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        'Session ${entry.sessionId}  •  Flow ${entry.correlationId}',
+        style: const TextStyle(
+          color: Color(0xFFD4AF37),
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
 class _EventInspectorTile extends StatelessWidget {
   const _EventInspectorTile({required this.entry});
 
@@ -943,6 +1028,7 @@ class _EventInspectorTile extends StatelessWidget {
     final traceSummary = entry.consumerTraces
         .map((trace) => '${trace.consumer}:${trace.status}')
         .join(' • ');
+    final tagSummary = entry.tags.join(' • ');
 
     return Container(
       width: double.infinity,
@@ -972,6 +1058,30 @@ class _EventInspectorTile extends StatelessWidget {
               height: 1.3,
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            'session=${entry.sessionId}',
+            style: TextStyle(
+              color: accent.withValues(alpha: 0.95),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            'flow=${entry.correlationId}',
+            style: const TextStyle(color: Color(0xFFF7EDE2), fontSize: 10),
+          ),
+          if (tagSummary.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              tagSummary,
+              style: const TextStyle(
+                color: Color(0xFFD4AF37),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
           if (traceSummary.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(

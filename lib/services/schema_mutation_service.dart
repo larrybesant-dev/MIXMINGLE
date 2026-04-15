@@ -75,13 +75,16 @@ class SchemaMutationService {
     final existingUsername =
         (existingData['username'] as String?)?.trim() ?? '';
     final authDisplayName = user.displayName?.trim() ?? '';
+    final emailHandle = (user.email?.split('@').first.trim() ?? '');
     final shouldReplaceAutofilledName =
         existingUsername.isEmpty ||
-        _looksLikePersonalName(existingUsername) ||
-        (authDisplayName.isNotEmpty &&
-            existingUsername.toLowerCase() == authDisplayName.toLowerCase());
+        _isPlaceholderPublicUsername(existingUsername);
     final publicUsername = shouldReplaceAutofilledName
-        ? _fallbackPublicUsername(user.uid)
+        ? (authDisplayName.isNotEmpty
+              ? authDisplayName
+              : (emailHandle.isNotEmpty
+                    ? emailHandle
+                    : _fallbackPublicUsername(user.uid)))
         : existingUsername;
 
     final identityPayload = <String, dynamic>{
@@ -311,22 +314,15 @@ class SchemaMutationService {
     await batch.commit();
   }
 
-  bool _looksLikePersonalName(String value) {
+  bool _isPlaceholderPublicUsername(String value) {
     final normalized = value.trim();
-    if (normalized.isEmpty) {
-      return false;
-    }
-
-    if (normalized.contains('@')) {
-      return true;
-    }
-
-    final parts = normalized
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .toList(growable: false);
-    final wordPattern = RegExp(r"^[A-Za-z][A-Za-z'’-]*$");
-    return parts.length >= 2 && parts.every(wordPattern.hasMatch);
+    final generatedHandlePattern = RegExp(
+      r'^(User|Guest|Member) [A-Z0-9]{1,4}$',
+    );
+    return normalized.isEmpty ||
+        normalized == 'MixVy User' ||
+        normalized == 'MixVy Member' ||
+        generatedHandlePattern.hasMatch(normalized);
   }
 
   String _fallbackPublicUsername(String uid) {
@@ -334,13 +330,13 @@ class SchemaMutationService {
         .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
         .toUpperCase();
     if (compactUid.isEmpty) {
-      return 'MixVy User';
+      return 'MixVy Member';
     }
     final suffix = compactUid.substring(
       0,
       compactUid.length < 4 ? compactUid.length : 4,
     );
-    return 'Guest $suffix';
+    return 'Member $suffix';
   }
 
   Map<String, dynamic> _pickAllowedFields({

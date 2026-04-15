@@ -352,6 +352,8 @@ class ProfileController extends Notifier<ProfileState> {
         ProfileUpdatedEvent(
           id: 'profile-updated:$userId:${DateTime.now().millisecondsSinceEpoch}',
           timestamp: DateTime.now(),
+          sessionId: AppEventIds.profileSession(userId: userId),
+          correlationId: AppEventIds.profileCorrelation(userId: userId),
           userId: userId,
         ),
       );

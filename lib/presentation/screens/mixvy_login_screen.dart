@@ -11,20 +11,20 @@ import 'package:mixvy/services/analytics_service.dart';
 import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 // ── MIXVY Brand Colors — locked ───────────────────────────────────────────────
-const _surface         = Color(0xFF0B0B0B); // Jet Black
-const _surfaceHigh     = Color(0xFF1C1617); // elevated surface
-const _surfaceCard     = Color(0xFF161012); // card background
-const _primary         = Color(0xFFD4AF37); // Gold
-const _primaryDim      = Color(0xFF9A7B1A); // deep gold
-const _secondary       = Color(0xFF781E2B); // Deep Wine Red
+const _surface = Color(0xFF0B0B0B); // Jet Black
+const _surfaceHigh = Color(0xFF1C1617); // elevated surface
+const _surfaceCard = Color(0xFF161012); // card background
+const _primary = Color(0xFFD4AF37); // Gold
+const _primaryDim = Color(0xFF9A7B1A); // deep gold
+const _secondary = Color(0xFF781E2B); // Deep Wine Red
 const _secondaryBright = Color(0xFF9B2535); // wine highlight
-const _onSurface       = Color(0xFFF7EDE2); // Soft Cream
-const _onVariant       = Color(0xFFAD9585); // muted cream
-const _goldBorder      = Color(0x40D4AF37); // semi-transparent gold border
+const _onSurface = Color(0xFFF7EDE2); // Soft Cream
+const _onVariant = Color(0xFFAD9585); // muted cream
+const _goldBorder = Color(0x40D4AF37); // semi-transparent gold border
 // ignore: unused_element
-const _ghostBorder     = Color(0x26FFFFFF); // subtle white ghost border
+const _ghostBorder = Color(0x26FFFFFF); // subtle white ghost border
 // ignore: unused_element
-const _surfaceHighest  = Color(0xFF211619); // highest elevation surface
+const _surfaceHighest = Color(0xFF211619); // highest elevation surface
 
 class MixVyLoginScreen extends ConsumerStatefulWidget {
   const MixVyLoginScreen({super.key});
@@ -61,14 +61,17 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     super.dispose();
   }
 
-  void _togglePassword() => setState(() => _obscurePassword = !_obscurePassword);
+  void _togglePassword() =>
+      setState(() => _obscurePassword = !_obscurePassword);
 
   Future<void> _showMessage(String message, {bool isError = false}) async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: isError ? const Color(0xFFFF6E84) : const Color(0xFFC45E7A),
+        backgroundColor: isError
+            ? const Color(0xFFFF6E84)
+            : const Color(0xFFC45E7A),
       ),
     );
   }
@@ -94,7 +97,10 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      await _showMessage('Enter your email first to reset password', isError: true);
+      await _showMessage(
+        'Enter your email first to reset password',
+        isError: true,
+      );
       return;
     }
     final authController = ref.read(authControllerProvider.notifier);
@@ -158,11 +164,13 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           children: [
             // Ambient gradient blobs
             Positioned(
-              top: -120, left: -120,
+              top: -120,
+              left: -120,
               child: _ambientBlob(_primary.withAlpha(25), 320),
             ),
             Positioned(
-              bottom: -100, right: -100,
+              bottom: -100,
+              right: -100,
               child: _ambientBlob(_secondary.withAlpha(18), 280),
             ),
             // Main layout
@@ -193,10 +201,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
         child: const SizedBox.expand(),
@@ -210,18 +215,29 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8, height: 8,
+          width: 8,
+          height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _secondary,
-            boxShadow: [BoxShadow(color: _secondary.withAlpha(80), blurRadius: 6, spreadRadius: 2)],
+            boxShadow: [
+              BoxShadow(
+                color: _secondary.withAlpha(80),
+                blurRadius: 6,
+                spreadRadius: 2,
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 6),
         Text(
           'SYSTEM LIVE',
-          style: GoogleFonts.raleway(fontSize: 10, fontWeight: FontWeight.w500,
-              color: _secondary, letterSpacing: 1.2),
+          style: GoogleFonts.raleway(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: _secondary,
+            letterSpacing: 1.2,
+          ),
         ),
       ],
     );
@@ -357,15 +373,20 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           children: [
             Icon(icon, color: accent, size: 22),
             const SizedBox(height: 10),
-            Text(label,
-                style: GoogleFonts.raleway(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: accent,
-                    letterSpacing: 1.5)),
+            Text(
+              label,
+              style: GoogleFonts.raleway(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: accent,
+                letterSpacing: 1.5,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(sub,
-                style: GoogleFonts.raleway(fontSize: 12, color: _onVariant)),
+            Text(
+              sub,
+              style: GoogleFonts.raleway(fontSize: 12, color: _onVariant),
+            ),
           ],
         ),
       ),
@@ -419,7 +440,11 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                     const SizedBox(height: 10),
                     _socialButton(
                       onPressed: authState.isLoading ? null : _signInWithApple,
-                      icon: const Icon(Icons.apple, size: 20, color: _onSurface),
+                      icon: const Icon(
+                        Icons.apple,
+                        size: 20,
+                        color: _onSurface,
+                      ),
                       label: 'Continue with Apple',
                     ),
                   ],
@@ -458,11 +483,20 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(999),
-                        borderSide: const BorderSide(color: _primary, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: _primary,
+                          width: 1.5,
+                        ),
                       ),
-                      hintStyle: GoogleFonts.raleway(color: _onVariant, fontSize: 14),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded,
-                          size: 18, color: _onVariant),
+                      hintStyle: GoogleFonts.raleway(
+                        color: _onVariant,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 18,
+                        color: _onVariant,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -474,7 +508,9 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                         onPressed: _togglePassword,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                     ),
                     validator: (v) =>
                         (v == null || v.isEmpty) ? 'Enter your password' : null,
@@ -486,14 +522,18 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                     child: TextButton(
                       onPressed: authState.isLoading ? null : _resetPassword,
                       style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 0, vertical: 4)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 4,
+                        ),
+                      ),
                       child: Text(
                         'Forgot password?',
                         style: GoogleFonts.raleway(
-                            fontSize: 12,
-                            color: _primary,
-                            fontWeight: FontWeight.w500),
+                          fontSize: 12,
+                          color: _primary,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -508,15 +548,18 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: _surface),
+                              strokeWidth: 2,
+                              color: _surface,
+                            ),
                           )
                         : Text(
                             'SIGN IN',
                             style: GoogleFonts.raleway(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: _surface,
-                                letterSpacing: 1.5),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: _surface,
+                              letterSpacing: 1.5,
+                            ),
                           ),
                   ),
 
@@ -532,39 +575,26 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
 
                   const SizedBox(height: 16),
 
-                  // ── ENTER AS GUEST ────────────────────────────────
-                  Center(
-                    child: TextButton(
-                      onPressed: authState.isLoading
-                          ? null
-                          : () => ref
-                              .read(authControllerProvider.notifier)
-                              .signInAsGuest(),
-                      child: Text(
-                        'ENTER AS GUEST',
-                        style: GoogleFonts.raleway(
-                            fontSize: 11,
-                            color: _onVariant,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 1.2),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   // Footer
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _footerLink('Terms'),
-                      Text(' · ',
-                          style: GoogleFonts.raleway(
-                              fontSize: 11, color: _onVariant)),
+                      Text(
+                        ' · ',
+                        style: GoogleFonts.raleway(
+                          fontSize: 11,
+                          color: _onVariant,
+                        ),
+                      ),
                       _footerLink('Privacy'),
-                      Text(' · ',
-                          style: GoogleFonts.raleway(
-                              fontSize: 11, color: _onVariant)),
+                      Text(
+                        ' · ',
+                        style: GoogleFonts.raleway(
+                          fontSize: 11,
+                          color: _onVariant,
+                        ),
+                      ),
                       _footerLink('Support'),
                     ],
                   ),
@@ -591,7 +621,8 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           backgroundColor: _surfaceHigh,
           side: const BorderSide(color: _goldBorder),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999)),
+            borderRadius: BorderRadius.circular(999),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         child: Row(
@@ -599,11 +630,14 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           children: [
             icon,
             const SizedBox(width: 10),
-            Text(label,
-                style: GoogleFonts.raleway(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: _onSurface)),
+            Text(
+              label,
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: _onSurface,
+              ),
+            ),
           ],
         ),
       ),
@@ -640,8 +674,10 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
         ),
         hintStyle: GoogleFonts.raleway(color: _onVariant, fontSize: 14),
         prefixIcon: Icon(prefixIcon, size: 18, color: _onVariant),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
       validator: validator,
     );
@@ -704,16 +740,18 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           foregroundColor: _primary,
           side: const BorderSide(color: _primary, width: 1.5),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999)),
+            borderRadius: BorderRadius.circular(999),
+          ),
           backgroundColor: Colors.transparent,
         ),
         child: Text(
           label,
           style: GoogleFonts.raleway(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-              color: _primary,
-              letterSpacing: 1.5),
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            color: _primary,
+            letterSpacing: 1.5,
+          ),
         ),
       ),
     );
@@ -729,10 +767,11 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           child: Text(
             'OR EMAIL',
             style: GoogleFonts.raleway(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: _onVariant,
-                letterSpacing: 1.5),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: _onVariant,
+              letterSpacing: 1.5,
+            ),
           ),
         ),
         Expanded(child: Container(height: 1, color: _goldBorder)),
@@ -746,10 +785,15 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
       width: 20,
       height: 20,
       decoration: const BoxDecoration(
-          shape: BoxShape.circle, color: Colors.white),
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
       padding: const EdgeInsets.all(2),
-      child: const Icon(Icons.g_mobiledata_rounded,
-          size: 16, color: Color(0xFF4285F4)),
+      child: const Icon(
+        Icons.g_mobiledata_rounded,
+        size: 16,
+        color: Color(0xFF4285F4),
+      ),
     );
   }
 
@@ -767,10 +811,11 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
       child: Text(
         label,
         style: GoogleFonts.raleway(
-            fontSize: 11,
-            color: _onVariant,
-            decoration: TextDecoration.underline,
-            decorationColor: _onVariant),
+          fontSize: 11,
+          color: _onVariant,
+          decoration: TextDecoration.underline,
+          decorationColor: _onVariant,
+        ),
       ),
     );
   }

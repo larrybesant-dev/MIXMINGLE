@@ -21,10 +21,13 @@ class LiveRoomAppBarActions extends StatelessWidget {
     required this.showVolumeControls,
     required this.hasParticipants,
     required this.pendingMicCount,
+    required this.isOnMic,
+    required this.isMicFree,
     required this.onToggleMic,
     required this.onToggleVideo,
     required this.onLongPressVideo,
     required this.onToggleSystemAudio,
+    this.onGrabMicAction,
     required this.onToggleVolumeControls,
     required this.onGoHome,
     required this.onOpenPeople,
@@ -49,10 +52,13 @@ class LiveRoomAppBarActions extends StatelessWidget {
   final bool showVolumeControls;
   final bool hasParticipants;
   final int pendingMicCount;
+  final bool isOnMic;
+  final bool isMicFree;
   final VoidCallback? onToggleMic;
   final Future<void> Function() onToggleVideo;
   final VoidCallback? onLongPressVideo;
   final VoidCallback? onToggleSystemAudio;
+  final VoidCallback? onGrabMicAction;
   final VoidCallback onToggleVolumeControls;
   final Future<void> Function() onGoHome;
   final VoidCallback? onOpenPeople;
@@ -82,7 +88,11 @@ class LiveRoomAppBarActions extends StatelessWidget {
           onToggleMic: onToggleMic,
           onToggleVideo: onToggleVideo,
           onLongPressVideo: onLongPressVideo,
-          showSystemAudioButton: kIsWeb,
+          showSystemAudioButton: false,
+          showGrabMicButton: true,
+          isOnMic: isOnMic,
+          isMicFree: isMicFree,
+          onGrabMicAction: onGrabMicAction,
           onToggleSystemAudio: onToggleSystemAudio,
         ),
         IconButton(

@@ -133,6 +133,11 @@ class FollowService {
       FollowEvent(
         id: 'follow:$followerUserId:$followedUserId',
         timestamp: DateTime.now(),
+        sessionId: AppEventIds.socialSession(userId: followerUserId),
+        correlationId: AppEventIds.followCorrelation(
+          fromUserId: followerUserId,
+          toUserId: followedUserId,
+        ),
         fromUserId: followerUserId,
         toUserId: followedUserId,
         fromUsername: actorName.isEmpty ? null : actorName,

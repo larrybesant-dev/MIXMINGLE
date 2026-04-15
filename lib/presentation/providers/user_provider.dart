@@ -5,27 +5,9 @@ import '../../features/auth/controllers/auth_controller.dart';
 import '../../features/profile/profile_controller.dart';
 import '../../models/user_model.dart';
 
-bool _looksLikePersonalName(String value) {
-  final normalized = value.trim();
-  if (normalized.isEmpty) {
-    return false;
-  }
-
-  if (normalized.contains('@')) {
-    return true;
-  }
-
-  final parts = normalized
-      .split(RegExp(r'\s+'))
-      .where((part) => part.isNotEmpty)
-      .toList(growable: false);
-  final wordPattern = RegExp(r"^[A-Za-z][A-Za-z'’-]*$");
-  return parts.length >= 2 && parts.every(wordPattern.hasMatch);
-}
-
 bool isAnonymousDisplayName(String value) {
   final normalized = value.trim();
-  final generatedHandlePattern = RegExp(r'^(User|Guest) [A-Z0-9]{1,4}$');
+  final generatedHandlePattern = RegExp(r'^(User|Guest|Member) [A-Z0-9]{1,4}$');
   return normalized.isEmpty ||
       normalized == 'MixVy User' ||
       generatedHandlePattern.hasMatch(normalized);
@@ -64,14 +46,20 @@ String resolvePublicUsername({
 }) {
   final normalizedUid = uid.trim();
   final normalizedProfile = profileUsername?.trim() ?? '';
-  final looksPersonal = _looksLikePersonalName(normalizedProfile);
+  final normalizedAuthDisplayName = authDisplayName?.trim() ?? '';
 
-  if (normalizedProfile.isNotEmpty && !looksPersonal) {
+  if (normalizedProfile.isNotEmpty &&
+      !isAnonymousDisplayName(normalizedProfile)) {
     return normalizedProfile;
   }
 
+  if (normalizedAuthDisplayName.isNotEmpty &&
+      !isAnonymousDisplayName(normalizedAuthDisplayName)) {
+    return normalizedAuthDisplayName;
+  }
+
   if (normalizedUid.isEmpty) {
-    return 'MixVy User';
+    return 'MixVy Member';
   }
 
   final compactUid = normalizedUid
@@ -80,7 +68,7 @@ String resolvePublicUsername({
   final suffix = compactUid.isEmpty
       ? ''
       : compactUid.substring(0, compactUid.length < 4 ? compactUid.length : 4);
-  return suffix.isEmpty ? 'MixVy User' : 'User $suffix';
+  return suffix.isEmpty ? 'MixVy Member' : 'Member $suffix';
 }
 
 final userProvider = Provider<UserModel?>((ref) {

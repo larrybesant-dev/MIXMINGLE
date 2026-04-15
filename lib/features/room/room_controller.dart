@@ -436,6 +436,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       RoomJoinedEvent(
         id: 'room-joined:$arg:$normalizedUserId:${(_joinedAt ?? DateTime.now()).millisecondsSinceEpoch}',
         timestamp: _joinedAt ?? DateTime.now(),
+        sessionId: AppEventIds.roomSession(
+          roomId: arg,
+          userId: normalizedUserId,
+        ),
+        correlationId: AppEventIds.roomCorrelation(
+          roomId: arg,
+          userId: normalizedUserId,
+        ),
         userId: normalizedUserId,
         roomId: arg,
       ),
@@ -465,6 +473,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       RoomLeftEvent(
         id: 'room-left:$arg:$userId:${DateTime.now().millisecondsSinceEpoch}',
         timestamp: DateTime.now(),
+        sessionId: AppEventIds.roomSession(roomId: arg, userId: userId),
+        correlationId: AppEventIds.roomCorrelation(roomId: arg, userId: userId),
         userId: userId,
         roomId: arg,
       ),
@@ -544,6 +554,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         MicStateChangedEvent(
           id: 'mic-grab:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
           timestamp: DateTime.now(),
+          sessionId: AppEventIds.roomSession(
+            roomId: arg,
+            userId: normalizedUserId,
+          ),
+          correlationId: AppEventIds.roomCorrelation(
+            roomId: arg,
+            userId: normalizedUserId,
+          ),
           userId: normalizedUserId,
           roomId: arg,
           isSpeaker: true,
@@ -593,6 +611,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       MicStateChangedEvent(
         id: 'mic-release:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
         timestamp: DateTime.now(),
+        sessionId: AppEventIds.roomSession(
+          roomId: arg,
+          userId: normalizedUserId,
+        ),
+        correlationId: AppEventIds.roomCorrelation(
+          roomId: arg,
+          userId: normalizedUserId,
+        ),
         userId: normalizedUserId,
         roomId: arg,
         isSpeaker: false,

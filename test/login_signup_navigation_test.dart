@@ -39,9 +39,8 @@ void main() {
         ),
         GoRoute(
           path: '/register',
-          builder: (context, state) => const Scaffold(
-            body: Text('Register Screen'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('Register Screen')),
         ),
       ],
     );
@@ -49,7 +48,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authControllerProvider.overrideWith(() => AuthController(auth: mockAuth)),
+          authControllerProvider.overrideWith(
+            () => AuthController(auth: mockAuth),
+          ),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -59,6 +60,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('SIGN UP'), findsOneWidget);
+    expect(find.text('ENTER AS GUEST'), findsNothing);
 
     await tester.tap(find.text('SIGN UP'), warnIfMissed: false);
 

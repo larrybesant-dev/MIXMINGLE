@@ -45,10 +45,7 @@ void main() {
       container = ProviderContainer(
         overrides: [
           authControllerProvider.overrideWith(
-            () => AuthController(
-              auth: mockAuth,
-              unregisterToken: () async {},
-            ),
+            () => AuthController(auth: mockAuth, unregisterToken: () async {}),
           ),
         ],
       );
@@ -84,6 +81,26 @@ void main() {
       final state = container.read(authControllerProvider);
       expect(state.uid, isNotNull);
       expect(state.error, isNull);
+    });
+
+    test('anonymous session is rejected on startup', () async {
+      when(() => mockUser.isAnonymous).thenReturn(true);
+      currentUser = mockUser;
+      when(() => mockAuth.currentUser).thenAnswer((_) => currentUser);
+
+      final localContainer = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(
+            () => AuthController(auth: mockAuth, unregisterToken: () async {}),
+          ),
+        ],
+      );
+      addTearDown(localContainer.dispose);
+
+      localContainer.read(authControllerProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      verify(() => mockAuth.signOut()).called(greaterThanOrEqualTo(1));
     });
   });
 }

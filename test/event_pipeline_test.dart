@@ -66,6 +66,9 @@ void main() {
       final latest = AppEventInspector.instance.latest;
       expect(latest, isNotNull);
       expect(latest!.eventType, 'FollowEvent');
+      expect(latest.sessionId, 'social:alice');
+      expect(latest.correlationId, 'follow:alice:bob');
+      expect(latest.tags, contains('social'));
       expect(
         latest.consumerTraces.where((trace) => trace.status == 'success'),
         hasLength(3),
@@ -97,10 +100,52 @@ void main() {
       },
     );
 
+    test('captures shared session flow for room lifecycle events', () async {
+      const sessionId = 'room:velvet:alice';
+      const correlationId = 'room-flow:velvet:alice';
+
+      eventBus.emit(
+        RoomJoinedEvent(
+          id: 'evt-room-join-1',
+          timestamp: DateTime(2026, 4, 14, 23, 10),
+          sessionId: sessionId,
+          correlationId: correlationId,
+          userId: 'alice',
+          roomId: 'velvet',
+        ),
+      );
+      eventBus.emit(
+        MicStateChangedEvent(
+          id: 'evt-room-mic-1',
+          timestamp: DateTime(2026, 4, 14, 23, 11),
+          sessionId: sessionId,
+          correlationId: correlationId,
+          userId: 'alice',
+          roomId: 'velvet',
+          isSpeaker: true,
+        ),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      final sessionEntries = AppEventInspector.instance.entries
+          .where((entry) => entry.sessionId == sessionId)
+          .toList(growable: false);
+
+      expect(sessionEntries, hasLength(2));
+      expect(
+        sessionEntries.every((entry) => entry.correlationId == correlationId),
+        isTrue,
+      );
+    });
+
     test('ignores duplicated event ids to prevent double fan-out', () async {
       final event = FollowEvent(
         id: 'evt-dup-1',
         timestamp: DateTime(2026, 4, 14, 23, 15),
+        sessionId: 'social:ivy',
+        correlationId: 'follow:ivy:nova',
         fromUserId: 'ivy',
         toUserId: 'nova',
         fromUsername: 'Ivy',

@@ -179,7 +179,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late final ProviderSubscription<LiveRoomMediaState> _mediaStateSubscription;
   LiveRoomMediaState _latestMediaState = const LiveRoomMediaState();
   final Set<String> _shownBuzzIds = {};
-  final Set<String> _shownCamViewRequestIds = {};
+  String? _activeCamViewRequestId;
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>?
   _giftEventsSubscription;
 
@@ -374,14 +374,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         )),
         (_, next) {
           next.whenData((requests) {
-            for (final request in requests) {
-              if (_shownCamViewRequestIds.contains(request.id)) continue;
-              _shownCamViewRequestIds.add(request.id);
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                _handleIncomingCamViewRequest(request);
-              });
+            if (_activeCamViewRequestId != null &&
+                requests.every(
+                  (request) => request.id != _activeCamViewRequestId,
+                )) {
+              _activeCamViewRequestId = null;
             }
+            if (_activeCamViewRequestId != null || requests.isEmpty) {
+              return;
+            }
+            final request = requests.first;
+            _activeCamViewRequestId = request.id;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _handleIncomingCamViewRequest(request);
+            });
           });
         },
       );
@@ -955,7 +962,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   Future<void> _toggleMic() async {
     final service = _agoraService;
+    final currentUserId = _joinedUserId ?? ref.read(userProvider)?.id ?? '';
+    final currentRole = currentUserId.isEmpty
+        ? 'audience'
+        : ref
+                  .read(
+                    currentParticipantProvider(
+                      CurrentParticipantParams(
+                        roomId: widget.roomId,
+                        userId: currentUserId,
+                      ),
+                    ),
+                  )
+                  .valueOrNull
+                  ?.role ??
+              'audience';
     if (service == null || !_isCallReady || _isMicActionInFlight) return;
+    if (!RoomPermissions.canUseMic(currentRole)) {
+      _showSnackBar('Grab Mic first to speak in the room.');
+      return;
+    }
     final next = !_isMicMuted;
     AppTelemetry.logAction(
       domain: 'room',
@@ -1304,6 +1330,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               CameraStateChangedEvent(
                 id: 'camera:${widget.roomId}:${_joinedUserId!}:on:${DateTime.now().millisecondsSinceEpoch}',
                 timestamp: DateTime.now(),
+                sessionId: AppEventIds.roomSession(
+                  roomId: widget.roomId,
+                  userId: _joinedUserId!,
+                ),
+                correlationId: AppEventIds.cameraCorrelation(
+                  roomId: widget.roomId,
+                  userId: _joinedUserId!,
+                ),
                 userId: _joinedUserId!,
                 roomId: widget.roomId,
                 isCameraOn: true,
@@ -1487,12 +1521,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     );
     if (confirmed != true || !mounted) return;
     try {
+      final requesterName =
+          (_senderDisplayNameById[myUserId] ??
+                  ref.read(userProvider)?.username ??
+                  myUserId)
+              .trim();
       await ref
           .read(camViewRequestControllerProvider)
           .sendRequest(
             roomId: widget.roomId,
             requesterId: myUserId,
             targetId: targetUserId,
+            requesterName: requesterName,
           );
       if (mounted) {
         ScaffoldMessenger.of(
@@ -1551,7 +1591,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   Future<void> _handleIncomingCamViewRequest(CamViewRequest request) async {
     if (!mounted) return;
     final requesterName =
-        _senderDisplayNameById[request.requesterId] ?? request.requesterId;
+        request.requesterName ??
+        _senderDisplayNameById[request.requesterId] ??
+        request.requesterId;
     final approved = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -1573,22 +1615,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (!mounted) return;
     final myUserId = _joinedUserId;
     if (myUserId == null) return;
-    if (approved == true) {
+    try {
+      if (approved == true) {
+        await ref
+            .read(liveRoomControllerProvider(widget.roomId).notifier)
+            .approveCameraViewer(
+              ownerUserId: myUserId,
+              viewerUserId: request.requesterId,
+              approved: true,
+            );
+      }
       await ref
-          .read(liveRoomControllerProvider(widget.roomId).notifier)
-          .approveCameraViewer(
-            ownerUserId: myUserId,
-            viewerUserId: request.requesterId,
-            approved: true,
+          .read(camViewRequestControllerProvider)
+          .respondToRequest(
+            roomId: widget.roomId,
+            requestId: request.id,
+            approved: approved == true,
           );
+    } finally {
+      _activeCamViewRequestId = null;
     }
-    await ref
-        .read(camViewRequestControllerProvider)
-        .respondToRequest(
-          roomId: widget.roomId,
-          requestId: request.id,
-          approved: approved == true,
-        );
   }
 
   String _mapMediaError(Object error, {required bool canBroadcast}) {
@@ -4019,10 +4065,61 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             final roomPresenceSummary =
                 '${participantsInRoom.length} here • $onMicCount on mic • $watchingCamCount watching cam';
             final roomEnergyPrompt = roomFeelsQuiet
-                ? 'Tap mic to speak or turn on cam to start the vibe.'
+                ? 'Tap Grab Mic above or turn on cam to start the vibe.'
                 : onMicCount > 0
                 ? 'Jump into the convo or keep the chat moving.'
                 : 'Keep the room moving with chat, cam, or mic.';
+            final isOnMic = liveRoomState.isSpeaker(user.id);
+            final isMicFree =
+                liveRoomState.speakerIds.length < RoomState.maxSpeakers;
+
+            Future<void> handleReleaseMic() async {
+              try {
+                await ref
+                    .read(liveRoomControllerProvider(widget.roomId).notifier)
+                    .releaseMic(userId: user.id);
+                final svc = _agoraService;
+                if (svc != null && _isCallReady && !_isMicMuted) {
+                  await svc.mute(true);
+                  if (mounted) {
+                    _mediaController.setMicMuted(true);
+                  }
+                }
+                if (mounted) _showSnackBar('Mic released.');
+              } catch (e) {
+                if (mounted) {
+                  _showSnackBar('Could not release mic: $e');
+                }
+              }
+            }
+
+            Future<void> handleRequestMic() async {
+              try {
+                final result = await ref
+                    .read(liveRoomControllerProvider(widget.roomId).notifier)
+                    .requestMic(userId: user.id);
+                if (mounted) {
+                  _showSnackBar(
+                    result == MicRequestResult.grabbed
+                        ? 'You are now on mic.'
+                        : 'Mic request sent to the stage.',
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  _showSnackBar('Could not request mic: $e');
+                }
+              }
+            }
+
+            final canRequestMic =
+                allowMicRequests ||
+                liveRoomState.speakerIds.length < RoomState.maxSpeakers;
+            final VoidCallback? onGrabMicAction = isOnMic
+                ? () => unawaited(handleReleaseMic())
+                : canRequestMic
+                ? () => unawaited(handleRequestMic())
+                : null;
             _syncTelemetryForBuild(
               currentUserId: user.id,
               roomState: liveRoomState,
@@ -4173,7 +4270,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               0)
                         : 0,
                     coinBalance: walletAsync.valueOrNull?.coinBalance,
-                    onToggleMic: _toggleMic,
+                    isOnMic: isOnMic,
+                    isMicFree: isMicFree,
+                    onToggleMic: RoomPermissions.canUseMic(role)
+                        ? _toggleMic
+                        : null,
                     onToggleVideo: () async {
                       if (!_isVideoEnabled) {
                         final localPreview = _buildLocalCamContent(
@@ -4202,6 +4303,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       );
                     },
                     onToggleSystemAudio: _toggleSystemAudio,
+                    onGrabMicAction: onGrabMicAction,
                     onToggleVolumeControls: () => setState(
                       () => _showVolumeControls = !_showVolumeControls,
                     ),
@@ -5799,60 +5901,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   _agoraService?.isRemoteSpeaking(uid) ?? false,
                               uidToUserId: (uid) =>
                                   _userIdForRtcUid(uid, participantsInRoom),
-                              onReleaseMic: () async {
-                                try {
-                                  await ref
-                                      .read(
-                                        liveRoomControllerProvider(
-                                          widget.roomId,
-                                        ).notifier,
-                                      )
-                                      .releaseMic(userId: user.id);
-                                  final svc = _agoraService;
-                                  if (svc != null &&
-                                      _isCallReady &&
-                                      !_isMicMuted) {
-                                    await svc.mute(true);
-                                    if (mounted) {
-                                      _mediaController.setMicMuted(true);
-                                    }
-                                  }
-                                  if (mounted) _showSnackBar('Mic released.');
-                                } catch (e) {
-                                  if (mounted) {
-                                    _showSnackBar('Could not release mic: $e');
-                                  }
-                                }
-                              },
-                              onJoinQueue:
-                                  (allowMicRequests ||
-                                      liveRoomState.speakerIds.length <
-                                          RoomState.maxSpeakers)
-                                  ? () async {
-                                      try {
-                                        final result = await ref
-                                            .read(
-                                              liveRoomControllerProvider(
-                                                widget.roomId,
-                                              ).notifier,
-                                            )
-                                            .requestMic(userId: user.id);
-                                        if (mounted) {
-                                          _showSnackBar(
-                                            result == MicRequestResult.grabbed
-                                                ? 'You are now on mic.'
-                                                : 'Mic request sent to the stage.',
-                                          );
-                                        }
-                                      } catch (e) {
-                                        if (mounted) {
-                                          _showSnackBar(
-                                            'Could not request mic: $e',
-                                          );
-                                        }
-                                      }
-                                    }
-                                  : null,
+                              onReleaseMic: () => unawaited(handleReleaseMic()),
+                              onJoinQueue: onGrabMicAction,
                               onWhisper: (p) async {
                                 final currentUser = ref.read(userProvider);
                                 if (currentUser == null) return;
@@ -6039,7 +6089,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           localAudioLevel: _agoraService?.localAudioLevel ?? 0,
                           onToggleMic: _toggleMic,
                           onToggleVideo: _toggleVideo,
-                          showSystemAudioButton: kIsWeb,
+                          showSystemAudioButton: false,
                           onToggleSystemAudio: _toggleSystemAudio,
                           showMicLevel: false,
                         ),
@@ -6352,37 +6402,14 @@ class _RoomRosterSidebar extends StatelessWidget {
             iconColor: const Color(0xFFD4A853),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: roomState.isSpeaker(currentUserId)
-                      ? const Color(0xFFE53935) // red = you are on mic
-                      : isMicFree
-                      ? const Color(0xFF1DB954) // green = mic is free
-                      : const Color(0xFF1756C8), // blue = join queue
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  textStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                onPressed: roomState.isSpeaker(currentUserId)
-                    ? onReleaseMic
-                    : onJoinQueue,
-                child: Text(
-                  roomState.isSpeaker(currentUserId)
-                      ? 'Release Mic'
-                      : isMicFree
-                      ? 'Grab Mic'
-                      : 'Join Queue to Talk',
-                ),
-              ),
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+            child: Text(
+              roomState.isSpeaker(currentUserId)
+                  ? 'Use the top bar button to release your mic.'
+                  : isMicFree
+                  ? 'Use the top bar button to grab the mic.'
+                  : 'Use the top bar button to join the mic queue.',
+              style: const TextStyle(color: _kSubtle, fontSize: 11),
             ),
           ),
           const Divider(height: 1, thickness: 1, color: _kDivider),

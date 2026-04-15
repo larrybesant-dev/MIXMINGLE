@@ -25,6 +25,10 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
     this.onLongPressVideo,
     this.onToggleSystemAudio,
     this.showSystemAudioButton = false,
+    this.showGrabMicButton = false,
+    this.isOnMic = false,
+    this.isMicFree = false,
+    this.onGrabMicAction,
     this.showMicLevel = true,
     this.iconColor = Colors.white,
     this.mutedColor = const Color(0xFFFF6E84),
@@ -45,6 +49,10 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
   final VoidCallback? onLongPressVideo;
   final VoidCallback? onToggleSystemAudio;
   final bool showSystemAudioButton;
+  final bool showGrabMicButton;
+  final bool isOnMic;
+  final bool isMicFree;
+  final VoidCallback? onGrabMicAction;
   final bool showMicLevel;
   final Color iconColor;
   final Color mutedColor;
@@ -55,6 +63,7 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
       !isCallReady || !hasRtcService || isVideoActionInFlight;
   bool get _disableSystemAudio =>
       !isCallReady || !hasRtcService || isSystemAudioActionInFlight;
+  bool get _disableGrabMic => !hasRtcService || isMicActionInFlight;
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +101,7 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
             ))
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Center(
-              child: _MicLevelBar(level: localAudioLevel),
-            ),
+            child: Center(child: _MicLevelBar(level: localAudioLevel)),
           ),
         Tooltip(
           message: isVideoEnabled
@@ -105,7 +112,28 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
             child: videoButton,
           ),
         ),
-        if (showSystemAudioButton)
+        if (showGrabMicButton)
+          IconButton(
+            tooltip: isOnMic
+                ? 'Release mic'
+                : isMicFree
+                ? 'Grab mic'
+                : 'Join mic queue',
+            icon: Icon(
+              isOnMic
+                  ? Icons.mic_off_rounded
+                  : isMicFree
+                  ? Icons.record_voice_over_rounded
+                  : Icons.queue_rounded,
+              color: isOnMic
+                  ? mutedColor
+                  : isMicFree
+                  ? const Color(0xFF37D67A)
+                  : const Color(0xFFD4A853),
+            ),
+            onPressed: _disableGrabMic ? null : onGrabMicAction,
+          )
+        else if (showSystemAudioButton)
           IconButton(
             tooltip: isSharingSystemAudio
                 ? 'Stop sharing computer audio'
