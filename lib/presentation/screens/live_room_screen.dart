@@ -22,6 +22,7 @@ import '../../features/room/controllers/webrtc_controller.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
 import '../../features/room/providers/presence_provider.dart';
+import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/widgets/camera_wall.dart';
 import '../../features/room/widgets/room_control_sheets.dart';
@@ -95,6 +96,40 @@ bool roomParticipantCanBeShownAsTalking(RoomParticipantModel? participant) {
   return (participant.micOn) && !participant.isMuted && !participant.isBanned;
 }
 
+const Duration _kRoomRemovalGraceWindow = Duration(seconds: 8);
+
+bool shouldEjectJoinedUserFromRoom({
+  required bool hasTrackedRoomJoin,
+  bool isJoiningRoom = false,
+  bool hasCurrentParticipant = false,
+  bool isUserInResolvedRoomState = false,
+  RoomMembershipState? membershipState,
+  required DateTime? lastConfirmedMembershipAt,
+  DateTime? now,
+  Duration graceWindow = _kRoomRemovalGraceWindow,
+}) {
+  if (!hasTrackedRoomJoin) {
+    return false;
+  }
+
+  final authoritativeMembership =
+      membershipState?.isAuthoritativeMember ??
+      (hasCurrentParticipant || isUserInResolvedRoomState);
+  final shouldHoldRemoval =
+      membershipState?.shouldDeferRemoval ?? isJoiningRoom;
+
+  if (authoritativeMembership || shouldHoldRemoval) {
+    return false;
+  }
+
+  final confirmedAt = lastConfirmedMembershipAt;
+  if (confirmedAt == null) {
+    return false;
+  }
+
+  return (now ?? DateTime.now()).difference(confirmedAt) >= graceWindow;
+}
+
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late TextEditingController messageController;
   late TextEditingController _secretMessageController;
@@ -144,7 +179,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   DateTime? _videoToggleCooldownUntil;
   Set<String> _excludedUserIds = const <String>{};
   bool _isHandlingParticipantRemoval = false;
+  bool _isVerifyingUnexpectedRemoval = false;
   bool _preWarmDone = false;
+  DateTime? _lastConfirmedRoomMembershipAt;
 
   String _buildOutgoingChatMessage(String rawText) {
     final trimmed = rawText.trim();
@@ -2365,12 +2402,70 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
   }
 
+  void _markRoomMembershipConfirmed() {
+    _lastConfirmedRoomMembershipAt = DateTime.now();
+  }
+
+  Future<void> _verifyUnexpectedRoomRemoval(String userId) async {
+    if (_isHandlingParticipantRemoval || _isVerifyingUnexpectedRemoval) {
+      return;
+    }
+
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) {
+      return;
+    }
+
+    _isVerifyingUnexpectedRemoval = true;
+    try {
+      final roomController = ref.read(
+        liveRoomControllerProvider(widget.roomId).notifier,
+      );
+      await roomController.syncPresenceNow(forceSync: true);
+      final roomState = ref.read(liveRoomControllerProvider(widget.roomId));
+      final membershipState = roomState.membershipStateFor(normalizedUserId);
+      if (membershipState.isAuthoritativeMember ||
+          membershipState.shouldDeferRemoval) {
+        _markRoomMembershipConfirmed();
+        return;
+      }
+
+      final firestore = ref.read(roomFirestoreProvider);
+      final roomRef = firestore.collection('rooms').doc(widget.roomId);
+      final participantSnapshot = await roomRef
+          .collection('participants')
+          .doc(normalizedUserId)
+          .get();
+      final memberSnapshot = await roomRef
+          .collection('members')
+          .doc(normalizedUserId)
+          .get();
+
+      if ((participantSnapshot.data()?['isBanned'] as bool?) == true) {
+        await _handleForcedRoomExit('You were banned from this room.');
+        return;
+      }
+
+      if (participantSnapshot.exists || memberSnapshot.exists) {
+        _markRoomMembershipConfirmed();
+        return;
+      }
+
+      await _handleForcedRoomExit('You were removed from this room.');
+    } catch (_) {
+      _markRoomMembershipConfirmed();
+    } finally {
+      _isVerifyingUnexpectedRemoval = false;
+    }
+  }
+
   Future<void> _handleForcedRoomExit(String message) async {
     if (_isHandlingParticipantRemoval) {
       return;
     }
 
     _isHandlingParticipantRemoval = true;
+    _lastConfirmedRoomMembershipAt = null;
     await _disconnectCall();
 
     // Release any camera slot before nulling _joinedUserId, which _leaveRoom
@@ -3143,6 +3238,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
 
       _joinedUserId = userId;
+      _lastConfirmedRoomMembershipAt = joinResult.joinedAt ?? DateTime.now();
       AppTelemetry.updateRoomState(
         roomId: widget.roomId,
         joinedUserId: userId,
@@ -3737,6 +3833,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
         final allowMicRequests =
             roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
+        final roomPresenceList =
+            presenceAsync.valueOrNull ?? const <RoomPresenceModel>[];
+        final hasSelfPresenceSignal =
+            roomPresenceList.any(
+              (presence) =>
+                  presence.userId.trim() == user.id &&
+                  (presence.isOnline ||
+                      (presence.userStatus?.trim().toLowerCase() ?? '') !=
+                          'offline'),
+            ) ||
+            (currentUserPresenceAsync.valueOrNull?.inRoom?.trim() ?? '') ==
+                widget.roomId;
+        final membershipState = liveRoomState.membershipStateFor(user.id);
+        final authorityKeepsUserInRoom = membershipState.isAuthoritativeMember;
+        if (authorityKeepsUserInRoom || hasSelfPresenceSignal) {
+          _markRoomMembershipConfirmed();
+        }
+        if (!authorityKeepsUserInRoom &&
+            hasSelfPresenceSignal &&
+            _joinedUserId == user.id) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            unawaited(
+              ref
+                  .read(liveRoomControllerProvider(widget.roomId).notifier)
+                  .syncPresenceNow(forceSync: true),
+            );
+          });
+        }
         // Room-ended detection: when the host closes the room (isLive=false),
         // eject every participant so their camera slots are released and the
         // UI doesn't stay on a dead room. Only fire once the user has already
@@ -3772,22 +3896,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             ),
           );
         }
-        if (participant == null &&
-            !liveRoomState.isUserInRoom(user.id) &&
-            _hasTrackedRoomJoin &&
-            !_isJoiningRoom &&
+        if (shouldEjectJoinedUserFromRoom(
+              hasTrackedRoomJoin: _hasTrackedRoomJoin,
+              membershipState: membershipState,
+              lastConfirmedMembershipAt: _lastConfirmedRoomMembershipAt,
+            ) &&
             _joinedUserId == user.id) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _handleForcedRoomExit('You were removed from this room.');
+            _verifyUnexpectedRoomRemoval(user.id);
           });
-          return const AppPageScaffold(
-            safeArea: false,
-            maxContentWidth: double.infinity,
-            body: AppEmptyView(
-              title: 'You were removed from this room',
-              icon: Icons.exit_to_app_outlined,
-            ),
-          );
         }
         if (_roomJoinError != null && _joinedUserId == null) {
           return AppPageScaffold(
@@ -3851,8 +3968,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             );
         final roomMessages =
             messageStreamAsync.valueOrNull ?? const <MessageModel>[];
-        final roomPresenceList =
-            presenceAsync.valueOrNull ?? const <RoomPresenceModel>[];
         final presenceByUserId = <String, RoomPresenceModel>{
           for (final presence in roomPresenceList)
             if (presence.userId.trim().isNotEmpty)

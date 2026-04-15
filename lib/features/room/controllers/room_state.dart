@@ -6,6 +6,27 @@ enum RoomLifecycleState { initializing, hydrating, active, degraded, ended }
 
 enum RoomAudioState { muted, requestingMic, speaking, cohostSpeaking, denied }
 
+enum RoomMembershipState {
+  absent,
+  joining,
+  stabilizing,
+  active,
+  reconnecting,
+  leaving,
+}
+
+extension RoomMembershipStateX on RoomMembershipState {
+  bool get isAuthoritativeMember =>
+      this == RoomMembershipState.stabilizing ||
+      this == RoomMembershipState.active ||
+      this == RoomMembershipState.reconnecting;
+
+  bool get shouldDeferRemoval =>
+      this == RoomMembershipState.joining ||
+      this == RoomMembershipState.stabilizing ||
+      this == RoomMembershipState.reconnecting;
+}
+
 enum RoomAction {
   requestMic,
   manageStage,
@@ -393,12 +414,61 @@ class RoomState {
         hasExplicitAuthorityRole;
   }
 
-  bool isUserInRoom(String userId) {
+  RoomMembershipState membershipStateFor(String userId) {
     final normalized = userId.trim();
-    return normalized.isNotEmpty && userIds.contains(normalized);
+    if (normalized.isEmpty) {
+      return RoomMembershipState.absent;
+    }
+
+    final normalizedCurrentUserId = currentUserId?.trim() ?? '';
+    final isCurrentUser = normalized == normalizedCurrentUserId;
+    final isPending = pendingUserIds.contains(normalized);
+    final isStable = stableUserIds.contains(normalized);
+    final isListed = userIds.contains(normalized);
+    final isHostUser = hostId.trim() == normalized;
+    final hasRole =
+        participantRolesByUser.containsKey(normalized) || isHostUser;
+    final hasSessionSnapshot = sessionSnapshotsByUser.containsKey(normalized);
+
+    if (phase == LiveRoomPhase.joining && isCurrentUser) {
+      return RoomMembershipState.joining;
+    }
+
+    if (phase == LiveRoomPhase.leaving &&
+        (isCurrentUser || isListed || hasSessionSnapshot)) {
+      return RoomMembershipState.leaving;
+    }
+
+    if (isPending) {
+      return RoomMembershipState.stabilizing;
+    }
+
+    if (isListed && (isStable || hasRole || hasSessionSnapshot)) {
+      return RoomMembershipState.active;
+    }
+
+    if (hasRole && (isStable || isCurrentUser)) {
+      return RoomMembershipState.active;
+    }
+
+    if (isCurrentUser &&
+        (phase == LiveRoomPhase.joined || phase == LiveRoomPhase.error) &&
+        hasSessionSnapshot) {
+      return RoomMembershipState.reconnecting;
+    }
+
+    return RoomMembershipState.absent;
   }
 
-  bool canChat(String userId) => isUserInRoom(userId);
+  bool hasAuthoritativeMembership(String userId) =>
+      membershipStateFor(userId).isAuthoritativeMember;
+
+  bool shouldDeferMembershipRemoval(String userId) =>
+      membershipStateFor(userId).shouldDeferRemoval;
+
+  bool isUserInRoom(String userId) => hasAuthoritativeMembership(userId);
+
+  bool canChat(String userId) => hasAuthoritativeMembership(userId);
 
   bool isSpeaker(String userId) {
     final normalized = userId.trim();
@@ -411,16 +481,14 @@ class RoomState {
       return false;
     }
 
+    final membershipState = membershipStateFor(normalized);
     final normalizedCurrentUserId = currentUserId?.trim() ?? '';
     if (normalized == normalizedCurrentUserId) {
-      return stableUserIds.contains(normalized) ||
-          userIds.contains(normalized) ||
-          sessionSnapshotsByUser.containsKey(normalized);
+      return membershipState.isAuthoritativeMember ||
+          membershipState == RoomMembershipState.joining;
     }
 
-    return userIds.contains(normalized) &&
-        stableUserIds.contains(normalized) &&
-        !pendingUserIds.contains(normalized);
+    return membershipState == RoomMembershipState.active;
   }
 
   RoomSessionSnapshot? snapshotFor(String userId) {

@@ -107,6 +107,32 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('RoomController', () {
+    test(
+      'membership authority keeps the active user in-room while state hydrates',
+      () {
+        const state = RoomState(
+          phase: LiveRoomPhase.joined,
+          roomId: 'room-a',
+          currentUserId: 'user-1',
+          pendingUserIds: {'user-1'},
+          sessionSnapshotsByUser: {
+            'user-1': RoomSessionSnapshot(
+              userId: 'user-1',
+              displayName: 'User One',
+              role: 'audience',
+            ),
+          },
+        );
+
+        expect(
+          state.membershipStateFor('user-1'),
+          RoomMembershipState.stabilizing,
+        );
+        expect(state.hasAuthoritativeMembership('user-1'), isTrue);
+        expect(state.shouldDeferMembershipRemoval('user-1'), isTrue);
+      },
+    );
+
     test('joinRoom keeps the joined user in shared room state', () async {
       final firestore = FakeFirebaseFirestore();
       await firestore.collection('rooms').doc('room-a').set({
@@ -134,6 +160,20 @@ void main() {
       expect(state.isConnected, isTrue);
       expect(state.users, contains('user-1'));
     });
+
+    test(
+      'membership authority marks users absent when no authority signals remain',
+      () {
+        const state = RoomState(
+          phase: LiveRoomPhase.joined,
+          roomId: 'room-a',
+          currentUserId: 'user-1',
+        );
+
+        expect(state.membershipStateFor('user-1'), RoomMembershipState.absent);
+        expect(state.hasAuthoritativeMembership('user-1'), isFalse);
+      },
+    );
 
     test('leaveRoom resets the room session state', () async {
       final firestore = FakeFirebaseFirestore();

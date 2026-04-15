@@ -77,6 +77,61 @@ void main() {
   });
 
   test(
+    'shouldEjectJoinedUserFromRoom waits through transient room sync gaps',
+    () {
+      final now = DateTime(2026, 1, 1, 12, 0, 0);
+
+      expect(
+        shouldEjectJoinedUserFromRoom(
+          hasTrackedRoomJoin: true,
+          isJoiningRoom: false,
+          hasCurrentParticipant: false,
+          isUserInResolvedRoomState: false,
+          lastConfirmedMembershipAt: now.subtract(const Duration(seconds: 3)),
+          now: now,
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'shouldEjectJoinedUserFromRoom trusts the room authority while reconnecting',
+    () {
+      final now = DateTime(2026, 1, 1, 12, 0, 12);
+
+      expect(
+        shouldEjectJoinedUserFromRoom(
+          hasTrackedRoomJoin: true,
+          membershipState: RoomMembershipState.reconnecting,
+          lastConfirmedMembershipAt: now.subtract(const Duration(seconds: 20)),
+          now: now,
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'shouldEjectJoinedUserFromRoom only removes after the grace window expires',
+    () {
+      final now = DateTime(2026, 1, 1, 12, 0, 12);
+
+      expect(
+        shouldEjectJoinedUserFromRoom(
+          hasTrackedRoomJoin: true,
+          isJoiningRoom: false,
+          hasCurrentParticipant: false,
+          isUserInResolvedRoomState: false,
+          lastConfirmedMembershipAt: now.subtract(const Duration(seconds: 12)),
+          now: now,
+        ),
+        isTrue,
+      );
+    },
+  );
+
+  test(
     'roomParticipantCanBeShownAsTalking keeps active local mic users visible',
     () {
       final activeMember = RoomParticipantModel(

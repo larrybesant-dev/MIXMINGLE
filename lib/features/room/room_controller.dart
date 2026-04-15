@@ -7,6 +7,9 @@ export 'controllers/room_state.dart'
         LiveRoomPhase,
         RoomLifecycleState,
         RoomAudioState,
+        RoomMembershipState,
+        RoomMembershipStateX,
+        RoomSessionSnapshot,
         RoomState,
         RoomStateMachine,
         RoomAction;
@@ -1054,7 +1057,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       );
     }
     await _requireStageAuthority();
-    if (!state.isUserInRoom(normalizedTargetUserId)) {
+    if (!state.hasAuthoritativeMembership(normalizedTargetUserId)) {
       throw StateError('Only joined users can be added to the stage.');
     }
     if (!state.canAddSpeaker(normalizedTargetUserId)) {

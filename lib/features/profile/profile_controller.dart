@@ -7,6 +7,7 @@ import 'package:mixvy/models/adult_profile_model.dart';
 import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/services/profile_service.dart';
+import '../auth/controllers/auth_controller.dart';
 import '../../core/events/app_event.dart';
 import '../../core/events/app_event_bus.dart';
 import 'models/user_model.dart';
@@ -220,12 +221,21 @@ class ProfileController extends Notifier<ProfileState> {
 
   @override
   ProfileState build() {
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      final previousUid = previous?.uid?.trim();
+      final nextUid = next.uid?.trim();
+
+      if (nextUid != null && nextUid.isNotEmpty && nextUid != previousUid) {
+        Future.microtask(() => fetchProfile(nextUid));
+        return;
+      }
+
+      if (nextUid == null || nextUid.isEmpty) {
+        state = const ProfileState();
+      }
+    });
+
     final user = _auth.currentUser;
-    // Auto-hydrate from Firestore so username is available app-wide without
-    // requiring the profile screen to be opened first.
-    if (user != null) {
-      Future.microtask(() => fetchProfile(user.uid));
-    }
     return ProfileState(
       userId: user?.uid,
       email: user?.email,
