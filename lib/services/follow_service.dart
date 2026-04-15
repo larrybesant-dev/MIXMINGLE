@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../core/events/app_event.dart';
+import '../core/events/app_event_bus.dart';
 import '../services/moderation_service.dart';
-import 'social_activity_service.dart';
 
 class FollowService {
   FollowService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     ModerationService? moderationService,
-    SocialActivityService? socialActivityService,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
        _auth = auth ?? FirebaseAuth.instance,
        _moderationService =
@@ -17,17 +17,11 @@ class FollowService {
            ModerationService(
              firestore: firestore ?? FirebaseFirestore.instance,
              auth: auth ?? FirebaseAuth.instance,
-           ),
-       _socialActivityService =
-           socialActivityService ??
-           SocialActivityService(
-             firestore: firestore ?? FirebaseFirestore.instance,
            );
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final ModerationService _moderationService;
-  final SocialActivityService _socialActivityService;
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
@@ -135,26 +129,16 @@ class FollowService {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-    await _firestore.collection('notifications').add({
-      'userId': followedUserId,
-      'actorId': followerUserId,
-      'type': 'follow',
-      'content':
-          '${actorName.isEmpty ? 'Someone' : actorName} started following you.',
-      'isRead': false,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    try {
-      await _socialActivityService.logActivity(
-        userId: followerUserId,
-        type: 'followed_user',
-        targetId: followedUserId,
-        metadata: {
-          'targetUsername': targetName.isEmpty ? followedUserId : targetName,
-        },
-      );
-    } catch (_) {}
+    AppEventBus.instance.emit(
+      FollowEvent(
+        id: 'follow:$followerUserId:$followedUserId',
+        timestamp: DateTime.now(),
+        fromUserId: followerUserId,
+        toUserId: followedUserId,
+        fromUsername: actorName.isEmpty ? null : actorName,
+        toUsername: targetName.isEmpty ? followedUserId : targetName,
+      ),
+    );
   }
 
   Future<void> unfollowUser(String followedUserId) async {

@@ -66,7 +66,8 @@ import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/presence_repository.dart';
 import '../../services/room_audio_cues.dart';
-import '../../services/social_activity_service.dart';
+import '../../core/events/app_event.dart';
+import '../../core/events/app_event_bus.dart';
 import '../../core/providers/firebase_providers.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
@@ -1299,12 +1300,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             _sendSystemEvent('$myName turned on their camera 📷');
           }
           if ((_joinedUserId ?? '').isNotEmpty) {
-            unawaited(
-              SocialActivityService().logActivity(
+            AppEventBus.instance.emit(
+              CameraStateChangedEvent(
+                id: 'camera:${widget.roomId}:${_joinedUserId!}:on:${DateTime.now().millisecondsSinceEpoch}',
+                timestamp: DateTime.now(),
                 userId: _joinedUserId!,
-                type: 'went_live',
-                targetId: widget.roomId,
-                metadata: const <String, dynamic>{'detail': 'Turned on camera'},
+                roomId: widget.roomId,
+                isCameraOn: true,
               ),
             );
           }
@@ -3244,14 +3246,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _roomJoinedAt = joinResult.joinedAt ?? DateTime.now();
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName joined the room');
-      unawaited(
-        SocialActivityService().logActivity(
-          userId: userId,
-          type: 'joined_room',
-          targetId: widget.roomId,
-          metadata: const <String, dynamic>{'detail': 'Entered a live room'},
-        ),
-      );
     } catch (_) {
       AppTelemetry.updateRoomState(
         roomId: widget.roomId,
@@ -3330,14 +3324,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     try {
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName left the room');
-      unawaited(
-        SocialActivityService().logActivity(
-          userId: userId,
-          type: 'left_room',
-          targetId: widget.roomId,
-          metadata: const <String, dynamic>{'detail': 'Exited a live room'},
-        ),
-      );
       await _stopPresenceHeartbeat();
       await ref
           .read(liveRoomControllerProvider(widget.roomId).notifier)

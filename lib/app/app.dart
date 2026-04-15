@@ -13,6 +13,7 @@ import '../shared/widgets/incoming_call_overlay.dart';
 import '../features/after_dark/providers/after_dark_provider.dart';
 import '../features/after_dark/theme/after_dark_theme.dart';
 import '../services/presence_controller.dart';
+import '../core/events/event_providers.dart';
 
 class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
@@ -21,7 +22,10 @@ class MixVyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     ref.watch(presenceControllerProvider);
-    final settings = ref.watch(appSettingsControllerProvider).valueOrNull ?? const AppSettings.defaults();
+    ref.watch(eventPipelineProvider);
+    final settings =
+        ref.watch(appSettingsControllerProvider).valueOrNull ??
+        const AppSettings.defaults();
     final appLocale = Locale(settings.localeCode);
     final afterDarkActive = ref.watch(afterDarkSessionProvider);
 
@@ -35,19 +39,13 @@ class MixVyApp extends ConsumerWidget {
           style: const TextStyle(fontFamilyFallback: mixvyFontFamilyFallback),
           child: IncomingCallOverlay(
             child: BetaFeedbackOverlay(
-              child: AppDebugOverlay(
-                child: child ?? const SizedBox.shrink(),
-              ),
+              child: AppDebugOverlay(child: child ?? const SizedBox.shrink()),
             ),
           ),
         );
       },
       locale: appLocale,
-      supportedLocales: const [
-        Locale('en'),
-        Locale('es'),
-        Locale('fr'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('es'), Locale('fr')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

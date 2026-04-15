@@ -1,3 +1,4 @@
+import '../../../core/events/app_event.dart';
 import '../models/home_feed_snapshot.dart';
 import '../../../models/room_model.dart';
 import '../../../models/social_activity_model.dart';
@@ -5,6 +6,11 @@ import '../../../models/user_model.dart';
 
 class HomeFeedService {
   const HomeFeedService();
+
+  void handle(AppEvent event) {
+    // Feed and pulse are derived projections only.
+    // Persistence and fan-out happen in the event pipeline.
+  }
 
   HomeFeedSnapshot buildSnapshot({
     required List<SocialActivity> activities,

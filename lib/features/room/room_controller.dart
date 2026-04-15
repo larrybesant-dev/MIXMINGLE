@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/events/app_event.dart';
+import '../../core/events/app_event_bus.dart';
 import '../../models/mic_access_request_model.dart';
 import '../../models/room_participant_model.dart';
 import 'controllers/room_state.dart';
@@ -430,6 +432,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         _sessionSnapshotsByUser,
       ),
     );
+    AppEventBus.instance.emit(
+      RoomJoinedEvent(
+        id: 'room-joined:$arg:$normalizedUserId:${(_joinedAt ?? DateTime.now()).millisecondsSinceEpoch}',
+        timestamp: _joinedAt ?? DateTime.now(),
+        userId: normalizedUserId,
+        roomId: arg,
+      ),
+    );
     return result;
   }
 
@@ -451,6 +461,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _phase = LiveRoomPhase.leaving;
     state = state.copyWith(phase: _phase, errorMessage: null);
     await _sessionService.leaveRoom(roomId: arg, userId: userId);
+    AppEventBus.instance.emit(
+      RoomLeftEvent(
+        id: 'room-left:$arg:$userId:${DateTime.now().millisecondsSinceEpoch}',
+        timestamp: DateTime.now(),
+        userId: userId,
+        roomId: arg,
+      ),
+    );
     _phase = LiveRoomPhase.idle;
     _currentUserId = null;
     _joinedAt = null;
@@ -522,6 +540,15 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
     if (state.speakerIds.length < RoomState.maxSpeakers) {
       await _micAccess.grabMicDirectly(roomId: arg, userId: normalizedUserId);
+      AppEventBus.instance.emit(
+        MicStateChangedEvent(
+          id: 'mic-grab:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
+          timestamp: DateTime.now(),
+          userId: normalizedUserId,
+          roomId: arg,
+          isSpeaker: true,
+        ),
+      );
       return MicRequestResult.grabbed;
     }
 
@@ -553,7 +580,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return _micAccess.denyRequest(arg, requestId);
   }
 
-  Future<void> releaseMic({required String userId}) {
+  Future<void> releaseMic({required String userId}) async {
     final normalizedUserId = userId.trim();
     final actorUserId = _actorUserId;
     final isSelfRelease =
@@ -561,7 +588,16 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     if (!isSelfRelease) {
       _requireStageAuthority();
     }
-    return _micAccess.releaseMic(roomId: arg, userId: normalizedUserId);
+    await _micAccess.releaseMic(roomId: arg, userId: normalizedUserId);
+    AppEventBus.instance.emit(
+      MicStateChangedEvent(
+        id: 'mic-release:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
+        timestamp: DateTime.now(),
+        userId: normalizedUserId,
+        roomId: arg,
+        isSpeaker: false,
+      ),
+    );
   }
 
   Future<void> promoteSpeaker({

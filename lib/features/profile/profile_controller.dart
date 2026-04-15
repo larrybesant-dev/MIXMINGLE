@@ -7,7 +7,8 @@ import 'package:mixvy/models/adult_profile_model.dart';
 import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/services/profile_service.dart';
-import 'package:mixvy/services/social_activity_service.dart';
+import '../../core/events/app_event.dart';
+import '../../core/events/app_event_bus.dart';
 import 'models/user_model.dart';
 
 class ProfileState {
@@ -207,22 +208,15 @@ final profileControllerProvider =
 class ProfileController extends Notifier<ProfileState> {
   final FirebaseAuth _auth;
   final ProfileService _profileService;
-  final SocialActivityService _socialActivityService;
 
   ProfileController({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     ProfileService? profileService,
-    SocialActivityService? socialActivityService,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _profileService =
            profileService ??
-           ProfileService(firestore: firestore ?? FirebaseFirestore.instance),
-       _socialActivityService =
-           socialActivityService ??
-           SocialActivityService(
-             firestore: firestore ?? FirebaseFirestore.instance,
-           );
+           ProfileService(firestore: firestore ?? FirebaseFirestore.instance);
 
   @override
   ProfileState build() {
@@ -354,15 +348,13 @@ class ProfileController extends Notifier<ProfileState> {
         name: 'ProfileController',
       );
 
-      try {
-        await _socialActivityService.logActivity(
+      AppEventBus.instance.emit(
+        ProfileUpdatedEvent(
+          id: 'profile-updated:$userId:${DateTime.now().millisecondsSinceEpoch}',
+          timestamp: DateTime.now(),
           userId: userId,
-          type: 'updated_profile',
-          metadata: const <String, dynamic>{
-            'detail': 'Updated profile details',
-          },
-        );
-      } catch (_) {}
+        ),
+      );
 
       // Keep profile data in Firestore only.
       // This avoids Auth accounts:update failures (notably on web profile photo updates).
