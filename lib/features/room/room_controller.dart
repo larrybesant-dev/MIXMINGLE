@@ -436,10 +436,13 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       return;
     }
 
-    unawaited(_sendRoomHeartbeat(forceSync: true));
     _roomHeartbeatTimer = Timer.periodic(_kRoomHeartbeatInterval, (_) {
       unawaited(_sendRoomHeartbeat());
     });
+  }
+
+  Future<void> syncPresenceNow({bool forceSync = true}) async {
+    await _sendRoomHeartbeat(forceSync: forceSync);
   }
 
   void _stopRoomHeartbeat() {
@@ -649,12 +652,19 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       ),
     );
 
-    final result = await _sessionService.joinRoom(
-      roomId: arg,
-      userId: normalizedUserId,
-      displayName: normalizedDisplayName,
-      photoUrl: avatarUrl,
-    );
+    RoomJoinResult result;
+    try {
+      result = await _sessionService.joinRoom(
+        roomId: arg,
+        userId: normalizedUserId,
+        displayName: normalizedDisplayName,
+        photoUrl: avatarUrl,
+      );
+    } catch (_) {
+      result = const RoomJoinResult.failure(
+        'Could not join room. Please try again.',
+      );
+    }
     if (!result.isSuccess) {
       _stopRoomHeartbeat();
       _phase = LiveRoomPhase.error;
@@ -664,6 +674,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _excludedUserIds = result.excludedUserIds;
       _micRequested = false;
       _hasMicPermission = true;
+      _pendingUserIds.remove(normalizedUserId);
+      _stableUserIds.remove(normalizedUserId);
+      _sessionSnapshotsByUser.remove(normalizedUserId);
       _emitState(
         state.copyWith(
           phase: _phase,
@@ -671,6 +684,11 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
           errorMessage: _errorMessage,
           joinedAt: null,
           excludedUserIds: _excludedUserIds,
+          pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
+          stableUserIds: _resolveStableUserIds(state.userIds),
+          sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
+            _sessionSnapshotsByUser,
+          ),
         ),
       );
       return result;
@@ -707,6 +725,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         ),
       ),
     );
+    await syncPresenceNow(forceSync: true);
     AppEventBus.instance.emit(
       RoomJoinedEvent(
         id: 'room-joined:$arg:$normalizedUserId:${(_joinedAt ?? DateTime.now()).millisecondsSinceEpoch}',
@@ -793,6 +812,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _errorMessage = null;
     _startRoomHeartbeat();
     _emitState(state.copyWith(phase: _phase, errorMessage: null));
+    await syncPresenceNow(forceSync: true);
   }
 
   Future<void> postSystemEvent(String content) {

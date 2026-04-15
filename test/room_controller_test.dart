@@ -8,7 +8,10 @@ import 'package:mixvy/features/room/providers/mic_access_provider.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/features/room/room_controller.dart';
+import 'package:mixvy/features/room/services/room_session_service.dart';
+import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/models/room_participant_model.dart';
+import 'package:mixvy/services/presence_controller.dart';
 
 class _SpyMicAccessController extends MicAccessController {
   _SpyMicAccessController() : super(FakeFirebaseFirestore());
@@ -38,6 +41,67 @@ class _SpyMicAccessController extends MicAccessController {
   @override
   Future<void> cancelRequest(String roomId, String requestId) async {
     cancelled = true;
+  }
+}
+
+class _TestPresenceController extends PresenceController {
+  @override
+  PresenceControllerState build() => const PresenceControllerState();
+
+  @override
+  Future<void> setInRoom(String userId, String roomId) async {}
+
+  @override
+  Future<void> clearInRoom(String userId) async {}
+}
+
+class _FlakyRoomSessionService extends RoomSessionService {
+  _FlakyRoomSessionService({
+    required super.firestore,
+    required super.presenceController,
+    this.joinFailuresRemaining = 0,
+    this.heartbeatFailuresRemaining = 0,
+  });
+
+  int joinFailuresRemaining;
+  int heartbeatFailuresRemaining;
+
+  @override
+  Future<RoomJoinResult> joinRoom({
+    required String roomId,
+    required String userId,
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    if (joinFailuresRemaining > 0) {
+      joinFailuresRemaining -= 1;
+      throw StateError('simulated join failure');
+    }
+    return super.joinRoom(
+      roomId: roomId,
+      userId: userId,
+      displayName: displayName,
+      photoUrl: photoUrl,
+    );
+  }
+
+  @override
+  Future<DateTime> heartbeat({
+    required String roomId,
+    required String userId,
+    DateTime? lastParticipantSyncAt,
+    bool forceParticipantSync = false,
+  }) async {
+    if (heartbeatFailuresRemaining > 0) {
+      heartbeatFailuresRemaining -= 1;
+      throw StateError('simulated heartbeat failure');
+    }
+    return super.heartbeat(
+      roomId: roomId,
+      userId: userId,
+      lastParticipantSyncAt: lastParticipantSyncAt,
+      forceParticipantSync: forceParticipantSync,
+    );
   }
 }
 
@@ -287,6 +351,100 @@ void main() {
           .doc('settings')
           .get();
       expect(policySnap.data()?['micTimerSeconds'], 60);
+    });
+
+    test('joinRoom degrades cleanly when the session service throws', () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'ownerId': 'host-1',
+        'isLocked': false,
+      });
+
+      final flakySession = _FlakyRoomSessionService(
+        firestore: firestore,
+        presenceController: _TestPresenceController(),
+        joinFailuresRemaining: 1,
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          roomSessionServiceProvider.overrideWithValue(flakySession),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(
+        roomControllerProvider('room-a').notifier,
+      );
+
+      final result = await controller.joinRoom(
+        'user-1',
+        displayName: 'User One',
+      );
+      final state = container.read(roomControllerProvider('room-a'));
+
+      expect(result.isSuccess, isFalse);
+      expect(result.errorMessage, isNotEmpty);
+      expect(state.isConnected, isFalse);
+      expect(state.currentUserId, isNull);
+      expect(state.lifecycleState, RoomLifecycleState.degraded);
+    });
+
+    test('room lifecycle recovers after a transient sync failure', () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'user-1',
+        'ownerId': 'user-1',
+        'isLocked': false,
+      });
+
+      final flakySession = _FlakyRoomSessionService(
+        firestore: firestore,
+        presenceController: _TestPresenceController(),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          roomSessionServiceProvider.overrideWithValue(flakySession),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(
+        roomControllerProvider('room-a').notifier,
+      );
+
+      final result = await controller.joinRoom(
+        'user-1',
+        displayName: 'User One',
+      );
+      expect(result.isSuccess, isTrue);
+
+      controller.hydrateCurrentUser(
+        'user-1',
+        displayName: 'User One',
+        role: 'host',
+      );
+      expect(
+        container.read(roomControllerProvider('room-a')).lifecycleState,
+        RoomLifecycleState.active,
+      );
+
+      flakySession.heartbeatFailuresRemaining = 1;
+      await controller.syncPresenceNow(forceSync: true);
+
+      final degradedState = container.read(roomControllerProvider('room-a'));
+      expect(degradedState.errorMessage, isNotNull);
+      expect(degradedState.lifecycleState, RoomLifecycleState.degraded);
+
+      await controller.syncPresenceNow(forceSync: true);
+
+      final recoveredState = container.read(roomControllerProvider('room-a'));
+      expect(recoveredState.errorMessage, isNull);
+      expect(recoveredState.lifecycleState, RoomLifecycleState.active);
     });
   });
 }
