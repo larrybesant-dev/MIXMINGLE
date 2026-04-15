@@ -1,24 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/story_provider.dart';
 import '../../../core/utils/network_image_url.dart';
-
-// Fetches the list of userIds the current user follows
-final _followingIdsProvider = StreamProvider.family<List<String>, String>((ref, uid) {
-  return FirebaseFirestore.instance
-      .collection('follows')
-      .where('followerUserId', isEqualTo: uid)
-      .snapshots()
-      .map((snap) => snap.docs
-          .map((d) => d.data()['followedUserId'] as String?)
-          .whereType<String>()
-          .toList());
-});
+import '../../../presentation/providers/user_provider.dart';
 
 /// Horizontal scrolling row of story avatar bubbles shown at the top of feeds.
 ///
@@ -29,10 +16,12 @@ class StoriesRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return const SizedBox.shrink();
+    final authUser = ref.watch(userProvider);
+    final uid = authUser?.id;
+    if (uid == null || uid.trim().isEmpty) return const SizedBox.shrink();
 
-    final followingIds = ref.watch(_followingIdsProvider(uid)).asData?.value ?? [];
+    final followingIds =
+        ref.watch(followingIdsProvider(uid)).asData?.value ?? const <String>[];
     final params = (userId: uid, followingIds: followingIds);
     final storiesAsync = ref.watch(followingStoriesProvider(params));
 
@@ -130,7 +119,9 @@ class _StoryBubble extends StatelessWidget {
                           end: Alignment.bottomRight,
                         )
                       : null,
-                  color: hasStory ? null : theme.colorScheme.surfaceContainerHighest,
+                  color: hasStory
+                      ? null
+                      : theme.colorScheme.surfaceContainerHighest,
                 ),
                 padding: const EdgeInsets.all(2.5),
                 child: CircleAvatar(
@@ -159,7 +150,10 @@ class _StoryBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary,
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.colorScheme.surface, width: 1.5),
+                      border: Border.all(
+                        color: theme.colorScheme.surface,
+                        width: 1.5,
+                      ),
                     ),
                     child: const Icon(Icons.add, size: 12, color: Colors.white),
                   ),

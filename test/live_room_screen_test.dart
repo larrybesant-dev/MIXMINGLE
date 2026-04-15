@@ -739,6 +739,95 @@ void main() {
   );
 
   testWidgets(
+    'LiveRoomScreen does not show presence-only users who lack a confirmed room membership',
+    (WidgetTester tester) async {
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
+      await firestore.collection('users').doc('ghost').set({
+        'username': 'Ghost',
+      });
+
+      final me = RoomParticipantModel(
+        userId: 'user-1',
+        role: 'audience',
+        joinedAt: DateTime(2026, 1, 1),
+        lastActiveAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(me),
+            ),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([me]),
+            ),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
+            ),
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                MessageModel(
+                  id: 'msg-ghost',
+                  senderId: 'ghost',
+                  roomId: 'room-a',
+                  content: 'i should not be in the room list',
+                  sentAt: DateTime.now(),
+                ),
+              ]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('host-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            roomPresenceStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomPresenceModel(
+                  userId: 'user-1',
+                  isOnline: true,
+                  lastHeartbeatAt: DateTime.now(),
+                  lastSeenAt: DateTime.now(),
+                ),
+                RoomPresenceModel(
+                  userId: 'ghost',
+                  isOnline: true,
+                  lastHeartbeatAt: DateTime.now(),
+                  lastSeenAt: DateTime.now(),
+                ),
+              ]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'Curve',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Ghost'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets(
     'LiveRoomScreen keeps newly joined users visible while presence catches up',
     (WidgetTester tester) async {
       await configureViewport(tester);
@@ -751,6 +840,17 @@ void main() {
       await firestore.collection('users').doc('harley').set({
         'username': 'Harley',
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('members')
+          .doc('harley')
+          .set({
+            'userId': 'harley',
+            'role': 'member',
+            'joinedAt': DateTime.now(),
+            'lastActiveAt': DateTime.now(),
+          });
 
       final now = DateTime.now();
       final me = RoomParticipantModel(
@@ -842,6 +942,17 @@ void main() {
       await firestore.collection('users').doc('harley').set({
         'username': 'Harley',
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('members')
+          .doc('harley')
+          .set({
+            'userId': 'harley',
+            'role': 'member',
+            'joinedAt': DateTime.now(),
+            'lastActiveAt': DateTime.now(),
+          });
 
       final me = RoomParticipantModel(
         userId: 'user-1',
@@ -924,6 +1035,17 @@ void main() {
       await firestore.collection('users').doc('harley').set({
         'username': 'Harley',
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('members')
+          .doc('harley')
+          .set({
+            'userId': 'harley',
+            'role': 'member',
+            'joinedAt': DateTime(2026, 1, 1, 15, 0),
+            'lastActiveAt': DateTime.now(),
+          });
 
       final now = DateTime(2026, 1, 1, 15, 0);
       final me = RoomParticipantModel(

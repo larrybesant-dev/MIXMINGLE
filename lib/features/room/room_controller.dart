@@ -57,9 +57,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final participants =
         ref.watch(participantsStreamProvider(roomId)).valueOrNull ??
         const <RoomParticipantModel>[];
+    final memberUserIds =
+        ref.watch(roomMemberUserIdsProvider(roomId)).valueOrNull ??
+        const <String>[];
 
     final hostId = _resolveHostId(roomDoc, participants);
-    final userIds = _resolveUserIds(participants);
+    final userIds = _resolveUserIds(participants, memberUserIds: memberUserIds);
     final speakerIds = _resolveSpeakerIds(participants, hostId: hostId);
     final camViewersByUser = _resolveCamViewers(userIds);
     final participantRolesByUser = _resolveParticipantRoles(
@@ -121,12 +124,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return '';
   }
 
-  List<String> _resolveUserIds(List<RoomParticipantModel> participants) {
-    return participants
-        .map((participant) => participant.userId.trim())
-        .where((userId) => userId.isNotEmpty)
-        .toSet()
-        .toList(growable: false);
+  List<String> _resolveUserIds(
+    List<RoomParticipantModel> participants, {
+    List<String> memberUserIds = const <String>[],
+  }) {
+    return <String>{
+      ...memberUserIds.map((userId) => userId.trim()),
+      ...participants.map((participant) => participant.userId.trim()),
+    }.where((userId) => userId.isNotEmpty).toList(growable: false);
   }
 
   List<String> _resolveSpeakerIds(
@@ -366,8 +371,15 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
           : (existing?.role ?? state.roleFor(normalizedUserId)),
       joinedAt: existing?.joinedAt ?? _joinedAt,
     );
-    _stableUserIds.add(normalizedUserId);
-    _pendingUserIds.remove(normalizedUserId);
+
+    final normalizedCurrentUserId = _currentUserId?.trim() ?? '';
+    final canAffectRosterVisibility =
+        normalizedUserId == normalizedCurrentUserId ||
+        state.userIds.contains(normalizedUserId);
+    if (canAffectRosterVisibility) {
+      _stableUserIds.add(normalizedUserId);
+      _pendingUserIds.remove(normalizedUserId);
+    }
     _publishSessionState();
   }
 

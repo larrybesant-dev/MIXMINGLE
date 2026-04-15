@@ -25,6 +25,36 @@ final roomDocStreamProvider = StreamProvider.autoDispose
       );
     });
 
+final roomMemberUserIdsProvider = StreamProvider.autoDispose
+    .family<List<String>, String>((ref, roomId) {
+      final firestore = ref.watch(roomFirestoreProvider);
+      return traceFirestoreStream<List<String>>(
+        key: 'room_members/$roomId',
+        query: 'rooms/$roomId/members',
+        roomId: roomId,
+        itemCount: (value) => value.length,
+        stream: firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('members')
+            .snapshots()
+            .map((snapshot) {
+              return snapshot.docs
+                  .map((doc) {
+                    final data = doc.data();
+                    final userId = data['userId'];
+                    if (userId is String && userId.trim().isNotEmpty) {
+                      return userId.trim();
+                    }
+                    return doc.id.trim();
+                  })
+                  .where((userId) => userId.isNotEmpty)
+                  .toSet()
+                  .toList(growable: false);
+            }),
+      );
+    });
+
 class CurrentParticipantParams {
   final String roomId;
   final String userId;

@@ -54,7 +54,10 @@ bool _asBool(dynamic value, {bool fallback = false}) {
 List<String> _asStringList(dynamic value) {
   if (value is List) {
     return value
-        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .map(
+          (item) =>
+              item is String ? item.trim() : item?.toString().trim() ?? '',
+        )
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
   }
@@ -128,25 +131,54 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-// Stream of stories from following users
-final followingStoriesProvider = StreamProvider.family<List<Story>, ({String userId, List<String> followingIds})>((ref, params) {
+final followingIdsProvider = StreamProvider.family<List<String>, String>((
+  ref,
+  uid,
+) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
-      .collectionGroup('stories')
-      .where('userId', whereIn: params.followingIds.isNotEmpty ? params.followingIds : [params.userId])
-      .where('expiresAt', isGreaterThan: Timestamp.fromDate(DateTime.now()))
-      .orderBy('expiresAt', descending: true)
+      .collection('follows')
+      .where('followerUserId', isEqualTo: uid)
       .snapshots()
-      .map((snapshot) {
-    return snapshot.docs
-        .map((doc) => Story.fromJson(doc.data(), doc.id))
-        .where((story) => !story.isExpired)
-        .toList();
-  });
+      .map(
+        (snap) => snap.docs
+            .map((doc) => doc.data()['followedUserId'] as String?)
+            .whereType<String>()
+            .toList(growable: false),
+      );
 });
 
+// Stream of stories from following users
+final followingStoriesProvider =
+    StreamProvider.family<
+      List<Story>,
+      ({String userId, List<String> followingIds})
+    >((ref, params) {
+      final firestore = ref.watch(firestoreProvider);
+      return firestore
+          .collectionGroup('stories')
+          .where(
+            'userId',
+            whereIn: params.followingIds.isNotEmpty
+                ? params.followingIds
+                : [params.userId],
+          )
+          .where('expiresAt', isGreaterThan: Timestamp.fromDate(DateTime.now()))
+          .orderBy('expiresAt', descending: true)
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs
+                .map((doc) => Story.fromJson(doc.data(), doc.id))
+                .where((story) => !story.isExpired)
+                .toList();
+          });
+    });
+
 // Stream of user's own stories
-final myStoriesProvider = StreamProvider.family<List<Story>, String>((ref, userId) {
+final myStoriesProvider = StreamProvider.family<List<Story>, String>((
+  ref,
+  userId,
+) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('users')
@@ -157,11 +189,11 @@ final myStoriesProvider = StreamProvider.family<List<Story>, String>((ref, userI
       .orderBy('createdAt', descending: true)
       .snapshots()
       .map((snapshot) {
-    return snapshot.docs
-        .map((doc) => Story.fromJson(doc.data(), doc.id))
-        .where((story) => !story.isExpired)
-        .toList();
-  });
+        return snapshot.docs
+            .map((doc) => Story.fromJson(doc.data(), doc.id))
+            .where((story) => !story.isExpired)
+            .toList();
+      });
 });
 
 // Controller for story operations
@@ -173,7 +205,8 @@ final storyControllerProvider = Provider<StoryController>((ref) {
 class StoryController {
   final FirebaseFirestore _firestore;
 
-  StoryController({required FirebaseFirestore firestore}) : _firestore = firestore;
+  StoryController({required FirebaseFirestore firestore})
+    : _firestore = firestore;
 
   Future<void> createStory({
     required String userId,
@@ -211,8 +244,8 @@ class StoryController {
         .collection('stories')
         .doc(storyId)
         .update({
-      'viewedBy': FieldValue.arrayUnion([viewerId]),
-    });
+          'viewedBy': FieldValue.arrayUnion([viewerId]),
+        });
   }
 
   Future<void> deleteStory({

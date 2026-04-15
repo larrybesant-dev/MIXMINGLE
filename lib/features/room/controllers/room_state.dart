@@ -101,7 +101,8 @@ class RoomState {
           sessionSnapshotsByUser.containsKey(normalized);
     }
 
-    return stableUserIds.contains(normalized) &&
+    return userIds.contains(normalized) &&
+        stableUserIds.contains(normalized) &&
         !pendingUserIds.contains(normalized);
   }
 
