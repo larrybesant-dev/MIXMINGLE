@@ -65,7 +65,18 @@ class ChatPanel extends ConsumerStatefulWidget {
   final Widget? extraHeader;
 
   static const List<String> _quickEmojis = [
-    '😀', '😂', '😍', '🔥', '👏', '🙏', '💯', '🎉', '❤️', '👍', '👀', '😎',
+    '😀',
+    '😂',
+    '😍',
+    '🔥',
+    '👏',
+    '🙏',
+    '💯',
+    '🎉',
+    '❤️',
+    '👍',
+    '👀',
+    '😎',
   ];
 
   @override
@@ -101,14 +112,16 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
     final hintText = widget.isMuted
         ? 'You are muted'
         : widget.isBanned
-            ? 'You are banned'
-            : widget.hasBlockedRelationship
-                ? 'Blocked relationship in room'
-                : !widget.allowChat
-                    ? 'Chat disabled by host'
-                    : 'Type a message…';
+        ? 'You are banned'
+        : widget.hasBlockedRelationship
+        ? 'Blocked relationship in room'
+        : !widget.allowChat
+        ? 'Chat disabled by host'
+        : 'Type a message…';
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
-    final canSend = !widget.isSending &&
+    final canSend =
+        !widget.isSending &&
         !widget.isMuted &&
         !widget.isBanned &&
         widget.allowChat &&
@@ -126,31 +139,32 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
             child: widget.isLoadingMessages
                 ? const Center(child: CircularProgressIndicator())
                 : widget.messages.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No messages yet.',
-                          style: TextStyle(color: npOnVariant),
+                ? const Center(
+                    child: Text(
+                      'No messages yet.',
+                      style: TextStyle(color: npOnVariant),
+                    ),
+                  )
+                : ListView.builder(
+                    controller: widget.scrollController,
+                    padding: const EdgeInsets.all(6),
+                    itemCount: widget.messages.length,
+                    itemBuilder: (context, i) {
+                      final msg = widget.messages[i];
+                      return MessageBubble(
+                        message: msg,
+                        isMe: msg.senderId == widget.currentUserId,
+                        senderLabel: widget.senderLabelResolver(msg.senderId),
+                        senderVipLevel: widget.senderVipLevelResolver(
+                          msg.senderId,
                         ),
-                      )
-                    : ListView.builder(
-                        controller: widget.scrollController,
-                        padding: const EdgeInsets.all(6),
-                        itemCount: widget.messages.length,
-                        itemBuilder: (context, i) {
-                          final msg = widget.messages[i];
-                          return MessageBubble(
-                            message: msg,
-                            isMe: msg.senderId == widget.currentUserId,
-                            senderLabel:
-                                widget.senderLabelResolver(msg.senderId),
-                            senderVipLevel:
-                                widget.senderVipLevelResolver(msg.senderId),
-                            senderAvatarUrl:
-                                widget.senderAvatarResolver(msg.senderId),
-                            onTapSender: widget.onTapSender,
-                          );
-                        },
-                      ),
+                        senderAvatarUrl: widget.senderAvatarResolver(
+                          msg.senderId,
+                        ),
+                        onTapSender: widget.onTapSender,
+                      );
+                    },
+                  ),
           ),
 
           // Cooldown notice
@@ -170,8 +184,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
           // Typing indicator
           if (widget.typingNames.isNotEmpty)
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -201,10 +214,10 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                       widget.messageController.text += e;
                       widget.messageController.selection =
                           TextSelection.fromPosition(
-                        TextPosition(
-                          offset: widget.messageController.text.length,
-                        ),
-                      );
+                            TextPosition(
+                              offset: widget.messageController.text.length,
+                            ),
+                          );
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(4),
@@ -216,101 +229,129 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
             ),
 
           // Input row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(6, 2, 6, 6),
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: 'Emojis',
-                  iconSize: 20,
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    widget.showEmojiTray
-                        ? Icons.emoji_emotions
-                        : Icons.emoji_emotions_outlined,
-                    color: npOnVariant,
-                  ),
-                  onPressed: () {
-                    FocusScope.of(context).unfocus();
-                    widget.onToggleEmojiTray();
-                  },
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: widget.messageController,
-                    onChanged: (_) => widget.onTyping(),
-                    enabled: canSend,
-                    textInputAction: TextInputAction.send,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: hintText,
-                      hintStyle: const TextStyle(
-                          color: npOnVariant, fontSize: 12),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                            color: Color(0x30D4A853)),
+          SafeArea(
+            top: false,
+            left: false,
+            right: false,
+            minimum: const EdgeInsets.only(bottom: 4),
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.only(bottom: keyboardInset > 0 ? 4 : 0),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 2, 6, 6),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Emojis',
+                      iconSize: 20,
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        widget.showEmojiTray
+                            ? Icons.emoji_emotions
+                            : Icons.emoji_emotions_outlined,
+                        color: npOnVariant,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                            color: Color(0x30D4A853)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                            color: Color(0xFFD4A853)),
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFF241820),
+                      onPressed: () {
+                        FocusScope.of(context).unfocus();
+                        widget.onToggleEmojiTray();
+                      },
                     ),
-                    onSubmitted: canSend
-                        ? (text) async {
-                            final trimmed = text.trim();
-                            if (trimmed.isNotEmpty) {
-                              await widget.onSendMessage(trimmed);
-                            }
-                          }
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                SizedBox(
-                  height: 36,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFD4A853),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      minimumSize: Size.zero,
-                    ),
-                    onPressed: canSend
-                        ? () async {
-                            final text =
-                                widget.messageController.text.trim();
-                            if (text.isNotEmpty) {
-                              await widget.onSendMessage(text);
-                            }
-                          }
-                        : null,
-                    child: widget.isSending
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white),
-                          )
-                        : const Text(
-                            'Send',
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: widget.messageController,
+                        onChanged: (_) => widget.onTyping(),
+                        enabled: canSend,
+                        textInputAction: TextInputAction.send,
+                        scrollPadding: EdgeInsets.only(
+                          top: 24,
+                          bottom: keyboardInset + 120,
+                        ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: hintText,
+                          hintStyle: const TextStyle(
+                            color: npOnVariant,
+                            fontSize: 12,
                           ),
-                  ),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: const BorderSide(
+                              color: Color(0x30D4A853),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: const BorderSide(
+                              color: Color(0x30D4A853),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFD4A853),
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF241820),
+                        ),
+                        onSubmitted: canSend
+                            ? (text) async {
+                                final trimmed = text.trim();
+                                if (trimmed.isNotEmpty) {
+                                  await widget.onSendMessage(trimmed);
+                                }
+                              }
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    SizedBox(
+                      height: 36,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFD4A853),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          minimumSize: Size.zero,
+                        ),
+                        onPressed: canSend
+                            ? () async {
+                                final text = widget.messageController.text
+                                    .trim();
+                                if (text.isNotEmpty) {
+                                  await widget.onSendMessage(text);
+                                }
+                              }
+                            : null,
+                        child: widget.isSending
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Send',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

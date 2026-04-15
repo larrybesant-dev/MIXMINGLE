@@ -682,15 +682,15 @@ class FriendService {
     }
 
     if (friendship != null) {
-      if (friendship!.status == 'accepted' || friendship!.status == 'blocked') {
+      if (friendship.status == 'accepted' || friendship.status == 'blocked') {
         return;
       }
 
-      if (friendship!.status == 'pending') {
-        if (friendship!.requestedBy == normalizedFromUserId) {
+      if (friendship.status == 'pending') {
+        if (friendship.requestedBy == normalizedFromUserId) {
           return;
         }
-        await acceptFriendRequest(friendship!.id);
+        await acceptFriendRequest(friendship.id);
         return;
       }
     }

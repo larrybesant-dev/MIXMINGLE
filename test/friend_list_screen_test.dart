@@ -157,6 +157,9 @@ void main() {
     expect(find.text('ONLINE'), findsOneWidget);
     expect(find.text('IN ROOMS'), findsOneWidget);
     expect(find.text('OFFLINE'), findsOneWidget);
+    expect(find.text('2 active now'), findsOneWidget);
+    expect(find.text('1 in rooms'), findsOneWidget);
+    expect(find.text('Back to my room'), findsOneWidget);
     expect(find.text('User Two'), findsOneWidget);
     expect(find.text('Room Friend'), findsOneWidget);
     expect(find.text('Offline Friend'), findsOneWidget);

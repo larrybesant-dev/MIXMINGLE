@@ -45,7 +45,6 @@ import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/room/providers/mic_access_provider.dart';
 import '../../core/utils/network_image_url.dart';
-import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/feed/providers/host_controls_providers.dart';
 import '../../features/feed/providers/typing_providers.dart';
 import '../../features/room/providers/room_policy_provider.dart';
@@ -61,8 +60,6 @@ import '../../services/rtc_room_service.dart';
 import '../../services/webrtc_room_service_shim.dart';
 import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
-import '../../services/friend_service.dart';
-import '../../services/notification_service.dart';
 import '../../services/presence_repository.dart';
 import '../../services/room_audio_cues.dart';
 import '../../features/room/repository/room_repository.dart';
@@ -234,14 +231,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
     }
     return fallback;
-  }
-
-  bool _looksLikeAgoraAppId(String value) {
-    final trimmed = value.trim();
-    if (trimmed.length != 32) {
-      return false;
-    }
-    return RegExp(r'^[a-zA-Z0-9]{32}$').hasMatch(trimmed);
   }
 
   bool get _hasFirebaseApp {
@@ -3639,9 +3628,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         participant.userId: participant,
     };
     final messageStreamAsync = ref.watch(messageStreamProvider(widget.roomId));
-    final typingUserIdsAsync = ref.watch(
-      roomTypingUserIdsProvider(widget.roomId),
-    );
     final presenceAsync = ref.watch(roomPresenceStreamProvider(widget.roomId));
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
     final typingUsersAsync = ref.watch(typingStreamProvider(widget.roomId));
@@ -3872,11 +3858,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             if (presence.userId.trim().isNotEmpty)
               presence.userId.trim(): presence,
         };
-        final onlineRoomUserIds = roomPresenceList
-            .where((presence) => presence.isOnline)
-            .map((presence) => presence.userId.trim())
-            .where((userId) => userId.isNotEmpty)
-            .toSet();
         final recentMessageSenderIds = roomMessages
             .map((message) => message.senderId.trim())
             .where((userId) => userId.isNotEmpty)
@@ -4138,6 +4119,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final roomName = _asString(roomData?['name'], fallback: 'Live Room');
         final roomDescription = _asString(roomData?['description']);
         final spotlightUserId = _asString(roomData?['spotlightUserId']);
+        final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
         // ── 3-column layout helpers ──────────────────────────────────
         final screenWidth = MediaQuery.sizeOf(context).width;
         final isMobile = screenWidth < 640;
@@ -4369,11 +4351,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           final localIsFloating = floatingIds.contains(
                             '${user.id}_local',
                           );
-                          final participantByUserId =
-                              <String, RoomParticipantModel>{
-                                for (final participant in participantsInRoom)
-                                  participant.userId: participant,
-                              };
                           final remoteTiles = _agoraService!.remoteUids
                               .where((remoteUid) {
                                 // Hide from grid if already popped out.
@@ -5411,294 +5388,334 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   onChanged: () => setState(() {}),
                                 ),
                               // Input row
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Emojis',
-                                      visualDensity: VisualDensity.compact,
-                                      constraints: const BoxConstraints(
-                                        minWidth: 36,
-                                        minHeight: 36,
-                                      ),
-                                      padding: const EdgeInsets.all(6),
-                                      icon: Icon(
-                                        _showEmojiTray
-                                            ? Icons.emoji_emotions
-                                            : Icons.emoji_emotions_outlined,
-                                      ),
-                                      onPressed: () {
-                                        FocusScope.of(context).unfocus();
-                                        setState(
-                                          () =>
-                                              _showEmojiTray = !_showEmojiTray,
-                                        );
-                                      },
+                              SafeArea(
+                                top: false,
+                                left: false,
+                                right: false,
+                                minimum: const EdgeInsets.only(bottom: 4),
+                                child: AnimatedPadding(
+                                  duration: const Duration(milliseconds: 180),
+                                  curve: Curves.easeOut,
+                                  padding: EdgeInsets.only(
+                                    bottom: keyboardInset > 0 ? 4 : 0,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      8,
+                                      4,
+                                      8,
+                                      8,
                                     ),
-                                    Tooltip(
-                                      message: _showRichToolbar
-                                          ? 'Hide formatting'
-                                          : 'Rich text formatting',
-                                      child: IconButton(
-                                        visualDensity: VisualDensity.compact,
-                                        constraints: const BoxConstraints(
-                                          minWidth: 36,
-                                          minHeight: 36,
-                                        ),
-                                        padding: const EdgeInsets.all(6),
-                                        icon: Icon(
-                                          Icons.text_format,
-                                          color: _showRichToolbar
-                                              ? const Color(0xFFD4A853)
-                                              : const Color(0xFF5A5E6B),
-                                          size: 20,
-                                        ),
-                                        onPressed: () => setState(
-                                          () => _showRichToolbar =
-                                              !_showRichToolbar,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: messageController,
-                                        focusNode: _chatInputFocusNode,
-                                        onTap: () =>
-                                            _chatInputFocusNode.requestFocus(),
-                                        onChanged: (_) => _onTypingInput(),
-                                        enabled:
-                                            !isSending &&
-                                            participant?.isMuted != true &&
-                                            participant?.isBanned != true &&
-                                            !hasBlockedParticipantInRoom,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                        ),
-                                        cursorColor: const Color(0xFFD4A853),
-                                        textInputAction: TextInputAction.send,
-                                        onSubmitted:
-                                            isSending ||
-                                                participant?.isMuted == true ||
-                                                participant?.isBanned == true ||
-                                                !allowChat ||
-                                                hasBlockedParticipantInRoom
-                                            ? null
-                                            : (text) async {
-                                                final trimmed = text.trim();
-                                                if (trimmed.isEmpty) return;
-                                                final outgoingMessage =
-                                                    _buildOutgoingChatMessage(
-                                                      trimmed,
-                                                    );
-                                                if (slowModeSeconds > 0 &&
-                                                    lastMessageTime != null) {
-                                                  final secs = DateTime.now()
-                                                      .difference(
-                                                        lastMessageTime!,
-                                                      )
-                                                      .inSeconds;
-                                                  if (secs < slowModeSeconds) {
-                                                    setState(() {
-                                                      cooldownMessage =
-                                                          'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                                    });
-                                                    return;
-                                                  }
-                                                }
-                                                setState(
-                                                  () => isSending = true,
-                                                );
-                                                try {
-                                                  await sendMessage(
-                                                    outgoingMessage,
-                                                  );
-                                                  lastMessageTime =
-                                                      DateTime.now();
-                                                  cooldownMessage = '';
-                                                  messageController.clear();
-                                                  _pendingRichColorHex = null;
-                                                  _showEmojiTray = false;
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          e.toString(),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }
-                                                } finally {
-                                                  if (mounted) {
-                                                    setState(
-                                                      () => isSending = false,
-                                                    );
-                                                  }
-                                                }
-                                              },
-                                        decoration: InputDecoration(
-                                          hintText: participant?.isMuted == true
-                                              ? 'You are muted'
-                                              : participant?.isBanned == true
-                                              ? 'You are banned'
-                                              : hasBlockedParticipantInRoom
-                                              ? 'Blocked relationship in room'
-                                              : !allowChat
-                                              ? 'Chat disabled by host'
-                                              : 'Type a message…',
-                                          hintStyle: const TextStyle(
-                                            color: Colors.white38,
+                                    child: Row(
+                                      children: [
+                                        IconButton(
+                                          tooltip: 'Emojis',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
                                           ),
-                                          filled: true,
-                                          fillColor: const Color(0xFF18131D),
-                                          isDense: true,
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 10,
-                                              ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                            borderSide: const BorderSide(
-                                              color: Color(0x66D4A853),
-                                              width: 1.1,
-                                            ),
+                                          padding: const EdgeInsets.all(6),
+                                          icon: Icon(
+                                            _showEmojiTray
+                                                ? Icons.emoji_emotions
+                                                : Icons.emoji_emotions_outlined,
                                           ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                          onPressed: () {
+                                            FocusScope.of(context).unfocus();
+                                            setState(
+                                              () => _showEmojiTray =
+                                                  !_showEmojiTray,
+                                            );
+                                          },
+                                        ),
+                                        Tooltip(
+                                          message: _showRichToolbar
+                                              ? 'Hide formatting'
+                                              : 'Rich text formatting',
+                                          child: IconButton(
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            constraints: const BoxConstraints(
+                                              minWidth: 36,
+                                              minHeight: 36,
                                             ),
-                                            borderSide: const BorderSide(
-                                              color: Color(0x88D4A853),
-                                              width: 1.1,
+                                            padding: const EdgeInsets.all(6),
+                                            icon: Icon(
+                                              Icons.text_format,
+                                              color: _showRichToolbar
+                                                  ? const Color(0xFFD4A853)
+                                                  : const Color(0xFF5A5E6B),
+                                              size: 20,
                                             ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                            borderSide: const BorderSide(
-                                              color: Color(0xFFD4A853),
-                                              width: 1.4,
+                                            onPressed: () => setState(
+                                              () => _showRichToolbar =
+                                                  !_showRichToolbar,
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Tooltip(
-                                      message: 'Send message',
-                                      child: FilledButton(
-                                        style: FilledButton.styleFrom(
-                                          minimumSize: const Size(40, 40),
-                                          padding: const EdgeInsets.all(10),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                        Expanded(
+                                          child: TextField(
+                                            controller: messageController,
+                                            focusNode: _chatInputFocusNode,
+                                            onTap: () => _chatInputFocusNode
+                                                .requestFocus(),
+                                            onChanged: (_) => _onTypingInput(),
+                                            enabled:
+                                                !isSending &&
+                                                participant?.isMuted != true &&
+                                                participant?.isBanned != true &&
+                                                !hasBlockedParticipantInRoom,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
                                             ),
-                                          ),
-                                        ),
-                                        onPressed:
-                                            isSending ||
-                                                participant?.isMuted == true ||
-                                                participant?.isBanned == true ||
-                                                !allowChat ||
-                                                hasBlockedParticipantInRoom
-                                            ? null
-                                            : () async {
-                                                final trimmed =
-                                                    messageController.text
-                                                        .trim();
-                                                if (trimmed.isEmpty) {
-                                                  return;
-                                                }
-                                                final outgoingMessage =
-                                                    _buildOutgoingChatMessage(
-                                                      trimmed,
-                                                    );
-                                                if (slowModeSeconds > 0 &&
-                                                    lastMessageTime != null) {
-                                                  final secs = DateTime.now()
-                                                      .difference(
-                                                        lastMessageTime!,
-                                                      )
-                                                      .inSeconds;
-                                                  if (secs < slowModeSeconds) {
-                                                    setState(() {
-                                                      cooldownMessage =
-                                                          'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                                    });
-                                                    return;
-                                                  }
-                                                }
-                                                setState(
-                                                  () => isSending = true,
-                                                );
-                                                try {
-                                                  await sendMessage(
-                                                    outgoingMessage,
-                                                  );
-                                                  lastMessageTime =
-                                                      DateTime.now();
-                                                  cooldownMessage = '';
-                                                  messageController.clear();
-                                                  _pendingRichColorHex = null;
-                                                  _showEmojiTray = false;
-                                                  if (!_hasTrackedFirstMessage) {
-                                                    _hasTrackedFirstMessage =
-                                                        true;
-                                                    await AnalyticsService()
-                                                        .logEvent(
-                                                          'first_message_sent',
-                                                          params: {
-                                                            'room_id':
-                                                                widget.roomId,
-                                                            'user_id': user.id,
-                                                          },
+                                            cursorColor: const Color(
+                                              0xFFD4A853,
+                                            ),
+                                            textInputAction:
+                                                TextInputAction.send,
+                                            scrollPadding: EdgeInsets.only(
+                                              top: 24,
+                                              bottom: keyboardInset + 120,
+                                            ),
+                                            onSubmitted:
+                                                isSending ||
+                                                    participant?.isMuted ==
+                                                        true ||
+                                                    participant?.isBanned ==
+                                                        true ||
+                                                    !allowChat ||
+                                                    hasBlockedParticipantInRoom
+                                                ? null
+                                                : (text) async {
+                                                    final trimmed = text.trim();
+                                                    if (trimmed.isEmpty) return;
+                                                    final outgoingMessage =
+                                                        _buildOutgoingChatMessage(
+                                                          trimmed,
                                                         );
-                                                  }
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          e.toString(),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }
-                                                } finally {
-                                                  if (context.mounted) {
+                                                    if (slowModeSeconds > 0 &&
+                                                        lastMessageTime !=
+                                                            null) {
+                                                      final secs = DateTime.now()
+                                                          .difference(
+                                                            lastMessageTime!,
+                                                          )
+                                                          .inSeconds;
+                                                      if (secs <
+                                                          slowModeSeconds) {
+                                                        setState(() {
+                                                          cooldownMessage =
+                                                              'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                                        });
+                                                        return;
+                                                      }
+                                                    }
                                                     setState(
-                                                      () => isSending = false,
+                                                      () => isSending = true,
                                                     );
-                                                  }
-                                                }
-                                              },
-                                        child: isSending
-                                            ? const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              )
-                                            : const Icon(
-                                                Icons.send_rounded,
-                                                size: 18,
+                                                    try {
+                                                      await sendMessage(
+                                                        outgoingMessage,
+                                                      );
+                                                      lastMessageTime =
+                                                          DateTime.now();
+                                                      cooldownMessage = '';
+                                                      messageController.clear();
+                                                      _pendingRichColorHex =
+                                                          null;
+                                                      _showEmojiTray = false;
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              e.toString(),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
+                                                    } finally {
+                                                      if (mounted) {
+                                                        setState(
+                                                          () =>
+                                                              isSending = false,
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                            decoration: InputDecoration(
+                                              hintText:
+                                                  participant?.isMuted == true
+                                                  ? 'You are muted'
+                                                  : participant?.isBanned ==
+                                                        true
+                                                  ? 'You are banned'
+                                                  : hasBlockedParticipantInRoom
+                                                  ? 'Blocked relationship in room'
+                                                  : !allowChat
+                                                  ? 'Chat disabled by host'
+                                                  : 'Type a message…',
+                                              hintStyle: const TextStyle(
+                                                color: Colors.white38,
                                               ),
-                                      ),
+                                              filled: true,
+                                              fillColor: const Color(
+                                                0xFF18131D,
+                                              ),
+                                              isDense: true,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 10,
+                                                  ),
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0x66D4A853),
+                                                  width: 1.1,
+                                                ),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0x88D4A853),
+                                                  width: 1.1,
+                                                ),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFFD4A853),
+                                                  width: 1.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Tooltip(
+                                          message: 'Send message',
+                                          child: FilledButton(
+                                            style: FilledButton.styleFrom(
+                                              minimumSize: const Size(40, 40),
+                                              padding: const EdgeInsets.all(10),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            onPressed:
+                                                isSending ||
+                                                    participant?.isMuted ==
+                                                        true ||
+                                                    participant?.isBanned ==
+                                                        true ||
+                                                    !allowChat ||
+                                                    hasBlockedParticipantInRoom
+                                                ? null
+                                                : () async {
+                                                    final trimmed =
+                                                        messageController.text
+                                                            .trim();
+                                                    if (trimmed.isEmpty) {
+                                                      return;
+                                                    }
+                                                    final outgoingMessage =
+                                                        _buildOutgoingChatMessage(
+                                                          trimmed,
+                                                        );
+                                                    if (slowModeSeconds > 0 &&
+                                                        lastMessageTime !=
+                                                            null) {
+                                                      final secs = DateTime.now()
+                                                          .difference(
+                                                            lastMessageTime!,
+                                                          )
+                                                          .inSeconds;
+                                                      if (secs <
+                                                          slowModeSeconds) {
+                                                        setState(() {
+                                                          cooldownMessage =
+                                                              'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                                        });
+                                                        return;
+                                                      }
+                                                    }
+                                                    setState(
+                                                      () => isSending = true,
+                                                    );
+                                                    try {
+                                                      await sendMessage(
+                                                        outgoingMessage,
+                                                      );
+                                                      lastMessageTime =
+                                                          DateTime.now();
+                                                      cooldownMessage = '';
+                                                      messageController.clear();
+                                                      _pendingRichColorHex =
+                                                          null;
+                                                      _showEmojiTray = false;
+                                                      if (!_hasTrackedFirstMessage) {
+                                                        _hasTrackedFirstMessage =
+                                                            true;
+                                                        await AnalyticsService()
+                                                            .logEvent(
+                                                              'first_message_sent',
+                                                              params: {
+                                                                'room_id':
+                                                                    widget
+                                                                        .roomId,
+                                                                'user_id':
+                                                                    user.id,
+                                                              },
+                                                            );
+                                                      }
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              e.toString(),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
+                                                    } finally {
+                                                      if (context.mounted) {
+                                                        setState(
+                                                          () =>
+                                                              isSending = false,
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                            child: isSending
+                                                ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.send_rounded,
+                                                    size: 18,
+                                                  ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ],

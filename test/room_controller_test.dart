@@ -9,7 +9,6 @@ import 'package:mixvy/features/room/providers/participant_providers.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/features/room/room_controller.dart';
 import 'package:mixvy/features/room/services/room_session_service.dart';
-import 'package:mixvy/models/presence_model.dart';
 import 'package:mixvy/models/room_participant_model.dart';
 import 'package:mixvy/services/presence_controller.dart';
 
@@ -60,11 +59,10 @@ class _FlakyRoomSessionService extends RoomSessionService {
     required super.firestore,
     required super.presenceController,
     this.joinFailuresRemaining = 0,
-    this.heartbeatFailuresRemaining = 0,
   });
 
   int joinFailuresRemaining;
-  int heartbeatFailuresRemaining;
+  int heartbeatFailuresRemaining = 0;
 
   @override
   Future<RoomJoinResult> joinRoom({

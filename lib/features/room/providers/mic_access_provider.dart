@@ -58,15 +58,6 @@ class MicAccessController {
     return '${requesterId}_$hostId';
   }
 
-  Future<int> _nextPriority(String roomId) async {
-    final roomSnapshot = await _db.collection('rooms').doc(roomId).get();
-    final current = _asInt(
-      roomSnapshot.data()?['micQueueSequence'],
-      fallback: 0,
-    );
-    return current + 1;
-  }
-
   Future<void> _expireStalePendingRequests(String roomId) async {
     final now = DateTime.now();
     final pendingSnapshot = await _requestCollection(

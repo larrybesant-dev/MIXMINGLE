@@ -13,10 +13,7 @@ import '../providers/friends_providers.dart';
 import '../widgets/friend_tile.dart';
 
 class FriendsPaneView extends ConsumerStatefulWidget {
-  const FriendsPaneView({
-    super.key,
-    this.showHeader = true,
-  });
+  const FriendsPaneView({super.key, this.showHeader = true});
 
   final bool showHeader;
 
@@ -75,8 +72,8 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
         final filtered = q.isEmpty
             ? entries
             : entries
-                .where((e) => e.user.username.toLowerCase().contains(q))
-                .toList(growable: false);
+                  .where((e) => e.user.username.toLowerCase().contains(q))
+                  .toList(growable: false);
 
         final inRoomEntries = filtered
             .where((e) => (e.roomId ?? '').isNotEmpty)
@@ -87,6 +84,7 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
         final offlineEntries = filtered
             .where((e) => !e.isOnline)
             .toList(growable: false);
+        final activeCount = onlineEntries.length + inRoomEntries.length;
 
         return ListView(
           padding: const EdgeInsets.only(bottom: 24),
@@ -103,9 +101,9 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                 child: Text(
                   'Friends',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: VelvetNoir.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: VelvetNoir.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -116,13 +114,22 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
               controller: _searchController,
               onChanged: (v) => setState(() => _query = v),
             ),
+            _PresenceOverviewCard(
+              activeCount: activeCount,
+              inRoomCount: inRoomEntries.length,
+              offlineCount: offlineEntries.length,
+              currentRoomId: myRoomId,
+            ),
 
             if (filtered.isEmpty) ...[
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: Text(
                   'No matches.',
-                  style: TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 13),
+                  style: TextStyle(
+                    color: VelvetNoir.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ] else ...[
@@ -137,7 +144,9 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
               ),
               if (_onlineExpanded) ...[
                 if (onlineEntries.isEmpty)
-                  const _EmptySectionLabel(label: 'No friends online right now.')
+                  const _EmptySectionLabel(
+                    label: 'No friends online right now.',
+                  )
                 else
                   for (var i = 0; i < onlineEntries.length; i++) ...[
                     FriendTile(
@@ -150,7 +159,10 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                           label: 'Message',
                           icon: Icons.chat_bubble_outline_rounded,
                           onPressed: () => _openConversation(
-                              context, currentUser, onlineEntries[i].user),
+                            context,
+                            currentUser,
+                            onlineEntries[i].user,
+                          ),
                         ),
                         if ((myRoomId ?? '').isNotEmpty)
                           FriendTileAction(
@@ -165,7 +177,10 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                           ),
                       ],
                       onTap: () => _openConversation(
-                          context, currentUser, onlineEntries[i].user),
+                        context,
+                        currentUser,
+                        onlineEntries[i].user,
+                      ),
                     ),
                     if (i < onlineEntries.length - 1)
                       const Divider(
@@ -190,7 +205,8 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
               if (_inRoomsExpanded) ...[
                 if (inRoomEntries.isEmpty)
                   const _EmptySectionLabel(
-                      label: 'No friends in rooms right now.')
+                    label: 'No friends in rooms right now.',
+                  )
                 else
                   for (var i = 0; i < inRoomEntries.length; i++) ...[
                     FriendTile(
@@ -210,7 +226,10 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                           label: 'Message',
                           icon: Icons.chat_bubble_outline_rounded,
                           onPressed: () => _openConversation(
-                              context, currentUser, inRoomEntries[i].user),
+                            context,
+                            currentUser,
+                            inRoomEntries[i].user,
+                          ),
                         ),
                       ],
                       onTap: () =>
@@ -248,7 +267,10 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                       statusColor: VelvetNoir.onSurfaceVariant,
                       actions: const [],
                       onTap: () => _openConversation(
-                          context, currentUser, offlineEntries[i].user),
+                        context,
+                        currentUser,
+                        offlineEntries[i].user,
+                      ),
                     ),
                     if (i < offlineEntries.length - 1)
                       const Divider(
@@ -287,9 +309,9 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
       context.go('/messages/$conversationId');
     } catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open chat: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open chat: $error')));
     }
   }
 
@@ -315,9 +337,9 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
       );
     } catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send invite: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not send invite: $error')));
     }
   }
 
@@ -334,11 +356,130 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
 
 // ── Supporting widgets ────────────────────────────────────────────────────────
 
-class _FriendSearchBar extends StatelessWidget {
-  const _FriendSearchBar({
-    required this.controller,
-    required this.onChanged,
+class _PresenceOverviewCard extends StatelessWidget {
+  const _PresenceOverviewCard({
+    required this.activeCount,
+    required this.inRoomCount,
+    required this.offlineCount,
+    required this.currentRoomId,
   });
+
+  final int activeCount;
+  final int inRoomCount;
+  final int offlineCount;
+  final String? currentRoomId;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCurrentRoom = (currentRoomId ?? '').trim().isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: VelvetNoir.surfaceHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: VelvetNoir.outlineVariant.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Presence snapshot',
+            style: TextStyle(
+              color: VelvetNoir.onSurface,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PresenceStatChip(
+                label: '$activeCount active now',
+                color: const Color(0xFF22C55E),
+                icon: Icons.circle,
+              ),
+              _PresenceStatChip(
+                label: '$inRoomCount in rooms',
+                color: VelvetNoir.secondaryBright,
+                icon: Icons.mic_rounded,
+              ),
+              _PresenceStatChip(
+                label: '$offlineCount away',
+                color: VelvetNoir.onSurfaceVariant,
+                icon: Icons.schedule_rounded,
+              ),
+            ],
+          ),
+          if (hasCurrentRoom) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/room/$currentRoomId'),
+                icon: const Icon(Icons.meeting_room_rounded, size: 16),
+                label: const Text('Back to my room'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VelvetNoir.primary,
+                  side: BorderSide(
+                    color: VelvetNoir.primary.withValues(alpha: 0.55),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PresenceStatChip extends StatelessWidget {
+  const _PresenceStatChip({
+    required this.label,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FriendSearchBar extends StatelessWidget {
+  const _FriendSearchBar({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -353,8 +494,10 @@ class _FriendSearchBar extends StatelessWidget {
         style: const TextStyle(color: VelvetNoir.onSurface, fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Search friends...',
-          hintStyle:
-              const TextStyle(color: VelvetNoir.onSurfaceVariant, fontSize: 14),
+          hintStyle: const TextStyle(
+            color: VelvetNoir.onSurfaceVariant,
+            fontSize: 14,
+          ),
           prefixIcon: const Icon(
             Icons.search_rounded,
             color: VelvetNoir.onSurfaceVariant,
@@ -372,22 +515,27 @@ class _FriendSearchBar extends StatelessWidget {
               : null,
           filled: true,
           fillColor: VelvetNoir.surfaceHigh,
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 10,
+            horizontal: 16,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-                color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
+              color: VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-                color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
+              color: VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-                color: VelvetNoir.primary.withValues(alpha: 0.7)),
+              color: VelvetNoir.primary.withValues(alpha: 0.7),
+            ),
           ),
         ),
       ),
