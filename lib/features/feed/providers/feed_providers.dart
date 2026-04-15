@@ -3,11 +3,15 @@ import 'package:mixvy/services/room_service.dart';
 import 'package:mixvy/core/providers/firebase_providers.dart';
 
 import '../repository/feed_repository.dart';
+import '../models/home_feed_snapshot.dart';
 import '../models/post_model.dart';
 import '../../../models/room_model.dart';
+import '../../../models/social_activity_model.dart';
 import '../../../models/user_model.dart';
-import 'package:mixvy/models/models.dart';
+import '../../../presentation/providers/user_provider.dart';
 import '../../../services/presence_repository.dart';
+import '../../../services/social_activity_service.dart';
+import 'package:mixvy/models/models.dart';
 
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
   return FeedRepository(ref.read(firestoreProvider));
@@ -17,8 +21,10 @@ final postsStreamProvider = StreamProvider<List<PostModel>>((ref) {
   return ref.read(feedRepositoryProvider).postsStream();
 });
 
-final userPostsStreamProvider =
-    StreamProvider.family<List<PostModel>, String>((ref, userId) {
+final userPostsStreamProvider = StreamProvider.family<List<PostModel>, String>((
+  ref,
+  userId,
+) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('posts')
@@ -26,8 +32,10 @@ final userPostsStreamProvider =
       .orderBy('createdAt', descending: true)
       .limit(30)
       .snapshots()
-      .map((snap) =>
-          snap.docs.map((d) => PostModel.fromDoc(d.id, d.data())).toList());
+      .map(
+        (snap) =>
+            snap.docs.map((d) => PostModel.fromDoc(d.id, d.data())).toList(),
+      );
 });
 
 final roomsStreamProvider = StreamProvider<List<RoomModel>>((ref) {
@@ -49,29 +57,68 @@ final liveRoomsCountProvider = FutureProvider.autoDispose<int>((ref) async {
   return rooms.length;
 });
 
-final newMembersStreamProvider = FutureProvider.autoDispose<List<UserModel>>((ref) async {
+final newMembersStreamProvider = FutureProvider.autoDispose<List<UserModel>>((
+  ref,
+) async {
   final firestore = ref.watch(firestoreProvider);
   final snapshot = await firestore
       .collection('users')
       .orderBy('createdAt', descending: true)
       .limit(12)
       .get();
-  return snapshot.docs.map((d) {
-    final data = d.data();
-    data['id'] = d.id;
-    return UserModel.fromJson(data);
-  }).toList(growable: false);
-});
-
-final trendingUsersStreamProvider =
-    FutureProvider.autoDispose<List<UserModel>>((ref) async {
-  final snapshot = await ref
-      .watch(firestoreProvider)
-      .collection('users')
-      .orderBy('balance', descending: true)
-      .limit(10)
-      .get();
   return snapshot.docs
-      .map((d) => UserModel.fromJson({'id': d.id, ...d.data()}))
+      .map((d) {
+        final data = d.data();
+        data['id'] = d.id;
+        return UserModel.fromJson(data);
+      })
       .toList(growable: false);
 });
+
+final trendingUsersStreamProvider = FutureProvider.autoDispose<List<UserModel>>(
+  (ref) async {
+    final snapshot = await ref
+        .watch(firestoreProvider)
+        .collection('users')
+        .orderBy('balance', descending: true)
+        .limit(10)
+        .get();
+    return snapshot.docs
+        .map((d) => UserModel.fromJson({'id': d.id, ...d.data()}))
+        .toList(growable: false);
+  },
+);
+
+final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
+  return SocialActivityService(firestore: ref.watch(firestoreProvider));
+});
+
+final currentUserActivitiesProvider =
+    StreamProvider.autoDispose<List<SocialActivity>>((ref) {
+      final currentUser = ref.watch(userProvider);
+      final userId = currentUser?.id ?? '';
+      return ref
+          .watch(socialActivityServiceProvider)
+          .watchUserActivities(userId, limit: 4);
+    });
+
+final homeFeedSnapshotProvider =
+    Provider.autoDispose<AsyncValue<HomeFeedSnapshot>>((ref) {
+      final activitiesAsync = ref.watch(currentUserActivitiesProvider);
+      final roomsAsync = ref.watch(roomsStreamProvider);
+      final usersAsync = ref.watch(trendingUsersStreamProvider);
+
+      if (activitiesAsync.isLoading &&
+          roomsAsync.isLoading &&
+          usersAsync.isLoading) {
+        return const AsyncValue.loading();
+      }
+
+      return AsyncValue.data(
+        HomeFeedSnapshot(
+          activities: activitiesAsync.valueOrNull ?? const <SocialActivity>[],
+          liveRooms: roomsAsync.valueOrNull ?? const <RoomModel>[],
+          suggestedUsers: usersAsync.valueOrNull ?? const <UserModel>[],
+        ),
+      );
+    });

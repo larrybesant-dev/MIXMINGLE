@@ -15,9 +15,9 @@ import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
 import 'daily_checkin_card.dart';
 import 'leaderboard_strip.dart';
+import 'widgets/social_pulse_section.dart';
 import '../../models/user_model.dart';
 import '../../widgets/brand_ui_kit.dart';
-
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -33,9 +33,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _showNavigationError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _openRoom(String? roomId) {
@@ -70,6 +70,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.invalidate(liveRoomsCountProvider);
     ref.invalidate(newMembersStreamProvider);
     ref.invalidate(trendingUsersStreamProvider);
+    ref.invalidate(currentUserActivitiesProvider);
+    ref.invalidate(homeFeedSnapshotProvider);
     ref.invalidate(leaderboardProvider);
     ref.invalidate(dailyCheckinProvider);
 
@@ -80,6 +82,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ref.read(liveRoomsCountProvider.future),
       ref.read(newMembersStreamProvider.future),
       ref.read(trendingUsersStreamProvider.future),
+      ref.read(currentUserActivitiesProvider.future),
       ref.read(leaderboardProvider.future),
       ref.read(dailyCheckinProvider.future),
     ]);
@@ -94,6 +97,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final setupItems = ProfileCompletion.homeNudgeItems(profileState);
     final currentUser = ref.watch(userProvider);
     final newMembersAsync = ref.watch(newMembersStreamProvider);
+    final homeFeedAsync = ref.watch(homeFeedSnapshotProvider);
 
     return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
@@ -117,8 +121,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: VelvetNoir.primary.withValues(alpha: 0.6),
-                          width: 1.5),
+                        color: VelvetNoir.primary.withValues(alpha: 0.6),
+                        width: 1.5,
+                      ),
                       gradient: const RadialGradient(
                         colors: [Color(0xFF2A1A0A), Color(0xFF0B0B0B)],
                       ),
@@ -133,7 +138,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               child: Text(
                                 (currentUser?.username ?? 'U').isNotEmpty
                                     ? (currentUser?.username ?? 'U')[0]
-                                        .toUpperCase()
+                                          .toUpperCase()
                                     : 'U',
                                 style: const TextStyle(
                                   color: VelvetNoir.primary,
@@ -178,14 +183,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               const SizedBox(width: 4),
               IconButton(
-                icon: const Icon(Icons.add_circle_outline,
-                    color: VelvetNoir.onSurface),
+                icon: const Icon(
+                  Icons.add_circle_outline,
+                  color: VelvetNoir.onSurface,
+                ),
                 tooltip: 'Create',
                 onPressed: () => _showCreateMenu(context),
               ),
               IconButton(
-                icon: const Icon(Icons.notifications_outlined,
-                    color: VelvetNoir.onSurface),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: VelvetNoir.onSurface,
+                ),
                 onPressed: () => context.go('/notifications'),
               ),
             ],
@@ -218,7 +227,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: _ProfileNudge(
-                        setupItems: setupItems, profileState: profileState),
+                      setupItems: setupItems,
+                      profileState: profileState,
+                    ),
                   ),
                 ),
 
@@ -230,9 +241,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   topPadding: 20,
                   trailing: TextButton(
                     onPressed: () => context.go('/rooms'),
-                    child: const Text('See all',
-                        style: TextStyle(
-                            color: VelvetNoir.primary, fontSize: 13)),
+                    child: const Text(
+                      'See all',
+                      style: TextStyle(color: VelvetNoir.primary, fontSize: 13),
+                    ),
                   ),
                 ),
               ),
@@ -266,6 +278,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
 
+              // SOCIAL PULSE section
+              SliverToBoxAdapter(
+                child: homeFeedAsync.when(
+                  data: (snapshot) => SocialPulseSection(
+                    activities: snapshot.activities,
+                    headline: snapshot.headline,
+                    subheadline: snapshot.subheadline,
+                    liveRoomCount: snapshot.liveRooms.length,
+                    suggestionCount: snapshot.suggestedUsers.length,
+                    onOpenRooms: () => context.go('/rooms'),
+                    onOpenDiscover: () => context.go('/discover'),
+                  ),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: _HorizontalSkeleton(height: 190),
+                  ),
+                  error: (_, _) => SocialPulseSection(
+                    activities: const [],
+                    onOpenRooms: () => context.go('/rooms'),
+                    onOpenDiscover: () => context.go('/discover'),
+                  ),
+                ),
+              ),
+
               // DISCOVER PEOPLE section
               SliverToBoxAdapter(
                 child: _SectionHeader(
@@ -274,9 +310,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   topPadding: 24,
                   trailing: TextButton(
                     onPressed: () => context.go('/discover'),
-                    child: const Text('See all',
-                        style: TextStyle(
-                            color: VelvetNoir.primary, fontSize: 13)),
+                    child: const Text(
+                      'See all',
+                      style: TextStyle(color: VelvetNoir.primary, fontSize: 13),
+                    ),
                   ),
                 ),
               ),
@@ -295,8 +332,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             itemCount: users.length.clamp(0, 10),
                             separatorBuilder: (ctx, idx) =>
                                 const SizedBox(width: 10),
-                            itemBuilder: (context, i) =>
-                                _DiscoverPersonCard(
+                            itemBuilder: (context, i) => _DiscoverPersonCard(
                               user: users[i],
                               onTap: () => _openProfile(users[i].id),
                             ),
@@ -315,9 +351,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   topPadding: 24,
                   trailing: TextButton(
                     onPressed: () => context.go('/rooms'),
-                    child: const Text('Browse',
-                        style: TextStyle(
-                            color: VelvetNoir.primary, fontSize: 13)),
+                    child: const Text(
+                      'Browse',
+                      style: TextStyle(color: VelvetNoir.primary, fontSize: 13),
+                    ),
                   ),
                 ),
               ),
@@ -355,7 +392,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               SliverToBoxAdapter(
                 child: _SectionHeader(
                   title: 'New Members',
-                    dotColor: VelvetNoir.primary,
+                  dotColor: VelvetNoir.primary,
                   topPadding: 24,
                 ),
               ),
@@ -402,7 +439,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   if (posts.isEmpty) {
                     return const SliverToBoxAdapter(
                       child: _EmptyPill(
-                          label: 'No posts yet — follow someone!'),
+                        label: 'No posts yet — follow someone!',
+                      ),
                     );
                   }
                   final capped = posts.take(30).toList();
@@ -418,11 +456,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: Padding(
                     padding: EdgeInsets.all(32),
                     child: Center(
-                        child: CircularProgressIndicator(
-                            color: VelvetNoir.primary)),
+                      child: CircularProgressIndicator(
+                        color: VelvetNoir.primary,
+                      ),
+                    ),
                   ),
                 ),
-                error: (e, _) => const SliverToBoxAdapter(child: _ErrorCard(message: 'Could not load posts')),
+                error: (e, _) => const SliverToBoxAdapter(
+                  child: _ErrorCard(message: 'Could not load posts'),
+                ),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 80)),
@@ -442,8 +484,7 @@ class _StatsBarWidget extends StatelessWidget {
   final AsyncValue<int> onlineAsync;
   final AsyncValue<int> liveAsync;
 
-  const _StatsBarWidget(
-      {required this.onlineAsync, required this.liveAsync});
+  const _StatsBarWidget({required this.onlineAsync, required this.liveAsync});
 
   @override
   Widget build(BuildContext context) {
@@ -471,8 +512,11 @@ class _StatPill extends StatelessWidget {
   final Color dot;
   final String label;
   final String tooltip;
-  const _StatPill(
-      {required this.dot, required this.label, required this.tooltip});
+  const _StatPill({
+    required this.dot,
+    required this.label,
+    required this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -491,16 +535,16 @@ class _StatPill extends StatelessWidget {
             Container(
               width: 6,
               height: 6,
-              decoration: BoxDecoration(
-                  color: dot, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: VelvetNoir.onSurface),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: VelvetNoir.onSurface,
+              ),
             ),
           ],
         ),
@@ -529,8 +573,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          EdgeInsets.fromLTRB(16, topPadding, 16, 8),
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 8),
       child: Row(
         children: [
           Container(
@@ -583,8 +626,7 @@ class _NewMemberChip extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: VelvetNoir.primary.withValues(alpha: 0.25),
-                  border: Border.all(
-                      color: VelvetNoir.primary, width: 2),
+                  border: Border.all(color: VelvetNoir.primary, width: 2),
                 ),
                 child: CircleAvatar(
                   radius: 26,
@@ -598,9 +640,10 @@ class _NewMemberChip extends StatelessWidget {
                               ? user.username[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              color: VelvetNoir.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18),
+                            color: VelvetNoir.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                          ),
                         )
                       : null,
                 ),
@@ -610,17 +653,20 @@ class _NewMemberChip extends StatelessWidget {
                 right: -4,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 4, vertical: 2),
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                      color: VelvetNoir.primary,
-                      borderRadius: BorderRadius.circular(6),
+                    color: VelvetNoir.primary,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'NEW',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      color: VelvetNoir.surface,
                     ),
-                    child: const Text(
-                      'NEW',
-                      style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                          color: VelvetNoir.surface),
                   ),
                 ),
               ),
@@ -632,7 +678,9 @@ class _NewMemberChip extends StatelessWidget {
             child: Text(
               user.username,
               style: const TextStyle(
-                  fontSize: 10, color: VelvetNoir.onSurfaceVariant),
+                fontSize: 10,
+                color: VelvetNoir.onSurfaceVariant,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -709,7 +757,9 @@ class _LiveNowTile extends StatelessWidget {
                   left: 0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 5, vertical: 2),
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: VelvetNoir.liveGlow,
                       borderRadius: BorderRadius.circular(6),
@@ -732,12 +782,16 @@ class _LiveNowTile extends StatelessWidget {
                     right: -4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 2),
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: VelvetNoir.surface,
                         borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: VelvetNoir.liveGlow, width: 1),
+                        border: Border.all(
+                          color: VelvetNoir.liveGlow,
+                          width: 1,
+                        ),
                       ),
                       child: Text(
                         room.memberCount > 999
@@ -790,8 +844,7 @@ class _DiscoverPersonCard extends StatelessWidget {
         width: 120,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: VelvetNoir.primary.withValues(alpha: 0.18)),
+          border: Border.all(color: VelvetNoir.primary.withValues(alpha: 0.18)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -800,10 +853,7 @@ class _DiscoverPersonCard extends StatelessWidget {
             children: [
               // Photo / gradient bg
               avatarUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: avatarUrl,
-                      fit: BoxFit.cover,
-                    )
+                  ? CachedNetworkImage(imageUrl: avatarUrl, fit: BoxFit.cover)
                   : Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -901,7 +951,9 @@ class _PopularRoomCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: VelvetNoir.liveGlow.withValues(alpha: 0.25), width: 1),
+            color: VelvetNoir.liveGlow.withValues(alpha: 0.25),
+            width: 1,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -922,9 +974,11 @@ class _PopularRoomCard extends StatelessWidget {
                         ),
                       ),
                       child: Center(
-                        child: Icon(Icons.mic_external_on_rounded,
-                            color: VelvetNoir.primary.withValues(alpha: 0.3),
-                            size: 48),
+                        child: Icon(
+                          Icons.mic_external_on_rounded,
+                          color: VelvetNoir.primary.withValues(alpha: 0.3),
+                          size: 48,
+                        ),
                       ),
                     ),
               // Gradient overlay
@@ -951,7 +1005,9 @@ class _PopularRoomCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: VelvetNoir.liveGlow,
                         borderRadius: BorderRadius.circular(6),
@@ -969,14 +1025,20 @@ class _PopularRoomCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.people, color: Colors.white, size: 10),
+                          const Icon(
+                            Icons.people,
+                            color: Colors.white,
+                            size: 10,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             '${room.memberCount}',
@@ -1067,8 +1129,11 @@ class _VipLoungeBanner extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.workspace_premium_rounded,
-                    color: Colors.white, size: 28),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -1096,7 +1161,9 @@ class _VipLoungeBanner extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFD4AF37), Color(0xFF8C6020)],
@@ -1138,16 +1205,16 @@ int _nudgeTab(List<String> items) {
 class _ProfileNudge extends StatelessWidget {
   final List<String> setupItems;
   final dynamic profileState;
-  const _ProfileNudge(
-      {required this.setupItems, required this.profileState});
+  const _ProfileNudge({required this.setupItems, required this.profileState});
 
   @override
   Widget build(BuildContext context) {
-    final pct =
-      (ProfileCompletion.homeNudgeCompleteness(profileState) * 100).round();
+    final pct = (ProfileCompletion.homeNudgeCompleteness(profileState) * 100)
+        .round();
     final isAlmostDone = pct >= 70;
-    final Color accent =
-        isAlmostDone ? VelvetNoir.secondary : VelvetNoir.primary;
+    final Color accent = isAlmostDone
+        ? VelvetNoir.secondary
+        : VelvetNoir.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1158,8 +1225,7 @@ class _ProfileNudge extends StatelessWidget {
         },
         child: Container(
           width: double.infinity,
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: VelvetNoir.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
@@ -1173,9 +1239,10 @@ class _ProfileNudge extends StatelessWidget {
                 child: Text(
                   '$pct%',
                   style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: accent),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1184,25 +1251,28 @@ class _ProfileNudge extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isAlmostDone
-                          ? 'Almost there!'
-                          : 'Complete your profile',
+                      isAlmostDone ? 'Almost there!' : 'Complete your profile',
                       style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: accent),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
                     ),
                     Text(
                       '${setupItems.length} step${setupItems.length == 1 ? '' : 's'} left',
                       style: const TextStyle(
-                          fontSize: 11,
-                          color: VelvetNoir.onSurfaceVariant),
+                        fontSize: 11,
+                        color: VelvetNoir.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right,
-                  color: VelvetNoir.onSurfaceVariant, size: 20),
+              const Icon(
+                Icons.chevron_right,
+                color: VelvetNoir.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ),
         ),
@@ -1238,40 +1308,56 @@ void _showCreateMenu(BuildContext context) {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.article_outlined,
-              color: VelvetNoir.primary),
-          title: const Text('New Post',
-              style: TextStyle(color: VelvetNoir.onSurface)),
+          leading: const Icon(
+            Icons.article_outlined,
+            color: VelvetNoir.primary,
+          ),
+          title: const Text(
+            'New Post',
+            style: TextStyle(color: VelvetNoir.onSurface),
+          ),
           onTap: () {
             Navigator.pop(context);
             context.go('/create-post');
           },
         ),
         ListTile(
-          leading: const Icon(Icons.auto_stories_outlined,
-              color: VelvetNoir.secondary),
-          title: const Text('New Story',
-              style: TextStyle(color: VelvetNoir.onSurface)),
+          leading: const Icon(
+            Icons.auto_stories_outlined,
+            color: VelvetNoir.secondary,
+          ),
+          title: const Text(
+            'New Story',
+            style: TextStyle(color: VelvetNoir.onSurface),
+          ),
           onTap: () {
             Navigator.pop(context);
             context.go('/create-story');
           },
         ),
         ListTile(
-          leading: const Icon(Icons.meeting_room_outlined,
-              color: VelvetNoir.primaryDim),
-          title: const Text('Host Room',
-              style: TextStyle(color: VelvetNoir.onSurface)),
+          leading: const Icon(
+            Icons.meeting_room_outlined,
+            color: VelvetNoir.primaryDim,
+          ),
+          title: const Text(
+            'Host Room',
+            style: TextStyle(color: VelvetNoir.onSurface),
+          ),
           onTap: () {
             Navigator.pop(context);
             context.go('/create-room');
           },
         ),
         ListTile(
-          leading: const Icon(Icons.group_add_outlined,
-              color: VelvetNoir.secondaryBright),
-          title: const Text('New Group',
-              style: TextStyle(color: VelvetNoir.onSurface)),
+          leading: const Icon(
+            Icons.group_add_outlined,
+            color: VelvetNoir.secondaryBright,
+          ),
+          title: const Text(
+            'New Group',
+            style: TextStyle(color: VelvetNoir.onSurface),
+          ),
           onTap: () {
             Navigator.pop(context);
             context.go('/create-group');
@@ -1296,15 +1382,18 @@ class _EmptyPill extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: VelvetNoir.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(label,
-            style: const TextStyle(
-                color: VelvetNoir.onSurfaceVariant, fontSize: 13)),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: VelvetNoir.onSurfaceVariant,
+            fontSize: 13,
+          ),
+        ),
       ),
     );
   }
@@ -1327,17 +1416,19 @@ class _ErrorCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: VelvetNoir.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border:
-              Border.all(color: VelvetNoir.error.withValues(alpha: 0.3)),
+          border: Border.all(color: VelvetNoir.error.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline,
-                size: 16, color: VelvetNoir.error),
+            const Icon(Icons.error_outline, size: 16, color: VelvetNoir.error),
             const SizedBox(width: 8),
-            Text(message,
-                style: const TextStyle(
-                    fontSize: 12, color: VelvetNoir.onSurfaceVariant)),
+            Text(
+              message,
+              style: const TextStyle(
+                fontSize: 12,
+                color: VelvetNoir.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
