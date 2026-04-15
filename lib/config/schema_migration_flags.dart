@@ -8,7 +8,7 @@ class SchemaMigrationFlags {
 
   static const bool enableProfileLegacyWrite = bool.fromEnvironment(
     'MIXVY_ENABLE_PROFILE_LEGACY_WRITE',
-    defaultValue: true,
+    defaultValue: false,
   );
 
   static const bool enableFriendLegacyWrite = bool.fromEnvironment(
@@ -28,6 +28,6 @@ class SchemaMigrationFlags {
 
   static const bool enableAvatarLegacyWrite = bool.fromEnvironment(
     'MIXVY_ENABLE_AVATAR_LEGACY_WRITE',
-    defaultValue: true,
+    defaultValue: false,
   );
 }

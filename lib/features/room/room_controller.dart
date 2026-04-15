@@ -15,6 +15,8 @@ import 'services/room_session_service.dart';
 final roomControllerProvider = NotifierProvider.family
     .autoDispose<RoomController, RoomState, String>(RoomController.new);
 
+enum MicRequestResult { grabbed, queued }
+
 class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   RoomSessionService get _sessionService =>
       ref.read(roomSessionServiceProvider);
@@ -508,25 +510,32 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return _sessionService.setSpotlightUser(roomId: arg, userId: userId);
   }
 
-  Future<void> requestMic({required String userId}) async {
+  Future<MicRequestResult> requestMic({required String userId}) async {
     final normalizedUserId = userId.trim();
     if (!state.isUserInRoom(normalizedUserId)) {
       throw StateError('Only joined users can request the mic.');
     }
-    if (!state.canAddSpeaker(normalizedUserId)) {
-      throw StateError(
-        'The stage already has ${RoomState.maxSpeakers} speakers.',
-      );
+
+    if (state.isSpeaker(normalizedUserId)) {
+      return MicRequestResult.grabbed;
     }
+
+    if (state.speakerIds.length < RoomState.maxSpeakers) {
+      await _micAccess.grabMicDirectly(roomId: arg, userId: normalizedUserId);
+      return MicRequestResult.grabbed;
+    }
+
     final hostId = state.hostId.trim();
     if (hostId.isEmpty) {
       throw StateError('No active host was found for this room.');
     }
+
     await _micAccess.requestAccess(
       roomId: arg,
       requesterId: normalizedUserId,
       hostId: hostId,
     );
+    return MicRequestResult.queued;
   }
 
   Future<void> approveMicRequest(MicAccessRequestModel request) async {

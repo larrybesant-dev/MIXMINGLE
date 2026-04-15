@@ -3927,7 +3927,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   liveRoomState.shouldRenderUser(user.id))
                 user.id,
             };
-            final participantsInRoom = stateBackedUserIds
+            final rawParticipantsInRoom = stateBackedUserIds
                 .map((userId) {
                   final existing = participantById[userId];
                   if (existing != null) {
@@ -3959,6 +3959,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   );
                 })
                 .toList(growable: false);
+            final roomPresenceList =
+                presenceAsync.valueOrNull ?? const <RoomPresenceModel>[];
+            final onlineRoomUserIds = roomPresenceList
+                .where((presence) => presence.isOnline)
+                .map((presence) => presence.userId.trim())
+                .where((userId) => userId.isNotEmpty)
+                .toSet();
+            final hasPresenceSnapshot = roomPresenceList.isNotEmpty;
+            final participantsInRoom = hasPresenceSnapshot
+                ? rawParticipantsInRoom
+                      .where(
+                        (participantItem) =>
+                            participantItem.userId == user.id ||
+                            onlineRoomUserIds.contains(participantItem.userId),
+                      )
+                      .toList(growable: false)
+                : rawParticipantsInRoom;
             _syncTelemetryForBuild(
               currentUserId: user.id,
               roomState: liveRoomState,
@@ -5771,10 +5788,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   }
                                 }
                               },
-                              onJoinQueue: allowMicRequests
+                              onJoinQueue:
+                                  (allowMicRequests ||
+                                      liveRoomState.speakerIds.length <
+                                          RoomState.maxSpeakers)
                                   ? () async {
                                       try {
-                                        await ref
+                                        final result = await ref
                                             .read(
                                               liveRoomControllerProvider(
                                                 widget.roomId,
@@ -5783,7 +5803,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                             .requestMic(userId: user.id);
                                         if (mounted) {
                                           _showSnackBar(
-                                            'Mic request sent to the stage.',
+                                            result == MicRequestResult.grabbed
+                                                ? 'You are now on mic.'
+                                                : 'Mic request sent to the stage.',
                                           );
                                         }
                                       } catch (e) {
@@ -6170,21 +6192,19 @@ class _RoomRosterSidebar extends StatelessWidget {
     final participantByUserId = <String, RoomParticipantModel>{
       for (final participant in participants) participant.userId: participant,
     };
-    for (final userId in roomState.userIds) {
-      participantByUserId.putIfAbsent(
-        userId,
-        () => RoomParticipantModel(
-          userId: userId,
-          role: userId == roomState.hostId
-              ? 'host'
-              : (roomState.isSpeaker(userId) ? 'stage' : 'audience'),
-          isMuted: false,
-          isBanned: false,
-          camOn: false,
-          micOn: roomState.isSpeaker(userId),
-          joinedAt: DateTime.now(),
-          lastActiveAt: DateTime.now(),
-        ),
+    if (!participantByUserId.containsKey(currentUserId) &&
+        roomState.shouldRenderUser(currentUserId)) {
+      participantByUserId[currentUserId] = RoomParticipantModel(
+        userId: currentUserId,
+        role: currentUserId == roomState.hostId
+            ? 'host'
+            : (roomState.isSpeaker(currentUserId) ? 'stage' : 'audience'),
+        isMuted: false,
+        isBanned: false,
+        camOn: isLocalVideoEnabled,
+        micOn: roomState.isSpeaker(currentUserId) || localSpeaking,
+        joinedAt: DateTime.now(),
+        lastActiveAt: DateTime.now(),
       );
     }
 
@@ -6351,7 +6371,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           const Divider(height: 1, thickness: 1, color: _kDivider),
           // ── Chatting ─────────────────────────────────────────
           _RosterHeader(
-            label: 'Chatting ${roomState.userIds.length}',
+            label: 'Chatting ${sorted.length}',
             icon: Icons.chat_bubble_outline,
             iconColor: const Color(0xFFB09080),
           ),

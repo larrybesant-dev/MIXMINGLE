@@ -43,6 +43,13 @@ service cloud.firestore {
 
     function onlyProfilePublicFieldsAllowed() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'userId',
+        'avatarUrl',
+        'coverPhotoUrl',
+        'galleryUrls',
+        'introVideoUrl',
+        'bio',
+        'aboutMe',
         'age',
         'gender',
         'location',
@@ -52,14 +59,14 @@ service cloud.firestore {
         'musicTastePrompt',
         'interests',
         'profileAccentColor',
-        'galleryUrls',
-        'introVideoUrl',
+        'isPrivate',
         'updatedAt'
       ]);
     }
 
     function onlyPreferencesFieldsAllowed() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'userId',
         'themeId',
         'backgroundColor',
         'profileMusicUrl',
@@ -67,6 +74,15 @@ service cloud.firestore {
         'profileBgGradientStart',
         'profileBgGradientEnd',
         'camViewPolicy',
+        'updatedAt'
+      ]);
+    }
+
+    function onlyVerificationSettingsFieldsAllowed() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'userId',
+        'adultModeEnabled',
+        'adultConsentAccepted',
         'updatedAt'
       ]);
     }
@@ -176,8 +192,9 @@ service cloud.firestore {
       match /verification/{document=**} {
         // Only owner can read their own verification status.
         allow read: if isSelf(userId);
-        // All writes server-only. Client cannot set verified status.
-        allow create, update, delete: if false;
+        // Client may update only self-managed adult/privacy consent flags.
+        allow create, update: if isSelf(userId) && onlyVerificationSettingsFieldsAllowed();
+        allow delete: if false;
       }
 
       // ───────────────────────────────────────────────────────────────────────
@@ -200,6 +217,10 @@ service cloud.firestore {
           || (canReadSharedAdultProfile(userId)
             && resource.data.visibility == 'optedInAdultsOnly');
         allow create, update, delete: if isSelf(userId);
+      }
+
+      match /adult_profile/{documentId} {
+        allow read, create, update, delete: if isSelf(userId);
       }
 
       // ───────────────────────────────────────────────────────────────────────
@@ -235,6 +256,36 @@ service cloud.firestore {
         allow read: if signedIn();
         allow create, update, delete: if false;
       }
+    }
+
+    match /profile_public/{userId} {
+      allow read: if signedIn();
+      allow create: if isSelf(userId)
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isSelf(userId)
+        && request.resource.data.userId == resource.data.userId
+        && onlyProfilePublicFieldsAllowed();
+      allow delete: if false;
+    }
+
+    match /preferences/{userId} {
+      allow read: if isSelf(userId);
+      allow create: if isSelf(userId)
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isSelf(userId)
+        && request.resource.data.userId == resource.data.userId
+        && onlyPreferencesFieldsAllowed();
+      allow delete: if false;
+    }
+
+    match /verification/{userId} {
+      allow read: if isSelf(userId);
+      allow create: if isSelf(userId)
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isSelf(userId)
+        && request.resource.data.userId == resource.data.userId
+        && onlyVerificationSettingsFieldsAllowed();
+      allow delete: if false;
     }
 
     match /rooms/{roomId} {

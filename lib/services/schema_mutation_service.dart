@@ -18,6 +18,8 @@ class SchemaMutationService {
     'username',
     'usernameLower',
     'email',
+    'bio',
+    'isPrivate',
   };
 
   static const Set<String> _profilePublicFields = <String>{
@@ -25,7 +27,6 @@ class SchemaMutationService {
     'coverPhotoUrl',
     'galleryUrls',
     'introVideoUrl',
-    'bio',
     'aboutMe',
     'age',
     'gender',
@@ -35,7 +36,6 @@ class SchemaMutationService {
     'firstDatePrompt',
     'musicTastePrompt',
     'interests',
-    'isPrivate',
   };
 
   static const Set<String> _preferencesFields = <String>{
