@@ -528,6 +528,51 @@ class RoomState {
     );
   }
 
+  String presentationRoleFor(
+    String userId, {
+    String fallbackRole = roomRoleAudience,
+  }) {
+    final normalized = userId.trim();
+    if (normalized.isEmpty) {
+      return fallbackRole;
+    }
+
+    final resolvedRole = normalizeRoomRole(roleFor(normalized), fallbackRole: '');
+    if (resolvedRole.isNotEmpty) {
+      return resolvedRole;
+    }
+    if (isSpeaker(normalized)) {
+      return roomRoleStage;
+    }
+    if (hostId.trim() == normalized) {
+      return roomRoleHost;
+    }
+    return fallbackRole;
+  }
+
+  bool isOnMicByAuthority(String userId) {
+    final normalized = userId.trim();
+    if (normalized.isEmpty) {
+      return false;
+    }
+
+    final normalizedCurrentUserId = currentUserId?.trim() ?? '';
+    if (normalizedCurrentUserId != normalized &&
+        !hasAuthoritativeMembership(normalized)) {
+      return false;
+    }
+
+    final role = normalizeRoomRole(
+      presentationRoleFor(normalized, fallbackRole: ''),
+      fallbackRole: '',
+    );
+    return isSpeaker(normalized) ||
+        role == roomRoleHost ||
+        role == roomRoleOwner ||
+        role == roomRoleCohost ||
+        role == roomRoleStage;
+  }
+
   bool _canResolveAuthorityFor(String userId) {
     final normalized = userId.trim();
     if (normalized.isEmpty) {

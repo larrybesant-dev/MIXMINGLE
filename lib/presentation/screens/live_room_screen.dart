@@ -515,14 +515,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         currentRoomPresence.userStatus == 'offline';
     final cameraMismatch =
         isJoined && _isVideoEnabled && currentParticipant?.camOn != true;
-    final authorityMicOn =
-        currentParticipant != null &&
-        currentParticipant.micOn &&
-        !currentParticipant.isMuted;
-    final micMismatch =
-        isJoined &&
-        currentParticipant != null &&
-        authorityMicOn != !_isMicMuted;
+    final authorityMicOn = roomState.isOnMicByAuthority(currentUserId);
+    final micMismatch = isJoined && authorityMicOn != !_isMicMuted;
 
     AppTelemetry.updateRoomState(
       roomId: widget.roomId,
@@ -3931,17 +3925,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final rosterSelfParticipant = rosterParticipants
             .cast<RoomParticipantModel?>()
             .firstWhere((p) => p?.userId == user.id, orElse: () => null);
+        final authoritativeSelfRole = liveRoomState.presentationRoleFor(
+          user.id,
+        );
+        final authorityMicOn = liveRoomState.isOnMicByAuthority(user.id);
+        final localMicActive = liveRoomState.canPublishAudio && !_isMicMuted;
         final effectiveSelfParticipant =
             (participant ?? rosterSelfParticipant)?.copyWith(
               role:
                   _appliedMediaRole ??
                   participant?.role ??
                   rosterSelfParticipant?.role ??
-                  (liveRoomState.isSpeaker(user.id)
-                      ? 'stage'
-                      : (liveRoomState.hostId == user.id
-                            ? 'host'
-                            : 'audience')),
+                  authoritativeSelfRole,
               isMuted: participant?.isMuted ?? _isMicMuted,
               isBanned:
                   participant?.isBanned ??
@@ -3952,8 +3947,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   (participant?.camOn ?? false) ||
                   (rosterSelfParticipant?.camOn ?? false),
               micOn:
-                  liveRoomState.isSpeaker(user.id) ||
-                  (!_isMicMuted) ||
+                  authorityMicOn ||
+                  localMicActive ||
                   (participant?.micOn ?? false) ||
                   (rosterSelfParticipant?.micOn ?? false),
               userStatus:
@@ -3964,13 +3959,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             ) ??
             RoomParticipantModel(
               userId: user.id,
-              role: liveRoomState.isSpeaker(user.id)
-                  ? 'stage'
-                  : (liveRoomState.hostId == user.id ? 'host' : 'audience'),
+              role: authoritativeSelfRole,
               isMuted: _isMicMuted,
               isBanned: false,
               camOn: _isVideoEnabled,
-              micOn: !_isMicMuted || liveRoomState.isSpeaker(user.id),
+              micOn: authorityMicOn || localMicActive,
               userStatus: 'online',
               joinedAt: liveRoomState.joinedAt ?? DateTime.now(),
               lastActiveAt: DateTime.now(),
