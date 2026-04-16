@@ -326,7 +326,8 @@ class HostControls {
     _roomRef(roomId)
         .collection('mod_log')
         .add(entry)
-        .catchError((_) {});
+        // ignore: avoid_types_on_closure_parameters
+        .catchError((Object _) => _roomRef(roomId).collection('mod_log').doc());
   }
 
   // ── Stage / mic-seat controls ──────────────────────────────────────────────

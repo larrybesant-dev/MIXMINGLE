@@ -353,13 +353,15 @@ service cloud.firestore {
           )
           || (
             participantId == request.auth.uid
+            && request.resource.data.userId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus'])
+                .hasOnly(['userId', 'lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus', 'displayName', 'photoUrl', 'joinedAt', 'updatedAt'])
           )
           || (
             participantId == request.auth.uid
+            && request.resource.data.userId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus', 'role'])
+                .hasOnly(['userId', 'lastActiveAt', 'camOn', 'micOn', 'customStatus', 'userStatus', 'displayName', 'photoUrl', 'joinedAt', 'updatedAt', 'role'])
             && (
               (resource.data.role == 'stage'
                 && request.resource.data.role in ['member', 'audience'])

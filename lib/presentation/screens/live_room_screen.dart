@@ -133,7 +133,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool isSending = false;
   String cooldownMessage = '';
   bool _isJoiningRoom = false;
+  bool _isTearingDown = false;
   String? _roomJoinError;
+  String? _lastAutoJoinAttemptUserId;
   bool _hasTrackedRoomJoin = false;
   bool _hasTrackedFirstMessage = false;
   RtcRoomService? _agoraService;
@@ -199,6 +201,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   final GlobalKey<FloatingGiftOverlayState> _floatingGiftKey =
       GlobalKey<FloatingGiftOverlayState>();
   final GlobalKey<BuzzOverlayState> _buzzKey = GlobalKey<BuzzOverlayState>();
+  late final LiveRoomController _roomController;
   late final LiveRoomMediaController _liveRoomMediaNotifier;
   late final ProviderSubscription<LiveRoomMediaState> _mediaStateSubscription;
   LiveRoomMediaState _latestMediaState = const LiveRoomMediaState();
@@ -297,6 +300,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   @override
   void initState() {
     super.initState();
+    _roomController = ref.read(
+      liveRoomControllerProvider(widget.roomId).notifier,
+    );
     _liveRoomMediaNotifier = ref.read(
       liveRoomMediaControllerProvider(widget.roomId).notifier,
     );
@@ -329,10 +335,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           return;
         }
         if (user.username.trim().isNotEmpty) {
-          ref
-              .read(liveRoomControllerProvider(widget.roomId).notifier)
-              .cacheDisplayName(userId: user.id, displayName: user.username);
+          _roomController.cacheDisplayName(
+            userId: user.id,
+            displayName: user.username,
+          );
         }
+        _lastAutoJoinAttemptUserId = user.id;
         _joinRoom(user.id);
         if (!kIsWeb && _hasFirebaseApp) {
           // Pre-warm the Agora SDK in the background (mobile only) so WASM
@@ -2132,10 +2140,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       if (shouldWrite) {
         _typingStatusActive = true;
         _lastTypingWriteAt = now;
-        ref
-            .read(liveRoomControllerProvider(widget.roomId).notifier)
-            .setTyping(userId: userId, isTyping: true)
-            .ignore();
+        _roomController.setTyping(userId: userId, isTyping: true).ignore();
       }
       _typingTimer = Timer(_kTypingIdleTimeout, _clearTypingStatus);
     } catch (_) {
@@ -2147,12 +2152,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     _typingTimer?.cancel();
     _typingTimer = null;
     _typingStatusActive = false;
+    if (_isTearingDown) return;
     final userId = _joinedUserId;
     if (userId == null || userId.isEmpty) return;
     try {
-      await ref
-          .read(liveRoomControllerProvider(widget.roomId).notifier)
-          .setTyping(userId: userId, isTyping: false);
+      await _roomController.setTyping(userId: userId, isTyping: false);
     } catch (_) {}
   }
 
@@ -2401,7 +2405,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   }
 
   Future<void> _verifyUnexpectedRoomRemoval(String userId) async {
-    if (_isHandlingParticipantRemoval || _isVerifyingUnexpectedRemoval) {
+    if (_isTearingDown ||
+        _isHandlingParticipantRemoval ||
+        _isVerifyingUnexpectedRemoval) {
       return;
     }
 
@@ -3167,14 +3173,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   /// Posts a system event message (join/leave/cam-on/off) to the room chat.
   void _sendSystemEvent(String content) {
-    ref
-        .read(liveRoomControllerProvider(widget.roomId).notifier)
-        .postSystemEvent(content)
-        .ignore();
+    if (_isTearingDown) {
+      return;
+    }
+    _roomController.postSystemEvent(content).ignore();
   }
 
   Future<void> _joinRoom(String userId) async {
-    if (_isJoiningRoom) return;
+    if (_isJoiningRoom || _isTearingDown) return;
+
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) return;
+    _lastAutoJoinAttemptUserId = normalizedUserId;
 
     AppTelemetry.updateRoomState(
       roomId: widget.roomId,
@@ -3202,13 +3212,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         resolvedDisplayName: _senderDisplayNameById[userId],
         fallbackName: ref.read(userProvider)?.username,
       );
-      final joinResult = await ref
-          .read(liveRoomControllerProvider(widget.roomId).notifier)
-          .joinRoom(
-            userId,
-            displayName: sessionDisplayName,
-            avatarUrl: ref.read(userProvider)?.avatarUrl,
-          );
+      final joinResult = await _roomController.joinRoom(
+        userId,
+        displayName: sessionDisplayName,
+        avatarUrl: ref.read(userProvider)?.avatarUrl,
+      );
       _excludedUserIds = joinResult.excludedUserIds;
       if (!joinResult.isSuccess) {
         AppTelemetry.updateRoomState(
@@ -3227,7 +3235,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           );
         }
         _joinedUserId = null;
-        _exitRoom();
         return;
       }
 
@@ -3679,6 +3686,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   @override
   void dispose() {
+    _isTearingDown = true;
     _giftToastTimer?.cancel();
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
@@ -3716,9 +3724,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         ),
       );
     }
-    if (_joinedUserId != user.id && !_isJoiningRoom) {
+    if (_joinedUserId != user.id &&
+        !_isJoiningRoom &&
+        _roomJoinError == null &&
+        _lastAutoJoinAttemptUserId != user.id) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (mounted && !_isTearingDown) {
+          _lastAutoJoinAttemptUserId = user.id;
           _joinRoom(user.id);
         }
       });
@@ -3937,6 +3949,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             body: AppErrorView(
               error: _roomJoinError!,
               fallbackContext: 'join the live room',
+              onRetry: () {
+                if (_isJoiningRoom || _isTearingDown) {
+                  return;
+                }
+                setState(() {
+                  _roomJoinError = null;
+                  _lastAutoJoinAttemptUserId = null;
+                });
+                _joinRoom(user.id);
+              },
             ),
           );
         }

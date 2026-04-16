@@ -23,6 +23,8 @@ import '../models/post_model.dart';
 import '../providers/following_feed_provider.dart';
 import '../widgets/post_card.dart';
 import '../widgets/trending_user_card.dart';
+import '../../stories/providers/story_provider.dart';
+import '../../../presentation/providers/notification_provider.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
 const _npSurface        = Color(0xFF0D0A0C);
@@ -57,6 +59,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
       child: AppPageScaffold(
         backgroundColor: _npSurface,
         safeArea: false,
+        floatingActionButton: const _GoLiveFab(),
         body: NestedScrollView(
           headerSliverBuilder: (context, _) => [
             SliverAppBar(
@@ -70,6 +73,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                   icon: const Icon(Icons.search_rounded, color: _npOnVariant),
                   onPressed: () => context.go('/search'),
                 ),
+                const _NotificationBell(),
                 const SizedBox(width: 8),
               ],
               bottom: PreferredSize(
@@ -180,6 +184,9 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           SliverToBoxAdapter(
             child: _buildCategoryChips(),
           ),
+
+          // Friends Live — rooms hosted by people you follow
+          const _FriendsLiveSection(),
 
           if (filteredRooms.isNotEmpty) ...[
             // "Trending Now" header
@@ -507,7 +514,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     );
   }
 
-  Widget _buildBentoGrid(List rooms) {
+  Widget _buildBentoGrid(List<RoomModel> rooms) {
     if (rooms.isEmpty) return const SizedBox.shrink();
     final hero = rooms[0];
     final secondary = rooms.length > 1 ? rooms.sublist(1, rooms.length.clamp(1, 3)) : [];
@@ -651,13 +658,14 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
 }
 
 // ── Bento hero card ───────────────────────────────────────────────────────────
-class _BentoHeroCard extends StatelessWidget {
+class _BentoHeroCard extends ConsumerWidget {
   const _BentoHeroCard({required this.room, required this.onTap});
-  final dynamic room;
+  final RoomModel room;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatarAsync = ref.watch(_hostAvatarProvider(room.hostId));
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
@@ -665,20 +673,15 @@ class _BentoHeroCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background gradient placeholder (replace with actual image if available)
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF1C1240),
-                    const Color(0xFF0D0A0C),
-                  ],
+                  colors: [Color(0xFF1C1240), Color(0xFF0D0A0C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
             ),
-            // Gradient overlay
             Positioned(
               bottom: 0, left: 0, right: 0,
               child: Container(
@@ -692,17 +695,14 @@ class _BentoHeroCard extends StatelessWidget {
                 ),
               ),
             ),
-            // LIVE badge (top-left)
             Positioned(
               top: 12, left: 12,
               child: _LiveBadge(),
             ),
-            // Viewer count (bottom-right corner)
             Positioned(
               bottom: 52, right: 12,
-              child: _viewerPill(room.viewerCount ?? 0),
+              child: _viewerPill(room.memberCount),
             ),
-            // Room name + host (bottom)
             Positioned(
               bottom: 12, left: 12, right: 12,
               child: Column(
@@ -710,7 +710,7 @@ class _BentoHeroCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    room.name ?? 'Live Room',
+                    room.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.raleway(
@@ -720,10 +720,24 @@ class _BentoHeroCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      CircleAvatar(radius: 10, backgroundColor: _npPrimaryDim),
+                      ClipOval(
+                        child: SizedBox(
+                          width: 20, height: 20,
+                          child: avatarAsync.when(
+                            data: (url) => url != null
+                                ? CachedNetworkImage(
+                                    imageUrl: url, fit: BoxFit.cover,
+                                    errorWidget: (_, _, _) =>
+                                        Container(color: _npPrimaryDim))
+                                : Container(color: _npPrimaryDim),
+                            loading: () => Container(color: _npPrimaryDim),
+                            error: (_, _) => Container(color: _npPrimaryDim),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 6),
                       Text(
-                        room.hostName ?? 'Host',
+                        'Host',
                         style: GoogleFonts.raleway(
                             fontSize: 12, color: _npOnVariant),
                       ),
@@ -742,7 +756,7 @@ class _BentoHeroCard extends StatelessWidget {
 // ── Bento small card ──────────────────────────────────────────────────────────
 class _BentoSmallCard extends StatelessWidget {
   const _BentoSmallCard({required this.room, required this.onTap});
-  final dynamic room;
+  final RoomModel room;
   final VoidCallback onTap;
 
   @override
@@ -780,7 +794,7 @@ class _BentoSmallCard extends StatelessWidget {
             Positioned(
               bottom: 8, left: 8, right: 8,
               child: Text(
-                room.name ?? 'Live Room',
+                room.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.raleway(
@@ -796,13 +810,14 @@ class _BentoSmallCard extends StatelessWidget {
 }
 
 // ── Room grid card ────────────────────────────────────────────────────────────
-class _RoomGridCard extends StatelessWidget {
+class _RoomGridCard extends ConsumerWidget {
   const _RoomGridCard({required this.room, required this.onTap, super.key});
-  final dynamic room;
+  final RoomModel room;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatarAsync = ref.watch(_hostAvatarProvider(room.hostId));
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
@@ -811,9 +826,9 @@ class _RoomGridCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [const Color(0xFF1C1C2E), _npSurfaceHigh],
+                  colors: [Color(0xFF1C1C2E), _npSurfaceHigh],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -822,12 +837,12 @@ class _RoomGridCard extends StatelessWidget {
             Positioned(top: 10, left: 10, child: _LiveBadge(small: true)),
             Positioned(
               bottom: 10, left: 10,
-              child: _viewerPill(room.viewerCount ?? 0),
+              child: _viewerPill(room.memberCount),
             ),
             Positioned(
               bottom: 36, left: 10, right: 10,
               child: Text(
-                room.name ?? 'Live Room',
+                room.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.raleway(
@@ -837,8 +852,21 @@ class _RoomGridCard extends StatelessWidget {
             ),
             Positioned(
               bottom: 10, right: 10,
-              child: CircleAvatar(
-                  radius: 12, backgroundColor: _npPrimaryDim),
+              child: ClipOval(
+                child: SizedBox(
+                  width: 24, height: 24,
+                  child: avatarAsync.when(
+                    data: (url) => url != null
+                        ? CachedNetworkImage(
+                            imageUrl: url, fit: BoxFit.cover,
+                            errorWidget: (_, _, _) =>
+                                Container(color: _npPrimaryDim))
+                        : Container(color: _npPrimaryDim),
+                    loading: () => Container(color: _npPrimaryDim),
+                    error: (_, _) => Container(color: _npPrimaryDim),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -850,7 +878,7 @@ class _RoomGridCard extends StatelessWidget {
 // ── Upcoming room tile ────────────────────────────────────────────────────────
 class _UpcomingRoomTile extends StatelessWidget {
   const _UpcomingRoomTile({required this.room, this.scheduledAt, super.key});
-  final dynamic room;
+  final RoomModel room;
   final DateTime? scheduledAt;
 
   @override
@@ -883,7 +911,7 @@ class _UpcomingRoomTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(room.name ?? 'Upcoming Room',
+                Text(room.name,
                     style: GoogleFonts.raleway(
                         fontWeight: FontWeight.w700, fontSize: 14,
                         color: _npOnSurface)),
@@ -897,15 +925,28 @@ class _UpcomingRoomTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              border: Border.all(color: _npGhost),
-              borderRadius: BorderRadius.circular(999),
+          GestureDetector(
+            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'You\'ll be notified when "${room.name}" goes live.',
+                  style: GoogleFonts.raleway(color: _npOnSurface),
+                ),
+                backgroundColor: _npSurfaceHigh,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
+              ),
             ),
-            child: Text('Remind',
-                style: GoogleFonts.raleway(
-                    fontSize: 12, color: _npOnVariant)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: _npPrimary.withAlpha(80)),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text('Remind',
+                  style: GoogleFonts.raleway(
+                      fontSize: 12, color: _npPrimary)),
+            ),
           ),
         ],
       ),
@@ -1293,6 +1334,131 @@ class _EmojiAvatar extends StatelessWidget {
       color: _npSurfaceHighest,
       alignment: Alignment.center,
       child: Text(emoji, style: const TextStyle(fontSize: 22)),
+    );
+  }
+}
+
+class _NotificationBell extends ConsumerWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
+    return IconButton(
+      tooltip: 'Notifications',
+      onPressed: () => context.go('/notifications'),
+      icon: unreadCount > 0
+          ? Badge(
+              label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
+              child: const Icon(Icons.notifications_outlined, color: _npOnVariant),
+            )
+          : const Icon(Icons.notifications_outlined, color: _npOnVariant),
+    );
+  }
+}
+
+class _GoLiveFab extends StatelessWidget {
+  const _GoLiveFab();
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: () => context.go('/create-room'),
+      backgroundColor: _npPrimary,
+      foregroundColor: _npSurface,
+      icon: const Icon(Icons.mic_rounded),
+      label: Text(
+        'Start Room',
+        style: GoogleFonts.raleway(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _FriendsLiveSection extends ConsumerWidget {
+  const _FriendsLiveSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    final followingAsync = ref.watch(followingIdsProvider(uid));
+    final feedState = ref.watch(feedControllerProvider);
+
+    return followingAsync.when(
+      data: (followingIds) {
+        if (followingIds.isEmpty) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+
+        final friendRooms = feedState.liveRooms
+            .where((room) => followingIds.contains(room.hostId))
+            .take(10)
+            .toList();
+
+        if (friendRooms.isEmpty) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+
+        return SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.pageHorizontalPadding,
+                  context.sectionSpacing,
+                  context.pageHorizontalPadding,
+                  12,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [_npSecondary, _npPrimary],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Friends Live',
+                      style: GoogleFonts.raleway(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _npOnSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 92,
+                child: ListView.separated(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.pageHorizontalPadding,
+                  ),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: friendRooms.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 14),
+                  itemBuilder: (ctx, i) => _LiveNowBubble(
+                    room: friendRooms[i],
+                    onTap: () => context.go('/room/${friendRooms[i].id}'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
     );
   }
 }

@@ -8,8 +8,11 @@ import 'package:mixvy/core/services/first_run_service.dart';
 import 'package:mixvy/core/services/profile_gate_service.dart';
 import 'package:mixvy/features/onboarding/onboarding_screen.dart';
 import 'package:mixvy/features/splash/splash_screen.dart';
-import 'package:mixvy/features/feed/screens/discovery_feed_screen.dart';
 import 'package:mixvy/features/profile/user_profile_screen.dart';
+import 'package:mixvy/features/social/screens/explore_screen.dart';
+import 'package:mixvy/features/social/screens/home_lobby_screen.dart';
+import 'package:mixvy/features/social/screens/live_floor_screen.dart';
+import 'package:mixvy/features/social/screens/social_circle_screen.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 import 'package:mixvy/presentation/screens/notifications_screen.dart';
 import 'package:mixvy/presentation/screens/settings_screen.dart';
@@ -144,17 +147,21 @@ String? _currentAvatarUrl(Ref ref) {
 
 int _appShellIndexForLocation(String matchedLocation) {
   switch (matchedLocation) {
+    case '/discover':
+      return 0;
+    case '/live':
+    case '/create-room':
+      return 1;
+    case '/explore':
+    case '/rooms':
+    case '/search':
+    case '/trending':
+      return 2;
+    case '/social':
+    case '/friends':
     case '/messages':
     case '/messages/new':
     case '/messages/:conversationId':
-      return 0;
-    case '/rooms':
-    case '/create-room':
-      return 1;
-    case '/discover':
-    case '/search':
-      return 2;
-    case '/friends':
       return 3;
     case '/profile':
     case '/profile/:userId':
@@ -320,14 +327,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: child,
         ),
         routes: [
-          GoRoute(path: '/', redirect: (context, state) => '/messages'),
+          GoRoute(path: '/', redirect: (context, state) => '/discover'),
           GoRoute(
             path: '/dashboard',
             builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
             path: '/discover',
-            builder: (context, state) => const DiscoveryFeedScreen(),
+            builder: (context, state) => const HomeLobbyScreen(),
+          ),
+          GoRoute(
+            path: '/live',
+            builder: (context, state) => const LiveFloorScreen(),
+          ),
+          GoRoute(
+            path: '/explore',
+            builder: (context, state) => const ExploreScreen(),
+          ),
+          GoRoute(
+            path: '/social',
+            builder: (context, state) => const SocialCircleScreen(),
           ),
           GoRoute(
             path: '/profile',

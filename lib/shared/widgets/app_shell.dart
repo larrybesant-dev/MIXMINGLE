@@ -10,7 +10,7 @@ import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
-/// bottom nav bar (Home / Rooms / Messages / Friends / Profile).
+/// bottom nav bar (Home / Live / Explore / Circle / Profile).
 class AppShell extends ConsumerWidget {
   final Widget child;
   final int selectedIndex;
@@ -24,10 +24,10 @@ class AppShell extends ConsumerWidget {
   });
 
   static const List<String> _roots = [
-    '/messages',
-    '/rooms',
     '/discover',
-    '/friends',
+    '/live',
+    '/explore',
+    '/social',
     '/profile',
   ];
 
@@ -118,10 +118,10 @@ class _VelvetBottomNav extends StatelessWidget {
               height: compact ? 64 : 72,
               child: Row(
                 children: [
-                  _navItemBadge(context, 0, Icons.chat_bubble_outline_rounded, Icons.chat_rounded, 'Messages', unreadMsgs),
-                  _navItem(context, 1, Icons.meeting_room_outlined, Icons.meeting_room_rounded, 'Rooms'),
-                  _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
-                  _navItem(context, 3, Icons.people_alt_outlined, Icons.people_alt_rounded, 'Friends'),
+                  _navItem(context, 0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+                  _navItem(context, 1, Icons.graphic_eq_rounded, Icons.graphic_eq_rounded, 'Live'),
+                  _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Explore'),
+                  _navItem(context, 3, Icons.groups_2_outlined, Icons.groups_2_rounded, 'Circle'),
                   _navItem(context, 4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
                 ],
               ),
@@ -297,10 +297,10 @@ class _DesktopTopNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <({String label, IconData icon})>[
-      (label: 'Messages', icon: Icons.chat_rounded),
-      (label: 'Rooms', icon: Icons.meeting_room_rounded),
-      (label: 'Discover', icon: Icons.explore_rounded),
-      (label: 'Friends', icon: Icons.people_alt_rounded),
+      (label: 'Home', icon: Icons.home_rounded),
+      (label: 'Live', icon: Icons.graphic_eq_rounded),
+      (label: 'Explore', icon: Icons.explore_rounded),
+      (label: 'Circle', icon: Icons.groups_2_rounded),
       (label: 'Profile', icon: Icons.person_rounded),
     ];
 

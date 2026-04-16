@@ -20,6 +20,7 @@ export 'controllers/room_state.dart'
 
 import '../../core/events/app_event.dart';
 import '../../core/events/app_event_bus.dart';
+import '../../core/firestore/firestore_error_utils.dart';
 import '../../core/telemetry/app_telemetry.dart';
 import '../../models/mic_access_request_model.dart';
 import '../../models/room_participant_model.dart';
@@ -1074,10 +1075,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         displayName: normalizedDisplayName,
         photoUrl: avatarUrl,
       );
-    } catch (_) {
-      result = const RoomJoinResult.failure(
-        'Could not join room. Please try again.',
-      );
+    } catch (error) {
+      final info = parseFirestoreError(error);
+      final message = info.isPermissionOrAuth
+          ? 'Room access is blocked by Firestore permissions right now.'
+          : 'Could not join room. Please try again.';
+      result = RoomJoinResult.failure(message);
     }
     if (!result.isSuccess) {
       _stopRoomHeartbeat();
