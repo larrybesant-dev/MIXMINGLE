@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
+// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use, avoid_dynamic_calls
 import 'dart:html' as html;
 
 class MediaDeviceInfo {

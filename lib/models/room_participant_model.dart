@@ -8,6 +8,11 @@ DateTime? _parseDateTimeField(dynamic value) {
   return null;
 }
 
+/// Returns true if [p] should be shown as actively talking.
+/// Authority: [RoomParticipantModel.micOn] is set by the backend (grabMic CF
+/// and RoomController) and is the single source of truth for on-mic state.
+bool roomParticipantCanBeShownAsTalking(RoomParticipantModel p) => p.micOn;
+
 class RoomParticipantModel {
   final String userId;
   final String role; // e.g. 'host', 'cohost', 'audience', 'stage'

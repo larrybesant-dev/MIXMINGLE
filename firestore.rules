@@ -123,8 +123,16 @@ service cloud.firestore {
       return signedIn() && participantRole(roomId, request.auth.uid) == 'moderator';
     }
 
+    function isRoomCohost(roomId) {
+      return signedIn() && participantRole(roomId, request.auth.uid) == 'cohost';
+    }
+
+    function isTrustedSpeaker(roomId) {
+      return signedIn() && participantRole(roomId, request.auth.uid) == 'trusted_speaker';
+    }
+
     function isRoomStaff(roomId) {
-      return isRoomHost(roomId) || isRoomModerator(roomId);
+      return isRoomHost(roomId) || isRoomCohost(roomId) || isRoomModerator(roomId);
     }
 
     function isRoomParticipant(roomId) {
@@ -304,13 +312,17 @@ service cloud.firestore {
           !request.resource.data.get('isAdult', false)
           || adultModeEnabled(request.auth.uid)
         );
-      // Host can update/delete; callee can decline an incoming direct call.
+      // Host can update/delete; callee can decline an incoming direct call;
+      // co-host can update only the theme sub-map.
       allow update: if isRoomHost(roomId)
         || (signedIn()
           && resource.data.isDirectCall == true
           && resource.data.calleeId == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['callDeclined', 'callDeclinedAt']));
+              .hasOnly(['callDeclined', 'callDeclinedAt']))
+        || (isRoomCohost(roomId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['theme', 'updatedAt']));
       allow delete: if isRoomHost(roomId);
 
       match /members/{memberId} {
@@ -328,10 +340,17 @@ service cloud.firestore {
         allow create: if signedIn()
           && participantId == request.auth.uid
           && request.resource.data.userId == request.auth.uid
-          && request.resource.data.role in ['audience', 'host', 'cohost', 'moderator', 'stage', 'owner', 'mod', 'member']
+          && request.resource.data.role in ['audience', 'host', 'cohost', 'moderator', 'trusted_speaker', 'stage', 'owner', 'mod', 'member']
           && request.resource.data.isBanned == false
           && request.resource.data.isMuted == false;
         allow update: if isRoomHost(roomId)
+          || (isRoomCohost(roomId)
+            && participantId != request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['role', 'lastActiveAt'])
+            && !(resource.data.role in ['host', 'owner', 'cohost'])
+            && request.resource.data.role in ['moderator', 'trusted_speaker', 'stage', 'audience']
+          )
           || (
             participantId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
@@ -344,6 +363,8 @@ service cloud.firestore {
             && (
               (resource.data.role == 'stage'
                 && request.resource.data.role in ['member', 'audience'])
+              || (resource.data.role == 'trusted_speaker'
+                && request.resource.data.role == 'audience')
               || (resource.data.role == 'member'
                 && request.resource.data.role == 'audience')
             )
@@ -493,6 +514,13 @@ service cloud.firestore {
         allow delete: if signedIn()
           && (resource.data.userId == request.auth.uid || isRoomHost(roomId));
       }
+      // Audit log — all moderation/role actions are written by Cloud Functions only.
+      // Client-side reads are allowed for host/cohost; writes are server-only.
+      match /audit_log/{entryId} {
+        allow read: if isRoomHost(roomId) || isRoomCohost(roomId);
+        allow create, update, delete: if false;
+      }
+
       // WebRTC signaling — peer presence and P2P call documents.
       match /webrtc_peers/{userId} {
         allow read: if signedIn();

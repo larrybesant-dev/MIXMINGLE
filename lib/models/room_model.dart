@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixvy/core/utils/network_image_url.dart';
+import 'package:mixvy/features/room/models/room_theme_model.dart';
 
 class RoomModel {
   final String id;
@@ -27,6 +28,9 @@ class RoomModel {
   /// Whether this is an 18+ After Dark room.
   final bool isAdult;
 
+  /// Optional visual theme applied to the live room.
+  final RoomTheme theme;
+
   RoomModel({
     required this.id,
     required this.name,
@@ -48,6 +52,7 @@ class RoomModel {
     this.maxBroadcasters = 4,
     this.scheduledAt,
     this.isAdult = false,
+    this.theme = RoomTheme.defaultTheme,
   });
 
   /// Combined members list (used by UI)
@@ -131,6 +136,11 @@ class RoomModel {
       maxBroadcasters: json['maxBroadcasters'] is num ? (json['maxBroadcasters'] as num).toInt() : 4,
       scheduledAt: _asTimestamp(json['scheduledAt']),
       isAdult: _asBool(json['isAdult']),
+      theme: RoomTheme.fromJson(
+        json['theme'] is Map<String, dynamic>
+            ? json['theme'] as Map<String, dynamic>
+            : null,
+      ),
     );
   }
 
@@ -155,6 +165,7 @@ class RoomModel {
       'maxBroadcasters': maxBroadcasters,
       'scheduledAt': scheduledAt,
       'isAdult': isAdult,
+      'theme': theme.toJson(),
     };
   }
 
@@ -179,6 +190,7 @@ class RoomModel {
     int? maxBroadcasters,
     Timestamp? scheduledAt,
     bool? isAdult,
+    RoomTheme? theme,
   }) {
     return RoomModel(
       id: id ?? this.id,
@@ -201,6 +213,7 @@ class RoomModel {
       maxBroadcasters: maxBroadcasters ?? this.maxBroadcasters,
       scheduledAt: scheduledAt ?? this.scheduledAt,
       isAdult: isAdult ?? this.isAdult,
+      theme: theme ?? this.theme,
     );
   }
 }

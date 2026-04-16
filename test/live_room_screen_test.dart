@@ -20,6 +20,8 @@ import 'package:mixvy/models/message_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/features/room/providers/presence_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
+import 'package:mixvy/features/room/room_controller.dart'
+    show roomParticipantCanBeShownAsTalking;
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
 void main() {

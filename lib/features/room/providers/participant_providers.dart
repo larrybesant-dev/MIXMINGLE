@@ -254,17 +254,17 @@ final onMicParticipantsProvider = StreamProvider.autoDispose
 
       ref.listen<AsyncValue<List<RoomParticipantModel>>>(
         participantsStreamProvider(roomId),
-        (_, __) => publish(),
+        (_, _) => publish(),
         fireImmediately: true,
       );
       ref.listen<AsyncValue<List<String>>>(
         roomSpeakerUserIdsProvider(roomId),
-        (_, __) => publish(),
+        (_, _) => publish(),
         fireImmediately: true,
       );
       ref.listen<AsyncValue<Map<String, dynamic>?>>(
         roomDocStreamProvider(roomId),
-        (_, __) => publish(),
+        (_, _) => publish(),
         fireImmediately: true,
       );
       ref.onDispose(controller.close);

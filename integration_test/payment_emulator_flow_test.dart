@@ -39,7 +39,7 @@ Future<void> _initializeFirebaseForEmulators() async {
     );
   }
 
-  FirebaseAuth.instance.useAuthEmulator(emulatorHost, authPort);
+  await FirebaseAuth.instance.useAuthEmulator(emulatorHost, authPort);
   FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, firestorePort);
   FirebaseFunctions.instance.useFunctionsEmulator(emulatorHost, functionsPort);
 }

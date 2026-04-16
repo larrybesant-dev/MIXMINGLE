@@ -54,6 +54,8 @@ import '../../features/room/providers/user_cam_permissions_provider.dart';
 import '../../features/room/providers/cam_view_request_provider.dart';
 import '../../features/room/providers/room_slot_provider.dart';
 import '../../features/room/room_permissions.dart';
+import '../../features/room/models/room_theme_model.dart';
+import '../../features/room/widgets/background_picker_sheet.dart';
 import '../../presentation/providers/wallet_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
@@ -80,21 +82,9 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveRoomScreen> createState() => _LiveRoomScreenState();
 }
 
-bool roomParticipantHasMicAccess(RoomParticipantModel? participant) {
-  final role = participant?.role ?? '';
-  return role == 'host' ||
-      role == 'owner' ||
-      role == 'cohost' ||
-      role == 'stage';
-}
-
-bool roomParticipantCanBeShownAsTalking(RoomParticipantModel? participant) {
-  if (participant == null) {
-    return false;
-  }
-
-  return (participant.micOn) && !participant.isMuted && !participant.isBanned;
-}
+// roomParticipantHasMicAccess and roomParticipantCanBeShownAsTalking were
+// removed — mic/talking authority is derived exclusively from
+// state.isOnMicByAuthority() on the controller state.
 
 const Duration _kRoomRemovalGraceWindow = Duration(seconds: 8);
 
@@ -3287,6 +3277,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
   }
 
+  /// Opens the [BackgroundPickerSheet] for the host/co-host to change the
+  /// live room's visual theme. Writes the result through [RoomController].
+  void _showThemePicker(RoomTheme current) {
+    BackgroundPickerSheet.show(
+      context,
+      current: current,
+      onSelect: (theme) {
+        ref
+            .read(liveRoomControllerProvider(widget.roomId).notifier)
+            .updateRoomTheme(theme)
+            .catchError((_) {
+          if (mounted) _showSnackBar('Could not update room theme.');
+        });
+      },
+      onReset: () {
+        ref
+            .read(liveRoomControllerProvider(widget.roomId).notifier)
+            .resetRoomTheme()
+            .catchError((_) {
+          if (mounted) _showSnackBar('Could not reset room theme.');
+        });
+      },
+    );
+  }
+
   /// Shows a confirmation dialog and ends the room if confirmed.
   Future<void> _confirmAndEndRoom() async {
     final confirmed = await showDialog<bool>(
@@ -3825,6 +3840,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           }
         }
         final roomData = roomDocData;
+        final roomTheme = RoomTheme.fromJson(
+          roomData?['theme'] is Map<String, dynamic>
+              ? roomData!['theme'] as Map<String, dynamic>
+              : null,
+        );
         slowModeSeconds = roomData?['slowModeSeconds'] ?? 0;
         final rawMbc = roomData?['maxBroadcasters'];
         if (rawMbc is num) _maxBroadcasters = rawMbc.toInt();
@@ -4050,7 +4070,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         _recentChatters.contains(participantUserId) ||
                         participantItem.camOn ||
                         participantItem.micOn ||
-                        roomParticipantHasMicAccess(participantItem);
+                        liveRoomState.isOnMicByAuthority(participantUserId);
                     final joinedRecently =
                         now.difference(participantItem.joinedAt) <=
                         const Duration(minutes: 2);
@@ -4081,8 +4101,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           if (participantItem == null || participantItem.isBanned) {
             return false;
           }
-          return liveRoomState.isSpeaker(participantItem.userId) ||
-              roomParticipantHasMicAccess(participantItem);
+          return liveRoomState.isOnMicByAuthority(participantItem.userId);
         }
 
         final onMicCount = participantsInRoom
@@ -4102,7 +4121,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               total + liveRoomState.viewerCountFor(participantItem.userId),
         );
         final roomFeelsQuiet = onMicCount == 0 && onCamCount == 0;
-        final roomOnlineCount = participantsInRoom.length;
         final roomEnergyLabel = roomFeelsQuiet
             ? 'Room warming up'
             : watchingCamCount > 0
@@ -4420,6 +4438,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           body: Stack(
             fit: StackFit.expand,
             children: [
+              // ── ROOM BACKGROUND (theme-driven, real-time) ────────────────
+              // Reads from the room document so every participant sees the
+              // same background the moment the host updates it.
+              _RoomBackground(theme: roomTheme),
               // ── CAM COLUMN (order-aware) ──────────────────────────────
               // Camera panel width is whatever is left after chat + users.
               Positioned(
@@ -4776,41 +4798,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   right: 0,
                   child: LinearProgressIndicator(),
                 ),
-              if (onCamCount == 0)
-                Positioned(
-                  top: 56,
-                  left: colLeft('cams') + 12,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isMobile
-                          ? screenWidth - 24
-                          : (camsW - 24).clamp(240.0, 420.0),
-                    ),
-                    child: GestureDetector(
-                      onTap: participantsInRoom.isEmpty
-                          ? null
-                          : () => _openPeopleSheet(
-                              participants: participantsInRoom,
-                              currentParticipant: participant,
-                              currentUserId: user.id,
-                              currentUsername: currentSessionDisplayName,
-                              currentAvatarUrl: user.avatarUrl,
-                              hostId: hostId,
-                              isHost: isHost,
-                              isModerator: isModerator,
-                              presenceList:
-                                  presenceAsync.valueOrNull ?? const [],
-                            ),
-                      child: _RoomPresenceEnergyCard(
-                        title: roomEnergyLabel,
-                        statusLabel: '$roomOnlineCount online',
-                        summary: roomPresenceSummary,
-                        prompt: roomEnergyPrompt,
-                        isQuiet: roomFeelsQuiet,
-                      ),
-                    ),
-                  ),
-                ),
               // ── TOP GIFTERS STRIP (bottom-left, above admin bar) ──────
               if (topGifters.isNotEmpty)
                 Positioned(
@@ -4894,6 +4881,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         )
                         .toggleLockRoom(),
                     onEndRoom: _confirmAndEndRoom,
+                    onTheme: () => _showThemePicker(roomTheme),
                   ),
                 )
               // ── CO-HOST / MODERATOR CONTROLS BUTTON ────────────────────
@@ -5854,12 +5842,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // AppBar + ticker spacer so content starts below bar
+                      // AppBar spacer
                       SizedBox(
                         height: roomDescription.isEmpty
                             ? kToolbarHeight - 12
                             : kToolbarHeight + 8,
                       ),
+                      // ── Room energy card above Users header ───────────
+                      if (roomEnergyLabel.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                          child: _RoomPresenceEnergyCard(
+                            title: roomEnergyLabel,
+                            statusLabel: roomEnergyLabel == 'Room warming up'
+                                ? 'Start it'
+                                : 'Live now',
+                            summary: roomPresenceSummary,
+                            prompt: roomEnergyPrompt,
+                            isQuiet: roomFeelsQuiet,
+                          ),
+                        ),
                       // 32 px header row with ◄ ► move buttons
                       Container(
                         height: 32,
@@ -6443,20 +6445,6 @@ class _RoomRosterSidebar extends StatelessWidget {
         children: [
           // Space for the floating AppBar above
           SizedBox(height: topPadding),
-          if (roomEnergyLabel.trim().isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-              child: _RoomPresenceEnergyCard(
-                title: roomEnergyLabel,
-                statusLabel: roomEnergyLabel == 'Room warming up'
-                    ? 'Start it'
-                    : 'Live now',
-                summary: roomEnergySummary,
-                prompt: roomEnergyPrompt,
-                isQuiet: roomEnergyLabel == 'Room warming up',
-              ),
-            ),
-          ],
           // ── Talking Now ──────────────────────────────────────
           _RosterHeader(
             label: 'Talking Now',
@@ -6561,10 +6549,10 @@ class _RoomRosterSidebar extends StatelessWidget {
                   ),
                 ),
           const Divider(height: 1, thickness: 1, color: _kDivider),
-          // ── Chatting ─────────────────────────────────────────
+          // ── In Room ───────────────────────────────────────────
           _RosterHeader(
-            label: 'Chatting ${sorted.length}',
-            icon: Icons.chat_bubble_outline,
+            label: 'In Room ${sorted.length}',
+            icon: Icons.people_outline,
             iconColor: const Color(0xFFB09080),
           ),
           Expanded(
@@ -7716,6 +7704,7 @@ class _RoomOwnerAdminBar extends StatelessWidget {
     required this.speakerVolume,
     required this.onToggleLock,
     required this.onEndRoom,
+    required this.onTheme,
     this.onMicVolumeChanged,
     this.onSpeakerVolumeChanged,
   });
@@ -7727,6 +7716,7 @@ class _RoomOwnerAdminBar extends StatelessWidget {
   final double speakerVolume;
   final VoidCallback onToggleLock;
   final VoidCallback onEndRoom;
+  final VoidCallback onTheme;
   final ValueChanged<double>? onMicVolumeChanged;
   final ValueChanged<double>? onSpeakerVolumeChanged;
 
@@ -7760,6 +7750,11 @@ class _RoomOwnerAdminBar extends StatelessWidget {
             icon: Icons.settings_rounded,
             label: 'Settings',
             onTap: () => _openPanel(context, 0),
+          ),
+          _AdminBtn(
+            icon: Icons.palette_rounded,
+            label: 'Theme',
+            onTap: onTheme,
           ),
           _AdminBtn(
             icon: isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
@@ -7840,6 +7835,70 @@ class _AdminBtn extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _RoomBackground
+//
+// Renders the active room theme as a full-screen background layer.
+// When the host updates the theme the parent's roomData changes via a
+// Firestore stream, causing a rebuild with the new theme instantly.
+//
+// Rendering priority:
+//   1. Custom backgroundUrl from host  (network image)
+//   2. vibePreset gradient            (built-in palette)
+//   3. Default dark surface           (fallback)
+// A semi-transparent overlay is always applied on top to keep UI readable.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RoomBackground extends StatelessWidget {
+  const _RoomBackground({required this.theme});
+
+  final RoomTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Layer 1: base background
+        if (theme.hasBackground)
+          Image.network(
+            theme.backgroundUrl!,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _presetGradient(theme.vibePreset),
+          )
+        else
+          _presetGradient(theme.vibePreset),
+
+        // Layer 2: readability overlay (always present)
+        Container(color: const Color(0xD90D0A0C)),
+      ],
+    );
+  }
+
+  Widget _presetGradient(RoomVibePreset preset) {
+    final colors = switch (preset) {
+      RoomVibePreset.club => [const Color(0xFF0A0020), const Color(0xFF3D0070)],
+      RoomVibePreset.lounge =>
+        [const Color(0xFF1A0A00), const Color(0xFF3D200A)],
+      RoomVibePreset.neon => [const Color(0xFF001A2E), const Color(0xFF00204A)],
+      RoomVibePreset.hype => [const Color(0xFF1A0000), const Color(0xFF5C0000)],
+      RoomVibePreset.space => [const Color(0xFF000015), const Color(0xFF060618)],
+      RoomVibePreset.ocean =>
+        [const Color(0xFF001A2E), const Color(0xFF003355)],
+      _ => [const Color(0xFF0D0A0C), const Color(0xFF1A1520)],
+    };
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
         ),
       ),
     );

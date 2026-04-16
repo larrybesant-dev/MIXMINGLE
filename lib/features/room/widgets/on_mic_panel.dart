@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../models/room_participant_model.dart';
+import '../controllers/live_room_controller.dart';
 import '../providers/participant_providers.dart';
 import 'room_user_tile.dart';
 
@@ -31,105 +33,105 @@ class OnMicPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onMicAsync = ref.watch(onMicParticipantsProvider(roomId));
+    // Derive the ordered speaker list from the single-authority controller,
+    // then hydrate with participant models. This eliminates the duplicate
+    // onMicParticipantsProvider computation path.
+    final speakerIds = ref.watch(
+      liveRoomControllerProvider(roomId).select((s) => s.speakerIds),
+    );
+    final participantsAsync = ref.watch(participantsStreamProvider(roomId));
 
-    return onMicAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-      data: (participants) {
-        // Sort: host first, then cohost, then stage.
-        final sorted = [...participants]
-          ..sort((a, b) => _roleOrder(a.role).compareTo(_roleOrder(b.role)));
+    final participants = participantsAsync.valueOrNull ?? const [];
+    final participantByUser = {
+      for (final p in participants) p.userId.trim(): p,
+    };
+    // Preserve controller-determined order; skip IDs without a loaded model.
+    final sorted = speakerIds
+        .map((id) => participantByUser[id.trim()])
+        .whereType<RoomParticipantModel>()
+        .toList(growable: false);
 
-        return Container(
-          decoration: const BoxDecoration(
-            color: _kSurface,
-            border: Border(top: BorderSide(color: Color(0x14FFFFFF))),
+    return _buildPanel(context, sorted);
+  }
+
+  Widget _buildPanel(BuildContext context, List<RoomParticipantModel> sorted) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _kSurface,
+        border: Border(top: BorderSide(color: Color(0x14FFFFFF))),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ───────────────────────────────────────────────────
+          Container(
+            height: 28,
+            color: _kSurfaceHigh,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                const _PulsingMicIcon(),
+                const SizedBox(width: 6),
+                Text(
+                  'On Mic  •  ${sorted.length}',
+                  style: const TextStyle(
+                    color: _kGold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ─────────────────────────────────────────────────
-              Container(
-                height: 28,
-                color: _kSurfaceHigh,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    const _PulsingMicIcon(),
-                    const SizedBox(width: 6),
-                    Text(
-                      'On Mic  •  ${sorted.length}',
-                      style: const TextStyle(
-                        color: _kGold,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
+          if (sorted.isEmpty)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Text(
+                'Nobody on mic yet',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              if (sorted.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(12, 10, 12, 12),
-                  child: Text(
-                    'Nobody on mic yet',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 104,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    itemCount: sorted.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final p = sorted[index];
-                      final name = displayNameById[p.userId] ?? p.userId;
-                      final isMe = p.userId == currentUserId;
-                      return RoomUserTile(
-                        displayName: name,
-                        role: p.role,
-                        isMicOn: p.micOn,
-                        isMuted: p.isMuted,
-                        isMe: isMe,
-                        micExpiresAt: p.micExpiresAt,
-                        layout: RoomUserTileLayout.grid,
-                        compact: true,
-                      );
-                    },
-                  ),
+            )
+          else
+            SizedBox(
+              height: 104,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
                 ),
-            ],
-          ),
-        );
-      },
+                itemCount: sorted.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final p = sorted[index];
+                  final name = displayNameById[p.userId] ?? p.userId;
+                  final isMe = p.userId == currentUserId;
+                  return RoomUserTile(
+                    displayName: name,
+                    role: p.role,
+                    isMicOn: p.micOn,
+                    isMuted: p.isMuted,
+                    isMe: isMe,
+                    micExpiresAt: p.micExpiresAt,
+                    layout: RoomUserTileLayout.grid,
+                    compact: true,
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  static int _roleOrder(String role) {
-    switch (role) {
-      case 'host':
-      case 'owner':
-        return 0;
-      case 'cohost':
-        return 1;
-      default:
-        return 2;
-    }
-  }
 }
+// _roleOrder() removed — speaker ordering is owned by RoomController
 
 /// Pulsing mic icon to draw attention to the "On Mic" header.
 class _PulsingMicIcon extends StatefulWidget {

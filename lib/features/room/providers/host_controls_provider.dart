@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/notification_service.dart';
 import '../controllers/room_state.dart';
+import '../models/room_theme_model.dart';
 import 'room_firestore_provider.dart';
 
 class HostControls {
@@ -121,6 +122,11 @@ class HostControls {
 
   Future<void> promoteToModerator(String roomId, String userId) {
     return _participantRef(roomId, userId).update({'role': 'moderator'});
+  }
+
+  Future<void> promoteToTrustedSpeaker(String roomId, String userId) {
+    return _participantRef(roomId, userId)
+        .update({'role': 'trusted_speaker'});
   }
 
   Future<void> demoteToAudience(String roomId, String userId) {
@@ -374,6 +380,24 @@ class HostControls {
       }
     }
     await _roomRef(roomId).update(updates);
+  }
+
+  /// Applies a new [RoomTheme] to the room document. The UI merges the
+  /// `theme` sub-map so other top-level fields are not touched.
+  Future<void> updateRoomTheme(String roomId, RoomTheme theme) async {
+    await _roomRef(roomId).update({
+      'theme': theme.toJson(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Resets the room theme to the application default by clearing the stored
+  /// theme sub-map.
+  Future<void> resetRoomTheme(String roomId) async {
+    await _roomRef(roomId).update({
+      'theme': FieldValue.delete(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }
 

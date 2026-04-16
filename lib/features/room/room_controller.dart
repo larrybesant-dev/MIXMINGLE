@@ -1,6 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show protected;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+export '../../models/room_participant_model.dart'
+    show roomParticipantCanBeShownAsTalking;
 
 export 'controllers/room_state.dart'
     show
@@ -20,6 +24,9 @@ import '../../core/telemetry/app_telemetry.dart';
 import '../../models/mic_access_request_model.dart';
 import '../../models/room_participant_model.dart';
 import 'controllers/room_state.dart';
+import 'models/room_theme_model.dart';
+import 'room_permissions.dart';
+import 'room_state_contract.dart';
 import 'providers/host_controls_provider.dart';
 import 'providers/mic_access_provider.dart';
 import 'providers/participant_providers.dart';
@@ -45,7 +52,13 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   UserCamPermissionsController get _camPermissions =>
       ref.read(userCamPermissionsControllerProvider);
 
-  static const Duration _kJoinStabilizationDelay = Duration(milliseconds: 350);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MUTABLE STATE
+  //   Session state   — cleared fully on every leaveRoom().
+  //   Consistency maps — _lastActiveAtByUser + _pendingRoleByUser (see below).
+  //   Timers          — per-user join stabilization + heartbeat.
+  // See docs/ROOM_CONTROLLER_CONFLICT_RULES.md for update rules.
+  // ═══════════════════════════════════════════════════════════════════════════
 
   LiveRoomPhase _phase = LiveRoomPhase.idle;
   RoomLifecycleState _lifecycleState = RoomLifecycleState.initializing;
@@ -59,16 +72,50 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       <String, RoomSessionSnapshot>{};
   final Set<String> _pendingUserIds = <String>{};
   final Set<String> _stableUserIds = <String>{};
-  Timer? _joinStabilizationTimer;
+  // Per-user stabilization timers — a single Timer? would cancel the previous
+  // user's stabilization window on each new join, leaving them stuck in
+  // _pendingUserIds permanently (ghost pending).
+  final Map<String, Timer> _joinStabilizationTimers = <String, Timer>{};
   Timer? _roomHeartbeatTimer;
   DateTime? _lastParticipantSyncAt;
 
+  /// Tracks the most-recent `lastActiveAt` seen per user from Firestore.
+  /// Any incoming participant doc with an older timestamp is stale and must
+  /// not overwrite the role or snapshot we already accepted.
+  final Map<String, DateTime> _lastActiveAtByUser = <String, DateTime>{};
+
+  /// Holds roles set by in-session controller mutations (promote/demote/join)
+  /// that have been written to Firestore but not yet reflected in the stream.
+  /// A Firestore doc that arrives with an equal-or-older lastActiveAt while a
+  /// pending role exists must not overwrite the pending role.
+  final Map<String, String> _pendingRoleByUser = <String, String>{};
+
+  /// Records when each pending role was written. Used to enforce a TTL: if
+  /// Firestore does not confirm the write within `_kPendingRoleTtl`, the entry
+  /// is expired and the current Firestore doc is allowed to win. This prevents
+  /// a silently-failed write from holding `_pendingRoleByUser` open forever.
+  final Map<String, DateTime> _pendingRoleSetAtByUser = <String, DateTime>{};
+
+  // Values from the Room State Contract (docs/ROOM_STATE_CONTRACT.md §5, §8).
+  static const Duration _kPendingRoleTtl = kRoomPendingRoleTtl;
+  static const Duration _kJoinStabilizationDelay = kRoomJoinStabilizationDelay;
+
   static const Duration _kRoomHeartbeatInterval = Duration(seconds: 20);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // REACTIVE SNAPSHOT  (build)
+  // RULE: build() is a pure projection of stream inputs + mutable state onto
+  //       RoomState. It must NOT mutate any field or call async operations.
+  //       All field mutations happen in async methods that call _emitState().
+  // ═══════════════════════════════════════════════════════════════════════════
 
   @override
   RoomState build(String roomId) {
     ref.onDispose(() {
-      _joinStabilizationTimer?.cancel();
+      for (final t in _joinStabilizationTimers.values) {
+        t.cancel();
+      }
+      _joinStabilizationTimers.clear();
       _roomHeartbeatTimer?.cancel();
     });
 
@@ -136,7 +183,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       hasMicPermission: _hasMicPermission,
     );
 
-    _lifecycleState = RoomStateMachine.resolveLifecycleState(
+    // Compute lifecycle state as a pure local — no side effects in build().
+    final resolvedLifecycleState = RoomStateMachine.resolveLifecycleState(
       roomId: roomId,
       phase: nextState.phase,
       isHydrated: nextState.isRoomFullyHydrated,
@@ -156,7 +204,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         currentUserId.isNotEmpty &&
         (nextState.isSpeaker(currentUserId) || normalizedRole == roomRoleStage);
     final resolvedAudioState = RoomStateMachine.resolveAudioState(
-      roomState: _lifecycleState,
+      roomState: resolvedLifecycleState,
       isHost: isHostLikeRole(normalizedRole),
       isCohost: normalizedRole == roomRoleCohost,
       micRequested: _micRequested,
@@ -179,15 +227,25 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       hostMissing: hostMissing,
     );
 
-    return nextState.copyWith(
-      lifecycleState: _lifecycleState,
+    return _selfHeal(nextState.copyWith(
+      lifecycleState: resolvedLifecycleState,
       audioState: resolvedAudioState,
       micRequested: _micRequested,
       hasMicPermission: _hasMicPermission,
       hasSpeakerSeat: hasSpeakerSeat,
-    );
+    ));
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RESOLUTION LAYER  — stale filter + role/speaker projection
+  // RULE: These helpers may read _lastActiveAtByUser and _pendingRoleByUser.
+  //       Their only allowed side effects are:
+  //         • updating _lastActiveAtByUser[userId] (high-water mark advance)
+  //         • removing a confirmed entry from _pendingRoleByUser
+  //       They must not call async operations or read other mutable fields.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @protected
   String _resolveHostId(
     Map<String, dynamic>? roomDoc,
     List<RoomParticipantModel> participants,
@@ -198,6 +256,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
+  @protected
   List<String> _resolveUserIds(
     List<RoomParticipantModel> participants, {
     List<String> memberUserIds = const <String>[],
@@ -208,12 +267,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }.where((userId) => userId.isNotEmpty).toList(growable: false);
   }
 
+  @protected
   bool _shouldUseSpeakerDocs(Map<String, dynamic>? roomDoc) {
     final rawVersion = roomDoc?['speakerSyncVersion'];
     final rawMaxSpeakers = roomDoc?['maxSpeakers'];
     return rawVersion is num || rawMaxSpeakers is num;
   }
 
+  @protected
   List<String> _resolveSpeakerIds(
     List<RoomParticipantModel> participants, {
     required String hostId,
@@ -289,6 +350,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         .toList(growable: false);
   }
 
+  @protected
   bool _isSpeakerParticipant(RoomParticipantModel participant) {
     if (participant.userId.trim().isEmpty || participant.isBanned) {
       return false;
@@ -298,12 +360,17 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       participant.role,
       fallbackRole: '',
     );
-    final stageRole =
-        canManageStageRole(normalizedRole) || normalizedRole == roomRoleStage;
+    final stageRole = canManageStageRole(normalizedRole) ||
+        normalizedRole == roomRoleStage ||
+        normalizedRole == roomRoleTrustedSpeaker;
 
-    return stageRole || (participant.micOn && !participant.isMuted);
+    // Transient micOn flags from network lag must NOT promote audience members
+    // to the speaker list. Only authoritative role grants speaker status on
+    // the legacy (non-speakerDocs) path.
+    return stageRole;
   }
 
+  @protected
   int _speakerRank(RoomParticipantModel participant, {required String hostId}) {
     final normalizedRole = normalizeRoomRole(
       participant.role,
@@ -315,12 +382,16 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     if (normalizedRole == roomRoleCohost) {
       return 1;
     }
-    if (normalizedRole == roomRoleStage) {
+    if (normalizedRole == roomRoleTrustedSpeaker) {
       return 2;
     }
-    return 3;
+    if (normalizedRole == roomRoleStage) {
+      return 3;
+    }
+    return 4;
   }
 
+  @protected
   Map<String, List<String>> _resolveCamViewers(List<String> userIds) {
     final result = <String, List<String>>{};
     for (final userId in userIds) {
@@ -335,6 +406,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return result;
   }
 
+  @protected
   Map<String, String> _resolveParticipantRoles(
     List<RoomParticipantModel> participants, {
     required String hostId,
@@ -345,6 +417,67 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       if (userId.isEmpty) {
         continue;
       }
+
+      // Stale-event guard: if this doc is older than what we already accepted,
+      // carry forward the role we already know rather than regressing.
+      final incomingAt = participant.lastActiveAt;
+      final knownAt = _lastActiveAtByUser[userId];
+      if (knownAt != null && incomingAt.isBefore(knownAt)) {
+        // Stale — preserve existing resolution.
+        final existing = state.participantRolesByUser[userId];
+        if (existing != null) {
+          result[userId] = existing;
+          continue;
+        }
+      }
+      // Accept this doc's timestamp as the new high-water mark.
+      if (knownAt == null || incomingAt.isAfter(knownAt)) {
+        _lastActiveAtByUser[userId] = incomingAt;
+      }
+
+      // Pending-role precedence: an in-session promote/demote written to
+      // Firestore has not yet been reflected in the incoming stream doc.
+      // Keep the pending role until a fresh doc confirms the write, or until
+      // _kPendingRoleTtl elapses (write likely failed silently).
+      final pendingRole = _pendingRoleByUser[userId];
+      if (pendingRole != null) {
+        final setAt = _pendingRoleSetAtByUser[userId];
+        final isExpired =
+            setAt != null &&
+            DateTime.now().difference(setAt) > _kPendingRoleTtl;
+        if (isExpired) {
+          // Firestore never confirmed the write — let the server doc win.
+          _pendingRoleByUser.remove(userId);
+          _pendingRoleSetAtByUser.remove(userId);
+          AppTelemetry.logAction(
+            level: 'warning',
+            domain: 'room',
+            action: 'pending_role_expired',
+            message:
+                'Pending role "$pendingRole" for user $userId expired '
+                'without Firestore confirmation.',
+            roomId: arg,
+            metadata: <String, Object?>{
+              'userId': userId,
+              'expiredRole': pendingRole,
+            },
+          );
+          // Fall through — Firestore doc determines the role below.
+        } else {
+          final normalizedIncoming = normalizeRoomRole(
+            participant.role,
+            fallbackRole: '',
+          );
+          // Once Firestore echoes back the same role we wrote, clear pending.
+          if (normalizedIncoming == pendingRole) {
+            _pendingRoleByUser.remove(userId);
+            _pendingRoleSetAtByUser.remove(userId);
+          }
+          result[userId] = pendingRole;
+          continue;
+        }
+      }
+
       final normalizedRole = participant.role.trim().toLowerCase();
       result[userId] = normalizedRole.isEmpty ? 'audience' : normalizedRole;
     }
@@ -395,6 +528,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         generatedHandlePattern.hasMatch(normalized);
   }
 
+  @protected
   Map<String, RoomSessionSnapshot> _resolveSessionSnapshots(
     List<RoomParticipantModel> participants, {
     required String hostId,
@@ -406,14 +540,31 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       if (userId.isEmpty) {
         continue;
       }
+
+      // Stale-event guard: do not regress a snapshot we already accepted from
+      // a fresher document. Use the same high-water mark maintained by
+      // _resolveParticipantRoles (which runs first in build()).
+      final incomingAt = participant.lastActiveAt;
+      final knownAt = _lastActiveAtByUser[userId];
+      if (knownAt != null && incomingAt.isBefore(knownAt)) {
+        // Stale — keep the existing snapshot unchanged.
+        continue;
+      }
+
       final existing = result[userId];
       final existingName = existing?.displayName.trim() ?? '';
+
+      // Determine the effective role, respecting any pending in-session write.
+      final pendingRole = _pendingRoleByUser[userId];
+      final firestoreRole = participant.role.trim().isEmpty
+          ? (userId == hostId ? 'host' : 'audience')
+          : participant.role.trim().toLowerCase();
+      final effectiveRole = pendingRole ?? firestoreRole;
+
       result[userId] = RoomSessionSnapshot(
         userId: userId,
         displayName: existingName.isNotEmpty ? existingName : userId,
-        role: participant.role.trim().isEmpty
-            ? (userId == hostId ? 'host' : 'audience')
-            : participant.role.trim().toLowerCase(),
+        role: effectiveRole,
         joinedAt: existing?.joinedAt ?? participant.joinedAt,
       );
     }
@@ -437,6 +588,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return result;
   }
 
+  @protected
   List<String> _resolveStableUserIds(List<String> userIds) {
     final stable = <String>{...userIds, ..._stableUserIds};
     for (final userId in _pendingUserIds) {
@@ -447,17 +599,118 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     return stable.toList(growable: false);
   }
 
-  void _emitState(RoomState nextState) {
-    _lifecycleState = resolveRoomLifecycleState(
-      roomId: nextState.roomId,
-      phase: nextState.phase,
-      isHydrated: nextState.isRoomFullyHydrated,
-      currentUserId: nextState.currentUserId,
-      errorMessage: nextState.errorMessage,
-    );
-    state = nextState.copyWith(lifecycleState: _lifecycleState);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SELF-HEALING LAYER
+  // Runs after state computation in both build() and _emitState() paths.
+  // Applies surgical repairs for external inconsistencies caused by Firestore
+  // doc arrival timing (not programming bugs — those are caught by assertions).
+  // RULE: Log every repair. If healing frequency spikes, it is a signal of an
+  //       upstream bug — investigate rather than tuning the heal thresholds.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @protected
+  RoomState _selfHeal(RoomState candidate) {
+    var healed = candidate;
+
+    // Repair 1 — Ghost speaker removal.
+    // Cause: speaker-doc arrives at this client before the participant-doc.
+    // The speaker appears in speakerIds but not yet in userIds, so the UI
+    // would render an empty slot. We prune until the participant arrives.
+    final ghostSpeakers = healed.speakerIds
+        .where(
+          (id) =>
+              !healed.userIds.contains(id) &&
+              id.trim() != healed.hostId.trim(),
+        )
+        .toList(growable: false);
+    if (ghostSpeakers.isNotEmpty) {
+      AppTelemetry.logAction(
+        level: 'warning',
+        domain: 'room',
+        action: 'self_heal_ghost_speakers',
+        message:
+            'Pruned ${ghostSpeakers.length} ghost speaker(s) from speakerIds '
+            'pending participant-doc arrival.',
+        roomId: arg,
+        metadata: <String, Object?>{'removed': ghostSpeakers.join(',')},
+      );
+      healed = healed.copyWith(
+        speakerIds: healed.speakerIds
+            .where((id) => !ghostSpeakers.contains(id))
+            .toList(growable: false),
+      );
+    }
+
+    // Repair 2 — Host-role alignment.
+    // Cause: Firestore hostId field and role field are separate documents;
+    // a race can produce hostId = "X" while participantRolesByUser["X"] = "audience".
+    final hostId = healed.hostId.trim();
+    if (hostId.isNotEmpty) {
+      final existingRole = healed.participantRolesByUser[hostId];
+      if (existingRole != null && !isHostLikeRole(existingRole)) {
+        AppTelemetry.logAction(
+          level: 'warning',
+          domain: 'room',
+          action: 'self_heal_host_role',
+          message:
+              'Corrected participantRolesByUser["$hostId"] from '
+              '"$existingRole" to "host".',
+          roomId: arg,
+          metadata: <String, Object?>{'userId': hostId, 'was': existingRole},
+        );
+        healed = healed.copyWith(
+          participantRolesByUser: <String, String>{
+            ...healed.participantRolesByUser,
+            hostId: 'host',
+          },
+        );
+      }
+    }
+
+    return healed;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATE EMISSION
+  // RULE: All async paths that change controller state must route through
+  //       _emitState(). Never write `state = ...` directly outside this method.
+  //       _emitState() owns the equality guard that prevents rebuild storms.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @protected
+  void _emitState(RoomState nextState) {
+    // Self-healing runs first so that assertions check post-repair state.
+    // If an invariant still fires after healing, it is a programming bug.
+    final healed = _selfHeal(nextState);
+    // ── Hard invariants (docs/ROOM_STATE_CONTRACT.md §6) ─────────────────────
+    assert(RoomStateContract.assertValid(healed), '');
+
+    final resolvedLifecycle = resolveRoomLifecycleState(
+      roomId: healed.roomId,
+      phase: healed.phase,
+      isHydrated: healed.isRoomFullyHydrated,
+      currentUserId: healed.currentUserId,
+      errorMessage: healed.errorMessage,
+    );
+    _lifecycleState = resolvedLifecycle;
+    final candidate = healed.copyWith(lifecycleState: resolvedLifecycle);
+    // Avoid triggering downstream rebuilds when nothing meaningful changed.
+    if (candidate.phase == state.phase &&
+        candidate.lifecycleState == state.lifecycleState &&
+        candidate.currentUserId == state.currentUserId &&
+        candidate.errorMessage == state.errorMessage &&
+        candidate.hostId == state.hostId &&
+        candidate.speakerIds == state.speakerIds &&
+        candidate.audioState == state.audioState &&
+        candidate.micRequested == state.micRequested &&
+        candidate.hasMicPermission == state.hasMicPermission &&
+        candidate.hasSpeakerSeat == state.hasSpeakerSeat) {
+      return;
+    }
+    state = candidate;
+  }
+
+  @protected
   void _publishSessionState() {
     _emitState(
       state.copyWith(
@@ -470,6 +723,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
+  @protected
   void _scheduleStabilization(String userId) {
     final normalizedUserId = userId.trim();
     if (normalizedUserId.isEmpty) {
@@ -479,12 +733,17 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _stableUserIds.remove(normalizedUserId);
     _publishSessionState();
 
-    _joinStabilizationTimer?.cancel();
-    _joinStabilizationTimer = Timer(_kJoinStabilizationDelay, () {
-      _pendingUserIds.remove(normalizedUserId);
-      _stableUserIds.add(normalizedUserId);
-      _publishSessionState();
-    });
+    // Cancel only this user's timer, preserving all other users' windows.
+    _joinStabilizationTimers[normalizedUserId]?.cancel();
+    _joinStabilizationTimers[normalizedUserId] = Timer(
+      _kJoinStabilizationDelay,
+      () {
+        _joinStabilizationTimers.remove(normalizedUserId);
+        _pendingUserIds.remove(normalizedUserId);
+        _stableUserIds.add(normalizedUserId);
+        _publishSessionState();
+      },
+    );
   }
 
   void _startRoomHeartbeat() {
@@ -509,6 +768,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _lastParticipantSyncAt = null;
   }
 
+  @protected
   Future<void> _sendRoomHeartbeat({bool forceSync = false}) async {
     final userId = _currentUserId?.trim() ?? '';
     if (userId.isEmpty || _phase != LiveRoomPhase.joined) {
@@ -650,6 +910,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
+  @protected
   void _requireActiveLifecycle() {
     final lifecycleState = state.lifecycleState;
     final isReadyForMutation =
@@ -661,6 +922,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
   }
 
+  @protected
   Future<String> _refreshActorRole(String userId) async {
     final normalizedUserId = userId.trim();
     if (normalizedUserId.isEmpty) {
@@ -710,6 +972,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUTHORITY GUARDS  — host > cohost/moderator > stage > audience
+  // RULE: Every public mutation method must call exactly one of these before
+  //       writing to Firestore. No shortcuts. No bypasses.
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Future<void> _requireStageAuthority() async {
     final actorUserId = _actorUserId;
     _requireActiveLifecycle();
@@ -736,6 +1004,12 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       throw StateError('Only the room host can perform this action.');
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SESSION LIFECYCLE  — joinRoom / leaveRoom
+  // RULE: leaveRoom() is the ONLY place that clears _lastActiveAtByUser and
+  //       _pendingRoleByUser. Clearing them elsewhere breaks session isolation.
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Future<RoomJoinResult> joinRoom(
     String userId, {
@@ -899,6 +1173,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _pendingUserIds.clear();
       _stableUserIds.clear();
       _sessionSnapshotsByUser.clear();
+      _lastActiveAtByUser.clear();
+      _pendingRoleByUser.clear();
+      _pendingRoleSetAtByUser.clear();
       _lifecycleState = RoomLifecycleState.ended;
       state = const RoomState(lifecycleState: RoomLifecycleState.ended);
       return;
@@ -928,6 +1205,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _pendingUserIds.clear();
     _stableUserIds.clear();
     _sessionSnapshotsByUser.clear();
+    _lastActiveAtByUser.clear();
+    _pendingRoleByUser.clear();
+    _pendingRoleSetAtByUser.clear();
     _lifecycleState = RoomLifecycleState.ended;
     state = const RoomState(lifecycleState: RoomLifecycleState.ended);
   }
@@ -989,6 +1269,40 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     }
 
     if (state.isSpeaker(normalizedUserId)) {
+      return MicRequestResult.grabbed;
+    }
+
+    // Trusted Speakers bypass the mic queue when a slot is free — they do
+    // not need host approval, matching the system prompt contract.
+    final actorRole = state.roleFor(normalizedUserId);
+    final isTrustedOrStaff = canModerateRole(actorRole) ||
+        isTrustedSpeakerRole(actorRole);
+    final hasOpenSlot = state.speakerIds.length < RoomState.maxSpeakers;
+    if (isTrustedOrStaff && hasOpenSlot) {
+      await _roomRepository.requestMic(
+        roomId: arg,
+        userId: normalizedUserId,
+        displayName: state.snapshotFor(normalizedUserId)?.displayName,
+        role: state.roleFor(normalizedUserId),
+      );
+      AppEventBus.instance.emit(
+        MicStateChangedEvent(
+          id: 'mic-grab:$arg:$normalizedUserId:${DateTime.now().millisecondsSinceEpoch}',
+          timestamp: DateTime.now(),
+          sessionId: AppEventIds.roomSession(
+            roomId: arg,
+            userId: normalizedUserId,
+          ),
+          correlationId: AppEventIds.roomCorrelation(
+            roomId: arg,
+            userId: normalizedUserId,
+          ),
+          userId: normalizedUserId,
+          roomId: arg,
+          isSpeaker: true,
+        ),
+      );
+      updateAudioContext(micRequested: false, hasMicPermission: true);
       return MicRequestResult.grabbed;
     }
 
@@ -1104,6 +1418,13 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MUTATION METHODS  — stage + role changes
+  // RULE: Every role-changing method must write _pendingRoleByUser[userId]
+  //       BEFORE the awaited Firestore call so the stale filter holds the
+  //       intended role during the write confirmation window.
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Future<void> promoteSpeaker({
     String? actorUserId,
     required String targetUserId,
@@ -1164,9 +1485,21 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _logModerationAction('unmute_user', targetUserId: normalizedUserId);
   }
 
+  Future<void> promoteTrustedSpeaker(String userId) async {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) return;
+    await _requireStageAuthority();
+    _pendingRoleByUser[normalizedUserId] = roomRoleTrustedSpeaker;
+    _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
+    await _hostControls.promoteToTrustedSpeaker(arg, normalizedUserId);
+    _logModerationAction('promote_trusted_speaker', targetUserId: normalizedUserId);
+  }
+
   Future<void> promoteToModerator(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireHostAuthority();
+    _pendingRoleByUser[normalizedUserId] = roomRoleModerator;
+    _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
     await _hostControls.promoteToModerator(arg, normalizedUserId);
     _logModerationAction('promote_moderator', targetUserId: normalizedUserId);
   }
@@ -1174,6 +1507,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   Future<void> promoteToCohost(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireHostAuthority();
+    _pendingRoleByUser[normalizedUserId] = roomRoleCohost;
+    _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
     await _hostControls.promoteToCohost(arg, normalizedUserId);
     _logModerationAction('promote_cohost', targetUserId: normalizedUserId);
   }
@@ -1181,6 +1516,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   Future<void> demoteToAudience(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireHostAuthority();
+    _pendingRoleByUser[normalizedUserId] = roomRoleAudience;
+    _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
     await _hostControls.demoteToAudience(arg, normalizedUserId);
     _logModerationAction('demote_audience', targetUserId: normalizedUserId);
   }
@@ -1297,6 +1634,28 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       description: description,
       category: category,
     );
+  }
+
+  /// Updates the room's visual theme. Requires the caller to be host or
+  /// co-host (enforced via [RoomPermissions.canEditRoomTheme]).
+  Future<void> updateRoomTheme(RoomTheme theme) async {
+    _requireActiveLifecycle();
+    final actorRole = state.roleFor(_actorUserId);
+    if (!RoomPermissions.canEditRoomTheme(actorRole)) {
+      throw StateError('Only the host or a co-host can change the room theme.');
+    }
+    return _hostControls.updateRoomTheme(arg, theme);
+  }
+
+  /// Clears the room theme back to the default. Same permission requirement
+  /// as [updateRoomTheme].
+  Future<void> resetRoomTheme() async {
+    _requireActiveLifecycle();
+    final actorRole = state.roleFor(_actorUserId);
+    if (!RoomPermissions.canEditRoomTheme(actorRole)) {
+      throw StateError('Only the host or a co-host can reset the room theme.');
+    }
+    return _hostControls.resetRoomTheme(arg);
   }
 
   Future<void> approveCameraViewer({

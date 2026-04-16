@@ -11,6 +11,8 @@ import '../providers/room_policy_provider.dart';
 import '../providers/participant_providers.dart';
 import '../../feed/providers/host_controls_providers.dart';
 import '../../../services/room_audio_cues.dart';
+import 'background_picker_sheet.dart';
+import '../models/room_theme_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public entry-point: show the host control panel as a draggable bottom sheet.
@@ -98,8 +100,8 @@ class _RoomHostControlPanelSheetState
             role: widget.isOwner ? 'host' : null,
           );
     });
-    // Owners get all 5 tabs; mods/cohosts skip the Moderators tab.
-    final tabCount = widget.isOwner ? 5 : 4;
+    // Owners get all 6 tabs; mods/cohosts skip the Moderators tab (5 tabs).
+    final tabCount = widget.isOwner ? 6 : 5;
     _tabs = TabController(
       length: tabCount,
       vsync: this,
@@ -124,7 +126,7 @@ class _RoomHostControlPanelSheetState
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -171,6 +173,10 @@ class _RoomHostControlPanelSheetState
                     text: 'Audio',
                   ),
                   const Tab(icon: Icon(Icons.people, size: 18), text: 'People'),
+                  const Tab(
+                    icon: Icon(Icons.palette_rounded, size: 18),
+                    text: 'Theme',
+                  ),
                   if (widget.isOwner)
                     const Tab(
                       icon: Icon(Icons.admin_panel_settings, size: 18),
@@ -211,6 +217,10 @@ class _RoomHostControlPanelSheetState
                     _PeopleTab(
                       roomId: widget.roomId,
                       currentUserId: widget.currentUserId,
+                      scrollController: scrollController,
+                    ),
+                    _ThemeTab(
+                      roomId: widget.roomId,
                       scrollController: scrollController,
                     ),
                     if (widget.isOwner)
@@ -1342,6 +1352,160 @@ class _ControlTile extends StatelessWidget {
 // Dart 3 extension for let-style chaining used in sort.
 extension _LetExt<T> on T {
   R let<R>(R Function(T it) block) => block(this);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab 6 — Room Theme (host & co-host only)
+// Shows current theme state and opens BackgroundPickerSheet.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ThemeTab extends ConsumerWidget {
+  const _ThemeTab({
+    required this.roomId,
+    required this.scrollController,
+  });
+
+  final String roomId;
+  final ScrollController scrollController;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roomAsync = ref.watch(roomStreamProvider(roomId));
+    final roomController = ref.read(liveRoomControllerProvider(roomId).notifier);
+    final currentTheme = roomAsync.valueOrNull?.theme;
+    final preset = currentTheme?.vibePreset;
+    final hasCustomBg = currentTheme?.hasBackground ?? false;
+
+    String presetLabel() {
+      if (preset == null) return 'Default';
+      return switch (preset.name) {
+        'club' => 'Club',
+        'lounge' => 'Lounge',
+        'neon' => 'Neon',
+        'hype' => 'Hype',
+        'space' => 'Space',
+        'ocean' => 'Ocean',
+        _ => 'Default',
+      };
+    }
+
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(16),
+      children: [
+        _SectionHeader('Current Theme'),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                const Icon(Icons.palette_rounded,
+                    color: Color(0xFFD4A853), size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hasCustomBg
+                            ? 'Custom image'
+                            : 'Preset: ${presetLabel()}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      if (hasCustomBg)
+                        Text(
+                          currentTheme!.backgroundUrl!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.grey),
+                        )
+                      else
+                        const Text(
+                          'Tap Change to pick a background',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _SectionHeader('Actions'),
+        _ControlTile(
+          title: 'Change background',
+          subtitle: 'Pick a preset or paste a custom image URL',
+          icon: Icons.image_rounded,
+          trailing: const Icon(Icons.chevron_right, size: 20),
+        ),
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => BackgroundPickerSheet.show(
+            context,
+            current: currentTheme ?? RoomTheme.defaultTheme,
+            onSelect: (theme) {
+              roomController.updateRoomTheme(theme).catchError((_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not update theme.')),
+                  );
+                }
+              });
+            },
+            onReset: () {
+              roomController.resetRoomTheme().catchError((_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not reset theme.')),
+                  );
+                }
+              });
+            },
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                const SizedBox(width: 4),
+                const Icon(Icons.open_in_new, size: 14, color: Color(0xFFD4A853)),
+                const SizedBox(width: 6),
+                Text(
+                  'Open theme picker',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (currentTheme != null && !currentTheme.isDefault) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () {
+              roomController.resetRoomTheme().catchError((_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not reset theme.')),
+                  );
+                }
+              });
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Reset to Default Theme'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.grey,
+              side: const BorderSide(color: Color(0xFF3A3D4A)),
+            ),
+          ),
+        ],
+        const SizedBox(height: 32),
+      ],
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

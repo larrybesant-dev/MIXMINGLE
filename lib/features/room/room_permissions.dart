@@ -4,12 +4,15 @@ class RoomPermissions {
   static const String host = roomRoleHost;
   static const String cohost = roomRoleCohost;
   static const String moderator = roomRoleModerator;
+  static const String trustedSpeaker = roomRoleTrustedSpeaker;
   static const String stage = roomRoleStage;
   static const String audience = roomRoleAudience;
 
   static bool isHost(String role) => isHostLikeRole(role);
   static bool isModerator(String role) =>
       normalizeRoomRole(role, fallbackRole: '') == moderator;
+  static bool isTrustedSpeaker(String role) =>
+      normalizeRoomRole(role, fallbackRole: '') == trustedSpeaker;
   static bool isStaff(String role) => canModerateRole(role);
 
   static bool canUseMic(String role) {
@@ -40,9 +43,11 @@ class RoomPermissions {
       return true;
     }
 
-    // Moderators can only manage audience/stage participants.
+    // Moderators can only manage audience/stage/trusted_speaker participants.
     if (isModerator(actorRole)) {
-      return targetRole == audience || targetRole == stage;
+      return targetRole == audience ||
+          targetRole == stage ||
+          targetRole == trustedSpeaker;
     }
 
     return false;
@@ -57,5 +62,11 @@ class RoomPermissions {
     return isHost(actorRole) &&
         actorUserId == hostUserId &&
         actorUserId != targetUserId;
+  }
+
+  /// Returns true when [actorRole] is allowed to change the room's visual theme.
+  /// Only the host or a co-host can edit the room theme.
+  static bool canEditRoomTheme(String actorRole) {
+    return isHost(actorRole) || canManageStageRole(actorRole);
   }
 }

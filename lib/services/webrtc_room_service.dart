@@ -1,4 +1,4 @@
-// ignore_for_file: invalid_use_of_visible_for_testing_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member, avoid_dynamic_calls
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:js_interop';
@@ -439,7 +439,7 @@ class WebRtcRoomService extends RtcRoomService {
         // prevents dangling audio tracks consuming device bandwidth.
         if (_localStream != null) {
           for (final track in _localStream!.getTracks()) {
-            track.stop();
+            unawaited(track.stop());
           }
         }
 
@@ -482,8 +482,8 @@ class WebRtcRoomService extends RtcRoomService {
       // Stop only video tracks. If the mic is still active (audio track
       // is enabled), keep the local stream and broadcaster mode alive so
       // Harley's P2P connection is not torn down mid-audio.
-      for (final track in (_localStream?.getVideoTracks() ?? [])) {
-        track.stop();
+      for (final track in (_localStream?.getVideoTracks() ?? <MediaStreamTrack>[])) {
+        unawaited(track.stop());
       }
       _localVideoCapturing = false;
 
@@ -517,7 +517,8 @@ class WebRtcRoomService extends RtcRoomService {
     // started with no mic active) — in that case all audio tracks in
     // _localStream are system audio and there is nothing mic-only to mute.
     final sysIds = <String>{
-      for (final t in (_systemAudioStream?.getAudioTracks() ?? [])) t.id,
+      for (final t in (_systemAudioStream?.getAudioTracks() ?? <MediaStreamTrack>[]))
+        if (t.id != null) t.id!,
     };
     for (final track in stream.getAudioTracks()) {
       if (sysIds.contains(track.id)) continue; // keep system audio live
@@ -568,7 +569,7 @@ class WebRtcRoomService extends RtcRoomService {
 
   @override
   Future<void> publishLocalVideoStream(bool enabled) async {
-    for (final track in (_localStream?.getVideoTracks() ?? [])) {
+    for (final track in (_localStream?.getVideoTracks() ?? <MediaStreamTrack>[])) {
       track.enabled = enabled;
     }
   }
@@ -673,13 +674,13 @@ class WebRtcRoomService extends RtcRoomService {
 
         // Stop any video tracks Chrome included.
         for (final t in displayStream.getVideoTracks()) {
-          t.stop();
+          unawaited(t.stop());
         }
 
         final sysAudioTracks = displayStream.getAudioTracks();
         if (sysAudioTracks.isEmpty) {
           for (final t in displayStream.getTracks()) {
-            t.stop();
+            unawaited(t.stop());
           }
           throw AgoraServiceException(
             code: 'no-system-audio',
@@ -1309,7 +1310,7 @@ class WebRtcRoomService extends RtcRoomService {
       if (data['answer'] != null)
         continue; // already answered by another session
       _answeredCalls.add(callId);
-      _answerViewerOffer(callId, data);
+      unawaited(_answerViewerOffer(callId, data));
     }
   }
 
@@ -1506,7 +1507,7 @@ class WebRtcRoomService extends RtcRoomService {
     _teardownMixer();
     if (_localStream != null) {
       for (final track in _localStream!.getTracks()) {
-        track.stop();
+        unawaited(track.stop());
       }
       _localRenderer.srcObject = null;
       _localStream = null;

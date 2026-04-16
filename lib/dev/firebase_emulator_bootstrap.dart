@@ -29,7 +29,7 @@ class FirebaseEmulatorBootstrap {
       return;
     }
 
-    FirebaseAuth.instance.useAuthEmulator(host, authPort);
+    await FirebaseAuth.instance.useAuthEmulator(host, authPort);
     FirebaseFirestore.instance.useFirestoreEmulator(host, firestorePort);
     FirebaseFunctions.instance.useFunctionsEmulator(host, functionsPort);
   }

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../features/room/room_state_contract.dart'
+    show kRoomHealBurstCritical, kRoomHealBurstWarning;
 import '../../services/analytics_service.dart';
 import '../logger.dart';
 
@@ -69,6 +71,7 @@ class RoomHealthSnapshot {
     this.duplicateJoinCount = 0,
     this.reconnectBurstCount = 0,
     this.firestoreErrorBurstCount = 0,
+    this.healBurstCount = 0,
   });
 
   final RoomHealthSeverity severity;
@@ -83,6 +86,10 @@ class RoomHealthSnapshot {
   final int duplicateJoinCount;
   final int reconnectBurstCount;
   final int firestoreErrorBurstCount;
+  /// Number of self-healing corrections in the last 60 seconds.
+  /// A sustained non-zero value means the system is repeatedly correcting
+  /// an upstream inconsistency — investigate the root cause.
+  final int healBurstCount;
 
   String get label {
     switch (severity) {
@@ -108,6 +115,7 @@ class RoomHealthSnapshot {
             other.duplicateJoinCount == duplicateJoinCount &&
             other.reconnectBurstCount == reconnectBurstCount &&
             other.firestoreErrorBurstCount == firestoreErrorBurstCount &&
+            other.healBurstCount == healBurstCount &&
             listEquals(other.alerts, alerts) &&
             listEquals(other.suppressedAlertCodes, suppressedAlertCodes) &&
             listEquals(other.recentScores, recentScores));
@@ -124,6 +132,7 @@ class RoomHealthSnapshot {
     duplicateJoinCount,
     reconnectBurstCount,
     firestoreErrorBurstCount,
+    healBurstCount,
     Object.hashAll(alerts),
     Object.hashAll(suppressedAlertCodes),
     Object.hashAll(recentScores),
@@ -919,6 +928,17 @@ class AppTelemetry {
           event.domain == 'firestore' &&
           (event.action == 'listener_error' || event.level == 'error'),
     );
+    // Count self-healing corrections over the last 60 seconds.
+    // A spike here means the upstream data source is chronically inconsistent.
+    final healBurstCount = _countRecentEvents(
+      state.recentEvents,
+      window: const Duration(seconds: 60),
+      predicate: (event) =>
+          event.domain == 'room' &&
+          (event.action == 'self_heal_ghost_speakers' ||
+              event.action == 'self_heal_host_role' ||
+              event.action == 'pending_role_expired'),
+    );
 
     final inRecoveryWindow =
         state.roomPhase == 'joining' ||
@@ -1035,6 +1055,22 @@ class AppTelemetry {
       );
     }
 
+    if (healBurstCount >= kRoomHealBurstWarning) {
+      addAlert(
+        code: 'self_heal_spike',
+        message:
+            'The room engine is repeatedly correcting state inconsistencies '
+            '(${healBurstCount}x in 60s). '
+            'Investigate upstream Firestore write or ordering issues.',
+        severity:
+            healBurstCount >= kRoomHealBurstCritical
+                ? RoomHealthSeverity.critical
+                : RoomHealthSeverity.warning,
+        penalty: healBurstCount >= kRoomHealBurstCritical ? 20 : 10,
+        suppressDuringRecovery: true,
+      );
+    }
+
     if (state.staleParticipantIds.isNotEmpty) {
       addAlert(
         code: 'stale_presence',
@@ -1081,6 +1117,7 @@ class AppTelemetry {
       duplicateJoinCount: duplicateJoinCount,
       reconnectBurstCount: reconnectBurstCount,
       firestoreErrorBurstCount: firestoreErrorBurstCount,
+      healBurstCount: healBurstCount,
     );
   }
 

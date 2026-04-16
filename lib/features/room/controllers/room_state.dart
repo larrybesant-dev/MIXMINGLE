@@ -245,6 +245,7 @@ const String roomRoleHost = 'host';
 const String roomRoleOwner = 'owner';
 const String roomRoleCohost = 'cohost';
 const String roomRoleModerator = 'moderator';
+const String roomRoleTrustedSpeaker = 'trusted_speaker';
 const String roomRoleStage = 'stage';
 const String roomRoleAudience = 'audience';
 
@@ -258,6 +259,7 @@ String normalizeRoomRole(
     case roomRoleOwner:
     case roomRoleCohost:
     case roomRoleModerator:
+    case roomRoleTrustedSpeaker:
     case roomRoleStage:
     case roomRoleAudience:
       return normalized;
@@ -283,9 +285,15 @@ bool canModerateRole(String role) {
   return canManageStageRole(normalized) || normalized == roomRoleModerator;
 }
 
+bool isTrustedSpeakerRole(String role) {
+  return normalizeRoomRole(role, fallbackRole: '') == roomRoleTrustedSpeaker;
+}
+
 bool canUseMicRole(String role) {
   final normalized = normalizeRoomRole(role, fallbackRole: '');
-  return canModerateRole(normalized) || normalized == roomRoleStage;
+  return canModerateRole(normalized) ||
+      normalized == roomRoleStage ||
+      normalized == roomRoleTrustedSpeaker;
 }
 
 bool canUseCameraRole(String role) {
