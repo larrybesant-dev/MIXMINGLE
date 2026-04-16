@@ -36,9 +36,10 @@ function Get-LatestReport {
 
 $tier0 = Get-LatestReport -Pattern 'tier0_burn_in_*.json'
 $tier1 = Get-LatestReport -Pattern 'tier1_burn_in_*.json'
+$roomGate = Get-LatestReport -Pattern 'room_release_stress_gate_*.json'
 
-if ($null -eq $tier0 -or $null -eq $tier1) {
-  Write-Error 'Missing tier0 or tier1 burn-in report. Cannot build release verdict.'
+if ($null -eq $tier0 -or $null -eq $tier1 -or $null -eq $roomGate) {
+  Write-Error 'Missing tier0, tier1, or room release gate report. Cannot build release verdict.'
   exit 1
 }
 
@@ -49,7 +50,27 @@ function Build-GateSummary {
   )
 
   $reportData = $Report.Data
-  $pass = ($reportData.failedRuns -eq 0)
+  $pass = if ($null -ne $reportData.failedRuns) {
+    ($reportData.failedRuns -eq 0)
+  } elseif ($null -ne $reportData.verdict) {
+    ($reportData.verdict -eq 'PASS')
+  } else {
+    $false
+  }
+
+  $cycles = if ($null -ne $reportData.cycles) {
+    [int]$reportData.cycles
+  } else {
+    1
+  }
+
+  $caseSummary = if ($null -ne $reportData.caseSummary) {
+    $reportData.caseSummary
+  } elseif ($null -ne $reportData.cases) {
+    $reportData.cases
+  } else {
+    @()
+  }
 
   return [PSCustomObject]@{
     gate = $Gate
@@ -57,10 +78,31 @@ function Build-GateSummary {
     totalRuns = [int]$reportData.totalRuns
     passedRuns = [int]$reportData.passedRuns
     failedRuns = [int]$reportData.failedRuns
-    cycles = [int]$reportData.cycles
+    cycles = $cycles
     sourceReport = $Report.Name
-    caseSummary = $reportData.caseSummary
+    caseSummary = $caseSummary
   }
+}
+
+function Get-FirstPropertyValue {
+  param(
+    [object]$Object,
+    [string[]]$Names,
+    [object]$Default = $null
+  )
+
+  if ($null -eq $Object) {
+    return $Default
+  }
+
+  foreach ($name in $Names) {
+    $property = $Object.PSObject.Properties[$name]
+    if ($null -ne $property) {
+      return $property.Value
+    }
+  }
+
+  return $Default
 }
 
 function Get-Numeric {
@@ -100,9 +142,10 @@ function Build-DriftSummary {
   $topCases = @()
 
   foreach ($case in $cases) {
-    $avg = Get-Numeric -Value $case.AvgDurationMs
-    $min = Get-Numeric -Value $case.MinDurationMs
-    $max = Get-Numeric -Value $case.MaxDurationMs
+    $caseId = Get-FirstPropertyValue -Object $case -Names @('CaseId', 'caseId') -Default 'unknown'
+    $avg = Get-Numeric -Value (Get-FirstPropertyValue -Object $case -Names @('AvgDurationMs', 'avgDurationMs', 'durationMs') -Default 0)
+    $min = Get-Numeric -Value (Get-FirstPropertyValue -Object $case -Names @('MinDurationMs', 'minDurationMs', 'durationMs') -Default 0)
+    $max = Get-Numeric -Value (Get-FirstPropertyValue -Object $case -Names @('MaxDurationMs', 'maxDurationMs', 'durationMs') -Default 0)
 
     # Backward compatibility for older burn-in reports that only recorded max duration.
     if ($avg -le 0 -and $max -gt 0) {
@@ -120,7 +163,7 @@ function Build-DriftSummary {
 
     $ratios += $ratio
     $topCases += [PSCustomObject]@{
-      caseId = $case.CaseId
+      caseId = $caseId
       minDurationMs = $min
       avgDurationMs = $avg
       maxDurationMs = $max
@@ -155,16 +198,19 @@ function Build-GateScore {
 
 $tier0Summary = Build-GateSummary -Gate 'tier0' -Report $tier0
 $tier1Summary = Build-GateSummary -Gate 'tier1' -Report $tier1
+$roomSummary = Build-GateSummary -Gate 'room' -Report $roomGate
 
 $tier0Drift = Build-DriftSummary -GateSummary $tier0Summary
 $tier1Drift = Build-DriftSummary -GateSummary $tier1Summary
+$roomDrift = Build-DriftSummary -GateSummary $roomSummary
 
 $tier0Score = Build-GateScore -GateSummary $tier0Summary -Drift $tier0Drift
 $tier1Score = Build-GateScore -GateSummary $tier1Summary -Drift $tier1Drift
+$roomScore = Build-GateScore -GateSummary $roomSummary -Drift $roomDrift
 
-$releasePass = $tier0Summary.pass -and $tier1Summary.pass
+$releasePass = $tier0Summary.pass -and $tier1Summary.pass -and $roomSummary.pass
 
-$confidenceScore = [math]::Round((0.5 * $tier0Score) + (0.5 * $tier1Score), 2)
+$confidenceScore = [math]::Round((0.4 * $tier0Score) + (0.4 * $tier1Score) + (0.2 * $roomScore), 2)
 
 if (-not $releasePass) {
   $confidenceScore = [math]::Min($confidenceScore, 49)
@@ -190,10 +236,11 @@ $verdict = [ordered]@{
   releaseConfidenceScore = $confidenceScore
   releaseConfidenceBand = $confidenceBand
   scoringModel = [ordered]@{
-    modelVersion = 'rc_confidence_v1'
+    modelVersion = 'rc_confidence_v2'
     tierWeight = [ordered]@{
-      tier0 = 0.5
-      tier1 = 0.5
+      tier0 = 0.4
+      tier1 = 0.4
+      room = 0.2
     }
     gateScoreFormula = 'gateScore = 0.75*passRate + 0.25*driftScore - failurePenalty(40 when failedRuns>0)'
     driftFormula = 'driftScore = 100 - min(100, avg((max-min)/avg)*100)'
@@ -210,11 +257,18 @@ $verdict = [ordered]@{
       score = $tier1Score
       passRate = if ($tier1Summary.totalRuns -eq 0) { 0 } else { [math]::Round(($tier1Summary.passedRuns / $tier1Summary.totalRuns) * 100, 2) }
       drift = $tier1Drift
+    },
+    [ordered]@{
+      gate = 'room'
+      score = $roomScore
+      passRate = if ($roomSummary.totalRuns -eq 0) { 0 } else { [math]::Round(($roomSummary.passedRuns / $roomSummary.totalRuns) * 100, 2) }
+      drift = $roomDrift
     }
   )
   gates = @(
     $tier0Summary,
-    $tier1Summary
+    $tier1Summary,
+    $roomSummary
   )
 }
 
@@ -291,6 +345,7 @@ $mdLines = @(
   '|---|---:|---:|---:|---:|---:|---:|---:|---:|---|',
   "| tier0 | $($tier0Summary.pass) | $($tier0Summary.totalRuns) | $($tier0Summary.passedRuns) | $($tier0Summary.failedRuns) | $tier0Score | $($tier0Drift.driftScore) | $($tier0Drift.averageVariabilityRatio) | $($tier0Drift.maxVariabilityRatio) | $($tier0Summary.sourceReport) |",
   "| tier1 | $($tier1Summary.pass) | $($tier1Summary.totalRuns) | $($tier1Summary.passedRuns) | $($tier1Summary.failedRuns) | $tier1Score | $($tier1Drift.driftScore) | $($tier1Drift.averageVariabilityRatio) | $($tier1Drift.maxVariabilityRatio) | $($tier1Summary.sourceReport) |",
+  "| room | $($roomSummary.pass) | $($roomSummary.totalRuns) | $($roomSummary.passedRuns) | $($roomSummary.failedRuns) | $roomScore | $($roomDrift.driftScore) | $($roomDrift.averageVariabilityRatio) | $($roomDrift.maxVariabilityRatio) | $($roomSummary.sourceReport) |",
   '',
   '## Top Drift Cases',
   '',
@@ -316,10 +371,21 @@ foreach ($case in $tier1Drift.topCases) {
 
 $mdLines += @(
   '',
+  '### Room Gate',
+  '| Case | MinMs | AvgMs | MaxMs | Variability |',
+  '|---|---:|---:|---:|---:|'
+)
+
+foreach ($case in $roomDrift.topCases) {
+  $mdLines += "| $($case.caseId) | $($case.minDurationMs) | $($case.avgDurationMs) | $($case.maxDurationMs) | $($case.variabilityRatio) |"
+}
+
+$mdLines += @(
+  '',
   '## Notes',
   "- Decision policy: releaseCandidateVerdict must be PASS to release.",
-  "- Confidence policy: higher score indicates lower timing variance under burn-in.",
-  "- Model: rc_confidence_v1"
+  "- Confidence policy: tier0, tier1, and room stability all contribute to the score.",
+  "- Model: rc_confidence_v2"
 )
 
 $mdDir = Split-Path -Path $MarkdownOutputPath -Parent

@@ -130,32 +130,36 @@ class RoomStateMachine {
       sessionSnapshotsByUser[normalizedUserId]?.role,
       fallbackRole: '',
     );
+    final hasAuthoritativeHost = normalizedHostId.isNotEmpty;
 
-    if (normalizedHostId.isNotEmpty) {
-      if (normalizedHostId == normalizedUserId) {
-        if (isHostLikeRole(participantRole)) {
-          return participantRole;
-        }
-        if (isHostLikeRole(snapshotRole)) {
-          return snapshotRole;
-        }
-        return roomRoleHost;
-      }
+    final effectiveParticipantRole =
+        hasAuthoritativeHost &&
+            normalizedHostId != normalizedUserId &&
+            participantRole == roomRoleHost
+        ? ''
+        : participantRole;
+    final effectiveSnapshotRole =
+        hasAuthoritativeHost &&
+            normalizedHostId != normalizedUserId &&
+            snapshotRole == roomRoleHost
+        ? ''
+        : snapshotRole;
 
-      if (participantRole.isNotEmpty && !isHostLikeRole(participantRole)) {
-        return participantRole;
+    if (hasAuthoritativeHost && normalizedHostId == normalizedUserId) {
+      if (isHostLikeRole(effectiveParticipantRole)) {
+        return effectiveParticipantRole;
       }
-      if (snapshotRole.isNotEmpty && !isHostLikeRole(snapshotRole)) {
-        return snapshotRole;
+      if (isHostLikeRole(effectiveSnapshotRole)) {
+        return effectiveSnapshotRole;
       }
-      return normalizeRoomRole(fallbackRole);
+      return roomRoleHost;
     }
 
-    if (participantRole.isNotEmpty) {
-      return participantRole;
+    if (effectiveParticipantRole.isNotEmpty) {
+      return effectiveParticipantRole;
     }
-    if (snapshotRole.isNotEmpty) {
-      return snapshotRole;
+    if (effectiveSnapshotRole.isNotEmpty) {
+      return effectiveSnapshotRole;
     }
 
     return normalizeRoomRole(fallbackRole);
@@ -443,7 +447,7 @@ class RoomState {
       return RoomMembershipState.stabilizing;
     }
 
-    if (isListed && (isStable || hasRole || hasSessionSnapshot)) {
+    if (isListed) {
       return RoomMembershipState.active;
     }
 

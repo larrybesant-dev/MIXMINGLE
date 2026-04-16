@@ -18,5 +18,15 @@
         "runNumber":  null,
         "releaseCandidateVerdict":  "PASS",
         "releaseConfidenceScore":  100
+    },
+    {
+        "generatedAtUtc":  "2026-04-16T00:40:10.9292232Z",
+        "file":  "release_candidate_verdict_local_20260416T004010964Z.json",
+        "gitRef":  null,
+        "gitSha":  null,
+        "runId":  null,
+        "runNumber":  null,
+        "releaseCandidateVerdict":  "PASS",
+        "releaseConfidenceScore":  100
     }
 ]

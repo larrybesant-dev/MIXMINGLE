@@ -100,6 +100,11 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       participants,
       hostId: hostId,
     );
+    final hostConflict = _hasHostConflict(
+      hostId,
+      participantRolesByUser,
+      sessionSnapshotsByUser,
+    );
 
     final mergedUserIds = <String>{...userIds};
     final normalizedCurrentUserId = _currentUserId?.trim() ?? '';
@@ -157,6 +162,21 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       micRequested: _micRequested,
       hasMicPermission: _hasMicPermission,
       hasSpeakerSeat: hasSpeakerSeat,
+    );
+    final hostMissing = _isHostMissing(
+      phase: nextState.phase,
+      hostId: hostId,
+      userIds: mergedUserIds,
+    );
+
+    AppTelemetry.updateRoomState(
+      roomId: arg,
+      joinedUserId: _currentUserId,
+      roomPhase: nextState.phase.name,
+      roomError: nextState.errorMessage,
+      participantCount: mergedUserIds.length,
+      hostConflict: hostConflict,
+      hostMissing: hostMissing,
     );
 
     return nextState.copyWith(
@@ -332,6 +352,39 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       result.putIfAbsent(hostId.trim(), () => 'host');
     }
     return result;
+  }
+
+  bool _hasHostConflict(
+    String hostId,
+    Map<String, String> participantRolesByUser,
+    Map<String, RoomSessionSnapshot> sessionSnapshotsByUser,
+  ) {
+    final normalizedHostId = hostId.trim();
+    final hostLikeIds = <String>{
+      if (normalizedHostId.isNotEmpty) normalizedHostId,
+      for (final entry in participantRolesByUser.entries)
+        if (isHostLikeRole(entry.value) && entry.key.trim().isNotEmpty)
+          entry.key.trim(),
+      for (final snapshot in sessionSnapshotsByUser.values)
+        if (isHostLikeRole(snapshot.role) && snapshot.userId.trim().isNotEmpty)
+          snapshot.userId.trim(),
+    };
+
+    if (normalizedHostId.isEmpty) {
+      return hostLikeIds.length > 1;
+    }
+
+    return hostLikeIds.any((userId) => userId != normalizedHostId);
+  }
+
+  bool _isHostMissing({
+    required LiveRoomPhase phase,
+    required String hostId,
+    required Iterable<String> userIds,
+  }) {
+    return phase == LiveRoomPhase.joined &&
+        hostId.trim().isEmpty &&
+        userIds.any((userId) => userId.trim().isNotEmpty);
   }
 
   bool _isPlaceholderDisplayName(String value) {
@@ -693,6 +746,15 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     final normalizedDisplayName = displayName?.trim() ?? '';
     if (_phase == LiveRoomPhase.joining ||
         (state.isJoined && state.currentUserId == normalizedUserId)) {
+      AppTelemetry.logAction(
+        level: 'warning',
+        domain: 'room',
+        action: 'join_guard_triggered',
+        message: 'Duplicate room join was ignored for the active session.',
+        roomId: arg,
+        userId: normalizedUserId,
+        result: 'guarded',
+      );
       return RoomJoinResult.success(
         joinedAt: state.joinedAt ?? DateTime.now(),
         excludedUserIds: state.excludedUserIds,

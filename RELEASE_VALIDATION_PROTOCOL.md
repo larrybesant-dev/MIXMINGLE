@@ -98,32 +98,71 @@ Tier 2 is non-blocking unless there is a critical runtime failure.
 #### CG-3 CI Stability
 - Pass condition: no flaky failures across two consecutive CI runs.
 
+## Room Stability Gate
+
+### RS-1 Reconnect Storm
+- Runner command: powershell -ExecutionPolicy Bypass -File tools/run_room_release_stress_gate.ps1
+- Deterministic command case: flutter test --no-pub test/room_session_stress_test.dart
+- Pass condition: reconnect chaos suite passes with no room-state drift regression.
+
+### RS-2 Listener Leak Verification
+- Deterministic command case: flutter test --no-pub test/room_chaos_master_test.dart
+- Pass condition: duplicate-session and listener-chaos suite passes.
+
+### RS-3 Host Authority Stress
+- Deterministic command case: flutter test --no-pub test/room_state_machine_test.dart
+- Pass condition: host authority converges to one source of truth.
+
+### RS-4 Mic Pressure Test
+- Deterministic command case: flutter test --no-pub test/room_slot_service_test.dart test/room_host_control_panel_stage_tab_test.dart
+- Pass condition: mic-seat limits and stage controls remain aligned.
+
+### RS-5 Late Join Sync
+- Deterministic command case: flutter test --no-pub test/live_room_screen_test.dart test/room_state_test.dart
+- Pass condition: late-join hydration and UI sync remain correct.
+
+### RS-6 Telemetry Truth Validation
+- Deterministic command case: flutter test --no-pub test/app_telemetry_test.dart
+- Pass condition: alerts, suppression, and stability scoring remain truthful.
+
+### RS-7 Recovery Baseline Build
+- Deterministic command case: flutter build web --release --base-href /
+- Pass condition: production build still succeeds after room-stress validation.
+
 ## Final Ship Gate
 Ship equals TRUE only if:
 
 - All Tier 0 tests PASS.
 - All Tier 1 tests PASS.
 - Tier 2 has no critical runtime failures.
+- Room Stability Gate passes with verdict PASS.
 
 Otherwise, ship equals FALSE.
 
 ## CI Mapping Layer
 
 ### Tier 0 stage (blocking)
-- CI job: `flutter-tier0`
-- Runner command: `bash tools/run_release_gate.sh tier0`
-- Cases: `MC-1..MC-4`, `PS-1..PS-4`
+- CI job: flutter-tier0
+- Runner command: bash tools/run_release_gate.sh tier0
+- Cases: MC-1..MC-4, PS-1..PS-4
 
 ### Tier 1 stage (blocking)
-- CI job: `flutter-tier1`
-- Runner command: `bash tools/run_release_gate.sh tier1`
-- Cases: `NR-1..NR-4`
+- CI job: flutter-tier1
+- Runner command: bash tools/run_release_gate.sh tier1
+- Cases: NR-1..NR-4
 
 ### Tier 2 stage (soft gate)
-- CI job: `flutter-tier2`
-- Runner command: `bash tools/run_release_gate.sh tier2`
-- Cases: `CG-1..CG-3`
-- Policy: job is `continue-on-error: true`; warnings must still be reviewed before release.
+- CI job: flutter-tier2
+- Runner command: bash tools/run_release_gate.sh tier2
+- Cases: CG-1..CG-3
+- Policy: job is continue-on-error true; warnings must still be reviewed before release.
+
+### Room stage (blocking for launch hardening)
+- CI job: flutter-room-gate
+- Runner command: bash tools/run_release_gate.sh room
+- Local report runner: powershell -ExecutionPolicy Bypass -File tools/run_room_release_stress_gate.ps1
+- Cases: RS-1..RS-7
+- CI prerequisite: ensure flutter and unzip are available on the runner image; on local Windows, the PowerShell runner is the supported path.
 
 ## Case-to-Command Mapping
 

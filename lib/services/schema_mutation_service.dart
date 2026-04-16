@@ -213,7 +213,8 @@ class SchemaMutationService {
       'updatedAt': now,
     }, SetOptions(merge: true));
 
-    if (mirrorLegacyUsersDoc ?? SchemaMigrationFlags.enableProfileLegacyWrite) {
+    final shouldMirrorUsersDoc = mirrorLegacyUsersDoc ?? true;
+    if (shouldMirrorUsersDoc) {
       await usersRef.set({
         'isVerified': isVerified,
         'verifiedAt': isVerified ? now : FieldValue.delete(),

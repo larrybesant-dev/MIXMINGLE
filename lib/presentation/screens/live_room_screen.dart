@@ -515,6 +515,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         currentRoomPresence.userStatus == 'offline';
     final cameraMismatch =
         isJoined && _isVideoEnabled && currentParticipant?.camOn != true;
+    final authorityMicOn =
+        currentParticipant != null &&
+        currentParticipant.micOn &&
+        !currentParticipant.isMuted;
+    final micMismatch =
+        isJoined &&
+        currentParticipant != null &&
+        authorityMicOn != !_isMicMuted;
 
     AppTelemetry.updateRoomState(
       roomId: widget.roomId,
@@ -533,6 +541,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       callError: _callError,
       currentRtcUid: _currentRtcUid,
       cameraMismatch: cameraMismatch,
+      micMismatch: micMismatch,
       presenceMismatch:
           isJoined && (globalPresenceMismatch || roomPresenceMismatch),
     );

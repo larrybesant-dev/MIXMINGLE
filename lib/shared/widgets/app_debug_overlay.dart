@@ -267,6 +267,18 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
     return '${valueMs}ms';
   }
 
+  String _renderScoreTrend(List<int> scores) {
+    if (scores.isEmpty) {
+      return '-';
+    }
+    const bars = <String>['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+    return scores.map((score) {
+      final normalized = score.clamp(0, 100) as int;
+      final index = ((normalized / 100) * (bars.length - 1)).round();
+      return bars[index];
+    }).join();
+  }
+
   Future<void> _copySnapshot({
     required AppTelemetryState telemetry,
     required bool onlineMismatch,
@@ -435,6 +447,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                       final duplicateListeners = state.duplicateListenerKeys;
                       final firestore =
                           _firestorePresence ?? const <String, dynamic>{};
+                      final roomHealth = state.roomHealth;
                       final firestoreOnline =
                           _asBool(firestore['isOnline']) ||
                           _asBool(firestore['online']);
@@ -536,6 +549,64 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             label: 'In room',
                             value: state.inRoom ?? '-',
                           ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Room Health',
+                            style: TextStyle(
+                              color: Color(0xFFD4AF37),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _DebugLine(
+                            label: 'Status',
+                            value:
+                                '${roomHealth.label} (${roomHealth.score}/100)',
+                          ),
+                          _DebugLine(
+                            label: 'Trend',
+                            value: _renderScoreTrend(roomHealth.recentScores),
+                          ),
+                          if (roomHealth.recoveryWindowActive)
+                            const _DebugLine(
+                              label: 'Recovery window',
+                              value: 'suppression active',
+                            ),
+                          if (roomHealth.warningAlertCount > 0)
+                            _DebugLine(
+                              label: 'Warnings',
+                              value: roomHealth.warningAlertCount.toString(),
+                            ),
+                          if (roomHealth.criticalAlertCount > 0)
+                            _DebugLine(
+                              label: 'Criticals',
+                              value: roomHealth.criticalAlertCount.toString(),
+                            ),
+                          if (roomHealth.suppressedAlertCount > 0)
+                            _DebugLine(
+                              label: 'Suppressed',
+                              value: roomHealth.suppressedAlertCount.toString(),
+                            ),
+                          if (roomHealth.duplicateJoinCount > 0)
+                            _DebugLine(
+                              label: 'Join bursts',
+                              value: roomHealth.duplicateJoinCount.toString(),
+                            ),
+                          if (roomHealth.reconnectBurstCount > 0)
+                            _DebugLine(
+                              label: 'Reconnect bursts',
+                              value: roomHealth.reconnectBurstCount.toString(),
+                            ),
+                          if (roomHealth.firestoreErrorBurstCount > 0)
+                            _DebugLine(
+                              label: 'FS error burst',
+                              value: roomHealth.firestoreErrorBurstCount
+                                  .toString(),
+                            ),
+                          for (final alert in roomHealth.alerts)
+                            _AlertLine(
+                              text: 'Health ${alert.code}: ${alert.message}',
+                            ),
                           const SizedBox(height: 8),
                           const Text(
                             'Presence Debug',
