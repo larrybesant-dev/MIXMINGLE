@@ -53,6 +53,7 @@ import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/providers/user_cam_permissions_provider.dart';
 import '../../features/room/providers/cam_view_request_provider.dart';
 import '../../features/room/providers/room_slot_provider.dart';
+import '../../dev/room_inspector_panel.dart';
 import '../../features/room/room_permissions.dart';
 import '../../features/room/models/room_theme_model.dart';
 import '../../features/room/widgets/background_picker_sheet.dart';
@@ -6067,6 +6068,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   child: const SizedBox.expand(),
                 ),
               ),
+              // Debug inspector button — only visible in kDebugMode builds.
+              if (kDebugMode)
+                Positioned(
+                  right: 8,
+                  bottom: 72,
+                  child: RoomInspectorButton(roomId: widget.roomId),
+                ),
             ],
           ),
           bottomNavigationBar: !isMobile

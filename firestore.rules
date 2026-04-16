@@ -413,6 +413,17 @@ service cloud.firestore {
         allow create, update, delete: if isRoomHost(roomId);
       }
 
+      // Moderation audit log — append-only by room staff; readable by staff.
+      match /mod_log/{entryId} {
+        allow read: if isRoomHost(roomId)
+          || isRoomCohost(roomId)
+          || isRoomModerator(roomId);
+        allow create: if isRoomHost(roomId)
+          || isRoomCohost(roomId)
+          || isRoomModerator(roomId);
+        allow update, delete: if false;
+      }
+
       match /gift_events/{giftEventId} {
         allow read: if signedIn() && isRoomParticipant(roomId);
         allow create, update, delete: if false;

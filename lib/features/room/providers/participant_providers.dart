@@ -270,3 +270,23 @@ final onMicParticipantsProvider = StreamProvider.autoDispose
       ref.onDispose(controller.close);
       return controller.stream;
     });
+
+/// Streams the most-recent [limit] entries from `rooms/{roomId}/mod_log`,
+/// ordered by server timestamp descending. Only emits in debug/staff contexts;
+/// the caller is responsible for guarding access.
+final modLogStreamProvider = StreamProvider.autoDispose
+    .family<List<Map<String, dynamic>>, String>((ref, roomId) {
+      final firestore = ref.watch(roomFirestoreProvider);
+      return firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('mod_log')
+          .orderBy('ts', descending: true)
+          .limit(20)
+          .snapshots()
+          .map(
+            (snap) => snap.docs
+                .map((d) => <String, dynamic>{'id': d.id, ...d.data()})
+                .toList(growable: false),
+          );
+    });

@@ -1474,14 +1474,14 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   Future<void> muteUser(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireModerationAuthority();
-    await _hostControls.muteUser(arg, normalizedUserId);
+    await _hostControls.muteUser(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('mute_user', targetUserId: normalizedUserId);
   }
 
   Future<void> unmuteUser(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireModerationAuthority();
-    await _hostControls.unmuteUser(arg, normalizedUserId);
+    await _hostControls.unmuteUser(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('unmute_user', targetUserId: normalizedUserId);
   }
 
@@ -1491,7 +1491,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     await _requireStageAuthority();
     _pendingRoleByUser[normalizedUserId] = roomRoleTrustedSpeaker;
     _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
-    await _hostControls.promoteToTrustedSpeaker(arg, normalizedUserId);
+    await _hostControls.promoteToTrustedSpeaker(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('promote_trusted_speaker', targetUserId: normalizedUserId);
   }
 
@@ -1500,7 +1500,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     await _requireHostAuthority();
     _pendingRoleByUser[normalizedUserId] = roomRoleModerator;
     _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
-    await _hostControls.promoteToModerator(arg, normalizedUserId);
+    await _hostControls.promoteToModerator(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('promote_moderator', targetUserId: normalizedUserId);
   }
 
@@ -1509,7 +1509,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     await _requireHostAuthority();
     _pendingRoleByUser[normalizedUserId] = roomRoleCohost;
     _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
-    await _hostControls.promoteToCohost(arg, normalizedUserId);
+    await _hostControls.promoteToCohost(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('promote_cohost', targetUserId: normalizedUserId);
   }
 
@@ -1518,28 +1518,28 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     await _requireHostAuthority();
     _pendingRoleByUser[normalizedUserId] = roomRoleAudience;
     _pendingRoleSetAtByUser[normalizedUserId] = DateTime.now();
-    await _hostControls.demoteToAudience(arg, normalizedUserId);
+    await _hostControls.demoteToAudience(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('demote_audience', targetUserId: normalizedUserId);
   }
 
   Future<void> removeUser(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireModerationAuthority();
-    await _hostControls.removeUser(arg, normalizedUserId);
+    await _hostControls.removeUser(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('remove_user', targetUserId: normalizedUserId);
   }
 
   Future<void> banUser(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireModerationAuthority();
-    await _hostControls.banUser(arg, normalizedUserId);
+    await _hostControls.banUser(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('ban_user', targetUserId: normalizedUserId);
   }
 
   Future<void> unbanUser(String userId) async {
     final normalizedUserId = userId.trim();
     await _requireModerationAuthority();
-    await _hostControls.unbanUser(arg, normalizedUserId);
+    await _hostControls.unbanUser(arg, normalizedUserId, actorId: _actorUserId);
     _logModerationAction('unban_user', targetUserId: normalizedUserId);
   }
 
