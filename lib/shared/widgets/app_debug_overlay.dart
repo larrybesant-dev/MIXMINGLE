@@ -273,7 +273,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
     }
     const bars = <String>['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
     return scores.map((score) {
-      final normalized = score.clamp(0, 100) as int;
+      final normalized = score.clamp(0, 100);
       final index = ((normalized / 100) * (bars.length - 1)).round();
       return bars[index];
     }).join();

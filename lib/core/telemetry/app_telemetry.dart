@@ -1045,7 +1045,7 @@ class AppTelemetry {
       );
     }
 
-    final boundedScore = score.clamp(0, 100) as int;
+    final boundedScore = score.clamp(0, 100);
     final warningAlertCount = alerts
         .where((alert) => alert.severity == RoomHealthSeverity.warning)
         .length;
