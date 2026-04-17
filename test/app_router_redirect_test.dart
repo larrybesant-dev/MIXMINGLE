@@ -7,6 +7,7 @@ void main() {
       final result = await evaluateAppRedirect(
         matchedLocation: '/',
         uid: null,
+        authLoading: false,
         isFirstRun: () async => true,
         isProfileComplete: (_) async => true,
         isLegalAccepted: () async => false,
@@ -15,10 +16,24 @@ void main() {
       expect(result, '/onboarding');
     });
 
+    test('waits on splash while auth is still restoring', () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/',
+        uid: null,
+        authLoading: true,
+        isFirstRun: () async => false,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
+      );
+
+      expect(result, '/splash');
+    });
+
     test('routes logged-out users to login after onboarding', () async {
       final result = await evaluateAppRedirect(
         matchedLocation: '/',
         uid: null,
+        authLoading: false,
         isFirstRun: () async => false,
         isProfileComplete: (_) async => true,
         isLegalAccepted: () async => true,
@@ -27,10 +42,37 @@ void main() {
       expect(result, '/login');
     });
 
+    test('routes splash directly to login after auth restore', () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/splash',
+        uid: null,
+        authLoading: false,
+        isFirstRun: () async => false,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
+      );
+
+      expect(result, '/login');
+    });
+
+    test('routes splash directly to onboarding for first run', () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/splash',
+        uid: null,
+        authLoading: false,
+        isFirstRun: () async => true,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
+      );
+
+      expect(result, '/onboarding');
+    });
+
     test('routes logged-in users with incomplete profile to profile', () async {
       final result = await evaluateAppRedirect(
         matchedLocation: '/',
         uid: 'user-1',
+        authLoading: false,
         isFirstRun: () async => false,
         isProfileComplete: (_) async => false,
         isLegalAccepted: () async => true,
@@ -43,6 +85,7 @@ void main() {
       final result = await evaluateAppRedirect(
         matchedLocation: '/profile',
         uid: 'user-1',
+        authLoading: false,
         isFirstRun: () async => false,
         isProfileComplete: (_) async => false,
         isLegalAccepted: () async => true,
@@ -55,18 +98,20 @@ void main() {
       final result = await evaluateAppRedirect(
         matchedLocation: '/login',
         uid: 'user-1',
+        authLoading: false,
         isFirstRun: () async => false,
         isProfileComplete: (_) async => true,
         isLegalAccepted: () async => true,
       );
 
-      expect(result, '/');
+      expect(result, '/discover');
     });
 
     test('routes users to legal terms when current legal is not accepted', () async {
       final result = await evaluateAppRedirect(
         matchedLocation: '/login',
         uid: null,
+        authLoading: false,
         isFirstRun: () async => false,
         isProfileComplete: (_) async => true,
         isLegalAccepted: () async => false,

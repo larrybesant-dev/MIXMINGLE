@@ -46,7 +46,9 @@ class MixvyGoldButton extends StatelessWidget {
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
-              color: (onPressed == null || loading) ? VelvetNoir.surfaceHigh : null,
+              color: (onPressed == null || loading)
+                  ? VelvetNoir.surfaceHigh
+                  : null,
               borderRadius: BorderRadius.circular(999),
               boxShadow: (onPressed == null || loading)
                   ? null
@@ -70,7 +72,9 @@ class MixvyGoldButton extends StatelessWidget {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: VelvetNoir.surface),
+                          strokeWidth: 2,
+                          color: VelvetNoir.surface,
+                        ),
                       )
                     : Text(
                         label.toUpperCase(),
@@ -119,7 +123,8 @@ class MixvyGoldOutlineButton extends StatelessWidget {
           foregroundColor: VelvetNoir.primary,
           side: const BorderSide(color: VelvetNoir.primary, width: 1.5),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999)),
+            borderRadius: BorderRadius.circular(999),
+          ),
           backgroundColor: Colors.transparent,
         ),
         child: Text(
@@ -157,8 +162,9 @@ class _MixvyLiveBadgeState extends State<MixvyLiveBadge>
   void initState() {
     super.initState();
     _pulse = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat(reverse: true);
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
     _anim = Tween<double>(begin: 0.5, end: 1.0).animate(_pulse);
   }
 
@@ -192,7 +198,9 @@ class _MixvyLiveBadgeState extends State<MixvyLiveBadge>
               width: 6,
               height: 6,
               decoration: const BoxDecoration(
-                  color: Colors.white, shape: BoxShape.circle),
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
           const SizedBox(width: 5),
@@ -230,17 +238,17 @@ class MixvyVipBadge extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
-          BoxShadow(
-            color: VelvetNoir.primary.withAlpha(60),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: VelvetNoir.primary.withAlpha(60), blurRadius: 8),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.workspace_premium_rounded,
-              size: 11, color: VelvetNoir.surface),
+          const Icon(
+            Icons.workspace_premium_rounded,
+            size: 11,
+            color: VelvetNoir.surface,
+          ),
           const SizedBox(width: 3),
           Text(
             'VIP',
@@ -321,10 +329,7 @@ class MixvyGoldAvatar extends StatelessWidget {
             gradient: isVip
                 ? VelvetNoir.primaryGradient
                 : const LinearGradient(
-                    colors: [
-                      Color(0x60D4AF37),
-                      Color(0x30D4AF37),
-                    ],
+                    colors: [Color(0x60D4AF37), Color(0x30D4AF37)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -334,7 +339,7 @@ class MixvyGoldAvatar extends StatelessWidget {
             radius: radius,
             backgroundColor: VelvetNoir.surfaceHigh,
             backgroundImage: safeImageUrl != null
-              ? NetworkImage(safeImageUrl)
+                ? NetworkImage(safeImageUrl)
                 : null,
             child: safeImageUrl == null
                 ? Text(
@@ -356,12 +361,7 @@ class MixvyGoldAvatar extends StatelessWidget {
             right: 2,
             child: MixvyOnlineIndicator(isOnline: isOnline),
           ),
-        if (isVip)
-          Positioned(
-            top: -4,
-            right: -4,
-            child: const MixvyVipBadge(),
-          ),
+        if (isVip) Positioned(top: -4, right: -4, child: const MixvyVipBadge()),
       ],
     );
   }
@@ -473,33 +473,29 @@ class MixvyMonogram extends StatelessWidget {
 class MixvyLogoFull extends StatelessWidget {
   final double size;
 
-  /// [size] matches the auth-screen wordmark size; monogram scales proportionally.
+  /// [size] scales the full branded logo asset consistently across auth pages.
   const MixvyLogoFull({super.key, this.size = 88});
 
   @override
   Widget build(BuildContext context) {
+    final double logoWidth = size * 3.2;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        MixvyMonogram(size: size * 1.4, glow: false),
-        SizedBox(height: size * 0.18),
-        Text(
-          'MIXVY',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: size,
-            fontWeight: FontWeight.w700,
-            color: VelvetNoir.primary,
-            letterSpacing: size * 0.12,
-          ),
+        Image.asset(
+          'assets/images/branding/mixvy_logo.png',
+          width: logoWidth,
+          fit: BoxFit.contain,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
-          'MIX.  CONNECT.  INDULGE.',
+          'Luxury live connection',
           style: GoogleFonts.raleway(
             fontSize: 10,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: VelvetNoir.onSurfaceVariant,
-            letterSpacing: 2.0,
+            letterSpacing: 1.8,
           ),
         ),
       ],
@@ -518,14 +514,29 @@ class MixvyAppBarLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      'MIXVY',
-      style: GoogleFonts.playfairDisplay(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w700,
-        color: VelvetNoir.primary,
-        letterSpacing: fontSize * 0.12,
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(fontSize * 0.22),
+          child: Image.asset(
+            'assets/images/branding/mixvy_logo.png',
+            height: fontSize * 1.55,
+            width: fontSize * 1.55,
+            fit: BoxFit.cover,
+          ),
+        ),
+        SizedBox(width: fontSize * 0.35),
+        Text(
+          'MIXVY',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w700,
+            color: VelvetNoir.primary,
+            letterSpacing: fontSize * 0.10,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -573,7 +584,7 @@ class MixvyRoomCard extends StatelessWidget {
                     color: VelvetNoir.liveGlow.withAlpha(50),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -599,11 +610,7 @@ class MixvyRoomCard extends StatelessWidget {
               child: Stack(
                 children: [
                   if (isLive)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: MixvyLiveBadge(),
-                    ),
+                    Positioned(top: 8, left: 8, child: MixvyLiveBadge()),
                   // Gradient overlay
                   Positioned.fill(
                     child: DecoratedBox(
@@ -645,8 +652,11 @@ class MixvyRoomCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.person_outline_rounded,
-                          size: 12, color: VelvetNoir.primary),
+                      const Icon(
+                        Icons.person_outline_rounded,
+                        size: 12,
+                        color: VelvetNoir.primary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         hostName,
@@ -656,8 +666,11 @@ class MixvyRoomCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.people_outline_rounded,
-                          size: 11, color: VelvetNoir.onSurfaceVariant),
+                      const Icon(
+                        Icons.people_outline_rounded,
+                        size: 11,
+                        color: VelvetNoir.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         '$participantCount',

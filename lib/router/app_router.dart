@@ -190,6 +190,7 @@ final legalAcceptedCheckProvider = Provider<LegalAcceptedCheck>((ref) {
 Future<String?> evaluateAppRedirect({
   required String matchedLocation,
   required String? uid,
+  required bool authLoading,
   required FirstRunCheck isFirstRun,
   required ProfileCompleteCheck isProfileComplete,
   required LegalAcceptedCheck isLegalAccepted,
@@ -202,10 +203,12 @@ Future<String?> evaluateAppRedirect({
   // Let After Dark handle its own guard (age-gate + PIN redirect).
   if (matchedLocation.startsWith('/after-dark')) return null;
 
-  // Let the splash screen drive its own navigation after the animation.
-  if (matchedLocation == '/splash') return null;
+  if (authLoading) {
+    return matchedLocation == '/splash' ? null : '/splash';
+  }
 
   final loggedIn = uid != null;
+  final isSplash = matchedLocation == '/splash';
   final isLoggingIn =
       matchedLocation == '/login' || matchedLocation == '/register';
   final isOnboarding = matchedLocation == '/onboarding';
@@ -214,7 +217,7 @@ Future<String?> evaluateAppRedirect({
   final firstRun = await isFirstRun();
 
   if (firstRun && !isOnboarding && !isLegalRoute) return '/onboarding';
-  if (!firstRun && isOnboarding) return loggedIn ? '/' : '/login';
+  if (!firstRun && isOnboarding) return loggedIn ? '/discover' : '/login';
 
   final legalAccepted = await isLegalAccepted();
   if (!legalAccepted && !isOnboarding && !isLegalRoute) {
@@ -225,8 +228,9 @@ Future<String?> evaluateAppRedirect({
   if (loggedIn) {
     final profileComplete = await isProfileComplete(uid);
     if (!profileComplete && !isProfile) return '/profile';
+    if (profileComplete && (isLoggingIn || isSplash)) return '/discover';
   }
-  if (loggedIn && isLoggingIn) return '/';
+  if (!loggedIn && isSplash) return '/login';
   return null;
 }
 
@@ -246,6 +250,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return evaluateAppRedirect(
           matchedLocation: state.matchedLocation,
           uid: authState.uid,
+          authLoading: !authState.hasResolvedSession,
           isFirstRun: firstRunCheck,
           isProfileComplete: profileCompleteCheck,
           isLegalAccepted: legalAcceptedCheck,

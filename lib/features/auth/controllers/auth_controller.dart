@@ -15,20 +15,28 @@ import '../../../services/schema_mutation_service.dart';
 
 class AuthState {
   final bool isLoading;
+  final bool hasResolvedSession;
   final String? error;
   final String? uid;
 
   static const Object _unset = Object();
 
-  const AuthState({this.isLoading = false, this.error, this.uid});
+  const AuthState({
+    this.isLoading = false,
+    this.hasResolvedSession = false,
+    this.error,
+    this.uid,
+  });
 
   AuthState copyWith({
     bool? isLoading,
+    bool? hasResolvedSession,
     Object? error = _unset,
     Object? uid = _unset,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
+      hasResolvedSession: hasResolvedSession ?? this.hasResolvedSession,
       error: identical(error, _unset) ? this.error : error as String?,
       uid: identical(uid, _unset) ? this.uid : uid as String?,
     );
@@ -62,7 +70,11 @@ class AuthController extends Notifier<AuthState> {
     );
     try {
       await _googleSignInHelper.signInWithGoogle();
-      state = state.copyWith(isLoading: false, uid: _auth.currentUser?.uid);
+      state = state.copyWith(
+        isLoading: false,
+        hasResolvedSession: true,
+        uid: _auth.currentUser?.uid,
+      );
       AppTelemetry.updateAuthState(
         userId: _auth.currentUser?.uid,
         isLoading: false,
@@ -71,7 +83,11 @@ class AuthController extends Notifier<AuthState> {
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'google-sign-in');
       final message = _getReadableError(e.code);
-      state = state.copyWith(isLoading: false, error: message);
+      state = state.copyWith(
+        isLoading: false,
+        hasResolvedSession: true,
+        error: message,
+      );
       AppTelemetry.updateAuthState(
         userId: state.uid,
         isLoading: false,
@@ -114,7 +130,12 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
-      state = state.copyWith(uid: user?.uid, isLoading: false, error: null);
+      state = state.copyWith(
+        uid: user?.uid,
+        isLoading: false,
+        hasResolvedSession: true,
+        error: null,
+      );
       AppTelemetry.updateAuthState(
         userId: user?.uid,
         isLoading: false,
@@ -142,6 +163,7 @@ class AuthController extends Notifier<AuthState> {
       unawaited(_rejectAnonymousSession());
       return const AuthState(
         isLoading: false,
+        hasResolvedSession: true,
         error: 'Guest access is disabled. Please sign in with an account.',
       );
     }
@@ -164,7 +186,12 @@ class AuthController extends Notifier<AuthState> {
       // Best-effort sign-out.
     }
 
-    state = state.copyWith(isLoading: false, uid: null, error: message);
+    state = state.copyWith(
+      isLoading: false,
+      hasResolvedSession: true,
+      uid: null,
+      error: message,
+    );
     AppTelemetry.updateAuthState(
       userId: null,
       isLoading: false,
@@ -210,7 +237,11 @@ class AuthController extends Notifier<AuthState> {
       _logAuthException(e, st, context: 'cached-session-validation');
       if (_isInvalidSessionError(e.code)) {
         await _auth.signOut();
-        state = state.copyWith(uid: null, error: null);
+        state = state.copyWith(
+          uid: null,
+          hasResolvedSession: true,
+          error: null,
+        );
       }
     } catch (e, st) {
       developer.log(
@@ -220,7 +251,7 @@ class AuthController extends Notifier<AuthState> {
         stackTrace: st,
       );
       await _auth.signOut();
-      state = state.copyWith(uid: null, error: null);
+      state = state.copyWith(uid: null, hasResolvedSession: true, error: null);
     }
   }
 
@@ -245,7 +276,12 @@ class AuthController extends Notifier<AuthState> {
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
         await _ensureUserDocument(_auth.currentUser!);
-        state = state.copyWith(uid: uid, isLoading: false, error: null);
+        state = state.copyWith(
+          uid: uid,
+          isLoading: false,
+          hasResolvedSession: true,
+          error: null,
+        );
         AppTelemetry.updateAuthState(
           userId: uid,
           isLoading: false,
@@ -256,6 +292,7 @@ class AuthController extends Notifier<AuthState> {
       _logAuthException(e, st, context: 'redirect-result');
       state = state.copyWith(
         isLoading: false,
+        hasResolvedSession: true,
         error: _getReadableError(e.code),
       );
     } catch (_) {
@@ -402,7 +439,11 @@ class AuthController extends Notifier<AuthState> {
       if (user != null) {
         await _ensureUserDocument(user);
       }
-      state = state.copyWith(isLoading: false, uid: user?.uid);
+      state = state.copyWith(
+        isLoading: false,
+        hasResolvedSession: true,
+        uid: user?.uid,
+      );
       AppTelemetry.updateAuthState(
         userId: user?.uid,
         isLoading: false,

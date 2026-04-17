@@ -75,11 +75,8 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _logoController.forward().whenComplete(() {
-      _textController.forward().whenComplete(() {
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) context.go('/');
-        });
-      });
+      if (!mounted) return;
+      _textController.forward();
     });
   }
 
@@ -113,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // M monogram with gold glow ring
+                // Brand logo
                 AnimatedBuilder(
                   animation: _logoController,
                   builder: (context, child) => Opacity(
@@ -123,66 +120,11 @@ class _SplashScreenState extends State<SplashScreen>
                       child: child,
                     ),
                   ),
-                  child: AnimatedBuilder(
-                    animation: _glowPulse,
-                    builder: (context, _) => Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFD4AF37),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFD4AF37)
-                                .withValues(alpha: _glowPulse.value),
-                            blurRadius: 48,
-                            spreadRadius: 8,
-                          ),
-                          BoxShadow(
-                            color: const Color(0xFF781E2B)
-                                .withValues(alpha: _glowPulse.value * 0.6),
-                            blurRadius: 80,
-                            spreadRadius: 20,
-                          ),
-                        ],
-                        gradient: const RadialGradient(
-                          colors: [Color(0xFF1A1A1A), Color(0xFF0B0B0B)],
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'M',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 64,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFD4AF37),
-                            height: 1.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // MIXVY wordmark
-                AnimatedBuilder(
-                  animation: _textController,
-                  builder: (context, child) => Opacity(
-                    opacity: _textOpacity.value,
-                    child: child,
-                  ),
-                  child: Text(
-                    'MIXVY',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFD4AF37),
-                      letterSpacing: 8,
+                  child: SizedBox(
+                    width: 320,
+                    child: Image.asset(
+                      'assets/images/branding/mixvy_logo.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -192,10 +134,8 @@ class _SplashScreenState extends State<SplashScreen>
                 // Tagline
                 AnimatedBuilder(
                   animation: _textController,
-                  builder: (context, child) => Opacity(
-                    opacity: _taglineOpacity.value,
-                    child: child,
-                  ),
+                  builder: (context, child) =>
+                      Opacity(opacity: _taglineOpacity.value, child: child),
                   child: Text(
                     'Where chemistry meets connection.',
                     style: GoogleFonts.raleway(
@@ -229,18 +169,22 @@ class _SplashScreenState extends State<SplashScreen>
                           animation: _loaderController,
                           builder: (context, _) {
                             final delay = i * 0.2;
-                            final progress = ((_loaderController.value - delay)
-                                    .clamp(0.0, 0.6)) /
+                            final progress =
+                                ((_loaderController.value - delay).clamp(
+                                  0.0,
+                                  0.6,
+                                )) /
                                 0.6;
                             return Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 3),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
                               width: 5,
                               height: 5,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Color.lerp(
-                                  const Color(0xFFD4AF37).withValues(alpha: 0.3),
+                                  const Color(
+                                    0xFFD4AF37,
+                                  ).withValues(alpha: 0.3),
                                   const Color(0xFFD4AF37),
                                   progress,
                                 ),

@@ -98,8 +98,8 @@
     web:
       generate: true
       image_path: "assets/images/branding/mixvy_logo.png"
-      background_color: "#0D0D1A"
-      theme_color: "#B040FF"
+      background_color: "#0B0B0B"
+      theme_color: "#D4AF37"
     windows:
       generate: true
       image_path: "assets/images/branding/mixvy_logo.png"

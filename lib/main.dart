@@ -7,9 +7,11 @@ import 'package:mixvy/app/app.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:mixvy/firebase_options.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -75,6 +77,11 @@ void main() async {
             options: DefaultFirebaseOptions.currentPlatform,
           );
           _bootstrapLog('Firebase initialized');
+
+          if (kIsWeb) {
+            await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+            _bootstrapLog('FirebaseAuth local persistence enabled for web');
+          }
 
           if (kIsWeb) {
             FirebaseFirestore.instance.settings = const Settings(
@@ -190,11 +197,13 @@ void main() async {
             await windowManager.setSize(const Size(420, 640));
             await windowManager.setTitle('Whisper');
             await windowManager.show();
-            runApp(ProviderScope(
-              child: MaterialApp(
-                home: WhisperPopoutScreen(targetUserId: userId),
+            runApp(
+              ProviderScope(
+                child: MaterialApp(
+                  home: WhisperPopoutScreen(targetUserId: userId),
+                ),
               ),
-            ));
+            );
             return;
           } else if (camArg.isNotEmpty) {
             final userId = camArg.substring('--popout-cam='.length);
@@ -202,11 +211,11 @@ void main() async {
             await windowManager.setSize(const Size(520, 480));
             await windowManager.setTitle('Cam');
             await windowManager.show();
-            runApp(ProviderScope(
-              child: MaterialApp(
-                home: CamPopoutScreen(targetUserId: userId),
+            runApp(
+              ProviderScope(
+                child: MaterialApp(home: CamPopoutScreen(targetUserId: userId)),
               ),
-            ));
+            );
             return;
           }
           // Main window: initialise window_manager with platform defaults

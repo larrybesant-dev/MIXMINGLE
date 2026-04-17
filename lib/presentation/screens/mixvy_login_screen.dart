@@ -88,9 +88,8 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     if (authState.error != null) {
       await _showMessage(authState.error ?? '', isError: true);
     }
-    if (authState.uid != null && mounted) {
+    if (authState.uid != null) {
       await AnalyticsService().logLogin(method: 'email_password');
-      if (mounted) context.go('/');
     }
   }
 
@@ -125,7 +124,6 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     }
     if (authState.uid != null) {
       await AnalyticsService().logLogin(method: 'google');
-      if (mounted) context.go('/');
     }
   }
 
@@ -140,7 +138,6 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     }
     if (authState.uid != null) {
       await AnalyticsService().logLogin(method: 'apple');
-      if (mounted) context.go('/');
     }
   }
 

@@ -11,16 +11,16 @@ import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 // ── Brand tokens (mirrors mixvy_login_screen.dart) ────────────────────────────
-const _rSurface         = Color(0xFF0B0B0B);
-const _rSurfaceHigh     = Color(0xFF1C1617);
-const _rSurfaceCard     = Color(0xFF161012);
-const _rPrimary         = Color(0xFFD4AF37);
-const _rPrimaryDim      = Color(0xFF9A7B1A);
-const _rSecondary       = Color(0xFF781E2B);
+const _rSurface = Color(0xFF0B0B0B);
+const _rSurfaceHigh = Color(0xFF1C1617);
+const _rSurfaceCard = Color(0xFF161012);
+const _rPrimary = Color(0xFFD4AF37);
+const _rPrimaryDim = Color(0xFF9A7B1A);
+const _rSecondary = Color(0xFF781E2B);
 const _rSecondaryBright = Color(0xFF9B2535);
-const _rOnSurface       = Color(0xFFF7EDE2);
-const _rOnVariant       = Color(0xFFAD9585);
-const _rGoldBorder      = Color(0x40D4AF37);
+const _rOnSurface = Color(0xFFF7EDE2);
+const _rOnVariant = Color(0xFFAD9585);
+const _rGoldBorder = Color(0x40D4AF37);
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -73,7 +73,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     if (!mounted) return;
     setState(() => _localError = authState.error);
     if (authState.error == null && authState.uid != null) {
-      context.go('/profile');
+      await AnalyticsService().logLogin(method: 'email_password');
     }
   }
 
@@ -85,7 +85,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     setState(() => _localError = authState.error);
     if (authState.error == null && authState.uid != null) {
       await AnalyticsService().logLogin(method: 'google');
-      if (mounted) context.go('/');
     }
   }
 
@@ -97,7 +96,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     setState(() => _localError = authState.error);
     if (authState.error == null && authState.uid != null) {
       await AnalyticsService().logLogin(method: 'apple');
-      if (mounted) context.go('/');
     }
   }
 
@@ -120,12 +118,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           children: [
             // Ambient gold blob — top-right
             Positioned(
-              top: -120, right: -120,
+              top: -120,
+              right: -120,
               child: _ambientBlob(_rPrimary.withAlpha(25), 300),
             ),
             // Ambient wine blob — bottom-left
             Positioned(
-              bottom: -100, left: -100,
+              bottom: -100,
+              left: -100,
               child: _ambientBlob(_rSecondary.withAlpha(18), 260),
             ),
             SafeArea(
@@ -169,12 +169,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8, height: 8,
+          width: 8,
+          height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _rSecondary,
             boxShadow: [
-              BoxShadow(color: _rSecondary.withAlpha(80), blurRadius: 6, spreadRadius: 2),
+              BoxShadow(
+                color: _rSecondary.withAlpha(80),
+                blurRadius: 6,
+                spreadRadius: 2,
+              ),
             ],
           ),
         ),
@@ -182,8 +187,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         Text(
           'SYSTEM LIVE',
           style: GoogleFonts.raleway(
-            fontSize: 10, fontWeight: FontWeight.w500,
-            color: _rSecondary, letterSpacing: 1.2,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: _rSecondary,
+            letterSpacing: 1.2,
           ),
         ),
       ],
@@ -211,15 +218,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 Text(
                   'Your journey\nstarts here.',
                   style: GoogleFonts.playfairDisplay(
-                    fontSize: 32, fontWeight: FontWeight.w600,
-                    color: _rOnSurface, fontStyle: FontStyle.italic, height: 1.3,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    color: _rOnSurface,
+                    fontStyle: FontStyle.italic,
+                    height: 1.3,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Create your account and step into\na world of real connections.',
                   style: GoogleFonts.raleway(
-                    fontSize: 15, color: _rOnVariant, height: 1.7,
+                    fontSize: 15,
+                    color: _rOnVariant,
+                    height: 1.7,
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -258,8 +270,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             'Your journey starts here.',
             textAlign: TextAlign.center,
             style: GoogleFonts.playfairDisplay(
-              fontSize: 18, fontWeight: FontWeight.w500,
-              color: _rOnSurface, fontStyle: FontStyle.italic,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: _rOnSurface,
+              fontStyle: FontStyle.italic,
             ),
           ),
           const SizedBox(height: 36),
@@ -310,13 +324,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           children: [
             Icon(icon, color: accent, size: 22),
             const SizedBox(height: 10),
-            Text(label,
-                style: GoogleFonts.raleway(
-                    fontSize: 13, fontWeight: FontWeight.w700,
-                    color: accent, letterSpacing: 1.5)),
+            Text(
+              label,
+              style: GoogleFonts.raleway(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: accent,
+                letterSpacing: 1.5,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(sub,
-                style: GoogleFonts.raleway(fontSize: 12, color: _rOnVariant)),
+            Text(
+              sub,
+              style: GoogleFonts.raleway(fontSize: 12, color: _rOnVariant),
+            ),
           ],
         ),
       ),
@@ -350,13 +371,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   Text(
                     'Create account',
                     style: GoogleFonts.playfairDisplay(
-                      fontSize: 26, fontWeight: FontWeight.w700, color: _rOnSurface,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: _rOnSurface,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Join the experience. It only takes a moment.',
-                    style: GoogleFonts.raleway(fontSize: 13, color: _rOnVariant),
+                    style: GoogleFonts.raleway(
+                      fontSize: 13,
+                      color: _rOnVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
 
@@ -370,7 +396,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     const SizedBox(height: 10),
                     _socialButton(
                       onPressed: isLoading ? null : _signInWithApple,
-                      icon: const Icon(Icons.apple, size: 20, color: _rOnSurface),
+                      icon: const Icon(
+                        Icons.apple,
+                        size: 20,
+                        color: _rOnSurface,
+                      ),
                       label: 'Continue with Apple',
                     ),
                   ],
@@ -385,8 +415,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     hint: 'Email address',
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icons.mail_outline_rounded,
-                    validator: (v) =>
-                        (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                    validator: (v) => (v == null || !v.contains('@'))
+                        ? 'Enter a valid email'
+                        : null,
                     autofocus: true,
                     textInputAction: TextInputAction.next,
                   ),
@@ -398,7 +429,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: isLoading ? null : (_) => _register(),
-                    style: GoogleFonts.raleway(color: _rOnSurface, fontSize: 14),
+                    style: GoogleFonts.raleway(
+                      color: _rOnSurface,
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Password (min. 6 characters)',
                       filled: true,
@@ -413,11 +447,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(999),
-                        borderSide: const BorderSide(color: _rPrimary, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: _rPrimary,
+                          width: 1.5,
+                        ),
                       ),
-                      hintStyle: GoogleFonts.raleway(color: _rOnVariant, fontSize: 14),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded,
-                          size: 18, color: _rOnVariant),
+                      hintStyle: GoogleFonts.raleway(
+                        color: _rOnVariant,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 18,
+                        color: _rOnVariant,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -426,14 +469,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           size: 18,
                           color: _rOnVariant,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                     ),
-                    validator: (v) =>
-                        (v == null || v.length < 6) ? 'Minimum 6 characters' : null,
+                    validator: (v) => (v == null || v.length < 6)
+                        ? 'Minimum 6 characters'
+                        : null,
                   ),
 
                   // ── Error message ────────────────────────────────────
@@ -441,12 +488,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: _rSecondaryBright.withAlpha(30),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: _rSecondaryBright.withAlpha(80)),
+                          color: _rSecondaryBright.withAlpha(80),
+                        ),
                       ),
                       child: Text(
                         errorText,
@@ -466,15 +516,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     onPressed: isLoading ? null : _register,
                     child: isLoading
                         ? const SizedBox(
-                            width: 20, height: 20,
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: _rSurface),
+                              strokeWidth: 2,
+                              color: _rSurface,
+                            ),
                           )
                         : Text(
                             'CREATE ACCOUNT',
                             style: GoogleFonts.raleway(
-                              fontWeight: FontWeight.w700, fontSize: 15,
-                              color: _rSurface, letterSpacing: 1.5,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: _rSurface,
+                              letterSpacing: 1.5,
                             ),
                           ),
                   ),
@@ -494,9 +549,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _footerLink('Terms'),
-                      Text(' · ',
-                          style: GoogleFonts.raleway(
-                              fontSize: 11, color: _rOnVariant)),
+                      Text(
+                        ' · ',
+                        style: GoogleFonts.raleway(
+                          fontSize: 11,
+                          color: _rOnVariant,
+                        ),
+                      ),
                       _footerLink('Privacy'),
                     ],
                   ),
@@ -522,7 +581,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         style: OutlinedButton.styleFrom(
           backgroundColor: _rSurfaceHigh,
           side: const BorderSide(color: _rGoldBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         child: Row(
@@ -530,9 +591,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           children: [
             icon,
             const SizedBox(width: 10),
-            Text(label,
-                style: GoogleFonts.raleway(
-                    fontSize: 14, fontWeight: FontWeight.w500, color: _rOnSurface)),
+            Text(
+              label,
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: _rOnSurface,
+              ),
+            ),
           ],
         ),
       ),
@@ -573,7 +639,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         ),
         hintStyle: GoogleFonts.raleway(color: _rOnVariant, fontSize: 14),
         prefixIcon: Icon(prefixIcon, size: 18, color: _rOnVariant),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
       validator: validator,
     );
@@ -616,7 +685,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               onPressed: onPressed,
               style: TextButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999)),
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
               child: child,
             ),
@@ -637,11 +707,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-              color: onPressed == null
-                  ? _rGoldBorder
-                  : _rPrimary.withAlpha(120),
-              width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+            color: onPressed == null ? _rGoldBorder : _rPrimary.withAlpha(120),
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
         ),
         child: Text(
           label,
@@ -691,7 +762,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       child: Text(
         label,
         style: GoogleFonts.raleway(
-            fontSize: 11, color: _rOnVariant, fontWeight: FontWeight.w400),
+          fontSize: 11,
+          color: _rOnVariant,
+          fontWeight: FontWeight.w400,
+        ),
       ),
     );
   }
@@ -699,14 +773,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   // ── Google icon (coloured G) ──────────────────────────────────────────────
   Widget _googleIcon() {
     return SizedBox(
-      width: 20, height: 20,
+      width: 20,
+      height: 20,
       child: Stack(
         alignment: Alignment.center,
         children: [
           Text(
             'G',
             style: GoogleFonts.raleway(
-              fontSize: 16, fontWeight: FontWeight.w700,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF4285F4),
             ),
           ),

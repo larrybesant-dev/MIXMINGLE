@@ -91,6 +91,46 @@ void main() {
       expect(rooms.last.id, 'room-1');
     });
 
+    test(
+      'getLiveRooms excludes adult rooms by default for discovery safety',
+      () async {
+        await firestore.collection('rooms').doc('public-room').set({
+          'name': 'Public Room',
+          'hostId': 'host-1',
+          'isLive': true,
+          'isAdult': false,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('public-room')
+            .collection('participants')
+            .doc('host-1')
+            .set({'lastActiveAt': Timestamp.now()});
+
+        await firestore.collection('rooms').doc('adult-room').set({
+          'name': 'Adult Room',
+          'hostId': 'host-2',
+          'isLive': true,
+          'isAdult': true,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('adult-room')
+            .collection('participants')
+            .doc('host-2')
+            .set({'lastActiveAt': Timestamp.now()});
+
+        final rooms = await service.getLiveRooms(limit: 10);
+
+        expect(rooms.map((room) => room.id), contains('public-room'));
+        expect(rooms.map((room) => room.id), isNot(contains('adult-room')));
+      },
+    );
+
     test('getRecommendedLiveRooms boosts friend-hosted rooms', () async {
       await firestore.collection('rooms').doc('room-friend').set({
         'name': 'Friend Room',
@@ -101,7 +141,9 @@ void main() {
         'stageUserIds': <String>[],
         'audienceUserIds': <String>['friend-1'],
         'isLocked': false,
-        'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 30))),
+        'updatedAt': Timestamp.fromDate(
+          DateTime.now().subtract(const Duration(minutes: 30)),
+        ),
       });
       await firestore
           .collection('rooms')
@@ -118,7 +160,9 @@ void main() {
         'stageUserIds': <String>[],
         'audienceUserIds': <String>['host-2'],
         'isLocked': false,
-        'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 5))),
+        'updatedAt': Timestamp.fromDate(
+          DateTime.now().subtract(const Duration(minutes: 5)),
+        ),
       });
       await firestore
           .collection('rooms')
@@ -181,45 +225,48 @@ void main() {
       expect(rooms.map((room) => room.id), contains('room-b'));
     });
 
-    test('getLiveRooms can exclude adult rooms for public discovery queries', () async {
-      await firestore.collection('rooms').doc('public-room').set({
-        'name': 'Public Room',
-        'hostId': 'host-1',
-        'isLive': true,
-        'isAdult': false,
-        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
-        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
-      });
-      await firestore
-          .collection('rooms')
-          .doc('public-room')
-          .collection('participants')
-          .doc('host-1')
-          .set({'lastActiveAt': Timestamp.now()});
+    test(
+      'getLiveRooms can exclude adult rooms for public discovery queries',
+      () async {
+        await firestore.collection('rooms').doc('public-room').set({
+          'name': 'Public Room',
+          'hostId': 'host-1',
+          'isLive': true,
+          'isAdult': false,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('public-room')
+            .collection('participants')
+            .doc('host-1')
+            .set({'lastActiveAt': Timestamp.now()});
 
-      await firestore.collection('rooms').doc('adult-room').set({
-        'name': 'Adult Room',
-        'hostId': 'host-2',
-        'isLive': true,
-        'isAdult': true,
-        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
-        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
-      });
-      await firestore
-          .collection('rooms')
-          .doc('adult-room')
-          .collection('participants')
-          .doc('host-2')
-          .set({'lastActiveAt': Timestamp.now()});
+        await firestore.collection('rooms').doc('adult-room').set({
+          'name': 'Adult Room',
+          'hostId': 'host-2',
+          'isLive': true,
+          'isAdult': true,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('adult-room')
+            .collection('participants')
+            .doc('host-2')
+            .set({'lastActiveAt': Timestamp.now()});
 
-      final rooms = await service.getLiveRooms(
-        limit: 10,
-        includeAdultRooms: false,
-      );
+        final rooms = await service.getLiveRooms(
+          limit: 10,
+          includeAdultRooms: false,
+        );
 
-      expect(rooms.map((room) => room.id), contains('public-room'));
-      expect(rooms.map((room) => room.id), isNot(contains('adult-room')));
-    });
+        expect(rooms.map((room) => room.id), contains('public-room'));
+        expect(rooms.map((room) => room.id), isNot(contains('adult-room')));
+      },
+    );
 
     test('getRecommendationReason returns social and popularity labels', () {
       final friendHostedRoom = RoomModel(
@@ -245,39 +292,49 @@ void main() {
       expect(popularReason, 'Popular right now');
     });
 
-    test('getRecommendationTier classifies rooms by social/popularity/recency', () {
-      final friendRoom = RoomModel(
-        id: 'room-f',
-        name: 'Friend Room',
-        hostId: 'friend-1',
-      );
-      final hotRoom = RoomModel(
-        id: 'room-h',
-        name: 'Hot Room',
-        hostId: 'host-2',
-        memberCount: 30,
-      );
-      final freshRoom = RoomModel(
-        id: 'room-r',
-        name: 'Fresh Room',
-        hostId: 'host-3',
-        updatedAt: Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 10))),
-      );
-      final liveRoom = RoomModel(
-        id: 'room-l',
-        name: 'Live Room',
-        hostId: 'host-4',
-        updatedAt: Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 3))),
-      );
+    test(
+      'getRecommendationTier classifies rooms by social/popularity/recency',
+      () {
+        final friendRoom = RoomModel(
+          id: 'room-f',
+          name: 'Friend Room',
+          hostId: 'friend-1',
+        );
+        final hotRoom = RoomModel(
+          id: 'room-h',
+          name: 'Hot Room',
+          hostId: 'host-2',
+          memberCount: 30,
+        );
+        final freshRoom = RoomModel(
+          id: 'room-r',
+          name: 'Fresh Room',
+          hostId: 'host-3',
+          updatedAt: Timestamp.fromDate(
+            DateTime.now().subtract(const Duration(minutes: 10)),
+          ),
+        );
+        final liveRoom = RoomModel(
+          id: 'room-l',
+          name: 'Live Room',
+          hostId: 'host-4',
+          updatedAt: Timestamp.fromDate(
+            DateTime.now().subtract(const Duration(hours: 3)),
+          ),
+        );
 
-      expect(
-        service.getRecommendationTier(friendRoom, friendIds: const <String>{'friend-1'}),
-        'Friends',
-      );
-      expect(service.getRecommendationTier(hotRoom), 'Hot');
-      expect(service.getRecommendationTier(freshRoom), 'Fresh');
-      expect(service.getRecommendationTier(liveRoom), 'Live');
-    });
+        expect(
+          service.getRecommendationTier(
+            friendRoom,
+            friendIds: const <String>{'friend-1'},
+          ),
+          'Friends',
+        );
+        expect(service.getRecommendationTier(hotRoom), 'Hot');
+        expect(service.getRecommendationTier(freshRoom), 'Fresh');
+        expect(service.getRecommendationTier(liveRoom), 'Live');
+      },
+    );
 
     test('watchRoomById returns null stream for empty id', () async {
       final result = await service.watchRoomById('   ').first;
