@@ -18,10 +18,15 @@ class SocialCircleScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final hp = context.pageHorizontalPadding;
+    final isWideLayout = MediaQuery.sizeOf(context).width >= 900;
 
     final followingUsersAsync = ref.watch(followingUsersProvider(uid));
     final liveFollowingAsync = ref.watch(followingLiveRoomsProvider(uid));
     final newMembersAsync = ref.watch(newMembersStreamProvider);
+
+    final liveNowCount = liveFollowingAsync.valueOrNull?.length ?? 0;
+    final followingCount = followingUsersAsync.valueOrNull?.length ?? 0;
+    final freshCount = newMembersAsync.valueOrNull?.length ?? 0;
 
     return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
@@ -43,17 +48,32 @@ class SocialCircleScreen extends ConsumerWidget {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.search_rounded,
-                    color: VelvetNoir.onSurfaceVariant),
+                icon: const Icon(
+                  Icons.search_rounded,
+                  color: VelvetNoir.onSurfaceVariant,
+                ),
                 onPressed: () => context.go('/search'),
               ),
             ],
           ),
 
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(hp, 8, hp, 14),
+              child: _CircleOverviewCard(
+                liveNowCount: liveNowCount,
+                followingCount: followingCount,
+                freshCount: freshCount,
+                onExplore: () => context.go('/explore'),
+                onSearch: () => context.go('/search'),
+              ),
+            ),
+          ),
+
           // Live following section
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(hp, 8, hp, 10),
+              padding: EdgeInsets.fromLTRB(hp, 0, hp, 10),
               child: _SectionHeader(
                 title: 'Who is Live Now',
                 subtitle: 'People you follow on the mic',
@@ -122,7 +142,8 @@ class SocialCircleScreen extends ConsumerWidget {
                     child: _EmptyCard(
                       emoji: '👥',
                       title: 'No follows yet',
-                      message: 'Discover people, follow them, and build your circle.',
+                      message:
+                          'Discover people, follow them, and build your circle.',
                       actionLabel: 'Find People',
                       onTap: () => context.go('/search'),
                     ),
@@ -162,15 +183,40 @@ class SocialCircleScreen extends ConsumerWidget {
           newMembersAsync.when(
             loading: () => const SliverToBoxAdapter(child: _ShimmerList()),
             error: (_, __) => const SliverToBoxAdapter(child: SizedBox()),
-            data: (users) => SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (ctx, i) => _RecentlyActiveTile(
-                  user: users[i],
-                  onTap: () => ctx.go('/profile/${users[i].id}'),
+            data: (users) {
+              if (isWideLayout) {
+                return SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: hp),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 420,
+                          mainAxisExtent: 86,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 10,
+                        ),
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, i) => _RecentlyActiveTile(
+                        user: users[i],
+                        onTap: () => ctx.go('/profile/${users[i].id}'),
+                        compact: true,
+                      ),
+                      childCount: users.length,
+                    ),
+                  ),
+                );
+              }
+
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (ctx, i) => _RecentlyActiveTile(
+                    user: users[i],
+                    onTap: () => ctx.go('/profile/${users[i].id}'),
+                  ),
+                  childCount: users.length,
                 ),
-                childCount: users.length,
-              ),
-            ),
+              );
+            },
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -181,6 +227,138 @@ class SocialCircleScreen extends ConsumerWidget {
 }
 
 // ── Shared widgets ────────────────────────────────────────────────────────────
+class _CircleOverviewCard extends StatelessWidget {
+  const _CircleOverviewCard({
+    required this.liveNowCount,
+    required this.followingCount,
+    required this.freshCount,
+    required this.onExplore,
+    required this.onSearch,
+  });
+
+  final int liveNowCount;
+  final int followingCount;
+  final int freshCount;
+  final VoidCallback onExplore;
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            VelvetNoir.surfaceHigh,
+            VelvetNoir.secondary.withValues(alpha: 0.18),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: VelvetNoir.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your social floor',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: VelvetNoir.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'See who is live, who is close, and where the vibe is moving.',
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _MiniStat(label: 'Live now', value: '$liveNowCount'),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MiniStat(label: 'Following', value: '$followingCount'),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MiniStat(label: 'Fresh faces', value: '$freshCount'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              FilledButton.icon(
+                onPressed: onExplore,
+                icon: const Icon(Icons.explore_rounded, size: 18),
+                label: const Text('Explore Rooms'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onSearch,
+                icon: const Icon(Icons.person_search_rounded, size: 18),
+                label: const Text('Find People'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: VelvetNoir.surface.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: VelvetNoir.outlineVariant.withValues(alpha: 0.24),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: VelvetNoir.primary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.raleway(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
@@ -289,10 +467,15 @@ class _UserPill extends StatelessWidget {
 }
 
 class _RecentlyActiveTile extends StatelessWidget {
-  const _RecentlyActiveTile({required this.user, required this.onTap});
+  const _RecentlyActiveTile({
+    required this.user,
+    required this.onTap,
+    this.compact = false,
+  });
 
   final UserModel user;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -303,11 +486,13 @@ class _RecentlyActiveTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: compact
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: VelvetNoir.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: VelvetNoir.outlineVariant.withValues(alpha: 0.3),
           ),
@@ -315,19 +500,21 @@ class _RecentlyActiveTile extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              radius: 22,
+              radius: compact ? 18 : 20,
               backgroundColor: VelvetNoir.secondary.withValues(alpha: 0.22),
               child: Text(
                 initials,
                 style: GoogleFonts.raleway(
+                  fontSize: compact ? 13 : 14,
                   fontWeight: FontWeight.w800,
                   color: VelvetNoir.secondaryBright,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -335,12 +522,12 @@ class _RecentlyActiveTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.raleway(
-                      fontSize: 14,
+                      fontSize: compact ? 13 : 14,
                       fontWeight: FontWeight.w700,
                       color: VelvetNoir.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     user.bio?.trim().isNotEmpty == true
                         ? user.bio!
@@ -348,15 +535,19 @@ class _RecentlyActiveTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.raleway(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: VelvetNoir.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: VelvetNoir.onSurfaceVariant),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
           ],
         ),
       ),

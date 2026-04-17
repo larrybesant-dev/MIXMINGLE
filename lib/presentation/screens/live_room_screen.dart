@@ -3296,16 +3296,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             .read(liveRoomControllerProvider(widget.roomId).notifier)
             .updateRoomTheme(theme)
             .catchError((_) {
-          if (mounted) _showSnackBar('Could not update room theme.');
-        });
+              if (mounted) _showSnackBar('Could not update room theme.');
+            });
       },
       onReset: () {
         ref
             .read(liveRoomControllerProvider(widget.roomId).notifier)
             .resetRoomTheme()
             .catchError((_) {
-          if (mounted) _showSnackBar('Could not reset room theme.');
-        });
+              if (mounted) _showSnackBar('Could not reset room theme.');
+            });
       },
     );
   }
@@ -4219,6 +4219,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           }
         }
 
+        void handleStartConversation() {
+          if (isMobile && _mobileTab != 1) {
+            setState(() => _mobileTab = 1);
+          }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _chatInputFocusNode.requestFocus();
+          });
+        }
+
         final canRequestMic =
             liveRoomState.audioState != RoomAudioState.denied &&
             (allowMicRequests || onMicCount < RoomState.maxSpeakers) &&
@@ -4262,6 +4272,28 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final allowChat =
             liveRoomState.canChat(user.id) &&
             (roomPolicyAsync.valueOrNull?.allowChat ?? true);
+        final primaryActionIsChat =
+            !isOnMic && !hasPendingMicRequest && !canRequestMic && allowChat;
+        final roomPrimaryActionLabel = isOnMic
+            ? 'Release mic'
+            : hasPendingMicRequest
+            ? 'Leave queue'
+            : canRequestMic
+            ? 'Grab mic'
+            : 'Say hello';
+        final VoidCallback? roomPrimaryAction = isOnMic
+            ? () => unawaited(handleReleaseMic())
+            : hasPendingMicRequest
+            ? () => unawaited(handleCancelMicRequest())
+            : canRequestMic
+            ? () => unawaited(handleRequestMic())
+            : allowChat
+            ? handleStartConversation
+            : null;
+        final String? roomSecondaryActionLabel =
+            primaryActionIsChat || !allowChat ? null : 'Open chat';
+        final VoidCallback? roomSecondaryAction =
+            primaryActionIsChat || !allowChat ? null : handleStartConversation;
         if (isLocked && !isHost && !isCohost && !isModerator) {
           return const AppPageScaffold(
             safeArea: false,
@@ -5883,6 +5915,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             summary: roomPresenceSummary,
                             prompt: roomEnergyPrompt,
                             isQuiet: roomFeelsQuiet,
+                            primaryActionLabel: roomPrimaryActionLabel,
+                            onPrimaryAction: roomPrimaryAction,
+                            secondaryActionLabel: roomSecondaryActionLabel,
+                            onSecondaryAction: roomSecondaryAction,
                           ),
                         ),
                       // 32 px header row with ◄ ► move buttons
@@ -6702,6 +6738,10 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
     required this.summary,
     required this.prompt,
     required this.isQuiet,
+    this.primaryActionLabel,
+    this.onPrimaryAction,
+    this.secondaryActionLabel,
+    this.onSecondaryAction,
   });
 
   final String title;
@@ -6709,6 +6749,10 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
   final String summary;
   final String prompt;
   final bool isQuiet;
+  final String? primaryActionLabel;
+  final VoidCallback? onPrimaryAction;
+  final String? secondaryActionLabel;
+  final VoidCallback? onSecondaryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -6793,6 +6837,46 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
               height: 1.3,
             ),
           ),
+          if ((primaryActionLabel?.trim().isNotEmpty ?? false) ||
+              (secondaryActionLabel?.trim().isNotEmpty ?? false)) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (primaryActionLabel?.trim().isNotEmpty ?? false)
+                  FilledButton.tonal(
+                    onPressed: onPrimaryAction,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: accent.withValues(alpha: 0.18),
+                      foregroundColor: accent,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(primaryActionLabel!),
+                  ),
+                if (secondaryActionLabel?.trim().isNotEmpty ?? false)
+                  OutlinedButton(
+                    onPressed: onSecondaryAction,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(secondaryActionLabel!),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -7914,13 +7998,20 @@ class _RoomBackground extends StatelessWidget {
   Widget _presetGradient(RoomVibePreset preset) {
     final colors = switch (preset) {
       RoomVibePreset.club => [const Color(0xFF0A0020), const Color(0xFF3D0070)],
-      RoomVibePreset.lounge =>
-        [const Color(0xFF1A0A00), const Color(0xFF3D200A)],
+      RoomVibePreset.lounge => [
+        const Color(0xFF1A0A00),
+        const Color(0xFF3D200A),
+      ],
       RoomVibePreset.neon => [const Color(0xFF001A2E), const Color(0xFF00204A)],
       RoomVibePreset.hype => [const Color(0xFF1A0000), const Color(0xFF5C0000)],
-      RoomVibePreset.space => [const Color(0xFF000015), const Color(0xFF060618)],
-      RoomVibePreset.ocean =>
-        [const Color(0xFF001A2E), const Color(0xFF003355)],
+      RoomVibePreset.space => [
+        const Color(0xFF000015),
+        const Color(0xFF060618),
+      ],
+      RoomVibePreset.ocean => [
+        const Color(0xFF001A2E),
+        const Color(0xFF003355),
+      ],
       _ => [const Color(0xFF0D0A0C), const Color(0xFF1A1520)],
     };
     return Container(
