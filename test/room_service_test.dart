@@ -131,24 +131,51 @@ void main() {
       },
     );
 
-    test('getLiveRooms still includes legacy live rooms missing isAdult', () async {
-      await firestore.collection('rooms').doc('legacy-room').set({
-        'name': 'Legacy Room',
-        'hostId': 'legacy-host',
-        'isLive': true,
-        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 8)),
-      });
-      await firestore
-          .collection('rooms')
-          .doc('legacy-room')
-          .collection('participants')
-          .doc('legacy-host')
-          .set({'lastActiveAt': Timestamp.now()});
+    test(
+      'getLiveRooms still includes legacy live rooms missing isAdult',
+      () async {
+        await firestore.collection('rooms').doc('legacy-room').set({
+          'name': 'Legacy Room',
+          'hostId': 'legacy-host',
+          'isLive': true,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 8)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('legacy-room')
+            .collection('participants')
+            .doc('legacy-host')
+            .set({'lastActiveAt': Timestamp.now()});
 
-      final rooms = await service.getLiveRooms(limit: 10);
+        final rooms = await service.getLiveRooms(limit: 10);
 
-      expect(rooms.map((room) => room.id), contains('legacy-room'));
-    });
+        expect(rooms.map((room) => room.id), contains('legacy-room'));
+      },
+    );
+
+    test(
+      'getLiveRooms keeps real active rooms visible when heartbeat sync lags',
+      () async {
+        await firestore.collection('rooms').doc('room-realtime').set({
+          'name': 'Realtime Room',
+          'hostId': 'host-rt',
+          'isLive': true,
+          'isAdult': false,
+          'memberCount': 3,
+          'stageUserIds': <String>['host-rt'],
+          'audienceUserIds': <String>['user-2', 'user-3'],
+          'updatedAt': Timestamp.now(),
+        });
+
+        final rooms = await service.getLiveRooms(limit: 10);
+
+        expect(rooms.map((room) => room.id), contains('room-realtime'));
+        expect(
+          rooms.firstWhere((room) => room.id == 'room-realtime').memberCount,
+          3,
+        );
+      },
+    );
 
     test('getRecommendedLiveRooms boosts friend-hosted rooms', () async {
       await firestore.collection('rooms').doc('room-friend').set({

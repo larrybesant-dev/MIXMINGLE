@@ -362,20 +362,19 @@ class RoomRepository {
       _asString(participantData['role'], fallback: roomRoleAudience),
       fallbackRole: roomRoleAudience,
     );
-    final nextRole = canModerateRole(currentRole) ? currentRole : 'member';
+    final nextRole = canModerateRole(currentRole)
+        ? currentRole
+        : roomRoleAudience;
 
     final batch = _firestore.batch();
-    batch.set(_roomRef(roomId), {
-      'maxSpeakers': 4,
-      'speakerSyncVersion': 1,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
     batch.delete(_speakerRef(roomId, normalizedUserId));
     batch.set(_participantRef(roomId, normalizedUserId), {
       'userId': normalizedUserId,
       'role': nextRole,
       'micOn': false,
+      'isMuted': false,
       'lastActiveAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await batch.commit();
   }

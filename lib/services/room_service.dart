@@ -10,9 +10,10 @@ final roomServiceProvider = Provider<RoomService>((ref) {
 });
 
 class RoomService {
-  static const Duration _participantFreshnessWindow = Duration(seconds: 60);
+  static const Duration _participantFreshnessWindow = Duration(seconds: 90);
   static const Duration _liveRoomRemovalGraceWindow = Duration(seconds: 2);
   static const Duration _liveRoomsDebounceWindow = Duration(milliseconds: 220);
+  static const Duration _roomActivityFallbackWindow = Duration(minutes: 3);
 
   RoomService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -53,6 +54,9 @@ class RoomService {
     String roomId,
   ) => _roomsCollection.doc(roomId).collection('participants');
 
+  CollectionReference<Map<String, dynamic>> _membersCollection(String roomId) =>
+      _roomsCollection.doc(roomId).collection('members');
+
   String _normalizeRoomId(String roomId) {
     final trimmedRoomId = roomId.trim();
     if (trimmedRoomId.isEmpty) {
@@ -64,16 +68,38 @@ class RoomService {
   DateTime get _freshParticipantCutoff =>
       DateTime.now().subtract(_participantFreshnessWindow);
 
-  Future<bool> _hasFreshParticipants(String roomId) async {
+  bool _roomDocShowsRecentActivity(RoomModel room) {
+    final effectiveCount = _effectiveRoomMemberCount(room);
+    if (effectiveCount <= 0) {
+      return false;
+    }
+
+    final activityAt = room.updatedAt?.toDate() ?? room.createdAt?.toDate();
+    if (activityAt == null) {
+      return true;
+    }
+
+    return DateTime.now().difference(activityAt) <= _roomActivityFallbackWindow;
+  }
+
+  Future<bool> _hasFreshParticipants(RoomModel room) async {
     try {
-      final snapshot = await _participantsCollection(roomId)
-          .where(
-            'lastActiveAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(_freshParticipantCutoff),
-          )
-          .limit(1)
-          .get();
-      return snapshot.docs.isNotEmpty;
+      final cutoff = Timestamp.fromDate(_freshParticipantCutoff);
+      final participantSnapshot = await _participantsCollection(
+        room.id,
+      ).where('lastActiveAt', isGreaterThanOrEqualTo: cutoff).limit(1).get();
+      if (participantSnapshot.docs.isNotEmpty) {
+        return true;
+      }
+
+      final memberSnapshot = await _membersCollection(
+        room.id,
+      ).where('lastActiveAt', isGreaterThanOrEqualTo: cutoff).limit(1).get();
+      if (memberSnapshot.docs.isNotEmpty) {
+        return true;
+      }
+
+      return _roomDocShowsRecentActivity(room);
     } on FirebaseException {
       // Some production rule sets can restrict participant reads.
       // Fail open here so discovery feed remains usable.
@@ -84,9 +110,6 @@ class RoomService {
   Future<void> _markRoomInactive(String roomId) {
     return _roomsCollection.doc(roomId).set({
       'isLive': false,
-      'memberCount': 0,
-      'audienceUserIds': <String>[],
-      'stageUserIds': <String>[],
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -232,7 +255,7 @@ class RoomService {
         continue;
       }
       try {
-        if (await _hasFreshParticipants(doc.id)) {
+        if (await _hasFreshParticipants(room)) {
           activeRooms.add(room);
           continue;
         }

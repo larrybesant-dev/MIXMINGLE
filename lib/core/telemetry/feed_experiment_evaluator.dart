@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:mixvy/core/telemetry/app_telemetry.dart';
 import 'package:mixvy/core/telemetry/feed_experiment_contract.dart';
 
@@ -49,14 +51,83 @@ class FeedExperimentSnapshot {
   };
 }
 
+class FeedExperimentDecisionSnapshot {
+  const FeedExperimentDecisionSnapshot({
+    required this.timestamp,
+    required this.source,
+    required this.rolloutPercent,
+    required this.pendingAction,
+    required this.metrics,
+    required this.evaluation,
+  });
+
+  final DateTime timestamp;
+  final String source;
+  final double rolloutPercent;
+  final String pendingAction;
+  final FeedExperimentSnapshot metrics;
+  final FeedExperimentEvaluation evaluation;
+
+  Map<String, Object> toMetadata() => <String, Object>{
+    'snapshot_at': timestamp.toIso8601String(),
+    'source': source,
+    'rollout_pct': rolloutPercent.toStringAsFixed(1),
+    'pending_action': pendingAction,
+    'summary': evaluation.summary,
+    'top_drivers': evaluation.reasons.take(3).join(' || '),
+    ...metrics.toMetadata(),
+    ...evaluation.toMetadata(),
+  };
+}
+
 class FeedExperimentEvaluator {
   FeedExperimentEvaluator._();
+
+  static const int _maxSnapshots = 25;
+  static final List<FeedExperimentDecisionSnapshot> _history =
+      <FeedExperimentDecisionSnapshot>[];
+
+  static UnmodifiableListView<FeedExperimentDecisionSnapshot> get history =>
+      UnmodifiableListView<FeedExperimentDecisionSnapshot>(_history);
+
+  static FeedExperimentDecisionSnapshot? get latestSnapshot =>
+      _history.isEmpty ? null : _history.first;
+
+  static void reset() {
+    _history.clear();
+  }
 
   static FeedExperimentEvaluation evaluateAndPublish(
     FeedExperimentSnapshot snapshot, {
     String source = 'runtime',
+    double rolloutPercent = 0,
+    String pendingAction = 'hold',
   }) {
     final evaluation = snapshot.evaluate();
+    final decisionSnapshot = FeedExperimentDecisionSnapshot(
+      timestamp: DateTime.now(),
+      source: source,
+      rolloutPercent: rolloutPercent,
+      pendingAction: pendingAction,
+      metrics: snapshot,
+      evaluation: evaluation,
+    );
+
+    _history.insert(0, decisionSnapshot);
+    if (_history.length > _maxSnapshots) {
+      _history.removeRange(_maxSnapshots, _history.length);
+    }
+
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'feed_experiment_snapshot',
+      message: 'Captured experiment state before rollout action.',
+      result: pendingAction,
+      metadata: <String, Object?>{
+        ...FeedAttentionExperiment.telemetryMetadata(),
+        ...decisionSnapshot.toMetadata(),
+      },
+    );
 
     AppTelemetry.logAction(
       domain: 'room',
@@ -65,9 +136,7 @@ class FeedExperimentEvaluator {
       result: evaluation.decision.name,
       metadata: <String, Object?>{
         ...FeedAttentionExperiment.telemetryMetadata(),
-        ...snapshot.toMetadata(),
-        ...evaluation.toMetadata(),
-        'source': source,
+        ...decisionSnapshot.toMetadata(),
         'should_promote': evaluation.shouldPromote,
         'should_rollback': evaluation.shouldRollback,
       },

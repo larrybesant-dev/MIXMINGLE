@@ -55,7 +55,7 @@ class RoomSessionService {
   }) : _firestore = firestore,
        _presenceController = presenceController;
 
-  static const Duration participantSyncInterval = Duration(seconds: 60);
+  static const Duration participantSyncInterval = Duration(seconds: 30);
 
   final FirebaseFirestore _firestore;
   final PresenceController _presenceController;

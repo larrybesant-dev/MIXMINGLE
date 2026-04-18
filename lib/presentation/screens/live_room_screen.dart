@@ -3796,10 +3796,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
     return currentParticipantAsync.when(
       data: (participant) {
-        final isHost = ref.watch(isHostProvider(participant));
-        final isCohost = ref.watch(isCohostProvider(participant));
-        final isModerator = participant?.role == 'moderator';
-        final role = participant?.role ?? 'audience';
+        final resolvedRole = liveRoomState.presentationRoleFor(
+          user.id,
+          fallbackRole: 'audience',
+        );
+        final localRoleHint = _asString(
+          _appliedMediaRole,
+          fallback: _asString(participant?.role, fallback: 'audience'),
+        ).toLowerCase();
+        final role = (!liveRoomState.isRoomFullyHydrated &&
+                resolvedRole == 'audience' &&
+                (localRoleHint == 'stage' ||
+                    localRoleHint == 'trusted_speaker'))
+            ? localRoleHint
+            : resolvedRole;
+        final isHost = isRoomHostByDoc || liveRoomState.isHost(user.id);
+        final isCohost = liveRoomState.isCohost(user.id);
+        final isModerator = liveRoomState.isModerator(user.id);
         final myMicRequestAsync = ref.watch(
           myMicAccessRequestProvider((
             roomId: widget.roomId,
@@ -3986,18 +3999,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final rosterSelfParticipant = rosterParticipants
             .cast<RoomParticipantModel?>()
             .firstWhere((p) => p?.userId == user.id, orElse: () => null);
-        final authoritativeSelfRole = liveRoomState.presentationRoleFor(
-          user.id,
-        );
+        final authoritativeSelfRole = role;
         final authorityMicOn = liveRoomState.isOnMicByAuthority(user.id);
         final localMicActive = liveRoomState.canPublishAudio && !_isMicMuted;
+        final selfCanUseMicByRole =
+            authoritativeSelfRole == 'host' ||
+            authoritativeSelfRole == 'owner' ||
+            authoritativeSelfRole == 'cohost' ||
+            authoritativeSelfRole == 'stage' ||
+            authoritativeSelfRole == 'trusted_speaker';
+        final staleSelfMicHint =
+            (participant?.micOn ?? false) ||
+            (rosterSelfParticipant?.micOn ?? false);
         final effectiveSelfParticipant =
             (participant ?? rosterSelfParticipant)?.copyWith(
-              role:
-                  _appliedMediaRole ??
-                  participant?.role ??
-                  rosterSelfParticipant?.role ??
-                  authoritativeSelfRole,
+              role: authoritativeSelfRole,
               isMuted: participant?.isMuted ?? _isMicMuted,
               isBanned:
                   participant?.isBanned ??
@@ -4010,8 +4026,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               micOn:
                   authorityMicOn ||
                   localMicActive ||
-                  (participant?.micOn ?? false) ||
-                  (rosterSelfParticipant?.micOn ?? false),
+                  (staleSelfMicHint && selfCanUseMicByRole),
               userStatus:
                   participant?.userStatus ??
                   rosterSelfParticipant?.userStatus ??
@@ -4147,14 +4162,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             return true;
           }
 
-          final normalizedRole = participantItem.role.trim().toLowerCase();
-          return participantItem.userId == user.id &&
-              (participantItem.micOn ||
-                  normalizedRole == 'stage' ||
-                  normalizedRole == 'host' ||
-                  normalizedRole == 'owner' ||
-                  normalizedRole == 'cohost' ||
-                  localMicActive);
+          if (participantItem.userId != user.id) {
+            return false;
+          }
+
+          return localMicActive ||
+              (participantItem.micOn && selfCanUseMicByRole);
         }
 
         final onMicCount = participantsInRoom

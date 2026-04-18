@@ -61,8 +61,9 @@ void main() {
     expect(evaluation.riskLevel, 'high');
   });
 
-  test('central evaluator publishes a standardized decision event', () {
+  test('central evaluator snapshots state before publishing a decision', () {
     AppTelemetry.reset();
+    FeedExperimentEvaluator.reset();
 
     final evaluation = FeedExperimentEvaluator.evaluateAndPublish(
       const FeedExperimentSnapshot(
@@ -76,9 +77,14 @@ void main() {
         observedParticipationRate: 0.295,
       ),
       source: 'test',
+      rolloutPercent: 25,
+      pendingAction: 'expand',
     );
 
     expect(evaluation.decision, FeedExperimentDecision.pass);
+    expect(FeedExperimentEvaluator.latestSnapshot, isNotNull);
+    expect(FeedExperimentEvaluator.latestSnapshot!.pendingAction, 'expand');
+    expect(FeedExperimentEvaluator.latestSnapshot!.rolloutPercent, 25);
     expect(AppTelemetry.state.recentEvents, isNotEmpty);
     expect(
       AppTelemetry.state.recentEvents.first.action,
@@ -93,5 +99,11 @@ void main() {
       AppTelemetry.state.recentEvents.first.metadata['risk_level'],
       'none',
     );
+    expect(
+      AppTelemetry.state.recentEvents[1].action,
+      'feed_experiment_snapshot',
+    );
+    expect(AppTelemetry.state.recentEvents[1].result, 'expand');
+    expect(AppTelemetry.state.recentEvents[1].metadata['rollout_pct'], '25.0');
   });
 }

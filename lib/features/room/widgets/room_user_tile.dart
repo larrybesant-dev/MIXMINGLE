@@ -326,25 +326,21 @@ class _RoomUserTileState extends State<RoomUserTile>
       );
     }
 
+    final avatarDecoration = ringColor != null
+        ? BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: ringColor,
+              width: _isSpeaking ? 2.5 : 1.8,
+            ),
+            boxShadow: glowColor != null
+                ? [BoxShadow(color: glowColor, blurRadius: 10, spreadRadius: 2)]
+                : null,
+          )
+        : const BoxDecoration();
+
     Widget ringed = DecoratedBox(
-      decoration: ringColor != null
-          ? BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: ringColor,
-                width: _isSpeaking ? 2.5 : 1.8,
-              ),
-              boxShadow: glowColor != null
-                  ? [
-                      BoxShadow(
-                        color: glowColor,
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : null,
-            )
-          : null,
+      decoration: avatarDecoration,
       child: Padding(
         padding: EdgeInsets.all(ringColor != null ? 2.0 : 0.0),
         child: Stack(clipBehavior: Clip.none, children: [avatar, ?micOverlay]),

@@ -60,6 +60,7 @@ class AppShell extends ConsumerWidget {
                 unreadMsgs: unreadMsgs,
                 compact: context.isCompactLayout,
                 onTap: (i) => context.go(_roots[i]),
+                onMenuTap: () => Scaffold.maybeOf(context)?.openDrawer(),
               ),
             ),
     );
@@ -73,12 +74,14 @@ class _VelvetBottomNav extends StatelessWidget {
     required this.unreadMsgs,
     required this.compact,
     required this.onTap,
+    required this.onMenuTap,
   });
 
   final int selectedIndex;
   final int unreadMsgs;
   final bool compact;
   final void Function(int) onTap;
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -118,14 +121,75 @@ class _VelvetBottomNav extends StatelessWidget {
               height: compact ? 64 : 72,
               child: Row(
                 children: [
-                  _navItem(context, 0, Icons.home_outlined, Icons.home_rounded, 'Home'),
-                  _navItem(context, 1, Icons.graphic_eq_rounded, Icons.graphic_eq_rounded, 'Live'),
-                  _navItem(context, 2, Icons.explore_outlined, Icons.explore_rounded, 'Explore'),
-                  _navItem(context, 3, Icons.groups_2_outlined, Icons.groups_2_rounded, 'Circle'),
-                  _navItem(context, 4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+                  _navItem(
+                    context,
+                    0,
+                    Icons.home_outlined,
+                    Icons.home_rounded,
+                    'Home',
+                  ),
+                  _navItem(
+                    context,
+                    1,
+                    Icons.graphic_eq_rounded,
+                    Icons.graphic_eq_rounded,
+                    'Live',
+                  ),
+                  _navItem(
+                    context,
+                    2,
+                    Icons.explore_outlined,
+                    Icons.explore_rounded,
+                    'Explore',
+                  ),
+                  _navItem(
+                    context,
+                    3,
+                    Icons.groups_2_outlined,
+                    Icons.groups_2_rounded,
+                    'Circle',
+                  ),
+                  _navItem(
+                    context,
+                    4,
+                    Icons.person_outline_rounded,
+                    Icons.person_rounded,
+                    'Profile',
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _menuButton(context),
+                  ),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuButton(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onMenuTap,
+        child: Ink(
+          width: compact ? 40 : 44,
+          height: compact ? 40 : 44,
+          decoration: BoxDecoration(
+            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.20),
+            ),
+          ),
+          child: Icon(
+            Icons.menu_rounded,
+            color: theme.colorScheme.onSurface,
+            size: compact ? 20 : 22,
           ),
         ),
       ),
