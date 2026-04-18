@@ -498,7 +498,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Text field
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             color: VelvetNoir.surfaceHigh,
             borderRadius: BorderRadius.circular(12),

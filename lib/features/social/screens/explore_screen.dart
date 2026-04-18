@@ -10,7 +10,6 @@ import 'package:mixvy/features/social/providers/social_providers.dart';
 import 'package:mixvy/features/social/widgets/social_room_card.dart';
 import 'package:mixvy/models/room_model.dart';
 import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
-import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 // ── Category data ─────────────────────────────────────────────────────────────
 const _categories = [
@@ -201,7 +200,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             loading: () => const SliverToBoxAdapter(
               child: _ShimmerList(),
             ),
-            error: (_, __) => const SliverToBoxAdapter(child: SizedBox()),
+            error: (_, _) => const SliverToBoxAdapter(child: SizedBox()),
             data: (rooms) {
               final filtered = _filterRooms(rooms);
               if (filtered.isEmpty && (_selectedCategory != null || _searchQuery.isNotEmpty)) {
@@ -248,14 +247,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 height: 200,
                 child: newRoomsAsync.when(
                   loading: () => const _HorizontalShimmer(),
-                  error: (_, __) => const SizedBox(),
+                  error: (_, _) => const SizedBox(),
                   data: (rooms) {
                     if (rooms.isEmpty) return const SizedBox();
                     return ListView.separated(
                       padding: EdgeInsets.symmetric(horizontal: hp),
                       scrollDirection: Axis.horizontal,
                       itemCount: rooms.length,
-                      separatorBuilder: (_, __) =>
+                      separatorBuilder: (_, _) =>
                           const SizedBox(width: 10),
                       itemBuilder: (ctx, i) => SocialRoomCardCompact(
                         key: ValueKey(rooms[i].id),
@@ -285,14 +284,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 height: 130,
                 child: trendingUsersAsync.when(
                   loading: () => const _HorizontalShimmer(height: 130),
-                  error: (_, __) => const SizedBox(),
+                  error: (_, _) => const SizedBox(),
                   data: (users) {
                     if (users.isEmpty) return const SizedBox();
                     return ListView.separated(
                       padding: EdgeInsets.symmetric(horizontal: hp),
                       scrollDirection: Axis.horizontal,
                       itemCount: users.length,
-                      separatorBuilder: (_, __) =>
+                      separatorBuilder: (_, _) =>
                           const SizedBox(width: 12),
                       itemBuilder: (ctx, i) => TrendingUserCard(
                         key: ValueKey(users[i].id),
@@ -321,7 +320,7 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: VelvetNoir.surfaceHigh,
         borderRadius: BorderRadius.circular(14),
@@ -340,7 +339,7 @@ class _SearchBar extends StatelessWidget {
               color: VelvetNoir.onSurfaceVariant, size: 20),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
-            builder: (_, value, __) => value.text.isNotEmpty
+            builder: (_, value, _) => value.text.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.close_rounded,
                         color: VelvetNoir.onSurfaceVariant, size: 18),

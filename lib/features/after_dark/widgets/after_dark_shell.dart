@@ -143,7 +143,7 @@ class _AfterDarkBottomNav extends StatelessWidget {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
+        child: DecoratedBox(
           decoration: const BoxDecoration(
             color: Color(0xEE0C0508),
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),

@@ -377,7 +377,7 @@ class _AfterDarkLoungesLoadingSliver extends StatelessWidget {
 
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
-              (context, index) => Container(
+              (context, index) => DecoratedBox(
                 decoration: BoxDecoration(
                   color: EmberDark.surfaceHigh,
                   borderRadius: BorderRadius.circular(18),

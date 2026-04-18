@@ -78,7 +78,7 @@ class _FriendsPanelSheetState extends ConsumerState<_FriendsPanelSheet> {
       maxChildSize: 0.92,
       expand: false,
       builder: (sheetCtx, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius:

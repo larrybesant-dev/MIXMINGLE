@@ -3,7 +3,6 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixvy/features/room/controllers/room_state.dart';
 import 'package:mixvy/features/room/providers/mic_access_provider.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/features/room/room_controller.dart';

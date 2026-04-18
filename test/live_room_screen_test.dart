@@ -422,7 +422,7 @@ void main() {
 
       final subscription = container.listen(
         roomControllerProvider('room-a'),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(subscription.close);
 

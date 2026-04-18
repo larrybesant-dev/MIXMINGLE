@@ -15,7 +15,7 @@ class UserAvatar extends StatelessWidget {
     return CircleAvatar(
       backgroundColor: theme.colorScheme.surface,
       radius: radius,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: theme.colorScheme.primary, width: 2),

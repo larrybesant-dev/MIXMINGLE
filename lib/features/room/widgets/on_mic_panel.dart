@@ -55,7 +55,7 @@ class OnMicPanel extends ConsumerWidget {
   }
 
   Widget _buildPanel(BuildContext context, List<RoomParticipantModel> sorted) {
-    return Container(
+    return DecoratedBox(
       decoration: const BoxDecoration(
         color: _kSurface,
         border: Border(top: BorderSide(color: Color(0x14FFFFFF))),

@@ -175,7 +175,7 @@ class _BackgroundPickerSheetState extends State<BackgroundPickerSheet>
       maxChildSize: 0.92,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: const BoxDecoration(
             color: surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -361,7 +361,7 @@ class _BackgroundPickerSheetState extends State<BackgroundPickerSheet>
                               _draft.backgroundUrl!,
                               height: 140,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                              errorBuilder: (_, _, _) => Container(
                                 height: 140,
                                 color: const Color(0xFF1A1D2A),
                                 child: const Center(

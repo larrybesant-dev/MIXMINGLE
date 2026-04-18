@@ -8,7 +8,6 @@ import 'package:mixvy/features/feed/providers/feed_providers.dart';
 import 'package:mixvy/features/social/widgets/social_room_card.dart';
 import 'package:mixvy/models/room_model.dart';
 import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
-import 'package:mixvy/widgets/brand_ui_kit.dart';
 
 // ── Sort options ──────────────────────────────────────────────────────────────
 enum _FloorSort { mostSpeakers, mostListeners, newestLive }

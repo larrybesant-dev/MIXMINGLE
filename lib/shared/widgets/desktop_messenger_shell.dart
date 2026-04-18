@@ -252,7 +252,7 @@ class _MessengerSidebar extends ConsumerWidget {
           }).toList(growable: false),
         );
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: VelvetNoir.surfaceLow,
         border: Border(right: BorderSide(color: VelvetNoir.outlineVariant.withValues(alpha: 0.35))),
@@ -442,7 +442,7 @@ class _DesktopSocialRail extends ConsumerWidget {
     final unreadCount = conversations.where((c) => c.hasUnreadMessages(currentUser.id)).length;
     final pinnedCount = conversations.where((c) => c.isPinnedFor(currentUser.id)).length;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: VelvetNoir.surfaceLow,
         border: Border(left: BorderSide(color: VelvetNoir.outlineVariant.withValues(alpha: 0.35))),

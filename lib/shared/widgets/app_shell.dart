@@ -87,7 +87,7 @@ class _VelvetBottomNav extends StatelessWidget {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -198,89 +198,6 @@ class _VelvetBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _navItemBadge(
-      BuildContext context,
-      int idx,
-      IconData icon,
-      IconData selectedIcon,
-      String label,
-      int count) {
-    final isSelected = selectedIndex == idx;
-    final theme = Theme.of(context);
-    final selectedColor = theme.colorScheme.primary;
-    final idleColor = theme.colorScheme.onSurfaceVariant;
-    final badgeColor = theme.colorScheme.error;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(idx),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 40,
-              height: 30,
-              decoration: isSelected
-                  ? BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          VelvetNoir.primary.withValues(alpha: 0.18),
-                          VelvetNoir.primary.withValues(alpha: 0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    )
-                  : null,
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    isSelected ? selectedIcon : icon,
-                    color: isSelected ? selectedColor : idleColor,
-                    size: 22,
-                  ),
-                  if (count > 0)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: badgeColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        constraints:
-                            const BoxConstraints(minWidth: 14, minHeight: 14),
-                        child: Text(
-                          count > 99 ? '99+' : '$count',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: GoogleFonts.raleway(
-                fontSize: compact ? 10 : 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                color: isSelected ? selectedColor : idleColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _DesktopTopNav extends StatelessWidget {

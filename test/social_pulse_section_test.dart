@@ -49,7 +49,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SocialPulseSection(
-              pulseItems: const [],
+              pulseItems: [],
               onOpenRooms: _noop,
               onOpenDiscover: _noop,
             ),

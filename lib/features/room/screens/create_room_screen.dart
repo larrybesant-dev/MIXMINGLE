@@ -476,7 +476,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   }
 
   Widget _buildPrivacyOptions() {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: _surfaceLow,
         borderRadius: BorderRadius.circular(14),

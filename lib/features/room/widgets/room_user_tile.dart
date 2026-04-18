@@ -326,7 +326,7 @@ class _RoomUserTileState extends State<RoomUserTile>
       );
     }
 
-    Widget ringed = Container(
+    Widget ringed = DecoratedBox(
       decoration: ringColor != null
           ? BoxDecoration(
               shape: BoxShape.circle,

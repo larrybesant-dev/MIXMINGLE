@@ -113,7 +113,7 @@ final schemaStableFriendPresenceMapProvider =
     var disposed = false;
     var hasEmittedInitialState = false;
     Timer? debounceTimer;
-    Map<String, SchemaFriendPresence> stablePresenceMap = <String, SchemaFriendPresence>{};
+    final Map<String, SchemaFriendPresence> stablePresenceMap = <String, SchemaFriendPresence>{};
     Map<String, SchemaFriendPresence> latestRawPresenceMap = <String, SchemaFriendPresence>{};
     final pendingTransitions = <String, _PendingPresenceTransition>{};
 

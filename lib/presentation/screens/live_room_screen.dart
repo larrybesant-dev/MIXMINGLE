@@ -6247,7 +6247,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
+                  DecoratedBox(
                     decoration: BoxDecoration(
                       color: const Color(0xB310131A),
                       borderRadius: BorderRadius.circular(24),
@@ -7750,7 +7750,7 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -8329,7 +8329,7 @@ class _RoomBackground extends StatelessWidget {
           Image.network(
             theme.backgroundUrl!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _presetGradient(theme.vibePreset),
+            errorBuilder: (_, _, _) => _presetGradient(theme.vibePreset),
           )
         else
           _presetGradient(theme.vibePreset),

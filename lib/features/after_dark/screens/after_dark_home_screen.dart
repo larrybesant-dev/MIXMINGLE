@@ -183,7 +183,7 @@ class _AfterDarkRoomGridSkeleton extends StatelessWidget {
                   : 2;
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
-              (context, index) => Container(
+              (context, index) => DecoratedBox(
                 decoration: BoxDecoration(
                   color: EmberDark.surfaceHigh,
                   borderRadius: BorderRadius.circular(18),

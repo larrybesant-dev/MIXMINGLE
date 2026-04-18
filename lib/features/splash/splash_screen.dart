@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../shared/widgets/app_page_scaffold.dart';
@@ -19,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   late final Animation<double> _logoOpacity;
   late final Animation<double> _logoScale;
-  late final Animation<double> _textOpacity;
   late final Animation<double> _taglineOpacity;
   late final Animation<double> _loaderOpacity;
   late final Animation<double> _glowPulse;
@@ -53,11 +51,6 @@ class _SplashScreenState extends State<SplashScreen>
         parent: _logoController,
         curve: const Interval(0.0, 0.85, curve: Curves.easeOutBack),
       ),
-    );
-
-    _textOpacity = CurvedAnimation(
-      parent: _textController,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeIn),
     );
 
     _taglineOpacity = CurvedAnimation(

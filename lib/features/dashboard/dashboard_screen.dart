@@ -854,7 +854,7 @@ class _DiscoverPersonCard extends StatelessWidget {
               // Photo / gradient bg
               avatarUrl.isNotEmpty
                   ? CachedNetworkImage(imageUrl: avatarUrl, fit: BoxFit.cover)
-                  : Container(
+                  : DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
@@ -965,7 +965,7 @@ class _PopularRoomCard extends StatelessWidget {
                       imageUrl: room.thumbnailUrl!,
                       fit: BoxFit.cover,
                     )
-                  : Container(
+                  : DecoratedBox(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,

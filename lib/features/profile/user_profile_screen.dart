@@ -510,8 +510,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               }
               if (isOwnProfile ||
                   _asBool(privacy['showRelationshipStatus'], fallback: false)) {
-                if ((relationshipStatus ?? '').isNotEmpty)
+                if ((relationshipStatus ?? '').isNotEmpty) {
                   details.add(relationshipStatus!);
+                }
               }
 
               return ListView(

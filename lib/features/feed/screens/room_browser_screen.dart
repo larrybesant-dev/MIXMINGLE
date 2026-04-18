@@ -742,7 +742,7 @@ class _RoomBrowserLoadingSliver extends StatelessWidget {
               : 2;
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
-              (context, index) => Container(
+              (context, index) => DecoratedBox(
                 decoration: BoxDecoration(
                   color: VelvetNoir.surfaceHigh,
                   borderRadius: BorderRadius.circular(16),

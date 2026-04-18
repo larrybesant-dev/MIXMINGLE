@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/core/layout/app_layout.dart';
+import 'package:mixvy/core/telemetry/app_telemetry.dart';
+import 'package:mixvy/core/telemetry/feed_experiment_contract.dart';
 import 'package:mixvy/core/theme.dart';
 import 'package:mixvy/features/feed/providers/feed_providers.dart';
 import 'package:mixvy/features/social/providers/social_providers.dart';
@@ -13,8 +16,18 @@ import 'package:mixvy/features/social/widgets/social_room_card.dart';
 import 'package:mixvy/models/room_model.dart';
 import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 
-class HomeLobbyScreen extends ConsumerWidget {
+class HomeLobbyScreen extends ConsumerStatefulWidget {
   const HomeLobbyScreen({super.key});
+
+  @override
+  ConsumerState<HomeLobbyScreen> createState() => _HomeLobbyScreenState();
+}
+
+class _HomeLobbyScreenState extends ConsumerState<HomeLobbyScreen> {
+  Timer? _featuredDwellTimer;
+  DateTime? _featuredVisibleAt;
+  String? _featuredRoomId;
+  final Set<int> _scrollMilestonesLogged = <int>{};
 
   int _stablePeopleCount(RoomModel room) {
     final derivedCount = room.stageUserIds.length + room.audienceUserIds.length;
@@ -77,7 +90,119 @@ class HomeLobbyScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _featuredDwellTimer?.cancel();
+    super.dispose();
+  }
+
+  void _trackFeaturedRoom(RoomModel? room, {required String section}) {
+    if (room == null || _featuredRoomId == room.id) {
+      return;
+    }
+
+    _featuredDwellTimer?.cancel();
+    _featuredRoomId = room.id;
+    _featuredVisibleAt = DateTime.now();
+
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'feed_featured_impression',
+      message: 'Featured room surfaced in the home feed.',
+      roomId: room.id,
+      result: 'visible',
+      metadata: <String, Object?>{
+        ...FeedAttentionExperiment.telemetryMetadata(),
+        'section': section,
+        'category': room.category ?? 'unknown',
+        'members': _stablePeopleCount(room),
+        'speakers': room.stageUserIds.length,
+      },
+    );
+
+    _featuredDwellTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted ||
+          _featuredRoomId != room.id ||
+          _featuredVisibleAt == null) {
+        return;
+      }
+
+      AppTelemetry.logAction(
+        domain: 'room',
+        action: 'feed_featured_dwell',
+        message: 'Featured room held attention in the home feed.',
+        roomId: room.id,
+        result: 'engaged',
+        metadata: <String, Object?>{
+          ...FeedAttentionExperiment.telemetryMetadata(),
+          'section': section,
+          'category': room.category ?? 'unknown',
+          'dwell_ms': DateTime.now()
+              .difference(_featuredVisibleAt!)
+              .inMilliseconds,
+        },
+      );
+    });
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    final maxScrollExtent = notification.metrics.maxScrollExtent;
+    if (maxScrollExtent <= 0) {
+      return false;
+    }
+
+    final depthPercent =
+        (notification.metrics.pixels / maxScrollExtent).clamp(0.0, 1.0) * 100;
+    for (final milestone in const <int>[25, 50, 75]) {
+      if (depthPercent >= milestone && _scrollMilestonesLogged.add(milestone)) {
+        AppTelemetry.logAction(
+          domain: 'room',
+          action: 'feed_scroll_depth',
+          message: 'User reached a home feed depth milestone.',
+          result: 'scroll',
+          metadata: <String, Object?>{
+            ...FeedAttentionExperiment.telemetryMetadata(),
+            'percent': milestone,
+          },
+        );
+      }
+    }
+    return false;
+  }
+
+  void _openRoom(
+    BuildContext context,
+    RoomModel room, {
+    required String section,
+    required int rank,
+    required bool featured,
+  }) {
+    final dwellMs = _featuredRoomId == room.id && _featuredVisibleAt != null
+        ? DateTime.now().difference(_featuredVisibleAt!).inMilliseconds
+        : null;
+
+    AppTelemetry.logAction(
+      domain: 'room',
+      action: 'feed_room_open',
+      message: 'User opened a room from the home feed.',
+      roomId: room.id,
+      result: featured ? 'featured' : 'standard',
+      metadata: <String, Object?>{
+        ...FeedAttentionExperiment.telemetryMetadata(),
+        'section': section,
+        'rank': rank,
+        'featured': featured,
+        'category': room.category ?? 'unknown',
+        'members': _stablePeopleCount(room),
+        'speakers': room.stageUserIds.length,
+        'dwell_ms': ?dwellMs,
+      },
+    );
+
+    context.go('/room/${room.id}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final hp = context.pageHorizontalPadding;
 
@@ -95,231 +220,281 @@ class HomeLobbyScreen extends ConsumerWidget {
           ref.invalidate(followingLiveRoomsProvider(uid));
           ref.invalidate(forYouRoomsProvider(uid));
         },
-        child: CustomScrollView(
-          slivers: [
-            // Header
-            SliverAppBar(
-              pinned: true,
-              backgroundColor: VelvetNoir.surface,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Home',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 23,
-                      fontWeight: FontWeight.w700,
-                      color: VelvetNoir.onSurface,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: CustomScrollView(
+            slivers: [
+              // Header
+              SliverAppBar(
+                pinned: true,
+                backgroundColor: VelvetNoir.surface,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Home',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 23,
+                        fontWeight: FontWeight.w700,
+                        color: VelvetNoir.onSurface,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Live voices, fresh rooms, your circle',
-                    style: GoogleFonts.raleway(
-                      fontSize: 11,
-                      color: VelvetNoir.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.search_rounded,
-                    color: VelvetNoir.onSurfaceVariant,
-                  ),
-                  onPressed: () => context.go('/search'),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: VelvetNoir.onSurfaceVariant,
-                  ),
-                  onPressed: () => context.go('/notifications'),
-                ),
-              ],
-            ),
-
-            // Main sections composed from shared room stream
-            roomsAsync.when(
-              loading: () => const SliverToBoxAdapter(child: _HomeShimmer()),
-              error: (_, __) => SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(hp),
-                  child: Center(
-                    child: Text(
-                      'Unable to load the social feed right now.',
+                    Text(
+                      'Live voices, fresh rooms, your circle',
                       style: GoogleFonts.raleway(
+                        fontSize: 11,
                         color: VelvetNoir.onSurfaceVariant,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-              data: (rooms) {
-                final liveNow = rooms.take(10).toList();
-                final trending = _trending(rooms).take(6).toList();
-                final newest = _newest(rooms).take(6).toList();
-                final featuredRoomId = trending.isNotEmpty
-                    ? trending.first.id
-                    : (liveNow.isNotEmpty ? liveNow.first.id : null);
-
-                return SliverList(
-                  delegate: SliverChildListDelegate([
-                    // A. Live Now
-                    _SectionHeader(
-                      padding: EdgeInsets.fromLTRB(hp, 14, hp, 10),
-                      title: 'Live Now',
-                      subtitle: 'Jump into the room that fits your mood',
+                actions: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.search_rounded,
+                      color: VelvetNoir.onSurfaceVariant,
                     ),
-                    if (liveNow.isEmpty)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: hp),
-                        child: const _EmptyRoomsCard(
-                          title: 'No rooms are live yet',
-                          subtitle: 'Check back soon or start one yourself.',
-                        ),
-                      )
-                    else
-                      SizedBox(
-                        height: 200,
-                        child: ListView.separated(
-                          padding: EdgeInsets.symmetric(horizontal: hp),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: liveNow.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 10),
-                          itemBuilder: (ctx, i) => SocialRoomCardCompact(
-                            key: ValueKey(liveNow[i].id),
-                            featured: liveNow[i].id == featuredRoomId,
-                            room: liveNow[i],
-                            onTap: () => ctx.go('/room/${liveNow[i].id}'),
-                          ),
+                    onPressed: () => context.go('/search'),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: VelvetNoir.onSurfaceVariant,
+                    ),
+                    onPressed: () => context.go('/notifications'),
+                  ),
+                ],
+              ),
+
+              // Main sections composed from shared room stream
+              roomsAsync.when(
+                loading: () => const SliverToBoxAdapter(child: _HomeShimmer()),
+                error: (_, _) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(hp),
+                    child: Center(
+                      child: Text(
+                        'Unable to load the social feed right now.',
+                        style: GoogleFonts.raleway(
+                          color: VelvetNoir.onSurfaceVariant,
                         ),
                       ),
-
-                    // B. Following Live
-                    _SectionHeader(
-                      padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
-                      title: 'Following Live',
-                      subtitle: 'People you already care about',
                     ),
-                    followingLiveAsync.when(
-                      loading: () => const _MiniLoadingStrip(),
-                      error: (_, __) => const SizedBox.shrink(),
-                      data: (followRooms) {
-                        if (followRooms.isEmpty) {
-                          final suggestions = rooms.take(3).toList();
-                          return Padding(
+                  ),
+                ),
+                data: (rooms) {
+                  final liveNow = rooms.take(10).toList();
+                  final trending = _trending(rooms).take(6).toList();
+                  final newest = _newest(rooms).take(6).toList();
+                  final featuredRoom = trending.isNotEmpty
+                      ? trending.first
+                      : (liveNow.isNotEmpty ? liveNow.first : null);
+                  final featuredRoomId = featuredRoom?.id;
+                  final featuredSection = trending.isNotEmpty
+                      ? 'trending'
+                      : 'live_now';
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) {
+                      return;
+                    }
+                    _trackFeaturedRoom(featuredRoom, section: featuredSection);
+                  });
+
+                  return SliverList(
+                    delegate: SliverChildListDelegate([
+                      // A. Live Now
+                      _SectionHeader(
+                        padding: EdgeInsets.fromLTRB(hp, 14, hp, 10),
+                        title: 'Live Now',
+                        subtitle: 'Jump into the room that fits your mood',
+                      ),
+                      if (liveNow.isEmpty)
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: hp),
+                          child: const _EmptyRoomsCard(
+                            title: 'No rooms are live yet',
+                            subtitle: 'Check back soon or start one yourself.',
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 200,
+                          child: ListView.separated(
                             padding: EdgeInsets.symmetric(horizontal: hp),
-                            child: Column(
-                              children: [
-                                const _EmptyRoomsCard(
-                                  title: 'Nobody you follow is live yet',
-                                  subtitle:
-                                      'Here are a few rooms worth checking out.',
-                                ),
-                                const SizedBox(height: 10),
-                                ...suggestions.map(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: liveNow.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 10),
+                            itemBuilder: (ctx, i) => SocialRoomCardCompact(
+                              key: ValueKey(liveNow[i].id),
+                              featured: liveNow[i].id == featuredRoomId,
+                              room: liveNow[i],
+                              onTap: () => _openRoom(
+                                ctx,
+                                liveNow[i],
+                                section: 'live_now',
+                                rank: i + 1,
+                                featured: liveNow[i].id == featuredRoomId,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // B. Following Live
+                      _SectionHeader(
+                        padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
+                        title: 'Following Live',
+                        subtitle: 'People you already care about',
+                      ),
+                      followingLiveAsync.when(
+                        loading: () => const _MiniLoadingStrip(),
+                        error: (_, _) => const SizedBox.shrink(),
+                        data: (followRooms) {
+                          if (followRooms.isEmpty) {
+                            final suggestions = rooms.take(3).toList();
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: hp),
+                              child: Column(
+                                children: [
+                                  const _EmptyRoomsCard(
+                                    title: 'Nobody you follow is live yet',
+                                    subtitle:
+                                        'Here are a few rooms worth checking out.',
+                                  ),
+                                  const SizedBox(height: 10),
+                                  ...suggestions.map(
+                                    (room) => SocialRoomCard(
+                                      key: ValueKey(room.id),
+                                      featured: room.id == featuredRoomId,
+                                      room: room,
+                                      onTap: () => _openRoom(
+                                        context,
+                                        room,
+                                        section: 'following_suggestions',
+                                        rank: suggestions.indexOf(room) + 1,
+                                        featured: room.id == featuredRoomId,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: followRooms
+                                .map(
                                   (room) => SocialRoomCard(
                                     key: ValueKey(room.id),
                                     featured: room.id == featuredRoomId,
                                     room: room,
-                                    onTap: () => context.go('/room/${room.id}'),
+                                    onTap: () => _openRoom(
+                                      context,
+                                      room,
+                                      section: 'following_live',
+                                      rank: followRooms.indexOf(room) + 1,
+                                      featured: room.id == featuredRoomId,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                )
+                                .toList(),
                           );
-                        }
-                        return Column(
-                          children: followRooms
-                              .map(
-                                (room) => SocialRoomCard(
-                                  key: ValueKey(room.id),
-                                  featured: room.id == featuredRoomId,
-                                  room: room,
-                                  onTap: () => context.go('/room/${room.id}'),
-                                ),
-                              )
-                              .toList(),
-                        );
-                      },
-                    ),
-
-                    // C. Trending Rooms
-                    _SectionHeader(
-                      padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
-                      title: 'Trending Rooms',
-                      subtitle: 'Ranked by activity, speakers, and recency',
-                    ),
-                    ...trending.map(
-                      (room) => _RankedRoomCard(
-                        room: room,
-                        score: _activityScore(room),
-                        onTap: () => context.go('/room/${room.id}'),
+                        },
                       ),
-                    ),
 
-                    // D. New Rooms
-                    _SectionHeader(
-                      padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
-                      title: 'New Rooms',
-                      subtitle: 'Fresh spaces that just opened',
-                    ),
-                    ...newest.map(
-                      (room) => SocialRoomCard(
-                        key: ValueKey('${room.id}-new'),
-                        featured: room.id == featuredRoomId,
-                        room: room,
-                        onTap: () => context.go('/room/${room.id}'),
+                      // C. Trending Rooms
+                      _SectionHeader(
+                        padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
+                        title: 'Trending Rooms',
+                        subtitle: 'Ranked by activity, speakers, and recency',
                       ),
-                    ),
+                      ...trending.map(
+                        (room) => _RankedRoomCard(
+                          room: room,
+                          score: _activityScore(room),
+                          onTap: () => _openRoom(
+                            context,
+                            room,
+                            section: 'trending',
+                            rank: trending.indexOf(room) + 1,
+                            featured: room.id == featuredRoomId,
+                          ),
+                        ),
+                      ),
 
-                    // E. For You
-                    _SectionHeader(
-                      padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
-                      title: 'For You',
-                      subtitle:
-                          'Picked from your interests and social activity',
-                    ),
-                    forYouAsync.when(
-                      loading: () => const _MiniLoadingStrip(),
-                      error: (_, __) => const SizedBox.shrink(),
-                      data: (suggestions) {
-                        if (suggestions.isEmpty) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(horizontal: hp),
-                            child: const _EmptyRoomsCard(
-                              title: 'Your recommendations are warming up',
-                              subtitle:
-                                  'Join a few rooms and follow hosts to personalize this feed.',
-                            ),
+                      // D. New Rooms
+                      _SectionHeader(
+                        padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
+                        title: 'New Rooms',
+                        subtitle: 'Fresh spaces that just opened',
+                      ),
+                      ...newest.map(
+                        (room) => SocialRoomCard(
+                          key: ValueKey('${room.id}-new'),
+                          featured: room.id == featuredRoomId,
+                          room: room,
+                          onTap: () => _openRoom(
+                            context,
+                            room,
+                            section: 'new_rooms',
+                            rank: newest.indexOf(room) + 1,
+                            featured: room.id == featuredRoomId,
+                          ),
+                        ),
+                      ),
+
+                      // E. For You
+                      _SectionHeader(
+                        padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
+                        title: 'For You',
+                        subtitle:
+                            'Picked from your interests and social activity',
+                      ),
+                      forYouAsync.when(
+                        loading: () => const _MiniLoadingStrip(),
+                        error: (_, _) => const SizedBox.shrink(),
+                        data: (suggestions) {
+                          if (suggestions.isEmpty) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: hp),
+                              child: const _EmptyRoomsCard(
+                                title: 'Your recommendations are warming up',
+                                subtitle:
+                                    'Join a few rooms and follow hosts to personalize this feed.',
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: suggestions
+                                .take(5)
+                                .map(
+                                  (room) => SocialRoomCard(
+                                    key: ValueKey('${room.id}-foryou'),
+                                    featured: room.id == featuredRoomId,
+                                    room: room,
+                                    onTap: () => _openRoom(
+                                      context,
+                                      room,
+                                      section: 'for_you',
+                                      rank: suggestions.indexOf(room) + 1,
+                                      featured: room.id == featuredRoomId,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           );
-                        }
-                        return Column(
-                          children: suggestions
-                              .take(5)
-                              .map(
-                                (room) => SocialRoomCard(
-                                  key: ValueKey('${room.id}-foryou'),
-                                  featured: room.id == featuredRoomId,
-                                  room: room,
-                                  onTap: () => context.go('/room/${room.id}'),
-                                ),
-                              )
-                              .toList(),
-                        );
-                      },
-                    ),
+                        },
+                      ),
 
-                    const SizedBox(height: 100),
-                  ]),
-                );
-              },
-            ),
-          ],
+                      const SizedBox(height: 100),
+                    ]),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

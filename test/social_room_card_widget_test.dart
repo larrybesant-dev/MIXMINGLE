@@ -36,6 +36,20 @@ void main() {
     expect(find.text('Start here'), findsOneWidget);
   });
 
+  testWidgets('non featured social room card keeps the focus cue hidden', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SocialRoomCard(room: buildRoom(), onTap: () {}),
+        ),
+      ),
+    );
+
+    expect(find.text('Start here'), findsNothing);
+  });
+
   testWidgets('compact social room card tells the room story', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

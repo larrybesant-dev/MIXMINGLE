@@ -1104,8 +1104,9 @@ class WebRtcRoomService extends RtcRoomService {
     // offer/answer stalled), drop the zombie connection so the screen tile
     // disappears rather than showing "Connecting cam…" indefinitely.
     Timer(const Duration(seconds: 15), () {
-      if (!identical(_peers[broadcasterId], peer))
+      if (!identical(_peers[broadcasterId], peer)) {
         return; // stale — new PC present
+      }
       if (peer.remoteStream == null && _isJoined && _roomId != null) {
         _log(
           'P2P stream timeout (15 s) for broadcaster=$broadcasterId — dropping zombie',
@@ -1307,8 +1308,9 @@ class WebRtcRoomService extends RtcRoomService {
       if (_answeredCalls.contains(callId)) continue;
       final data = doc.data();
       if (data['offer'] == null) continue;
-      if (data['answer'] != null)
+      if (data['answer'] != null) {
         continue; // already answered by another session
+      }
       _answeredCalls.add(callId);
       unawaited(_answerViewerOffer(callId, data));
     }

@@ -319,7 +319,7 @@ class HostControls {
     final entry = <String, dynamic>{
       'action': action,
       'actorId': actorId,
-      if (targetId != null) 'targetId': targetId,
+      'targetId': ?targetId,
       'ts': FieldValue.serverTimestamp(),
       if (meta != null) ...meta,
     };

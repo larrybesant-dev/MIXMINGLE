@@ -78,7 +78,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
               ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(48),
-                child: Container(
+                child: DecoratedBox(
                   decoration: const BoxDecoration(
                     border: Border(
                       bottom: BorderSide(color: _npGhost),

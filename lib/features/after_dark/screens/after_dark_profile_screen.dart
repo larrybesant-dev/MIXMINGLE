@@ -222,7 +222,7 @@ class _AfterDarkProfileScreenState
             const SizedBox(height: 20),
 
             // Privacy toggle
-            Container(
+            DecoratedBox(
               decoration: BoxDecoration(
                 color: EmberDark.surfaceHigh,
                 borderRadius: BorderRadius.circular(16),

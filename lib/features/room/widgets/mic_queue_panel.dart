@@ -95,7 +95,7 @@ class _MicQueuePanelState extends ConsumerState<MicQueuePanel> {
 
         if (pending.isEmpty) return const SizedBox.shrink();
 
-        return Container(
+        return DecoratedBox(
           decoration: BoxDecoration(
             color: npSurfaceContainer,
             border: Border(

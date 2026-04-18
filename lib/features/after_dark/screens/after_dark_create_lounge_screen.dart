@@ -618,7 +618,7 @@ class _AfterDarkCreateLoungeScreenState
   }
 
   Widget _buildPrivacyOptions() {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: EmberDark.surfaceHigh,
         borderRadius: BorderRadius.circular(16),
@@ -656,7 +656,7 @@ class _AfterDarkCreateLoungeScreenState
   }
 
   Widget _buildVideoToggle() {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: EmberDark.surfaceHigh,
         borderRadius: BorderRadius.circular(16),

@@ -348,7 +348,7 @@ class _EmojiGridCell extends ConsumerWidget {
       child: InkWell(
         onTap: () => onTap(item),
         borderRadius: BorderRadius.circular(10),
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: VelvetNoir.surfaceHigh,
             borderRadius: BorderRadius.circular(10),

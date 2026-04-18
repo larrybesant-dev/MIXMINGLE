@@ -513,7 +513,7 @@ class _Thumbnail extends StatelessWidget {
           width: w,
           height: size,
           fit: BoxFit.cover,
-          errorWidget: (_, __, ___) =>
+          errorWidget: (_, _, _) =>
               _FallbackThumb(category: category, size: size, width: w),
         ),
       );
