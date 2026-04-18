@@ -172,6 +172,15 @@ void main() {
     });
   }
 
+  Future<void> configureMobileViewport(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+  }
+
   testWidgets('LiveRoomScreen shows login prompt when user is missing', (
     WidgetTester tester,
   ) async {
@@ -184,6 +193,97 @@ void main() {
     );
 
     expect(find.text('Please log in'), findsOneWidget);
+  });
+
+  testWidgets('LiveRoomScreen shows a visible mobile chat entry point', (
+    WidgetTester tester,
+  ) async {
+    await configureMobileViewport(tester);
+    final firestore = FakeFirebaseFirestore();
+    await firestore.collection('rooms').doc('room-a').set({
+      'hostId': 'host-1',
+      'isLocked': false,
+      'slowModeSeconds': 0,
+    });
+    await firestore
+        .collection('rooms')
+        .doc('room-a')
+        .collection('participants')
+        .doc('user-1')
+        .set({
+          'userId': 'user-1',
+          'role': 'audience',
+          'isMuted': false,
+          'isBanned': false,
+          'joinedAt': DateTime(2026, 1, 1),
+          'lastActiveAt': DateTime(2026, 1, 1),
+        });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          currentParticipantProvider.overrideWith(
+            (ref, args) => Stream.value(
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                isMuted: false,
+                isBanned: false,
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                isMuted: false,
+                isBanned: false,
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ]),
+          ),
+          roomStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value(
+              RoomModel(
+                id: roomId,
+                name: 'Room A',
+                hostId: 'host-1',
+              ),
+            ),
+          ),
+          roomPolicyProvider.overrideWith(
+            (ref, roomId) => Stream.value(RoomPolicyModel(roomId: roomId)),
+          ),
+          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          hostProvider.overrideWith(
+            (ref, roomId) => Stream.value(Host('host-1')),
+          ),
+          coHostsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <Cohost>[]),
+          ),
+          userProvider.overrideWithValue(
+            UserModel(
+              id: 'user-1',
+              email: 'user1@mixvy.com',
+              username: 'User One',
+              createdAt: DateTime(2026, 1, 1),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('Message the room'), findsOneWidget);
+    expect(find.text('Chat'), findsWidgets);
   });
 
   testWidgets('LiveRoomScreen renders joined audience state', (

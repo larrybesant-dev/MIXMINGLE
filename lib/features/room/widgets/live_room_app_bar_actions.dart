@@ -76,6 +76,8 @@ class LiveRoomAppBarActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 640;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -100,21 +102,23 @@ class LiveRoomAppBarActions extends StatelessWidget {
           onGrabMicAction: onGrabMicAction,
           onToggleSystemAudio: onToggleSystemAudio,
         ),
-        IconButton(
-          tooltip: 'Volume controls',
-          icon: Icon(
-            showVolumeControls ? Icons.volume_up : Icons.volume_up_outlined,
-            color: showVolumeControls ? VelvetNoir.primary : Colors.white70,
+        if (!isCompact)
+          IconButton(
+            tooltip: 'Volume controls',
+            icon: Icon(
+              showVolumeControls ? Icons.volume_up : Icons.volume_up_outlined,
+              color: showVolumeControls ? VelvetNoir.primary : Colors.white70,
+            ),
+            onPressed: onToggleVolumeControls,
           ),
-          onPressed: onToggleVolumeControls,
-        ),
-        IconButton(
-          tooltip: 'Go to Home',
-          icon: const Icon(Icons.home_rounded),
-          onPressed: onGoHome,
-        ),
-        const FriendsPanelButton(iconColor: Colors.white),
-        if (coinBalance != null)
+        if (!isCompact)
+          IconButton(
+            tooltip: 'Go to Home',
+            icon: const Icon(Icons.home_rounded),
+            onPressed: onGoHome,
+          ),
+        if (!isCompact) const FriendsPanelButton(iconColor: Colors.white),
+        if (!isCompact && coinBalance != null)
           Padding(
             padding: const EdgeInsets.only(right: 4),
             child: Center(child: CoinBalanceWidget(balance: coinBalance!)),
@@ -160,6 +164,8 @@ class LiveRoomAppBarActions extends StatelessWidget {
         PopupMenuButton<String>(
           onSelected: (value) {
             switch (value) {
+              case 'home':
+                onGoHome();
               case 'invite':
                 onInviteFriends();
               case 'online_friends':
@@ -172,9 +178,32 @@ class LiveRoomAppBarActions extends StatelessWidget {
                 onReportRoom();
               case 'report_issue':
                 onReportIssue();
+              case 'coins':
+                break;
             }
           },
-          itemBuilder: (context) => const [
+          itemBuilder: (context) => [
+            if (isCompact)
+              const PopupMenuItem<String>(
+                value: 'home',
+                child: ListTile(
+                  leading: Icon(Icons.home_rounded),
+                  title: Text('Go home'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+              ),
+            if (isCompact && coinBalance != null)
+              PopupMenuItem<String>(
+                enabled: false,
+                value: 'coins',
+                child: ListTile(
+                  leading: const Icon(Icons.monetization_on_outlined),
+                  title: Text('Coins: $coinBalance'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+              ),
             PopupMenuItem<String>(
               value: 'invite',
               child: ListTile(

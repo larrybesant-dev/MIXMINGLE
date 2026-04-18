@@ -4230,6 +4230,57 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           });
         }
 
+        Future<void> handleSubmitChatMessage() async {
+          final trimmed = messageController.text.trim();
+          if (trimmed.isEmpty) {
+            return;
+          }
+          final outgoingMessage = _buildOutgoingChatMessage(trimmed);
+          if (slowModeSeconds > 0 && lastMessageTime != null) {
+            final secs = DateTime.now().difference(lastMessageTime!).inSeconds;
+            if (secs < slowModeSeconds) {
+              setState(() {
+                cooldownMessage =
+                    'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+              });
+              return;
+            }
+          }
+          setState(() => isSending = true);
+          try {
+            await sendMessage(outgoingMessage);
+            lastMessageTime = DateTime.now();
+            cooldownMessage = '';
+            messageController.clear();
+            _pendingRichColorHex = null;
+            _showEmojiTray = false;
+            if (!_hasTrackedFirstMessage) {
+              _hasTrackedFirstMessage = true;
+              await AnalyticsService().logEvent(
+                'first_message_sent',
+                params: {'room_id': widget.roomId, 'user_id': user.id},
+              );
+            }
+            if (scrollController.hasClients) {
+              scrollController.animateTo(
+                scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(e.toString())),
+              );
+            }
+          } finally {
+            if (mounted) {
+              setState(() => isSending = false);
+            }
+          }
+        }
+
         final canRequestMic =
             liveRoomState.audioState != RoomAudioState.denied &&
             (allowMicRequests || onMicCount < RoomState.maxSpeakers) &&
@@ -5649,65 +5700,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                     !allowChat ||
                                                     hasBlockedParticipantInRoom
                                                 ? null
-                                                : (text) async {
-                                                    final trimmed = text.trim();
-                                                    if (trimmed.isEmpty) return;
-                                                    final outgoingMessage =
-                                                        _buildOutgoingChatMessage(
-                                                          trimmed,
-                                                        );
-                                                    if (slowModeSeconds > 0 &&
-                                                        lastMessageTime !=
-                                                            null) {
-                                                      final secs = DateTime.now()
-                                                          .difference(
-                                                            lastMessageTime!,
-                                                          )
-                                                          .inSeconds;
-                                                      if (secs <
-                                                          slowModeSeconds) {
-                                                        setState(() {
-                                                          cooldownMessage =
-                                                              'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                                        });
-                                                        return;
-                                                      }
-                                                    }
-                                                    setState(
-                                                      () => isSending = true,
-                                                    );
-                                                    try {
-                                                      await sendMessage(
-                                                        outgoingMessage,
-                                                      );
-                                                      lastMessageTime =
-                                                          DateTime.now();
-                                                      cooldownMessage = '';
-                                                      messageController.clear();
-                                                      _pendingRichColorHex =
-                                                          null;
-                                                      _showEmojiTray = false;
-                                                    } catch (e) {
-                                                      if (context.mounted) {
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              e.toString(),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      }
-                                                    } finally {
-                                                      if (mounted) {
-                                                        setState(
-                                                          () =>
-                                                              isSending = false,
-                                                        );
-                                                      }
-                                                    }
-                                                  },
+                                                : (_) => handleSubmitChatMessage(),
                                             decoration: InputDecoration(
                                               hintText:
                                                   participant?.isMuted == true
@@ -5781,84 +5774,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                     !allowChat ||
                                                     hasBlockedParticipantInRoom
                                                 ? null
-                                                : () async {
-                                                    final trimmed =
-                                                        messageController.text
-                                                            .trim();
-                                                    if (trimmed.isEmpty) {
-                                                      return;
-                                                    }
-                                                    final outgoingMessage =
-                                                        _buildOutgoingChatMessage(
-                                                          trimmed,
-                                                        );
-                                                    if (slowModeSeconds > 0 &&
-                                                        lastMessageTime !=
-                                                            null) {
-                                                      final secs = DateTime.now()
-                                                          .difference(
-                                                            lastMessageTime!,
-                                                          )
-                                                          .inSeconds;
-                                                      if (secs <
-                                                          slowModeSeconds) {
-                                                        setState(() {
-                                                          cooldownMessage =
-                                                              'Slow mode on. Wait ${slowModeSeconds - secs}s.';
-                                                        });
-                                                        return;
-                                                      }
-                                                    }
-                                                    setState(
-                                                      () => isSending = true,
-                                                    );
-                                                    try {
-                                                      await sendMessage(
-                                                        outgoingMessage,
-                                                      );
-                                                      lastMessageTime =
-                                                          DateTime.now();
-                                                      cooldownMessage = '';
-                                                      messageController.clear();
-                                                      _pendingRichColorHex =
-                                                          null;
-                                                      _showEmojiTray = false;
-                                                      if (!_hasTrackedFirstMessage) {
-                                                        _hasTrackedFirstMessage =
-                                                            true;
-                                                        await AnalyticsService()
-                                                            .logEvent(
-                                                              'first_message_sent',
-                                                              params: {
-                                                                'room_id':
-                                                                    widget
-                                                                        .roomId,
-                                                                'user_id':
-                                                                    user.id,
-                                                              },
-                                                            );
-                                                      }
-                                                    } catch (e) {
-                                                      if (context.mounted) {
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              e.toString(),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      }
-                                                    } finally {
-                                                      if (context.mounted) {
-                                                        setState(
-                                                          () =>
-                                                              isSending = false,
-                                                        );
-                                                      }
-                                                    }
-                                                  },
+                                                : handleSubmitChatMessage,
                                             child: isSending
                                                 ? const SizedBox(
                                                     width: 16,
@@ -6140,30 +6056,101 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               ? null
               : Container(
                   color: const Color(0xFF161A21),
-                  child: Row(
-                    children: [
-                      _MobileTabBtn(
-                        icon: Icons.videocam_outlined,
-                        activeIcon: Icons.videocam_rounded,
-                        label: 'Camera',
-                        active: _mobileTab == 0,
-                        onTap: () => setState(() => _mobileTab = 0),
-                      ),
-                      _MobileTabBtn(
-                        icon: Icons.chat_bubble_outline_rounded,
-                        activeIcon: Icons.chat_bubble_rounded,
-                        label: 'Chat',
-                        active: _mobileTab == 1,
-                        onTap: () => setState(() => _mobileTab = 1),
-                      ),
-                      _MobileTabBtn(
-                        icon: Icons.people_outline_rounded,
-                        activeIcon: Icons.people_rounded,
-                        label: 'People',
-                        active: _mobileTab == 2,
-                        onTap: () => setState(() => _mobileTab = 2),
-                      ),
-                    ],
+                  child: SafeArea(
+                    top: false,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_mobileTab != 1)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: handleStartConversation,
+                                    child: AbsorbPointer(
+                                      child: TextField(
+                                        readOnly: true,
+                                        decoration: InputDecoration(
+                                          hintText: !allowChat
+                                              ? 'Chat disabled by host'
+                                              : participant?.isMuted == true
+                                              ? 'You are muted'
+                                              : participant?.isBanned == true
+                                              ? 'You are banned'
+                                              : 'Message the room',
+                                          hintStyle: const TextStyle(
+                                            color: Colors.white54,
+                                          ),
+                                          filled: true,
+                                          fillColor: const Color(0xFF18131D),
+                                          prefixIcon: const Icon(
+                                            Icons.chat_bubble_outline_rounded,
+                                            color: Color(0xFFD4A853),
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: const BorderSide(
+                                              color: Color(0x55D4A853),
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: const BorderSide(
+                                              color: Color(0x55D4A853),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton(
+                                  onPressed: allowChat
+                                      ? handleStartConversation
+                                      : null,
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size(44, 44),
+                                    padding: const EdgeInsets.all(0),
+                                  ),
+                                  child: const Icon(Icons.send_rounded),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Row(
+                          children: [
+                            _MobileTabBtn(
+                              icon: Icons.videocam_outlined,
+                              activeIcon: Icons.videocam_rounded,
+                              label: 'Camera',
+                              active: _mobileTab == 0,
+                              onTap: () => setState(() => _mobileTab = 0),
+                            ),
+                            _MobileTabBtn(
+                              icon: Icons.chat_bubble_outline_rounded,
+                              activeIcon: Icons.chat_bubble_rounded,
+                              label: 'Chat',
+                              active: _mobileTab == 1,
+                              onTap: () => setState(() => _mobileTab = 1),
+                            ),
+                            _MobileTabBtn(
+                              icon: Icons.people_outline_rounded,
+                              activeIcon: Icons.people_rounded,
+                              label: 'People',
+                              active: _mobileTab == 2,
+                              onTap: () => setState(() => _mobileTab = 2),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
         );

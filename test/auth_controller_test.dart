@@ -75,12 +75,21 @@ void main() {
       expect(state.uid, isNull);
     });
 
-    test('signup sets user state', () async {
+    test('signup sets user state when username is provided', () async {
       final controller = container.read(authControllerProvider.notifier);
-      await controller.signup('new@example.com', 'password');
+      await controller.signup('new@example.com', 'password', 'VelvetNoir');
       final state = container.read(authControllerProvider);
       expect(state.uid, isNotNull);
       expect(state.error, isNull);
+    });
+
+    test('signup rejects blank usernames', () async {
+      final controller = container.read(authControllerProvider.notifier);
+      await controller.signup('new@example.com', 'password', '   ');
+      final state = container.read(authControllerProvider);
+      expect(state.uid, isNull);
+      expect(state.error, isNotNull);
+      expect(state.error, contains('username'));
     });
 
     test('anonymous session is rejected on startup', () async {

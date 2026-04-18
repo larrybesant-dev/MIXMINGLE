@@ -61,13 +61,6 @@ class ProfileCard extends StatelessWidget {
           onInvite: onInvite,
           onJoin: onJoin,
         ),
-        const SizedBox(height: 14),
-        ProfileActivitySection(
-          currentRoom: currentRoom,
-          lastMessagePreview: lastMessagePreview,
-          mutualFriendsCount: mutualFriendsCount,
-          activities: activities,
-        ),
         const SizedBox(height: 10),
         _SecondaryActionsRow(
           onMute: onMute,
