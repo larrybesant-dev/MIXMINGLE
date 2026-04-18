@@ -133,11 +133,19 @@ class PresenceController extends Notifier<PresenceControllerState>
         ? PresenceAppState.detached
         : state.appState;
     state = state.copyWith(status: status, appState: nextAppState);
+    final userId = state.userId;
     if (status == UserStatus.offline) {
       _heartbeatTimer?.cancel();
       _heartbeatTimer = null;
-    } else if (_heartbeatTimer == null) {
+      if (userId != null) {
+        unawaited(_rtdb.disconnect(userId));
+      }
+    } else {
       _startHeartbeat();
+      if (userId != null) {
+        unawaited(_rtdb.connect(userId));
+        unawaited(_rtdb.heartbeat(userId));
+      }
     }
     await _writePresence();
   }
@@ -214,15 +222,19 @@ class PresenceController extends Notifier<PresenceControllerState>
     final nextAppState = _appStateForLifecycle(lifecycleState);
     state = state.copyWith(status: nextStatus, appState: nextAppState);
 
+    final userId = state.userId;
     if (nextStatus == UserStatus.offline) {
       _heartbeatTimer?.cancel();
       _heartbeatTimer = null;
-      final userId = state.userId;
-      if (userId != null) unawaited(_rtdb.disconnect(userId));
-    } else if (_heartbeatTimer == null) {
+      if (userId != null) {
+        unawaited(_rtdb.disconnect(userId));
+      }
+    } else {
       _startHeartbeat();
-      final userId = state.userId;
-      if (userId != null) unawaited(_rtdb.connect(userId));
+      if (userId != null) {
+        unawaited(_rtdb.connect(userId));
+        unawaited(_rtdb.heartbeat(userId));
+      }
     }
 
     await _writePresence();

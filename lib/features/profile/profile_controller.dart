@@ -278,6 +278,14 @@ class ProfileController extends Notifier<ProfileState> {
     try {
       final normalizedUsername = (profile.username ?? '').trim();
       final normalizedEmail = (profile.email ?? user?.email ?? '').trim();
+
+      if (normalizedUsername.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Username is required.',
+        );
+        return;
+      }
       final normalizedAvatar = (profile.avatarUrl ?? '').trim();
       final normalizedCover = (profile.coverPhotoUrl ?? '').trim();
       final normalizedGallery = profile.galleryUrls

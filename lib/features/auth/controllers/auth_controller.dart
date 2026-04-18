@@ -300,7 +300,22 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<void> signup(String email, String password) async {
+  Future<void> signup(String email, String password, String username) async {
+    final normalizedUsername = username.trim();
+    if (normalizedUsername.isEmpty) {
+      state = state.copyWith(
+        isLoading: false,
+        hasResolvedSession: true,
+        error: 'A username is required.',
+      );
+      AppTelemetry.updateAuthState(
+        userId: state.uid,
+        isLoading: false,
+        error: 'A username is required.',
+      );
+      return;
+    }
+
     state = state.copyWith(isLoading: true, error: null);
     AppTelemetry.updateAuthState(
       userId: state.uid,
@@ -502,7 +517,10 @@ class AuthController extends Notifier<AuthState> {
     AppTelemetry.updateAuthState(userId: null, isLoading: false, error: null);
   }
 
-  Future<void> _ensureUserDocument(User user) async {
+  Future<void> _ensureUserDocument(
+    User user, {
+    String? preferredUsername,
+  }) async {
     final firestore = _firestore ?? _tryResolveFirestore();
     if (firestore == null) {
       return;
@@ -515,7 +533,10 @@ class AuthController extends Notifier<AuthState> {
         path: 'users/${user.uid}',
         operation: 'ensure_user_document',
         userId: user.uid,
-        action: () => mutationService.createUserProfile(user: user),
+        action: () => mutationService.createUserProfile(
+          user: user,
+          preferredUsername: preferredUsername,
+        ),
       );
     } catch (e, st) {
       developer.log(

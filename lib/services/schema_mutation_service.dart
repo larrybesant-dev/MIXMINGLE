@@ -62,6 +62,7 @@ class SchemaMutationService {
 
   Future<void> createUserProfile({
     required User user,
+    String? preferredUsername,
     bool? mirrorLegacyAvatarInUsers,
   }) async {
     final userRef = _firestore.collection('users').doc(user.uid);
@@ -72,20 +73,28 @@ class SchemaMutationService {
     final userSnapshot = await userRef.get();
     final now = FieldValue.serverTimestamp();
     final existingData = userSnapshot.data() ?? const <String, dynamic>{};
-    final existingUsername =
-        (existingData['username'] as String?)?.trim() ?? '';
-    final authDisplayName = user.displayName?.trim() ?? '';
-    final emailHandle = (user.email?.split('@').first.trim() ?? '');
+    final existingUsername = _normalizeUsername(
+      (existingData['username'] as String?)?.trim(),
+    );
+    final authDisplayName = _normalizeUsername(user.displayName);
+    final emailHandle = _emailHandleFrom(user.email);
+    final normalizedPreferredUsername = _normalizeUsername(preferredUsername);
     final shouldReplaceAutofilledName =
         existingUsername.isEmpty ||
         _isPlaceholderPublicUsername(existingUsername);
     final publicUsername = shouldReplaceAutofilledName
-        ? (authDisplayName.isNotEmpty
-              ? authDisplayName
-              : (emailHandle.isNotEmpty
-                    ? emailHandle
-                    : _fallbackPublicUsername(user.uid)))
-        : existingUsername;
+        ? _resolvePublicUsername(
+            preferredUsername: normalizedPreferredUsername,
+            authDisplayName: authDisplayName,
+            emailHandle: emailHandle,
+            uid: user.uid,
+          )
+        : _resolvePublicUsername(
+            preferredUsername: existingUsername,
+            authDisplayName: authDisplayName,
+            emailHandle: emailHandle,
+            uid: user.uid,
+          );
 
     final identityPayload = <String, dynamic>{
       'username': publicUsername,
@@ -313,6 +322,38 @@ class SchemaMutationService {
     }
 
     await batch.commit();
+  }
+
+  String _normalizeUsername(String? value) {
+    final normalized = (value ?? '').trim().replaceAll(RegExp(r'\s+'), ' ');
+    return normalized;
+  }
+
+  String _emailHandleFrom(String? email) {
+    final normalized = (email ?? '').trim();
+    if (normalized.isEmpty || !normalized.contains('@')) {
+      return '';
+    }
+    return _normalizeUsername(normalized.split('@').first);
+  }
+
+  String _resolvePublicUsername({
+    String? preferredUsername,
+    String? authDisplayName,
+    String? emailHandle,
+    required String uid,
+  }) {
+    for (final candidate in <String?>[
+      preferredUsername,
+      authDisplayName,
+      emailHandle,
+    ]) {
+      final normalized = _normalizeUsername(candidate);
+      if (normalized.isNotEmpty) {
+        return normalized;
+      }
+    }
+    return _fallbackPublicUsername(uid);
   }
 
   bool _isPlaceholderPublicUsername(String value) {

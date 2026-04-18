@@ -21,6 +21,25 @@ service cloud.firestore {
         && (data.userA == request.auth.uid || data.userB == request.auth.uid);
     }
 
+    function canonicalFriendId(otherUserId) {
+      return request.auth.uid < otherUserId
+        ? request.auth.uid + '_' + otherUserId
+        : otherUserId + '_' + request.auth.uid;
+    }
+
+    function isAcceptedFriend(userId) {
+      return signedIn() && (
+        (
+          exists(/databases/$(database)/documents/friend_links/$(canonicalFriendId(userId)))
+          && get(/databases/$(database)/documents/friend_links/$(canonicalFriendId(userId))).data.status == 'accepted'
+        )
+        || (
+          exists(/databases/$(database)/documents/friendships/$(canonicalFriendId(userId)))
+          && get(/databases/$(database)/documents/friendships/$(canonicalFriendId(userId))).data.status == 'accepted'
+        )
+      );
+    }
+
     function isFriendLinkUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'updatedAt'])
         && request.resource.data.diff(resource.data).affectedKeys().hasAny(['friends'])
@@ -145,6 +164,7 @@ service cloud.firestore {
       allow read: if signedIn()
         && (
           isSelf(userId)
+          || isAcceptedFriend(userId)
           || !resource.data.get('isPrivate', false)
           || request.auth.uid in resource.data.get('followers', [])
         );

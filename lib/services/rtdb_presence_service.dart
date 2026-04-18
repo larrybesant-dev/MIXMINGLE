@@ -24,18 +24,39 @@ class RtdbPresenceService {
 
   final FirebaseDatabase _rtdb;
   String? _sessionId;
+  String? _inRoom;
+  bool _camOn = false;
+  bool _micOn = false;
 
   DatabaseReference _userRef(String userId) => _rtdb.ref('status/$userId');
 
   DatabaseReference _sessionsRef(String userId) =>
       _userRef(userId).child('sessions');
 
-  DatabaseReference _sessionRef(String userId) {
-    final sessionId = _sessionId;
-    if (sessionId == null || sessionId.trim().isEmpty) {
-      throw StateError('RTDB presence session is not initialized. Call connect() first.');
+  String _ensureSessionId() {
+    final existing = _sessionId;
+    if (existing != null && existing.trim().isNotEmpty) {
+      return existing;
     }
+    final created = _buildSessionId();
+    _sessionId = created;
+    return created;
+  }
+
+  DatabaseReference _sessionRef(String userId) {
+    final sessionId = _ensureSessionId();
     return _sessionsRef(userId).child(sessionId);
+  }
+
+  Map<String, Object?> _onlinePayload({bool includeSessionId = false}) {
+    return {
+      'online': true,
+      'last_seen': ServerValue.timestamp,
+      'in_room': _inRoom,
+      'cam_on': _camOn,
+      'mic_on': _micOn,
+      if (includeSessionId) 'session_id': _sessionId,
+    };
   }
 
   String _buildSessionId() {
@@ -46,7 +67,7 @@ class RtdbPresenceService {
   Future<void> connect(String userId) async {
     if (userId.trim().isEmpty) return;
     try {
-      _sessionId ??= _buildSessionId();
+      _ensureSessionId();
       final ref = _sessionRef(userId);
       final offlinePayload = {
         'online': false,
@@ -56,11 +77,7 @@ class RtdbPresenceService {
         'mic_on': false,
       };
       await ref.onDisconnect().set(offlinePayload);
-      await ref.update({
-        'online': true,
-        'last_seen': ServerValue.timestamp,
-        'session_id': _sessionId,
-      });
+      await ref.update(_onlinePayload(includeSessionId: true));
     } catch (e, st) {
       debugPrint('[RTDB] connect error (non-fatal): $e\n$st');
     }
@@ -77,6 +94,7 @@ class RtdbPresenceService {
 
   Future<void> setInRoom(String userId, String roomId) async {
     if (userId.trim().isEmpty) return;
+    _inRoom = roomId.trim().isEmpty ? null : roomId.trim();
     try {
       final ref = _sessionRef(userId);
       await ref.onDisconnect().update({
@@ -86,7 +104,7 @@ class RtdbPresenceService {
         'cam_on': false,
         'mic_on': false,
       });
-      await ref.update({'in_room': roomId});
+      await ref.update(_onlinePayload());
     } catch (e) {
       debugPrint('[RTDB] setInRoom error (non-fatal): $e');
     }
@@ -94,12 +112,11 @@ class RtdbPresenceService {
 
   Future<void> clearInRoom(String userId) async {
     if (userId.trim().isEmpty) return;
+    _inRoom = null;
+    _camOn = false;
+    _micOn = false;
     try {
-      await _sessionRef(userId).update({
-        'in_room': null,
-        'cam_on': false,
-        'mic_on': false,
-      });
+      await _sessionRef(userId).update(_onlinePayload());
     } catch (e) {
       debugPrint('[RTDB] clearInRoom error (non-fatal): $e');
     }
@@ -107,15 +124,17 @@ class RtdbPresenceService {
 
   Future<void> setCamOn(String userId, {required bool camOn}) async {
     if (userId.trim().isEmpty) return;
+    _camOn = camOn;
     try {
-      await _sessionRef(userId).update({'cam_on': camOn});
+      await _sessionRef(userId).update(_onlinePayload());
     } catch (_) {}
   }
 
   Future<void> setMicOn(String userId, {required bool micOn}) async {
     if (userId.trim().isEmpty) return;
+    _micOn = micOn;
     try {
-      await _sessionRef(userId).update({'mic_on': micOn});
+      await _sessionRef(userId).update(_onlinePayload());
     } catch (_) {}
   }
 
@@ -129,22 +148,27 @@ class RtdbPresenceService {
       debugPrint('[RTDB] disconnect error (non-fatal): $e');
     } finally {
       _sessionId = null;
+      _inRoom = null;
+      _camOn = false;
+      _micOn = false;
     }
   }
 
   Stream<bool> watchOnline(String userId) {
     if (userId.trim().isEmpty) return Stream.value(false);
     try {
-      return _sessionsRef(userId).onValue.map((event) {
-        final raw = event.snapshot.value;
-        if (raw is! Map) return false;
-        for (final value in raw.values) {
-          if (value is Map && value['online'] == true) {
-            return true;
-          }
-        }
-        return false;
-      }).handleError((_) => false);
+      return _sessionsRef(userId).onValue
+          .map((event) {
+            final raw = event.snapshot.value;
+            if (raw is! Map) return false;
+            for (final value in raw.values) {
+              if (value is Map && value['online'] == true) {
+                return true;
+              }
+            }
+            return false;
+          })
+          .handleError((_) => false);
     } catch (_) {
       return Stream.value(false);
     }

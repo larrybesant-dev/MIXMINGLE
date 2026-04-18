@@ -1,9 +1,57 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:mixvy/core/providers/firebase_providers.dart';
 import 'package:mixvy/models/presence_model.dart';
+import 'package:mixvy/services/presence_controller.dart';
+import 'package:mixvy/services/presence_repository.dart';
 import 'package:mixvy/services/presence_service.dart';
+import 'package:mixvy/services/rtdb_presence_service.dart';
+
+import 'test_helpers.dart';
+
+class _MockFirebaseDatabase extends Mock implements FirebaseDatabase {}
+
+class _TestablePresenceController extends PresenceController {
+  @override
+  PresenceControllerState build() => const PresenceControllerState(
+    userId: 'user-1',
+    status: UserStatus.online,
+    appState: PresenceAppState.foreground,
+  );
+}
+
+class _FakeRtdbPresenceService extends RtdbPresenceService {
+  _FakeRtdbPresenceService() : super(_MockFirebaseDatabase());
+
+  int connectCalls = 0;
+  int heartbeatCalls = 0;
+  int disconnectCalls = 0;
+
+  @override
+  Future<void> connect(String userId) async {
+    connectCalls += 1;
+  }
+
+  @override
+  Future<void> heartbeat(String userId) async {
+    heartbeatCalls += 1;
+  }
+
+  @override
+  Future<void> disconnect(String userId) async {
+    disconnectCalls += 1;
+  }
+}
 
 void main() {
+  setUpAll(() async {
+    await testSetup();
+  });
+
   group('PresenceModel.fromJson', () {
     test('reads current schema fields', () {
       final model = PresenceModel.fromJson({
@@ -35,35 +83,119 @@ void main() {
       expect(model.inRoom, 'room-b');
     });
 
-    test('treats missing online fields as offline unless status says otherwise', () {
-      final offline = PresenceModel.fromJson({'userId': 'user-3'});
-      final online = PresenceModel.fromJson({
-        'userId': 'user-4',
-        'status': 'online',
+    test(
+      'treats missing online fields as offline unless status says otherwise',
+      () {
+        final offline = PresenceModel.fromJson({'userId': 'user-3'});
+        final online = PresenceModel.fromJson({
+          'userId': 'user-4',
+          'status': 'online',
+          'lastSeen': DateTime.now().toIso8601String(),
+        });
+
+        expect(offline.isOnline, isFalse);
+        expect(offline.status, UserStatus.offline);
+        expect(online.isOnline, isTrue);
+        expect(online.status, UserStatus.online);
+      },
+    );
+
+    test('treats active session count as online truth', () {
+      final model = PresenceModel.fromJson({
+        'userId': 'user-5',
+        'isOnline': false,
+        'status': 'offline',
+        'rtdbActiveSessionCount': 2,
         'lastSeen': DateTime.now().toIso8601String(),
       });
 
-      expect(offline.isOnline, isFalse);
-      expect(offline.status, UserStatus.offline);
-      expect(online.isOnline, isTrue);
-      expect(online.status, UserStatus.online);
+      expect(model.isOnline, isTrue);
+      expect(model.status, UserStatus.online);
+      expect(model.activeSessionCount, 2);
     });
   });
 
   group('PresenceService', () {
-    test('reads presence snapshots through PresenceModel normalization', () async {
-      final firestore = FakeFirebaseFirestore();
-      final service = PresenceService(firestore: firestore);
-      await firestore.collection('users').doc('placeholder').set({'ok': true});
+    test(
+      'reads presence snapshots through PresenceModel normalization',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        final service = PresenceService(firestore: firestore);
+        await firestore.collection('users').doc('placeholder').set({
+          'ok': true,
+        });
 
-      final emissions = <PresenceModel>[];
-      final sub = service.watchUserPresence('user-1').listen(emissions.add);
+        final emissions = <PresenceModel>[];
+        final sub = service.watchUserPresence('user-1').listen(emissions.add);
 
-      await firestore.collection('users').doc('placeholder-2').set({'ok': true});
+        await firestore.collection('users').doc('placeholder-2').set({
+          'ok': true,
+        });
 
-      expect(emissions, isNotEmpty);
+        expect(emissions, isNotEmpty);
 
-      await sub.cancel();
+        await sub.cancel();
+      },
+    );
+  });
+
+  group('PresenceRepository arbitration', () {
+    test(
+      'holds recent online presence through a transient offline flip',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        final repository = FirestorePresenceRepository(firestore);
+        final emissions = <PresenceModel>[];
+
+        final sub = repository
+            .watchUserPresence('user-1')
+            .listen(emissions.add);
+        await firestore.collection('presence').doc('user-1').set({
+          'isOnline': true,
+          'status': 'online',
+          'lastSeen': Timestamp.fromDate(DateTime.now()),
+        });
+        await firestore.collection('presence').doc('user-1').set({
+          'isOnline': false,
+          'status': 'offline',
+          'lastSeen': Timestamp.fromDate(DateTime.now()),
+        });
+        await Future<void>.delayed(Duration.zero);
+
+        expect(emissions, isNotEmpty);
+        expect(emissions.last.isOnline, isTrue);
+
+        await sub.cancel();
+      },
+    );
+  });
+
+  group('PresenceController reconnect hardening', () {
+    test('resume forces a fresh connect and heartbeat', () async {
+      final fakeRtdb = _FakeRtdbPresenceService();
+      final container = ProviderContainer(
+        overrides: [
+          presenceControllerProvider.overrideWith(
+            _TestablePresenceController.new,
+          ),
+          rtdbPresenceServiceProvider.overrideWithValue(fakeRtdb),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(presenceControllerProvider.notifier);
+      container.read(presenceControllerProvider);
+
+      notifier.didChangeAppLifecycleState(AppLifecycleState.hidden);
+      await Future<void>.delayed(Duration.zero);
+      final connectsAfterHidden = fakeRtdb.connectCalls;
+
+      notifier.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(connectsAfterHidden, greaterThan(0));
+      expect(fakeRtdb.connectCalls, greaterThan(connectsAfterHidden));
+      expect(fakeRtdb.heartbeatCalls, greaterThan(0));
     });
   });
 }

@@ -75,6 +75,20 @@ class FriendService {
         .toList(growable: false);
   }
 
+  void _logReadFallback({
+    required String action,
+    required String details,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    developer.log(
+      '$action $details',
+      name: 'FriendService',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
   List<List<String>> _chunksOf(List<String> values, int size) {
     if (values.isEmpty) {
       return const <List<String>>[];
@@ -862,11 +876,45 @@ class FriendService {
     final uniqueIds = userIds.toSet().toList(growable: false);
     final usersById = <String, UserModel>{};
     for (final chunk in _chunksOf(uniqueIds, _firestoreWhereInLimit)) {
-      final query = await _usersCollection
-          .where(FieldPath.documentId, whereIn: chunk)
-          .get();
-      for (final doc in query.docs) {
-        usersById[doc.id] = UserModel.fromJson({'id': doc.id, ...doc.data()});
+      try {
+        final query = await _usersCollection
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+        for (final doc in query.docs) {
+          usersById[doc.id] = UserModel.fromJson({'id': doc.id, ...doc.data()});
+        }
+      } catch (error, stackTrace) {
+        if (!_isPermissionDenied(error)) {
+          rethrow;
+        }
+        _logReadFallback(
+          action: 'users_query_permission_denied',
+          details: 'path=users ids=${chunk.join(',')}',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        for (final userId in chunk) {
+          try {
+            final doc = await _usersCollection.doc(userId).get();
+            if (doc.exists) {
+              usersById[doc.id] = UserModel.fromJson({
+                'id': doc.id,
+                ...?doc.data(),
+              });
+            }
+          } catch (docError, docStackTrace) {
+            if (_isPermissionDenied(docError)) {
+              _logReadFallback(
+                action: 'user_doc_permission_denied',
+                details: 'path=users/$userId',
+                error: docError,
+                stackTrace: docStackTrace,
+              );
+              continue;
+            }
+            rethrow;
+          }
+        }
       }
     }
 
@@ -959,20 +1007,55 @@ class FriendService {
         : await _moderationService.getExcludedUserIds(currentUserId);
 
     QuerySnapshot<Map<String, dynamic>> snapshot;
-    if (normalizedQuery.isEmpty) {
-      snapshot = await _usersCollection
-          .orderBy('createdAt', descending: true)
-          .limit(50)
-          .get();
-    } else {
-      snapshot = await _usersCollection
-          .where('usernameLower', isGreaterThanOrEqualTo: normalizedQuery)
-          .where('usernameLower', isLessThan: '$normalizedQuery\uf8ff')
-          .limit(20)
-          .get();
+    try {
+      if (normalizedQuery.isEmpty) {
+        snapshot = await _usersCollection
+            .where('isPrivate', isEqualTo: false)
+            .orderBy('createdAt', descending: true)
+            .limit(50)
+            .get();
+      } else {
+        snapshot = await _usersCollection
+            .where('isPrivate', isEqualTo: false)
+            .where('usernameLower', isGreaterThanOrEqualTo: normalizedQuery)
+            .where('usernameLower', isLessThan: '$normalizedQuery\uf8ff')
+            .limit(20)
+            .get();
+      }
+    } catch (error, stackTrace) {
+      if (!_isPermissionDenied(error)) {
+        rethrow;
+      }
+      _logReadFallback(
+        action: 'search_users_permission_denied',
+        details: 'path=users query=$normalizedQuery',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return const <UserModel>[];
+    }
+
+    if (snapshot.docs.isEmpty) {
+      try {
+        if (normalizedQuery.isEmpty) {
+          snapshot = await _usersCollection
+              .orderBy('createdAt', descending: true)
+              .limit(50)
+              .get();
+        } else {
+          snapshot = await _usersCollection
+              .where('usernameLower', isGreaterThanOrEqualTo: normalizedQuery)
+              .where('usernameLower', isLessThan: '$normalizedQuery\uf8ff')
+              .limit(20)
+              .get();
+        }
+      } catch (_) {
+        // Keep the safer public-only query result when the legacy fallback is denied.
+      }
     }
 
     return snapshot.docs
+        .where((doc) => (doc.data()['isPrivate'] as bool?) != true)
         .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
         .where((user) => user.id.isNotEmpty)
         .where((user) => user.id != currentUserId)
@@ -1030,20 +1113,77 @@ class FriendService {
         chunks.length,
         (_) => <String, UserModel>{},
       );
-      final subscriptions =
-          <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+      final subscriptions = <StreamSubscription<dynamic>>[];
+      var usingDocumentFallback = false;
 
-      void emit() {
-        final merged = <String, UserModel>{};
-        for (final chunkMap in chunkMaps) {
-          merged.addAll(chunkMap);
-        }
+      void emitMerged(Map<String, UserModel> merged) {
         controller.add(
           normalizedIds
               .map((userId) => merged[userId])
               .whereType<UserModel>()
               .toList(growable: false),
         );
+      }
+
+      void emit() {
+        final merged = <String, UserModel>{};
+        for (final chunkMap in chunkMaps) {
+          merged.addAll(chunkMap);
+        }
+        emitMerged(merged);
+      }
+
+      Future<void> switchToDocumentFallback() async {
+        if (usingDocumentFallback) {
+          return;
+        }
+        usingDocumentFallback = true;
+
+        for (final sub in subscriptions) {
+          await sub.cancel();
+        }
+        subscriptions.clear();
+
+        final usersById = <String, UserModel>{};
+
+        void emitFallback() => emitMerged(usersById);
+
+        for (final userId in normalizedIds) {
+          final sub = _usersCollection
+              .doc(userId)
+              .snapshots()
+              .listen(
+                (doc) {
+                  final data = doc.data();
+                  if (!doc.exists || data == null) {
+                    usersById.remove(userId);
+                  } else {
+                    usersById[userId] = UserModel.fromJson({
+                      'id': doc.id,
+                      ...data,
+                    });
+                  }
+                  emitFallback();
+                },
+                onError: (error, stackTrace) {
+                  if (_isPermissionDenied(error)) {
+                    usersById.remove(userId);
+                    _logReadFallback(
+                      action: 'user_stream_permission_denied',
+                      details: 'path=users/$userId',
+                      error: error,
+                      stackTrace: stackTrace,
+                    );
+                    emitFallback();
+                    return;
+                  }
+                  controller.addError(error, stackTrace);
+                },
+              );
+          subscriptions.add(sub);
+        }
+
+        emitFallback();
       }
 
       for (var index = 0; index < chunks.length; index += 1) {
@@ -1053,6 +1193,9 @@ class FriendService {
             .snapshots()
             .listen(
               (snapshot) {
+                if (usingDocumentFallback) {
+                  return;
+                }
                 chunkMaps[index] = {
                   for (final doc in snapshot.docs)
                     doc.id: UserModel.fromJson({'id': doc.id, ...doc.data()}),
@@ -1061,8 +1204,13 @@ class FriendService {
               },
               onError: (error, stackTrace) {
                 if (_isPermissionDenied(error)) {
-                  chunkMaps[index] = <String, UserModel>{};
-                  emit();
+                  _logReadFallback(
+                    action: 'users_stream_query_permission_denied',
+                    details: 'path=users ids=${chunk.join(',')}',
+                    error: error,
+                    stackTrace: stackTrace,
+                  );
+                  unawaited(switchToDocumentFallback());
                   return;
                 }
                 controller.addError(error, stackTrace);

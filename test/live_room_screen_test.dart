@@ -249,11 +249,7 @@ void main() {
           ),
           roomStreamProvider.overrideWith(
             (ref, roomId) => Stream.value(
-              RoomModel(
-                id: roomId,
-                name: 'Room A',
-                hostId: 'host-1',
-              ),
+              RoomModel(id: roomId, name: 'Room A', hostId: 'host-1'),
             ),
           ),
           roomPolicyProvider.overrideWith(
@@ -368,7 +364,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('No messages yet'), findsOneWidget);
-    expect(find.textContaining('1 online'), findsOneWidget);
+    expect(find.text('In Room 1'), findsOneWidget);
     expect(find.text('Room warming up'), findsWidgets);
     expect(
       find.textContaining('1 here • 0 on mic • 0 watching cam'),
@@ -424,12 +420,13 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen(
+      final subscription = container.listen(
         roomControllerProvider('room-a'),
         (_, __) {},
-        fireImmediately: true,
       );
+      addTearDown(subscription.close);
 
+      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(Duration.zero);
 
       final state = container.read(roomControllerProvider('room-a'));
@@ -508,7 +505,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.text('On Cam 1'), findsOneWidget);
-      expect(find.text('Chatting 1'), findsOneWidget);
+      expect(find.text('In Room 1'), findsOneWidget);
       expect(
         find.text('No one else is here yet. Invite people to join the room.'),
         findsNothing,
@@ -587,7 +584,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.text('On Cam 1'), findsOneWidget);
-      expect(find.text('Chatting 1'), findsOneWidget);
+      expect(find.text('In Room 1'), findsOneWidget);
       expect(find.textContaining('(You)'), findsWidgets);
 
       await tester.pump(const Duration(seconds: 3));
@@ -847,7 +844,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Chatting 1'), findsOneWidget);
+    expect(find.text('In Room 1'), findsOneWidget);
     expect(find.text('OfflineUser'), findsNothing);
 
     await tester.pump(const Duration(seconds: 3));
@@ -1034,7 +1031,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Ghost'), findsOneWidget);
+      expect(find.text('In Room 1'), findsOneWidget);
+      expect(
+        find.textContaining('i should not be in the room list'),
+        findsOneWidget,
+      );
 
       await tester.pump(const Duration(seconds: 3));
     },
@@ -1135,7 +1136,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Chatting 2'), findsOneWidget);
+      expect(find.text('In Room 2'), findsOneWidget);
       expect(find.text('Harley'), findsWidgets);
 
       await tester.pump(const Duration(seconds: 3));
@@ -1228,7 +1229,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Chatting 2'), findsOneWidget);
+      expect(find.text('In Room 2'), findsOneWidget);
       expect(find.text('Harley'), findsWidgets);
 
       await tester.pump(const Duration(seconds: 3));
@@ -1324,7 +1325,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Chatting 2'), findsOneWidget);
+      expect(find.text('In Room 2'), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 3));
     },
@@ -1389,7 +1390,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text('Chatting 1'), findsOneWidget);
+      expect(find.text('In Room 1'), findsOneWidget);
       expect(find.textContaining('VelvetHandle'), findsWidgets);
 
       await tester.pump(const Duration(seconds: 3));
@@ -1604,7 +1605,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Chatting 3'), findsOneWidget);
+    expect(find.text('In Room 3'), findsOneWidget);
 
     await tester.tap(find.byTooltip('People in room').first);
     await tester.pump();

@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -67,7 +69,10 @@ int _asInt(dynamic value, {int fallback = 0}) {
 List<String> _asStringList(dynamic value) {
   if (value is List) {
     return value
-        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .map(
+          (item) =>
+              item is String ? item.trim() : item?.toString().trim() ?? '',
+        )
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
   }
@@ -160,26 +165,53 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
 });
 
 // Search users by name or username
-final searchUsersProvider = FutureProvider.family<List<SearchUser>, String>((ref, query) async {
+final searchUsersProvider = FutureProvider.family<List<SearchUser>, String>((
+  ref,
+  query,
+) async {
   if (query.isEmpty) return [];
 
   final firestore = ref.watch(firestoreProvider);
-  final lowerQuery = query.toLowerCase();
+  final lowerQuery = query.trim().toLowerCase();
 
-  final snapshot = await firestore
-      .collection('users')
-      .where('username', isGreaterThanOrEqualTo: lowerQuery)
-      .where('username', isLessThan: '${lowerQuery}z')
-      .limit(20)
-      .get();
+  try {
+    var snapshot = await firestore
+        .collection('users')
+        .where('isPrivate', isEqualTo: false)
+        .where('usernameLower', isGreaterThanOrEqualTo: lowerQuery)
+        .where('usernameLower', isLessThan: '$lowerQuery\uf8ff')
+        .limit(20)
+        .get();
 
-  return snapshot.docs
-      .map((doc) => SearchUser.fromJson(doc.data(), doc.id))
-      .toList();
+    if (snapshot.docs.isEmpty) {
+      snapshot = await firestore
+          .collection('users')
+          .where('usernameLower', isGreaterThanOrEqualTo: lowerQuery)
+          .where('usernameLower', isLessThan: '$lowerQuery\uf8ff')
+          .limit(20)
+          .get();
+    }
+
+    return snapshot.docs
+        .where((doc) => (doc.data()['isPrivate'] as bool?) != true)
+        .map((doc) => SearchUser.fromJson(doc.data(), doc.id))
+        .toList();
+  } on FirebaseException catch (error, stackTrace) {
+    developer.log(
+      'searchUsersProvider query failed for "$lowerQuery"',
+      name: 'search_provider',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    return const <SearchUser>[];
+  }
 });
 
 // Search posts by content
-final searchPostsProvider = FutureProvider.family<List<SearchPost>, String>((ref, query) async {
+final searchPostsProvider = FutureProvider.family<List<SearchPost>, String>((
+  ref,
+  query,
+) async {
   if (query.isEmpty) return [];
 
   final firestore = ref.watch(firestoreProvider);
@@ -197,25 +229,26 @@ final searchPostsProvider = FutureProvider.family<List<SearchPost>, String>((ref
 });
 
 // Search hashtags
-final searchHashtagsProvider = FutureProvider.family<List<SearchHashtag>, String>((ref, query) async {
-  if (query.isEmpty) return [];
+final searchHashtagsProvider =
+    FutureProvider.family<List<SearchHashtag>, String>((ref, query) async {
+      if (query.isEmpty) return [];
 
-  final firestore = ref.watch(firestoreProvider);
-  final lowerQuery = query.toLowerCase().replaceAll('#', '');
+      final firestore = ref.watch(firestoreProvider);
+      final lowerQuery = query.toLowerCase().replaceAll('#', '');
 
-  final snapshot = await firestore
-      .collection('hashtags')
-      .where('hashtag', isGreaterThanOrEqualTo: lowerQuery)
-      .where('hashtag', isLessThan: '${lowerQuery}z')
-      .orderBy('hashtag')
-      .orderBy('postCount', descending: true)
-      .limit(10)
-      .get();
+      final snapshot = await firestore
+          .collection('hashtags')
+          .where('hashtag', isGreaterThanOrEqualTo: lowerQuery)
+          .where('hashtag', isLessThan: '${lowerQuery}z')
+          .orderBy('hashtag')
+          .orderBy('postCount', descending: true)
+          .limit(10)
+          .get();
 
-  return snapshot.docs
-      .map((doc) => SearchHashtag.fromJson(doc.data(), doc.id))
-      .toList();
-});
+      return snapshot.docs
+          .map((doc) => SearchHashtag.fromJson(doc.data(), doc.id))
+          .toList();
+    });
 
 /// Returns the 50 most-recently joined users — shown on the People tab before
 /// the user has typed anything.
@@ -232,7 +265,9 @@ final browseAllUsersProvider = FutureProvider<List<SearchUser>>((ref) async {
 });
 
 // Trending hashtags
-final trendingHashtagsProvider = FutureProvider<List<SearchHashtag>>((ref) async {
+final trendingHashtagsProvider = FutureProvider<List<SearchHashtag>>((
+  ref,
+) async {
   final firestore = ref.watch(firestoreProvider);
 
   final snapshot = await firestore

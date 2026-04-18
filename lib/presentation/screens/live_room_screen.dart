@@ -4027,17 +4027,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           for (final participantItem in rosterParticipants)
             participantItem.userId: participantItem,
         };
-        if (rosterSelfParticipant != null ||
-            liveRoomState.shouldRenderUser(user.id)) {
+        final shouldForceIncludeSelf =
+            participant != null ||
+            rosterSelfParticipant != null ||
+            liveRoomState.shouldRenderUser(user.id);
+        if (shouldForceIncludeSelf) {
           participantById[user.id] = effectiveSelfParticipant;
         }
         final stateBackedUserIds = <String>{
           ...liveRoomState.stableUserIds.where(liveRoomState.shouldRenderUser),
           ...liveRoomState.users.where(liveRoomState.shouldRenderUser),
           ...rosterParticipants.map((p) => p.userId),
-          if (rosterSelfParticipant != null ||
-              liveRoomState.shouldRenderUser(user.id))
-            user.id,
+          if (shouldForceIncludeSelf) user.id,
         };
         final rawParticipantsInRoom = stateBackedUserIds
             .map((userId) {
@@ -4124,7 +4125,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           if (participantItem == null || participantItem.isBanned) {
             return false;
           }
-          return liveRoomState.isOnMicByAuthority(participantItem.userId);
+          if (liveRoomState.isOnMicByAuthority(participantItem.userId)) {
+            return true;
+          }
+
+          final normalizedRole = participantItem.role.trim().toLowerCase();
+          return participantItem.userId == user.id &&
+              (participantItem.micOn ||
+                  normalizedRole == 'stage' ||
+                  normalizedRole == 'host' ||
+                  normalizedRole == 'owner' ||
+                  normalizedRole == 'cohost' ||
+                  localMicActive);
         }
 
         final onMicCount = participantsInRoom
@@ -4270,9 +4282,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(e.toString())),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(e.toString())));
             }
           } finally {
             if (mounted) {
@@ -5700,7 +5712,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                                     !allowChat ||
                                                     hasBlockedParticipantInRoom
                                                 ? null
-                                                : (_) => handleSubmitChatMessage(),
+                                                : (_) =>
+                                                      handleSubmitChatMessage(),
                                             decoration: InputDecoration(
                                               hintText:
                                                   participant?.isMuted == true

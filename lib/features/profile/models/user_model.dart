@@ -69,7 +69,7 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: _stringOrEmpty(json['id'] ?? json['uid']),
         email: _stringOrEmpty(json['email']),
-        username: _stringOrEmpty(json['username']),
+        username: _resolvedUsername(json),
         avatarUrl: _stringOrNull(json['avatarUrl']),
         coverPhotoUrl: _stringOrNull(json['coverPhotoUrl']),
         galleryUrls: _stringList(json['galleryUrls']),
@@ -124,6 +124,34 @@ class UserModel {
         .whereType<String>()
         .toSet()
         .toList(growable: false);
+  }
+
+  static String _resolvedUsername(Map<String, dynamic> json) {
+    final explicit = _stringOrNull(json['username']);
+    if (explicit != null) {
+      return explicit;
+    }
+
+    final displayName = _stringOrNull(json['displayName'] ?? json['name']);
+    if (displayName != null) {
+      return displayName;
+    }
+
+    final email = _stringOrNull(json['email']);
+    if (email != null && email.contains('@')) {
+      final handle = email.split('@').first.trim();
+      if (handle.isNotEmpty) {
+        return handle;
+      }
+    }
+
+    final id = _stringOrNull(json['id'] ?? json['uid']) ?? '';
+    final compact = id.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+    if (compact.isEmpty) {
+      return 'MixVy Member';
+    }
+    final suffix = compact.substring(0, compact.length < 4 ? compact.length : 4);
+    return 'Member $suffix';
   }
 
   static bool _boolOr(dynamic value, {required bool fallback}) {

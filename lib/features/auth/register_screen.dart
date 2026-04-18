@@ -32,6 +32,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -53,22 +54,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   @override
   void dispose() {
     _animController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   void _register() async {
+    final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     if (_formKey.currentState?.validate() != true) return;
-    if (email.isEmpty || password.isEmpty) {
-      setState(() => _localError = 'Email and password are required.');
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      setState(() => _localError = 'Username, email, and password are required.');
       return;
     }
     setState(() => _localError = null);
     final controller = ref.read(authControllerProvider.notifier);
-    await controller.signup(email, password);
+    await controller.signup(email, password, username);
     final authState = ref.read(authControllerProvider);
     if (!mounted) return;
     setState(() => _localError = authState.error);
@@ -408,6 +411,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   const SizedBox(height: 20),
                   _orDivider(),
                   const SizedBox(height: 20),
+
+                  _brandInput(
+                    controller: _usernameController,
+                    hint: 'Username',
+                    prefixIcon: Icons.alternate_email_rounded,
+                    validator: (v) {
+                      final value = (v ?? '').trim();
+                      if (value.isEmpty) return 'Username is required';
+                      if (value.length < 3) return 'Minimum 3 characters';
+                      return null;
+                    },
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 12),
 
                   // ── Email ────────────────────────────────────────────
                   _brandInput(

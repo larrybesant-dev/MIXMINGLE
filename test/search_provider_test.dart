@@ -34,16 +34,33 @@ void main() {
       expect(results, isEmpty);
     });
 
-    test('SearchUser.fromJson maps fields correctly', () {
-      final user = SearchUser.fromJson(
-        {
-          'username': 'jazzqueen',
-          'avatarUrl': 'https://example.com/avatar.png',
-          'isVerified': true,
-          'followerCount': 42,
-        },
-        'user-1',
+    test('search only returns public users', () async {
+      await firestore.collection('users').doc('public-1').set({
+        'username': 'velvetqueen',
+        'usernameLower': 'velvetqueen',
+        'isPrivate': false,
+      });
+      await firestore.collection('users').doc('private-1').set({
+        'username': 'velvethidden',
+        'usernameLower': 'velvethidden',
+        'isPrivate': true,
+      });
+
+      final results = await container.read(
+        searchUsersProvider('velvet').future,
       );
+
+      expect(results.map((user) => user.id), contains('public-1'));
+      expect(results.map((user) => user.id), isNot(contains('private-1')));
+    });
+
+    test('SearchUser.fromJson maps fields correctly', () {
+      final user = SearchUser.fromJson({
+        'username': 'jazzqueen',
+        'avatarUrl': 'https://example.com/avatar.png',
+        'isVerified': true,
+        'followerCount': 42,
+      }, 'user-1');
 
       expect(user.id, 'user-1');
       expect(user.username, 'jazzqueen');
@@ -86,17 +103,14 @@ void main() {
 
     test('SearchPost.fromJson maps fields correctly', () {
       final now = DateTime(2026, 4, 1);
-      final post = SearchPost.fromJson(
-        {
-          'authorId': 'user-1',
-          'authorName': 'Jazz Queen',
-          'content': 'Late night vibes',
-          'hashtags': ['jazz', 'vibes'],
-          'createdAt': now.toIso8601String(),
-          'likeCount': 10,
-        },
-        'post-1',
-      );
+      final post = SearchPost.fromJson({
+        'authorId': 'user-1',
+        'authorName': 'Jazz Queen',
+        'content': 'Late night vibes',
+        'hashtags': ['jazz', 'vibes'],
+        'createdAt': now.toIso8601String(),
+        'likeCount': 10,
+      }, 'post-1');
 
       expect(post.id, 'post-1');
       expect(post.authorId, 'user-1');
@@ -109,10 +123,7 @@ void main() {
 
   group('SearchHashtag.fromJson', () {
     test('maps postCount and falls back gracefully', () {
-      final tag = SearchHashtag.fromJson(
-        {'postCount': 99},
-        '#velvet',
-      );
+      final tag = SearchHashtag.fromJson({'postCount': 99}, '#velvet');
       expect(tag.hashtag, '#velvet');
       expect(tag.postCount, 99);
     });

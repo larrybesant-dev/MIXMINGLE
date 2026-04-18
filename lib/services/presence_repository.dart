@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +24,7 @@ class FirestorePresenceRepository implements PresenceRepository {
   FirestorePresenceRepository(this._firestore);
 
   static const int _firestoreWhereInLimit = 30;
+  static const Duration _transientOfflineHold = Duration(seconds: 8);
 
   final FirebaseFirestore _firestore;
 
@@ -68,15 +70,96 @@ class FirestorePresenceRepository implements PresenceRepository {
     return PresenceModel.fromJson({'userId': userId, ...data});
   }
 
+  bool _isFresh(DateTime? value, Duration threshold) {
+    if (value == null) {
+      return false;
+    }
+    return DateTime.now().difference(value) <= threshold;
+  }
+
+  PresenceModel _arbitratePresence(
+    String userId,
+    PresenceModel next, {
+    PresenceModel? previous,
+  }) {
+    if (previous == null) {
+      return next;
+    }
+
+    final nextOnline = next.isOnline == true;
+    final previousOnline = previous.isOnline == true;
+    if (nextOnline || !previousOnline) {
+      return next;
+    }
+
+    final recentSignal =
+        next.activeSessionCount > 0 ||
+        _isFresh(next.lastSeen, _transientOfflineHold) ||
+        _isFresh(previous.lastSeen, _transientOfflineHold);
+
+    if (!recentSignal) {
+      return next;
+    }
+
+    developer.log(
+      'presence_offline_hold_applied userId=$userId lastSeen=${next.lastSeen?.toIso8601String() ?? previous.lastSeen?.toIso8601String() ?? '-'}',
+      name: 'PresenceRepository',
+    );
+
+    return next.copyWith(
+      isOnline: true,
+      online: true,
+      status: previous.status == UserStatus.offline
+          ? UserStatus.online
+          : previous.status,
+      inRoom: next.inRoom ?? previous.inRoom,
+      roomId: next.roomId ?? previous.roomId,
+      activeSessionCount: next.activeSessionCount > 0
+          ? next.activeSessionCount
+          : previous.activeSessionCount,
+    );
+  }
+
   @override
   Stream<PresenceModel> watchUserPresence(String userId) {
-    return traceFirestoreStream<PresenceModel>(
-      key: 'presence/$userId',
-      query: 'presence/$userId',
-      userId: userId,
-      itemCount: (_) => 1,
-      stream: _ref(userId).snapshots().map((doc) => _parsePresence(userId, doc.data())),
-    );
+    return Stream.multi((controller) {
+      PresenceModel? lastPresence;
+      final subscription =
+          traceFirestoreStream<PresenceModel>(
+            key: 'presence/$userId',
+            query: 'presence/$userId',
+            userId: userId,
+            itemCount: (_) => 1,
+            stream: _ref(
+              userId,
+            ).snapshots().map((doc) => _parsePresence(userId, doc.data())),
+          ).listen(
+            (presence) {
+              final resolved = _arbitratePresence(
+                userId,
+                presence,
+                previous: lastPresence,
+              );
+              lastPresence = resolved;
+              controller.add(resolved);
+            },
+            onError: (error, stackTrace) {
+              if (_isPermissionDenied(error)) {
+                developer.log(
+                  'presence_watch_permission_denied userId=$userId path=presence/$userId',
+                  name: 'PresenceRepository',
+                  error: error,
+                  stackTrace: stackTrace,
+                );
+                controller.add(_parsePresence(userId, null));
+                return;
+              }
+              controller.addError(error, stackTrace);
+            },
+          );
+
+      controller.onCancel = () => subscription.cancel();
+    });
   }
 
   @override
@@ -94,11 +177,21 @@ class FirestorePresenceRepository implements PresenceRepository {
       final subscriptions = <StreamSubscription>[];
       var usingDocumentFallback = false;
 
+      final lastEmitted = <String, PresenceModel>{};
+
       void emitFrom(Map<String, PresenceModel> source) {
-        controller.add({
+        final resolved = <String, PresenceModel>{
           for (final userId in normalizedIds)
-            userId: source[userId] ?? _parsePresence(userId, null),
-        });
+            userId: _arbitratePresence(
+              userId,
+              source[userId] ?? _parsePresence(userId, null),
+              previous: lastEmitted[userId],
+            ),
+        };
+        lastEmitted
+          ..clear()
+          ..addAll(resolved);
+        controller.add(resolved);
       }
 
       Future<void> switchToDocumentFallback() async {
@@ -116,17 +209,20 @@ class FirestorePresenceRepository implements PresenceRepository {
         void emit() => emitFrom(presenceById);
 
         for (final userId in normalizedIds) {
-          final sub = _ref(userId).snapshots().listen((doc) {
-            presenceById[userId] = _parsePresence(userId, doc.data());
-            emit();
-          }, onError: (error, stackTrace) {
-            if (_isPermissionDenied(error)) {
-              presenceById[userId] = _parsePresence(userId, null);
+          final sub = _ref(userId).snapshots().listen(
+            (doc) {
+              presenceById[userId] = _parsePresence(userId, doc.data());
               emit();
-              return;
-            }
-            controller.addError(error, stackTrace);
-          });
+            },
+            onError: (error, stackTrace) {
+              if (_isPermissionDenied(error)) {
+                presenceById[userId] = _parsePresence(userId, null);
+                emit();
+                return;
+              }
+              controller.addError(error, stackTrace);
+            },
+          );
           subscriptions.add(sub);
         }
 
@@ -156,18 +252,22 @@ class FirestorePresenceRepository implements PresenceRepository {
             .collection('presence')
             .where(FieldPath.documentId, whereIn: chunk)
             .snapshots()
-            .listen((snapshot) {
-          chunkMaps[index] = {
-            for (final doc in snapshot.docs) doc.id: _parsePresence(doc.id, doc.data()),
-          };
-          emit();
-        }, onError: (error, stackTrace) {
-          if (_isPermissionDenied(error)) {
-            unawaited(switchToDocumentFallback());
-            return;
-          }
-          controller.addError(error, stackTrace);
-        });
+            .listen(
+              (snapshot) {
+                chunkMaps[index] = {
+                  for (final doc in snapshot.docs)
+                    doc.id: _parsePresence(doc.id, doc.data()),
+                };
+                emit();
+              },
+              onError: (error, stackTrace) {
+                if (_isPermissionDenied(error)) {
+                  unawaited(switchToDocumentFallback());
+                  return;
+                }
+                controller.addError(error, stackTrace);
+              },
+            );
         subscriptions.add(sub);
       }
 
@@ -180,7 +280,9 @@ class FirestorePresenceRepository implements PresenceRepository {
   }
 
   @override
-  Future<Map<String, PresenceModel>> getUsersPresence(List<String> userIds) async {
+  Future<Map<String, PresenceModel>> getUsersPresence(
+    List<String> userIds,
+  ) async {
     final normalizedIds = userIds.toSet().toList(growable: false);
     if (normalizedIds.isEmpty) {
       return const <String, PresenceModel>{};
@@ -218,12 +320,27 @@ class FirestorePresenceRepository implements PresenceRepository {
 
   @override
   Future<int> countOnlineUsers({int limit = 500}) async {
-    final snapshot = await _firestore
-        .collection('presence')
-        .where('isOnline', isEqualTo: true)
-        .limit(limit + 1)
-        .get();
+    try {
+      final snapshot = await _firestore
+          .collection('presence')
+          .where('isOnline', isEqualTo: true)
+          .limit(limit + 1)
+          .get();
 
-    return snapshot.docs.where((doc) => _parsePresence(doc.id, doc.data()).isOnline == true).length;
+      return snapshot.docs
+          .where((doc) => _parsePresence(doc.id, doc.data()).isOnline == true)
+          .length;
+    } catch (error, stackTrace) {
+      if (!_isPermissionDenied(error)) {
+        rethrow;
+      }
+      developer.log(
+        'count_online_users_permission_denied path=presence query=isOnline==true limit=$limit',
+        name: 'PresenceRepository',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return 0;
+    }
   }
 }

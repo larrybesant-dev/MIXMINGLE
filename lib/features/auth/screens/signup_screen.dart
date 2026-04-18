@@ -15,6 +15,7 @@ class SignupScreen extends ConsumerStatefulWidget {
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _username = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
 
@@ -36,6 +37,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 semanticLabel: 'MixVy logo',
               ),
               const SizedBox(height: 20),
+              TextFormField(
+                controller: _username,
+                decoration: const InputDecoration(label: Text("Username")),
+                validator: (v) {
+                  final value = (v ?? '').trim();
+                  if (value.isEmpty) return "Enter username";
+                  if (value.length < 3) return "Username too short";
+                  return null;
+                },
+              ),
               TextFormField(
                 controller: _email,
                 decoration: const InputDecoration(label: Text("Email")),
@@ -75,7 +86,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (_formKey.currentState?.validate() != true) return;
 
     final controller = ref.read(authControllerProvider.notifier);
-    await controller.signup(_email.text.trim(), _password.text.trim());
+    await controller.signup(
+      _email.text.trim(),
+      _password.text.trim(),
+      _username.text.trim(),
+    );
     if (!mounted) return;
     final authState = ref.read(authControllerProvider);
     if (authState.error == null) {
