@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +10,7 @@ import '../../../models/room_model.dart';
 import '../../../shared/widgets/app_page_scaffold.dart';
 import '../widgets/live_room_card.dart';
 import '../../../widgets/brand_ui_kit.dart';
+import '../../../services/room_service.dart';
 
 class RoomBrowserScreen extends ConsumerStatefulWidget {
   const RoomBrowserScreen({super.key, this.initialCategory});
@@ -488,35 +488,9 @@ class _CategoryCard extends StatelessWidget {
 
 final _roomsByCategoryProvider = StreamProvider.autoDispose
     .family<List<RoomModel>, String?>((ref, category) {
-      Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-          .collection('rooms')
-          .where('isLive', isEqualTo: true)
-          .limit(50);
-
-      if (category != null) {
-        query = query.where('category', isEqualTo: category);
-      }
-
-      return query.snapshots().map((snap) {
-        final rooms =
-            snap.docs
-                .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-                .toList(growable: false)
-              ..sort((a, b) {
-                final memberCompare = b.memberCount.compareTo(a.memberCount);
-                if (memberCompare != 0) {
-                  return memberCompare;
-                }
-                final aTs = a.updatedAt?.seconds ?? a.createdAt?.seconds ?? 0;
-                final bTs = b.updatedAt?.seconds ?? b.createdAt?.seconds ?? 0;
-                final byActivity = bTs.compareTo(aTs);
-                if (byActivity != 0) {
-                  return byActivity;
-                }
-                return a.id.compareTo(b.id);
-              });
-        return rooms;
-      });
+      return ref
+          .read(roomServiceProvider)
+          .watchLiveRoomsByCategory(category: category, limit: 50);
     });
 
 class _RoomListView extends ConsumerWidget {

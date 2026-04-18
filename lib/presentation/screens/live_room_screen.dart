@@ -187,8 +187,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     return '[color=$_pendingRichColorHex]$trimmed[/color]';
   }
 
+  void _showEntryMomentOverlay() {
+    _roomEntryMomentTimer?.cancel();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _showRoomEntryMoment = true);
+    _roomEntryMomentTimer = Timer(const Duration(seconds: 10), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _showRoomEntryMoment = false);
+    });
+  }
+
   Timer? _micLevelTimer;
   DateTime? _roomJoinedAt;
+  Timer? _roomEntryMomentTimer;
+  bool _showRoomEntryMoment = false;
   int _lastRenderedMessageCount = 0;
   final Set<String> _recentChatters = {};
   final Map<String, Timer> _recentChatterTimers = {};
@@ -3264,6 +3280,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         );
       }
       _roomJoinedAt = joinResult.joinedAt ?? DateTime.now();
+      _showEntryMomentOverlay();
       final myName = _senderDisplayNameById[userId] ?? userId;
       _sendSystemEvent('$myName joined the room');
     } catch (_) {
@@ -3690,6 +3707,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     _giftToastTimer?.cancel();
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
+    _roomEntryMomentTimer?.cancel();
     _micLevelTimer?.cancel();
     _micExpiryTimer?.cancel();
     for (final t in _recentChatterTimers.values) {
@@ -4170,6 +4188,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             : onMicCount > 0
             ? 'Jump into the convo or keep the chat moving.'
             : 'Keep the room moving with chat, cam, or mic.';
+        final roomEntryHeadline = roomFeelsQuiet
+            ? participantsInRoom.length <= 1
+                  ? 'You set the tone tonight'
+                  : 'The room is warming up'
+            : onMicCount > 0
+            ? 'Live conversation is happening'
+            : watchingCamCount > 0
+            ? 'Eyes are on the room'
+            : 'The vibe is building';
+        final roomEntrySubhead = roomFeelsQuiet
+            ? 'Break the ice with chat, cam, or mic.'
+            : onMicCount > 0
+            ? '$onMicCount on mic right now — slide into the convo when you are ready.'
+            : 'People are tuned in — bring the energy when you want.';
+        final roomEntryBadge = roomFeelsQuiet
+            ? 'Soft launch'
+            : onMicCount > 0
+            ? 'Live pulse'
+            : 'Crowd building';
         final isOnMic = participantHasMicSeat(effectiveSelfParticipant);
         final isMicFree = isOnMic || onMicCount < RoomState.maxSpeakers;
 
@@ -4917,6 +4954,29 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   right: 0,
                   child: LinearProgressIndicator(),
                 ),
+              Positioned(
+                top: _callError != null
+                    ? (spotlightName != null ? 112 : 72)
+                    : (spotlightName != null ? 40 : 8),
+                left: 12,
+                right: isMobile ? 12 : screenWidth * 0.42,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: _showRoomEntryMoment
+                      ? IgnorePointer(
+                          key: const ValueKey<String>('room-entry-moment'),
+                          child: _RoomEntryMomentCard(
+                            badgeLabel: roomEntryBadge,
+                            headline: roomEntryHeadline,
+                            subhead: roomEntrySubhead,
+                            isQuiet: roomFeelsQuiet,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
               // ── TOP GIFTERS STRIP (bottom-left, above admin bar) ──────
               if (topGifters.isNotEmpty)
                 Positioned(
@@ -6539,6 +6599,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     nameColor: _nameColor(vipLevelById[uid] ?? 0),
                     roleLabel: _roleLabel(participantByUserId[uid]),
                     isCurrentUser: uid == currentUserId,
+                    isTalkingNow: true,
                     camOn: participantByUserId[uid]?.camOn ?? false,
                     trailingIcon: Icons.mic,
                     trailingColor: const Color(0xFFC45E7A),
@@ -6602,6 +6663,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     isCurrentUser: p.userId == currentUserId,
                     trailingIcon: Icons.videocam,
                     trailingColor: Colors.white38,
+                    isTalkingNow: speakingUserIds.contains(p.userId),
                     camOn: true,
                     hasRecentChat: recentChatters.contains(p.userId),
                     isWatchingMe:
@@ -6656,6 +6718,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                           gender: genderById[p.userId],
                           roleLabel: _roleLabel(p),
                           isCurrentUser: p.userId == currentUserId,
+                          isTalkingNow: speakingUserIds.contains(p.userId),
                           camOn: p.camOn,
                           trailingIcon: p.role == 'host' || p.role == 'owner'
                               ? Icons.star
@@ -6730,6 +6793,131 @@ class _RosterHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RoomEntryMomentCard extends StatelessWidget {
+  const _RoomEntryMomentCard({
+    required this.badgeLabel,
+    required this.headline,
+    required this.subhead,
+    required this.isQuiet,
+  });
+
+  final String badgeLabel;
+  final String headline;
+  final String subhead;
+  final bool isQuiet;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = isQuiet ? const Color(0xFFD4A853) : VelvetNoir.liveGlow;
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 280),
+      offset: Offset.zero,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 280),
+        opacity: 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xEB130F16),
+                isQuiet ? const Color(0xD6302316) : const Color(0xD6361724),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: accent.withValues(alpha: 0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.2),
+                blurRadius: 16,
+                spreadRadius: 0.5,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent.withValues(alpha: 0.15),
+                    border: Border.all(color: accent.withValues(alpha: 0.35)),
+                  ),
+                  child: Icon(
+                    isQuiet ? Icons.auto_awesome : Icons.local_fire_department,
+                    size: 16,
+                    color: accent,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        headline,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subhead,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.78),
+                          fontSize: 11,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.circle, size: 7, color: accent),
+                      const SizedBox(width: 5),
+                      Text(
+                        badgeLabel,
+                        style: TextStyle(
+                          color: accent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -7013,6 +7201,7 @@ class _RosterRow extends StatelessWidget {
     this.gender,
     this.roleLabel,
     this.isCurrentUser = false,
+    this.isTalkingNow = false,
     this.camOn = false,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
@@ -7028,6 +7217,7 @@ class _RosterRow extends StatelessWidget {
   final String? gender;
   final String? roleLabel;
   final bool isCurrentUser;
+  final bool isTalkingNow;
   final bool camOn;
   final IconData? trailingIcon;
   final Color trailingColor;
@@ -7056,7 +7246,7 @@ class _RosterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final gIcon = _genderIcon(gender);
     final isHighlighted =
-        isCurrentUser || hasRecentChat || camOn || isWatchingMe;
+        isCurrentUser || hasRecentChat || camOn || isWatchingMe || isTalkingNow;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: AnimatedContainer(
@@ -7065,10 +7255,18 @@ class _RosterRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: isHighlighted ? const Color(0xFF20171D) : Colors.transparent,
+          color: isHighlighted
+              ? (isTalkingNow
+                    ? const Color(0xFF25131B)
+                    : const Color(0xFF20171D))
+              : Colors.transparent,
           border: isHighlighted
               ? Border.all(
-                  color: const Color(0xFFD4A853).withValues(alpha: 0.14),
+                  color:
+                      (isTalkingNow
+                              ? const Color(0xFFC45E7A)
+                              : const Color(0xFFD4A853))
+                          .withValues(alpha: 0.18),
                 )
               : null,
         ),
@@ -7138,6 +7336,12 @@ class _RosterRow extends StatelessWidget {
                     label: 'Cam On',
                     icon: Icons.videocam,
                     color: Color(0xFF4CAF50),
+                  ),
+                if (isTalkingNow)
+                  const _RosterChip(
+                    label: 'Live',
+                    icon: Icons.graphic_eq_rounded,
+                    color: Color(0xFFC45E7A),
                   ),
                 if (hasRecentChat)
                   _RosterChip(

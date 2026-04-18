@@ -21,13 +21,21 @@ class LiveRoomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final thumbnailUrl = sanitizeNetworkImageUrl(room.thumbnailUrl);
+    final speakerCount = room.stageUserIds.length;
     final memberCount = room.memberCount > 0
         ? room.memberCount
         : room.stageUserIds.length + room.audienceUserIds.length;
+    final activityLabel = speakerCount > 0
+        ? 'Conversation live'
+        : memberCount >= 6
+        ? 'Crowd building'
+        : 'Warming up';
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
         width: 160,
         decoration: BoxDecoration(
           color: VelvetNoir.surfaceHigh,
@@ -35,8 +43,10 @@ class LiveRoomCard extends StatelessWidget {
           border: Border.all(color: VelvetNoir.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: VelvetNoir.primaryDim.withValues(alpha: 0.12),
-              blurRadius: 12,
+              color: VelvetNoir.primaryDim.withValues(
+                alpha: speakerCount > 0 ? 0.16 : 0.12,
+              ),
+              blurRadius: speakerCount > 0 ? 14 : 12,
               offset: const Offset(0, 4),
             ),
           ],
@@ -61,27 +71,7 @@ class LiveRoomCard extends StatelessWidget {
                   _FallbackThumbnail(category: room.category),
 
                 // LIVE badge top-left
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: VelvetNoir.error,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      '● LIVE',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ),
+                const Positioned(top: 8, left: 8, child: _AnimatedLiveBadge()),
 
                 // Member count top-right
                 Positioned(
@@ -89,7 +79,9 @@ class LiveRoomCard extends StatelessWidget {
                   right: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 3),
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(6),
@@ -97,9 +89,11 @@ class LiveRoomCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.people,
-                            size: 11,
-                            color: VelvetNoir.secondary),
+                        const Icon(
+                          Icons.people,
+                          size: 11,
+                          color: VelvetNoir.secondary,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           '$memberCount',
@@ -144,18 +138,38 @@ class LiveRoomCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                  const SizedBox(height: 4),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: Text(
+                      activityLabel,
+                      key: ValueKey<String>(
+                        'room-activity-${room.id}-$activityLabel',
+                      ),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: speakerCount > 0
+                            ? VelvetNoir.liveGlow
+                            : VelvetNoir.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
 
                   // Category badge
                   if (room.category?.isNotEmpty == true) ...[
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: VelvetNoir.secondary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                            color: VelvetNoir.secondary.withValues(alpha: 0.3)),
+                          color: VelvetNoir.secondary.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         room.category!,
@@ -175,7 +189,9 @@ class LiveRoomCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: VelvetNoir.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
@@ -203,6 +219,66 @@ class LiveRoomCard extends StatelessWidget {
 }
 
 // Fallback thumbnail when no image is set — gradient with category emoji
+class _AnimatedLiveBadge extends StatefulWidget {
+  const _AnimatedLiveBadge();
+
+  @override
+  State<_AnimatedLiveBadge> createState() => _AnimatedLiveBadgeState();
+}
+
+class _AnimatedLiveBadgeState extends State<_AnimatedLiveBadge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            color: VelvetNoir.error,
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: [
+              BoxShadow(
+                color: VelvetNoir.liveGlow.withValues(
+                  alpha: 0.28 + (_controller.value * 0.18),
+                ),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: const Text(
+            '● LIVE',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _FallbackThumbnail extends StatelessWidget {
   final String? category;
   const _FallbackThumbnail({this.category});

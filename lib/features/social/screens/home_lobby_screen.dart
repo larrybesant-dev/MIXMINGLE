@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,28 +16,61 @@ import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 class HomeLobbyScreen extends ConsumerWidget {
   const HomeLobbyScreen({super.key});
 
+  int _stablePeopleCount(RoomModel room) {
+    final derivedCount = room.stageUserIds.length + room.audienceUserIds.length;
+    return room.memberCount > 0
+        ? math.max(room.memberCount, derivedCount)
+        : derivedCount;
+  }
+
   int _activityScore(RoomModel room) {
-    final total = room.memberCount > 0
-        ? room.memberCount
-        : room.stageUserIds.length + room.audienceUserIds.length;
+    final total = _stablePeopleCount(room);
     final speakers = room.stageUserIds.length;
     final created = room.createdAt?.toDate() ?? DateTime.now();
     final minutesAgo = DateTime.now().difference(created).inMinutes;
     final recencyBoost = (120 - minutesAgo).clamp(0, 120) ~/ 10;
-    return total + (speakers * 3) + recencyBoost;
+    final audienceBand = total >= 20
+        ? 20
+        : total >= 10
+        ? 14
+        : total >= 5
+        ? 8
+        : total >= 2
+        ? 4
+        : total;
+    return audienceBand + (speakers * 3) + recencyBoost;
   }
 
   List<RoomModel> _trending(List<RoomModel> rooms) {
     final sorted = List<RoomModel>.from(rooms)
-      ..sort((a, b) => _activityScore(b).compareTo(_activityScore(a)));
+      ..sort((a, b) {
+        final scoreA = _activityScore(a);
+        final scoreB = _activityScore(b);
+        final scoreDelta = scoreB - scoreA;
+        if (scoreDelta.abs() > 2) {
+          return scoreDelta;
+        }
+
+        final ta =
+            a.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final tb =
+            b.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final recencyCompare = tb.compareTo(ta);
+        if (recencyCompare != 0) {
+          return recencyCompare;
+        }
+        return a.id.compareTo(b.id);
+      });
     return sorted;
   }
 
   List<RoomModel> _newest(List<RoomModel> rooms) {
     final sorted = List<RoomModel>.from(rooms)
       ..sort((a, b) {
-        final ta = a.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final tb = b.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final ta =
+            a.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final tb =
+            b.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
         return tb.compareTo(ta);
       });
     return sorted;
@@ -90,13 +125,17 @@ class HomeLobbyScreen extends ConsumerWidget {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.search_rounded,
-                      color: VelvetNoir.onSurfaceVariant),
+                  icon: const Icon(
+                    Icons.search_rounded,
+                    color: VelvetNoir.onSurfaceVariant,
+                  ),
                   onPressed: () => context.go('/search'),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded,
-                      color: VelvetNoir.onSurfaceVariant),
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: VelvetNoir.onSurfaceVariant,
+                  ),
                   onPressed: () => context.go('/notifications'),
                 ),
               ],
@@ -146,7 +185,8 @@ class HomeLobbyScreen extends ConsumerWidget {
                           padding: EdgeInsets.symmetric(horizontal: hp),
                           scrollDirection: Axis.horizontal,
                           itemCount: liveNow.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 10),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 10),
                           itemBuilder: (ctx, i) => SocialRoomCardCompact(
                             key: ValueKey(liveNow[i].id),
                             room: liveNow[i],
@@ -173,7 +213,8 @@ class HomeLobbyScreen extends ConsumerWidget {
                               children: [
                                 const _EmptyRoomsCard(
                                   title: 'Nobody you follow is live yet',
-                                  subtitle: 'Here are a few rooms worth checking out.',
+                                  subtitle:
+                                      'Here are a few rooms worth checking out.',
                                 ),
                                 const SizedBox(height: 10),
                                 ...suggestions.map(
@@ -188,13 +229,15 @@ class HomeLobbyScreen extends ConsumerWidget {
                           );
                         }
                         return Column(
-                          children: followRooms.map(
-                            (room) => SocialRoomCard(
-                              key: ValueKey(room.id),
-                              room: room,
-                              onTap: () => context.go('/room/${room.id}'),
-                            ),
-                          ).toList(),
+                          children: followRooms
+                              .map(
+                                (room) => SocialRoomCard(
+                                  key: ValueKey(room.id),
+                                  room: room,
+                                  onTap: () => context.go('/room/${room.id}'),
+                                ),
+                              )
+                              .toList(),
                         );
                       },
                     ),
@@ -231,7 +274,8 @@ class HomeLobbyScreen extends ConsumerWidget {
                     _SectionHeader(
                       padding: EdgeInsets.fromLTRB(hp, 22, hp, 10),
                       title: 'For You',
-                      subtitle: 'Picked from your interests and social activity',
+                      subtitle:
+                          'Picked from your interests and social activity',
                     ),
                     forYouAsync.when(
                       loading: () => const _MiniLoadingStrip(),
@@ -242,18 +286,22 @@ class HomeLobbyScreen extends ConsumerWidget {
                             padding: EdgeInsets.symmetric(horizontal: hp),
                             child: const _EmptyRoomsCard(
                               title: 'Your recommendations are warming up',
-                              subtitle: 'Join a few rooms and follow hosts to personalize this feed.',
+                              subtitle:
+                                  'Join a few rooms and follow hosts to personalize this feed.',
                             ),
                           );
                         }
                         return Column(
-                          children: suggestions.take(5).map(
-                            (room) => SocialRoomCard(
-                              key: ValueKey('${room.id}-foryou'),
-                              room: room,
-                              onTap: () => context.go('/room/${room.id}'),
-                            ),
-                          ).toList(),
+                          children: suggestions
+                              .take(5)
+                              .map(
+                                (room) => SocialRoomCard(
+                                  key: ValueKey('${room.id}-foryou'),
+                                  room: room,
+                                  onTap: () => context.go('/room/${room.id}'),
+                                ),
+                              )
+                              .toList(),
                         );
                       },
                     ),
@@ -365,7 +413,9 @@ class _EmptyRoomsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: VelvetNoir.surfaceHigh,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: VelvetNoir.outlineVariant.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: VelvetNoir.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         children: [

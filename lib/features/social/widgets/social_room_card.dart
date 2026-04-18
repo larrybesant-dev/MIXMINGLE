@@ -11,29 +11,47 @@ import 'package:mixvy/models/room_model.dart';
 // ── Category accent colours ───────────────────────────────────────────────────
 Color _categoryColor(String? category) {
   switch (category?.toLowerCase()) {
-    case 'music':   return const Color(0xFF7C3AED);
-    case 'gaming':  return const Color(0xFF0EA5E9);
-    case 'dating':  return const Color(0xFFEC4899);
-    case 'talk':    return const Color(0xFF10B981);
-    case 'chill':   return const Color(0xFF64748B);
-    case 'art':     return const Color(0xFFF59E0B);
-    case 'dance':   return const Color(0xFFEF4444);
-    case 'study':   return const Color(0xFF3B82F6);
-    default:        return VelvetNoir.primary;
+    case 'music':
+      return const Color(0xFF7C3AED);
+    case 'gaming':
+      return const Color(0xFF0EA5E9);
+    case 'dating':
+      return const Color(0xFFEC4899);
+    case 'talk':
+      return const Color(0xFF10B981);
+    case 'chill':
+      return const Color(0xFF64748B);
+    case 'art':
+      return const Color(0xFFF59E0B);
+    case 'dance':
+      return const Color(0xFFEF4444);
+    case 'study':
+      return const Color(0xFF3B82F6);
+    default:
+      return VelvetNoir.primary;
   }
 }
 
 String _categoryEmoji(String? category) {
   switch (category?.toLowerCase()) {
-    case 'music':   return '🎵';
-    case 'gaming':  return '🎮';
-    case 'dating':  return '💕';
-    case 'talk':    return '💬';
-    case 'chill':   return '🍃';
-    case 'art':     return '🎨';
-    case 'dance':   return '💃';
-    case 'study':   return '📚';
-    default:        return '✨';
+    case 'music':
+      return '🎵';
+    case 'gaming':
+      return '🎮';
+    case 'dating':
+      return '💕';
+    case 'talk':
+      return '💬';
+    case 'chill':
+      return '🍃';
+    case 'art':
+      return '🎨';
+    case 'dance':
+      return '💃';
+    case 'study':
+      return '📚';
+    default:
+      return '✨';
   }
 }
 
@@ -69,11 +87,20 @@ class SocialRoomCard extends StatelessWidget {
         ? room.memberCount
         : speakerCount + listenerCount;
     final hasActiveSpeakers = speakerCount > 0;
+    final activityLabel = hasActiveSpeakers
+        ? 'Conversation live'
+        : totalCount >= 8
+        ? 'Crowd building'
+        : totalCount >= 3
+        ? 'People joining'
+        : 'Warming up';
     final thumb = sanitizeNetworkImageUrl(room.thumbnailUrl);
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: VelvetNoir.surfaceContainer,
@@ -91,7 +118,13 @@ class SocialRoomCard extends StatelessWidget {
                     offset: const Offset(0, 4),
                   ),
                 ]
-              : const [],
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -146,6 +179,23 @@ class SocialRoomCard extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: VelvetNoir.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: Text(
+                          activityLabel,
+                          key: ValueKey<String>(
+                            'activity-${room.id}-$activityLabel',
+                          ),
+                          style: GoogleFonts.raleway(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: hasActiveSpeakers
+                                ? accentColor.withValues(alpha: 0.95)
+                                : VelvetNoir.onSurfaceVariant,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -208,17 +258,33 @@ class SocialRoomCardCompact extends StatelessWidget {
     final totalCount = room.memberCount > 0
         ? room.memberCount
         : room.stageUserIds.length + room.audienceUserIds.length;
+    final speakerCount = room.stageUserIds.length;
+    final activityLabel = speakerCount > 0
+        ? 'Live now'
+        : totalCount >= 4
+        ? 'Building'
+        : 'Fresh';
     final thumb = sanitizeNetworkImageUrl(room.thumbnailUrl);
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
         width: 160,
         decoration: BoxDecoration(
           color: VelvetNoir.surfaceHigh,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: accentColor.withValues(alpha: 0.28)),
+          border: Border.all(color: accentColor.withValues(alpha: 0.28)),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(
+                alpha: speakerCount > 0 ? 0.16 : 0.08,
+              ),
+              blurRadius: speakerCount > 0 ? 12 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -228,22 +294,22 @@ class SocialRoomCardCompact extends StatelessWidget {
             Stack(
               children: [
                 _Thumbnail(
-                    url: thumb, category: room.category, size: 88,
-                    width: double.infinity, borderRadius: 0),
-                Positioned(
-                  top: 8, left: 8,
-                  child: _LiveDot(compact: true),
+                  url: thumb,
+                  category: room.category,
+                  size: 88,
+                  width: double.infinity,
+                  borderRadius: 0,
                 ),
+                Positioned(top: 8, left: 8, child: _LiveDot(compact: true)),
                 Positioned(
-                  bottom: 0, left: 0, right: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
                   child: Container(
                     height: 36,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Color(0xDD0B0B0B),
-                        ],
+                        colors: [Colors.transparent, Color(0xDD0B0B0B)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -268,12 +334,31 @@ class SocialRoomCardCompact extends StatelessWidget {
                       color: VelvetNoir.onSurface,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: Text(
+                      activityLabel,
+                      key: ValueKey<String>(
+                        'compact-${room.id}-$activityLabel',
+                      ),
+                      style: GoogleFonts.raleway(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: speakerCount > 0
+                            ? accentColor
+                            : VelvetNoir.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      Icon(Icons.people_rounded,
-                          size: 11,
-                          color: VelvetNoir.onSurfaceVariant),
+                      Icon(
+                        Icons.people_rounded,
+                        size: 11,
+                        color: VelvetNoir.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         _formatCount(totalCount),
@@ -329,8 +414,12 @@ class _Thumbnail extends StatelessWidget {
         ),
       );
     }
-    return _FallbackThumb(category: category, size: size, width: w,
-        borderRadius: borderRadius);
+    return _FallbackThumb(
+      category: category,
+      size: size,
+      width: w,
+      borderRadius: borderRadius,
+    );
   }
 }
 
@@ -397,35 +486,64 @@ class _CategoryTag extends StatelessWidget {
   }
 }
 
-class _LiveDot extends StatelessWidget {
+class _LiveDot extends StatefulWidget {
   const _LiveDot({this.compact = false});
   final bool compact;
 
   @override
+  State<_LiveDot> createState() => _LiveDotState();
+}
+
+class _LiveDotState extends State<_LiveDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: compact
-          ? const EdgeInsets.symmetric(horizontal: 5, vertical: 2)
-          : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: VelvetNoir.liveGlow.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: [
-          BoxShadow(
-            color: VelvetNoir.liveGlow.withValues(alpha: 0.45),
-            blurRadius: compact ? 6 : 10,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final glow = 0.32 + (_controller.value * 0.2);
+        return Container(
+          padding: widget.compact
+              ? const EdgeInsets.symmetric(horizontal: 5, vertical: 2)
+              : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: VelvetNoir.liveGlow.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: VelvetNoir.liveGlow.withValues(alpha: glow),
+                blurRadius: widget.compact ? 6 : 10,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Text(
-        '● LIVE',
-        style: GoogleFonts.raleway(
-          fontSize: compact ? 8 : 9,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          letterSpacing: 0.4,
-        ),
-      ),
+          child: Text(
+            '● LIVE',
+            style: GoogleFonts.raleway(
+              fontSize: widget.compact ? 8 : 9,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.4,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -444,9 +562,17 @@ class _StatChip extends StatelessWidget {
       children: [
         Icon(icon, size: 12, color: c),
         const SizedBox(width: 3),
-        Text(
-          label,
-          style: GoogleFonts.raleway(fontSize: 11, color: c),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(scale: animation, child: child),
+          ),
+          child: Text(
+            label,
+            key: ValueKey<String>('stat-$icon-$label'),
+            style: GoogleFonts.raleway(fontSize: 11, color: c),
+          ),
         ),
       ],
     );

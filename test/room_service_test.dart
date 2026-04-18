@@ -287,6 +287,95 @@ void main() {
       },
     );
 
+    test(
+      'watchLiveRooms keeps recently seen rooms visible through a transient live gap',
+      () async {
+        await firestore.collection('rooms').doc('room-a').set({
+          'name': 'Room A',
+          'hostId': 'host-a',
+          'isLive': true,
+          'isAdult': false,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+        });
+        await firestore.collection('rooms').doc('room-b').set({
+          'name': 'Room B',
+          'hostId': 'host-b',
+          'isLive': true,
+          'isAdult': false,
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('room-a')
+            .collection('participants')
+            .doc('host-a')
+            .set({'lastActiveAt': Timestamp.now()});
+        await firestore
+            .collection('rooms')
+            .doc('room-b')
+            .collection('participants')
+            .doc('host-b')
+            .set({'lastActiveAt': Timestamp.now()});
+
+        final emissions = <List<RoomModel>>[];
+        final sub = service.watchLiveRooms(limit: 10).listen(emissions.add);
+        addTearDown(sub.cancel);
+
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        await firestore.collection('rooms').doc('room-b').set({
+          'isLive': false,
+          'updatedAt': Timestamp.now(),
+        }, SetOptions(merge: true));
+
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+
+        expect(emissions, isNotEmpty);
+        expect(emissions.last.map((room) => room.id), contains('room-b'));
+      },
+    );
+
+    test(
+      'watchLiveRooms keeps the last known audience count during partial room updates',
+      () async {
+        await firestore.collection('rooms').doc('room-a').set({
+          'name': 'Room A',
+          'hostId': 'host-a',
+          'isLive': true,
+          'isAdult': false,
+          'memberCount': 5,
+          'stageUserIds': <String>['host-a'],
+          'audienceUserIds': <String>['u-1', 'u-2', 'u-3', 'u-4'],
+          'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+          'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 9)),
+        });
+        await firestore
+            .collection('rooms')
+            .doc('room-a')
+            .collection('participants')
+            .doc('host-a')
+            .set({'lastActiveAt': Timestamp.now()});
+
+        final emissions = <List<RoomModel>>[];
+        final sub = service.watchLiveRooms(limit: 10).listen(emissions.add);
+        addTearDown(sub.cancel);
+
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        await firestore.collection('rooms').doc('room-a').set({
+          'memberCount': 0,
+          'stageUserIds': <String>[],
+          'audienceUserIds': <String>[],
+          'updatedAt': Timestamp.now(),
+        }, SetOptions(merge: true));
+
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+
+        expect(emissions, isNotEmpty);
+        expect(emissions.last.single.memberCount, greaterThanOrEqualTo(5));
+      },
+    );
+
     test('getRecommendationReason returns social and popularity labels', () {
       final friendHostedRoom = RoomModel(
         id: 'room-1',

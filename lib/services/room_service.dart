@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +11,8 @@ final roomServiceProvider = Provider<RoomService>((ref) {
 
 class RoomService {
   static const Duration _participantFreshnessWindow = Duration(seconds: 60);
+  static const Duration _liveRoomRemovalGraceWindow = Duration(seconds: 2);
+  static const Duration _liveRoomsDebounceWindow = Duration(milliseconds: 220);
 
   RoomService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -19,8 +22,19 @@ class RoomService {
   CollectionReference<Map<String, dynamic>> get _roomsCollection =>
       _firestore.collection('rooms');
 
-  Query<Map<String, dynamic>> _liveRoomsQuery({required int limit}) {
-    return _roomsCollection.where('isLive', isEqualTo: true).limit(limit);
+  Query<Map<String, dynamic>> _liveRoomsQuery({
+    required int limit,
+    String? category,
+  }) {
+    Query<Map<String, dynamic>> query = _roomsCollection.where(
+      'isLive',
+      isEqualTo: true,
+    );
+    final normalizedCategory = category?.trim();
+    if (normalizedCategory != null && normalizedCategory.isNotEmpty) {
+      query = query.where('category', isEqualTo: normalizedCategory);
+    }
+    return query.limit(limit);
   }
 
   Query<Map<String, dynamic>> _upcomingRoomsQuery({
@@ -77,13 +91,143 @@ class RoomService {
     }, SetOptions(merge: true));
   }
 
+  int _effectiveRoomMemberCount(RoomModel room) {
+    return math.max(
+      room.memberCount,
+      room.stageUserIds.length + room.audienceUserIds.length,
+    );
+  }
+
+  RoomModel _normalizeLiveRoomSnapshot(RoomModel room) {
+    return room.copyWith(memberCount: _effectiveRoomMemberCount(room));
+  }
+
+  RoomModel _mergeStableLiveRoom(RoomModel previous, RoomModel incoming) {
+    final normalizedIncoming = _normalizeLiveRoomSnapshot(incoming);
+    final incomingLooksCollapsed =
+        normalizedIncoming.memberCount == 0 &&
+        normalizedIncoming.stageUserIds.isEmpty &&
+        normalizedIncoming.audienceUserIds.isEmpty &&
+        _effectiveRoomMemberCount(previous) > 0;
+
+    if (!incomingLooksCollapsed) {
+      return normalizedIncoming;
+    }
+
+    return normalizedIncoming.copyWith(
+      stageUserIds: previous.stageUserIds,
+      audienceUserIds: previous.audienceUserIds,
+      memberCount: _effectiveRoomMemberCount(previous),
+    );
+  }
+
+  List<RoomModel> _sortedBufferedLiveRooms(
+    Map<String, _StableLiveRoomBufferEntry> bufferedRooms,
+  ) {
+    final rooms =
+        bufferedRooms.values.map((entry) => entry.room).toList(growable: false)
+          ..sort(_compareStableLiveRooms);
+    return rooms;
+  }
+
+  String _roomsFingerprint(List<RoomModel> rooms) {
+    return rooms
+        .map(
+          (room) => [
+            room.id,
+            room.isLive ? '1' : '0',
+            '${room.memberCount}',
+            '${room.updatedAt?.millisecondsSinceEpoch ?? 0}',
+          ].join(':'),
+        )
+        .join('|');
+  }
+
+  Stream<List<RoomModel>> _watchStabilizedLiveRooms(
+    Query<Map<String, dynamic>> query, {
+    required bool includeAdultRooms,
+  }) {
+    final controller = StreamController<List<RoomModel>>();
+    final bufferedRooms = <String, _StableLiveRoomBufferEntry>{};
+    Timer? debounceTimer;
+    Future<void> pending = Future<void>.value();
+    String? lastFingerprint;
+
+    Future<void> processSnapshot(
+      QuerySnapshot<Map<String, dynamic>> snapshot,
+    ) async {
+      final now = DateTime.now();
+      final incomingRooms = await _filterActiveLiveRooms(
+        snapshot.docs,
+        includeAdultRooms: includeAdultRooms,
+      );
+      final incomingIds = <String>{};
+
+      for (final room in incomingRooms) {
+        incomingIds.add(room.id);
+        final previousRoom = bufferedRooms[room.id]?.room;
+        final mergedRoom = previousRoom == null
+            ? room
+            : _mergeStableLiveRoom(previousRoom, room);
+        bufferedRooms[room.id] = _StableLiveRoomBufferEntry(
+          room: mergedRoom,
+          missingSince: null,
+        );
+      }
+
+      for (final entry in bufferedRooms.entries.toList(growable: false)) {
+        if (incomingIds.contains(entry.key)) {
+          continue;
+        }
+        final missingSince = entry.value.missingSince ??= now;
+        if (now.difference(missingSince) >= _liveRoomRemovalGraceWindow) {
+          bufferedRooms.remove(entry.key);
+        }
+      }
+
+      debounceTimer?.cancel();
+      debounceTimer = Timer(_liveRoomsDebounceWindow, () {
+        if (controller.isClosed) {
+          return;
+        }
+        final rooms = _sortedBufferedLiveRooms(bufferedRooms);
+        final fingerprint = _roomsFingerprint(rooms);
+        if (fingerprint == lastFingerprint) {
+          return;
+        }
+        lastFingerprint = fingerprint;
+        controller.add(rooms);
+      });
+    }
+
+    final subscription = query.snapshots().listen(
+      (snapshot) {
+        pending = pending.then((_) => processSnapshot(snapshot));
+      },
+      onError: controller.addError,
+      onDone: () {
+        debounceTimer?.cancel();
+        controller.close();
+      },
+    );
+
+    controller.onCancel = () async {
+      debounceTimer?.cancel();
+      await subscription.cancel();
+    };
+
+    return controller.stream;
+  }
+
   Future<List<RoomModel>> _filterActiveLiveRooms(
     Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs, {
     required bool includeAdultRooms,
   }) async {
     final activeRooms = <RoomModel>[];
     for (final doc in docs) {
-      final room = RoomModel.fromJson(doc.data(), doc.id);
+      final room = _normalizeLiveRoomSnapshot(
+        RoomModel.fromJson(doc.data(), doc.id),
+      );
       if (!includeAdultRooms && room.isAdult) {
         continue;
       }
@@ -119,11 +263,20 @@ class RoomService {
     int limit = 30,
     bool includeAdultRooms = false,
   }) {
-    return _liveRoomsQuery(limit: limit).snapshots().asyncMap(
-      (snapshot) => _filterActiveLiveRooms(
-        snapshot.docs,
-        includeAdultRooms: includeAdultRooms,
-      ),
+    return _watchStabilizedLiveRooms(
+      _liveRoomsQuery(limit: limit),
+      includeAdultRooms: includeAdultRooms,
+    );
+  }
+
+  Stream<List<RoomModel>> watchLiveRoomsByCategory({
+    String? category,
+    int limit = 30,
+    bool includeAdultRooms = false,
+  }) {
+    return _watchStabilizedLiveRooms(
+      _liveRoomsQuery(limit: limit, category: category),
+      includeAdultRooms: includeAdultRooms,
     );
   }
 
@@ -437,4 +590,11 @@ class RoomService {
     final normalizedRoomId = _normalizeRoomId(roomId);
     await _roomsCollection.doc(normalizedRoomId).delete();
   }
+}
+
+class _StableLiveRoomBufferEntry {
+  _StableLiveRoomBufferEntry({required this.room, this.missingSince});
+
+  RoomModel room;
+  DateTime? missingSince;
 }
