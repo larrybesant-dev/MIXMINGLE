@@ -161,6 +161,9 @@ class HomeLobbyScreen extends ConsumerWidget {
                 final liveNow = rooms.take(10).toList();
                 final trending = _trending(rooms).take(6).toList();
                 final newest = _newest(rooms).take(6).toList();
+                final featuredRoomId = trending.isNotEmpty
+                    ? trending.first.id
+                    : (liveNow.isNotEmpty ? liveNow.first.id : null);
 
                 return SliverList(
                   delegate: SliverChildListDelegate([
@@ -189,6 +192,7 @@ class HomeLobbyScreen extends ConsumerWidget {
                               const SizedBox(width: 10),
                           itemBuilder: (ctx, i) => SocialRoomCardCompact(
                             key: ValueKey(liveNow[i].id),
+                            featured: liveNow[i].id == featuredRoomId,
                             room: liveNow[i],
                             onTap: () => ctx.go('/room/${liveNow[i].id}'),
                           ),

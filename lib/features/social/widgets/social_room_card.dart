@@ -246,11 +246,13 @@ class SocialRoomCardCompact extends StatelessWidget {
   const SocialRoomCardCompact({
     required this.room,
     required this.onTap,
+    this.featured = false,
     super.key,
   });
 
   final RoomModel room;
   final VoidCallback onTap;
+  final bool featured;
 
   @override
   Widget build(BuildContext context) {
@@ -259,120 +261,173 @@ class SocialRoomCardCompact extends StatelessWidget {
         ? room.memberCount
         : room.stageUserIds.length + room.audienceUserIds.length;
     final speakerCount = room.stageUserIds.length;
-    final activityLabel = speakerCount > 0
-        ? 'Live now'
-        : totalCount >= 4
-        ? 'Building'
-        : 'Fresh';
+    final category = room.category?.trim().toLowerCase() ?? '';
+    final String activityLabel;
+    if (speakerCount >= 2 && totalCount >= 8) {
+      activityLabel = switch (category) {
+        'music' => 'Stage hot',
+        'dating' => 'Chemistry',
+        'talk' => 'Live talk',
+        _ => 'Live now',
+      };
+    } else if (speakerCount > 0) {
+      activityLabel = switch (category) {
+        'chill' => 'Vibes',
+        'music' => 'Beats up',
+        _ => 'Active',
+      };
+    } else if (totalCount >= 6) {
+      activityLabel = 'Building';
+    } else {
+      activityLabel = 'Fresh';
+    }
     final thumb = sanitizeNetworkImageUrl(room.thumbnailUrl);
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
+      child: AnimatedScale(
         duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        width: 160,
-        decoration: BoxDecoration(
-          color: VelvetNoir.surfaceHigh,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accentColor.withValues(alpha: 0.28)),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(
-                alpha: speakerCount > 0 ? 0.16 : 0.08,
+        curve: Curves.easeOutCubic,
+        scale: featured ? 1.02 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          width: 160,
+          decoration: BoxDecoration(
+            color: featured
+                ? VelvetNoir.surfaceContainer
+                : VelvetNoir.surfaceHigh,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: featured
+                  ? VelvetNoir.primary
+                  : accentColor.withValues(alpha: 0.28),
+              width: featured ? 1.4 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (featured ? VelvetNoir.primary : accentColor).withValues(
+                  alpha: featured ? 0.18 : (speakerCount > 0 ? 0.16 : 0.08),
+                ),
+                blurRadius: featured ? 14 : (speakerCount > 0 ? 12 : 8),
+                offset: const Offset(0, 3),
               ),
-              blurRadius: speakerCount > 0 ? 12 : 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hero image
-            Stack(
-              children: [
-                _Thumbnail(
-                  url: thumb,
-                  category: room.category,
-                  size: 88,
-                  width: double.infinity,
-                  borderRadius: 0,
-                ),
-                Positioned(top: 8, left: 8, child: _LiveDot(compact: true)),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.transparent, Color(0xDD0B0B0B)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Info
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Hero image
+              Stack(
                 children: [
-                  Text(
-                    room.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.raleway(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: VelvetNoir.onSurface,
-                    ),
+                  _Thumbnail(
+                    url: thumb,
+                    category: room.category,
+                    size: 88,
+                    width: double.infinity,
+                    borderRadius: 0,
                   ),
-                  const SizedBox(height: 4),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: Text(
-                      activityLabel,
-                      key: ValueKey<String>(
-                        'compact-${room.id}-$activityLabel',
-                      ),
-                      style: GoogleFonts.raleway(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: speakerCount > 0
-                            ? accentColor
-                            : VelvetNoir.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.people_rounded,
-                        size: 11,
-                        color: VelvetNoir.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        _formatCount(totalCount),
-                        style: GoogleFonts.raleway(
-                          fontSize: 11,
-                          color: VelvetNoir.onSurfaceVariant,
+                  Positioned(top: 8, left: 8, child: _LiveDot(compact: true)),
+                  if (featured)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.48),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: VelvetNoir.primary.withValues(alpha: 0.42),
+                          ),
+                        ),
+                        child: Text(
+                          'Top pick',
+                          style: GoogleFonts.raleway(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: VelvetNoir.primary,
+                          ),
                         ),
                       ),
-                    ],
+                    ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.transparent, Color(0xDD0B0B0B)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+              // Info
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      room.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.raleway(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: VelvetNoir.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: Text(
+                        activityLabel,
+                        key: ValueKey<String>(
+                          'compact-${room.id}-$activityLabel',
+                        ),
+                        style: GoogleFonts.raleway(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: speakerCount > 0
+                              ? accentColor
+                              : VelvetNoir.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.people_rounded,
+                          size: 11,
+                          color: VelvetNoir.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          _formatCount(totalCount),
+                          style: GoogleFonts.raleway(
+                            fontSize: 11,
+                            color: VelvetNoir.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -398,7 +453,6 @@ class _Thumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = _categoryColor(category);
     final w = width ?? size;
 
     if (url != null) {
