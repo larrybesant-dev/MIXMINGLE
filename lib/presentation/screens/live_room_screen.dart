@@ -5844,6 +5844,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 : 'Live now',
                             summary: roomPresenceSummary,
                             prompt: roomEnergyPrompt,
+                            peopleCount: participantsInRoom.length,
+                            onMicCount: onMicCount,
+                            watchingCount: watchingCamCount,
                             isQuiet: roomFeelsQuiet,
                             primaryActionLabel: roomPrimaryActionLabel,
                             onPrimaryAction: roomPrimaryAction,
@@ -6738,6 +6741,9 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
     required this.statusLabel,
     required this.summary,
     required this.prompt,
+    required this.peopleCount,
+    required this.onMicCount,
+    required this.watchingCount,
     required this.isQuiet,
     this.primaryActionLabel,
     this.onPrimaryAction,
@@ -6749,6 +6755,9 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
   final String statusLabel;
   final String summary;
   final String prompt;
+  final int peopleCount;
+  final int onMicCount;
+  final int watchingCount;
   final bool isQuiet;
   final String? primaryActionLabel;
   final VoidCallback? onPrimaryAction;
@@ -6758,17 +6767,20 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = isQuiet ? const Color(0xFFD4A853) : const Color(0xFFC45E7A);
+    final secondaryAccent = isQuiet
+        ? const Color(0xFFB09080)
+        : const Color(0xFFD4A853);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOut,
+      curve: Curves.easeOutCubic,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xE6141018),
-            isQuiet ? const Color(0xCC302316) : const Color(0xCC351623),
+            const Color(0xF2141018),
+            isQuiet ? const Color(0xDD302316) : const Color(0xDD351623),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -6787,19 +6799,32 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                isQuiet ? Icons.auto_awesome : Icons.local_fire_department,
-                color: accent,
-                size: 16,
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accent.withValues(alpha: 0.14),
+                  border: Border.all(color: accent.withValues(alpha: 0.35)),
+                ),
+                child: Icon(
+                  isQuiet ? Icons.auto_awesome : Icons.local_fire_department,
+                  color: accent,
+                  size: 15,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: Text(
+                    title,
+                    key: ValueKey<String>(title),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
@@ -6809,33 +6834,73 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
                   color: Colors.black.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.circle, size: 7, color: accent),
+                    const SizedBox(width: 5),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            summary,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PresenceStatPill(
+                label: 'Here',
+                value: peopleCount,
+                icon: Icons.people_alt_outlined,
+                color: accent,
+              ),
+              _PresenceStatPill(
+                label: 'On mic',
+                value: onMicCount,
+                icon: Icons.mic_none_rounded,
+                color: secondaryAccent,
+              ),
+              _PresenceStatPill(
+                label: 'Watching',
+                value: watchingCount,
+                icon: Icons.visibility_outlined,
+                color: const Color(0xFF9B2535),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: Text(
+              summary,
+              key: ValueKey<String>(summary),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            prompt,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.82),
-              fontSize: 11,
-              height: 1.3,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: Text(
+              prompt,
+              key: ValueKey<String>(prompt),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.82),
+                fontSize: 11,
+                height: 1.3,
+              ),
             ),
           ),
           if ((primaryActionLabel?.trim().isNotEmpty ?? false) ||
@@ -6878,6 +6943,62 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PresenceStatPill extends StatelessWidget {
+  const _PresenceStatPill({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 6),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, animation) =>
+                ScaleTransition(scale: animation, child: child),
+            child: Text(
+              '$value',
+              key: ValueKey<int>(value),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -6934,95 +7055,114 @@ class _RosterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gIcon = _genderIcon(gender);
+    final isHighlighted =
+        isCurrentUser || hasRecentChat || camOn || isWatchingMe;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (gIcon != null) ...[
-                Icon(gIcon, size: 11, color: _genderColor(gender)),
-                const SizedBox(width: 3),
-              ],
-              Expanded(
-                child: Text(
-                  displayName,
-                  style: TextStyle(
-                    color: nameColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: isHighlighted ? const Color(0xFF20171D) : Colors.transparent,
+          border: isHighlighted
+              ? Border.all(
+                  color: const Color(0xFFD4A853).withValues(alpha: 0.14),
+                )
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (gIcon != null) ...[
+                  Icon(gIcon, size: 11, color: _genderColor(gender)),
+                  const SizedBox(width: 3),
+                ],
+                Expanded(
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      color: nameColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              if (isWatchingMe) ...[
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.visibility,
-                  size: 12,
-                  color: Color(0xFFD4AF37),
-                ),
+                if (isWatchingMe) ...[
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.visibility,
+                    size: 12,
+                    color: Color(0xFFD4AF37),
+                  ),
+                ],
+                if (vipLevel > 0) ...[
+                  const SizedBox(width: 3),
+                  Text(
+                    '💎$vipLevel',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFF7777BB),
+                    ),
+                  ),
+                ],
+                if (trailingIcon != null) ...[
+                  const SizedBox(width: 3),
+                  Icon(trailingIcon, size: 11, color: trailingColor),
+                ],
               ],
-              if (vipLevel > 0) ...[
-                const SizedBox(width: 3),
-                Text(
-                  '💎$vipLevel',
-                  style: const TextStyle(fontSize: 9, color: Color(0xFF7777BB)),
-                ),
+            ),
+            const SizedBox(height: 3),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                if (isCurrentUser)
+                  const _RosterChip(
+                    label: '(You)',
+                    icon: Icons.person,
+                    color: Color(0xFFD4A853),
+                  ),
+                if (roleLabel != null)
+                  _RosterChip(
+                    label: roleLabel!,
+                    icon: Icons.label_outline,
+                    color: const Color(0xFFC45E7A),
+                  ),
+                if (camOn)
+                  const _RosterChip(
+                    label: 'Cam On',
+                    icon: Icons.videocam,
+                    color: Color(0xFF4CAF50),
+                  ),
+                if (hasRecentChat)
+                  _RosterChip(
+                    label: 'Chatting',
+                    icon: Icons.chat_bubble_outline,
+                    color: VelvetNoir.primary,
+                  ),
+                if (onSecretMessage != null)
+                  _RosterActionChip(
+                    label: 'Secret',
+                    icon: Icons.lock_outline,
+                    color: const Color(0xFFD4A853),
+                    onTap: onSecretMessage!,
+                  ),
+                if (onDirectMessage != null)
+                  _RosterActionChip(
+                    label: 'DM',
+                    icon: Icons.mail_outline,
+                    color: const Color(0xFFB09080),
+                    onTap: onDirectMessage!,
+                  ),
               ],
-              if (trailingIcon != null) ...[
-                const SizedBox(width: 3),
-                Icon(trailingIcon, size: 11, color: trailingColor),
-              ],
-            ],
-          ),
-          const SizedBox(height: 3),
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              if (isCurrentUser)
-                const _RosterChip(
-                  label: '(You)',
-                  icon: Icons.person,
-                  color: Color(0xFFD4A853),
-                ),
-              if (roleLabel != null)
-                _RosterChip(
-                  label: roleLabel!,
-                  icon: Icons.label_outline,
-                  color: const Color(0xFFC45E7A),
-                ),
-              if (camOn)
-                const _RosterChip(
-                  label: 'Cam On',
-                  icon: Icons.videocam,
-                  color: Color(0xFF4CAF50),
-                ),
-              if (hasRecentChat)
-                _RosterChip(
-                  label: 'Chatting',
-                  icon: Icons.chat_bubble_outline,
-                  color: VelvetNoir.primary,
-                ),
-              if (onSecretMessage != null)
-                _RosterActionChip(
-                  label: 'Secret',
-                  icon: Icons.lock_outline,
-                  color: const Color(0xFFD4A853),
-                  onTap: onSecretMessage!,
-                ),
-              if (onDirectMessage != null)
-                _RosterActionChip(
-                  label: 'DM',
-                  icon: Icons.mail_outline,
-                  color: const Color(0xFFB09080),
-                  onTap: onDirectMessage!,
-                ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
