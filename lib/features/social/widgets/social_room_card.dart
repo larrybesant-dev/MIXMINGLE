@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +54,39 @@ String _categoryEmoji(String? category) {
   }
 }
 
+String _roomActivityLabel({
+  required String? category,
+  required int speakerCount,
+  required int totalCount,
+}) {
+  final normalized = category?.trim().toLowerCase() ?? '';
+
+  if (speakerCount >= 2 && totalCount >= 8) {
+    return switch (normalized) {
+      'music' => 'Stage is hot',
+      'dating' => 'Chemistry flowing',
+      'talk' => 'Real talk live',
+      'gaming' => 'Squad locked in',
+      'chill' => 'Late night energy',
+      _ => 'Conversation live',
+    };
+  }
+
+  if (speakerCount > 0) {
+    return switch (normalized) {
+      'music' => 'Beats in motion',
+      'dating' => 'Flirting energy',
+      'chill' => 'Late night vibes',
+      'gaming' => 'Lobby is active',
+      _ => 'Getting active',
+    };
+  }
+
+  if (totalCount >= 10) return 'Crowd building';
+  if (totalCount >= 4) return 'Picking up';
+  return 'Warming up';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 /// Reusable room card for the social layer (list-style, landscape).
 ///
@@ -68,12 +100,14 @@ class SocialRoomCard extends StatelessWidget {
     required this.onTap,
     this.showWaveform = true,
     this.hostAvatarUrl,
+    this.featured = false,
     super.key,
   });
 
   final RoomModel room;
   final VoidCallback onTap;
   final bool showWaveform;
+  final bool featured;
 
   /// Optional pre-fetched host avatar URL so callers can pass it in.
   final String? hostAvatarUrl;
@@ -87,151 +121,167 @@ class SocialRoomCard extends StatelessWidget {
         ? room.memberCount
         : speakerCount + listenerCount;
     final hasActiveSpeakers = speakerCount > 0;
-    final activityLabel = hasActiveSpeakers
-        ? 'Conversation live'
-        : totalCount >= 8
-        ? 'Crowd building'
-        : totalCount >= 3
-        ? 'People joining'
-        : 'Warming up';
+    final activityLabel = _roomActivityLabel(
+      category: room.category,
+      speakerCount: speakerCount,
+      totalCount: totalCount,
+    );
     final thumb = sanitizeNetworkImageUrl(room.thumbnailUrl);
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
+      child: AnimatedScale(
         duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: VelvetNoir.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: hasActiveSpeakers
-                ? accentColor.withValues(alpha: 0.35)
-                : VelvetNoir.outlineVariant.withValues(alpha: 0.4),
-          ),
-          boxShadow: hasActiveSpeakers
-              ? [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.12),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Row(
-            children: [
-              // Left accent bar
-              Container(
-                width: 4,
-                height: 90,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accentColor, accentColor.withValues(alpha: 0.4)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-              ),
-
-              // Thumbnail
-              _Thumbnail(url: thumb, category: room.category, size: 72),
-
-              const SizedBox(width: 12),
-
-              // Info column
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Category tag + LIVE badge
-                      Row(
-                        children: [
-                          _CategoryTag(
-                            label:
-                                '${_categoryEmoji(room.category)} ${_capitalize(room.category ?? 'Room')}',
-                            color: accentColor,
-                          ),
-                          const SizedBox(width: 6),
-                          _LiveDot(),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-
-                      // Room title
-                      Text(
-                        room.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: VelvetNoir.onSurface,
+        curve: Curves.easeOutCubic,
+        scale: featured ? 1.01 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: VelvetNoir.surfaceContainer,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: featured
+                  ? VelvetNoir.primary.withValues(alpha: 0.68)
+                  : hasActiveSpeakers
+                  ? accentColor.withValues(alpha: 0.35)
+                  : VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+              width: featured ? 1.2 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    (featured
+                            ? VelvetNoir.primary
+                            : hasActiveSpeakers
+                            ? accentColor
+                            : Colors.black)
+                        .withValues(
+                          alpha: featured
+                              ? 0.16
+                              : (hasActiveSpeakers ? 0.12 : 0.08),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        child: Text(
-                          activityLabel,
-                          key: ValueKey<String>(
-                            'activity-${room.id}-$activityLabel',
-                          ),
-                          style: GoogleFonts.raleway(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: hasActiveSpeakers
-                                ? accentColor.withValues(alpha: 0.95)
-                                : VelvetNoir.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Stats row
-                      Row(
-                        children: [
-                          _StatChip(
-                            icon: Icons.people_alt_rounded,
-                            label: _formatCount(totalCount),
-                          ),
-                          const SizedBox(width: 10),
-                          _StatChip(
-                            icon: Icons.mic_rounded,
-                            label: '$speakerCount',
-                            color: hasActiveSpeakers
-                                ? VelvetNoir.secondaryBright
-                                : VelvetNoir.onSurfaceVariant,
-                          ),
-                          if (showWaveform && hasActiveSpeakers) ...[
-                            const SizedBox(width: 8),
-                            _WaveformBars(color: accentColor),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Join button
-              Padding(
-                padding: const EdgeInsets.only(right: 14),
-                child: _JoinButton(onTap: onTap),
+                blurRadius: featured ? 18 : (hasActiveSpeakers ? 16 : 8),
+                offset: const Offset(0, 4),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Row(
+              children: [
+                // Left accent bar
+                Container(
+                  width: featured ? 5 : 4,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [accentColor, accentColor.withValues(alpha: 0.4)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+
+                // Thumbnail
+                _Thumbnail(url: thumb, category: room.category, size: 72),
+
+                const SizedBox(width: 12),
+
+                // Info column
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Category tag + LIVE badge
+                        Row(
+                          children: [
+                            _CategoryTag(
+                              label:
+                                  '${_categoryEmoji(room.category)} ${_capitalize(room.category ?? 'Room')}',
+                              color: accentColor,
+                            ),
+                            const SizedBox(width: 6),
+                            _LiveDot(),
+                            if (featured) ...[
+                              const SizedBox(width: 6),
+                              const _FocusChip(label: 'Start here'),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Room title
+                        Text(
+                          room.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: VelvetNoir.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: Text(
+                            activityLabel,
+                            key: ValueKey<String>(
+                              'activity-${room.id}-$activityLabel',
+                            ),
+                            style: GoogleFonts.raleway(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: hasActiveSpeakers
+                                  ? accentColor.withValues(alpha: 0.95)
+                                  : VelvetNoir.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Stats row
+                        Row(
+                          children: [
+                            _StatChip(
+                              icon: Icons.people_alt_rounded,
+                              label: _formatCount(totalCount),
+                            ),
+                            const SizedBox(width: 10),
+                            _StatChip(
+                              icon: Icons.mic_rounded,
+                              label: '$speakerCount',
+                              color: hasActiveSpeakers
+                                  ? VelvetNoir.secondaryBright
+                                  : VelvetNoir.onSurfaceVariant,
+                            ),
+                            if (showWaveform && hasActiveSpeakers) ...[
+                              const SizedBox(width: 8),
+                              _WaveformBars(color: accentColor),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Join button
+                Padding(
+                  padding: const EdgeInsets.only(right: 14),
+                  child: _JoinButton(
+                    onTap: onTap,
+                    label: featured ? 'Jump in' : 'Join',
+                    featured: featured,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -540,6 +590,32 @@ class _CategoryTag extends StatelessWidget {
   }
 }
 
+class _FocusChip extends StatelessWidget {
+  const _FocusChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: VelvetNoir.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: VelvetNoir.primary.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.raleway(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: VelvetNoir.primary,
+        ),
+      ),
+    );
+  }
+}
+
 class _LiveDot extends StatefulWidget {
   const _LiveDot({this.compact = false});
   final bool compact;
@@ -634,8 +710,15 @@ class _StatChip extends StatelessWidget {
 }
 
 class _JoinButton extends StatelessWidget {
-  const _JoinButton({required this.onTap});
+  const _JoinButton({
+    required this.onTap,
+    this.label = 'Join',
+    this.featured = false,
+  });
+
   final VoidCallback onTap;
+  final String label;
+  final bool featured;
 
   @override
   Widget build(BuildContext context) {
@@ -652,14 +735,16 @@ class _JoinButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
             BoxShadow(
-              color: VelvetNoir.primary.withValues(alpha: 0.3),
-              blurRadius: 8,
+              color: VelvetNoir.primary.withValues(
+                alpha: featured ? 0.38 : 0.3,
+              ),
+              blurRadius: featured ? 10 : 8,
               offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Text(
-          'Join',
+          label,
           style: GoogleFonts.raleway(
             fontSize: 12,
             fontWeight: FontWeight.w700,

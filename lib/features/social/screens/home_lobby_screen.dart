@@ -224,6 +224,7 @@ class HomeLobbyScreen extends ConsumerWidget {
                                 ...suggestions.map(
                                   (room) => SocialRoomCard(
                                     key: ValueKey(room.id),
+                                    featured: room.id == featuredRoomId,
                                     room: room,
                                     onTap: () => context.go('/room/${room.id}'),
                                   ),
@@ -237,6 +238,7 @@ class HomeLobbyScreen extends ConsumerWidget {
                               .map(
                                 (room) => SocialRoomCard(
                                   key: ValueKey(room.id),
+                                  featured: room.id == featuredRoomId,
                                   room: room,
                                   onTap: () => context.go('/room/${room.id}'),
                                 ),
@@ -269,6 +271,7 @@ class HomeLobbyScreen extends ConsumerWidget {
                     ...newest.map(
                       (room) => SocialRoomCard(
                         key: ValueKey('${room.id}-new'),
+                        featured: room.id == featuredRoomId,
                         room: room,
                         onTap: () => context.go('/room/${room.id}'),
                       ),
@@ -301,6 +304,7 @@ class HomeLobbyScreen extends ConsumerWidget {
                               .map(
                                 (room) => SocialRoomCard(
                                   key: ValueKey('${room.id}-foryou'),
+                                  featured: room.id == featuredRoomId,
                                   room: room,
                                   onTap: () => context.go('/room/${room.id}'),
                                 ),

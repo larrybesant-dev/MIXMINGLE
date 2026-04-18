@@ -28,11 +28,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SocialRoomCard(
-            room: buildRoom(),
-            featured: true,
-            onTap: () {},
-          ),
+          body: SocialRoomCard(room: buildRoom(), featured: true, onTap: () {}),
         ),
       ),
     );
@@ -45,13 +41,16 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SocialRoomCardCompact(
-            room: buildRoom(category: 'dating', stageUserIds: const ['h1', 'h2']),
+            room: buildRoom(
+              category: 'dating',
+              stageUserIds: const ['h1', 'h2'],
+            ),
             onTap: () {},
           ),
         ),
       ),
     );
 
-    expect(find.text('Chemistry'), findsOneWidget);
+    expect(find.textContaining('Chemistry'), findsOneWidget);
   });
 }
