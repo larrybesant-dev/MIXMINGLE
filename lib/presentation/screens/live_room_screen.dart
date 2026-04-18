@@ -4220,7 +4220,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         }
 
         void handleStartConversation() {
-          if (isMobile && _mobileTab != 1) {
+          final isCompactViewport = MediaQuery.sizeOf(context).width < 640;
+          if (isCompactViewport && _mobileTab != 1) {
             setState(() => _mobileTab = 1);
           }
           WidgetsBinding.instance.addPostFrameCallback((_) {

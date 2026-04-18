@@ -131,6 +131,25 @@ void main() {
       },
     );
 
+    test('getLiveRooms still includes legacy live rooms missing isAdult', () async {
+      await firestore.collection('rooms').doc('legacy-room').set({
+        'name': 'Legacy Room',
+        'hostId': 'legacy-host',
+        'isLive': true,
+        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1, 8)),
+      });
+      await firestore
+          .collection('rooms')
+          .doc('legacy-room')
+          .collection('participants')
+          .doc('legacy-host')
+          .set({'lastActiveAt': Timestamp.now()});
+
+      final rooms = await service.getLiveRooms(limit: 10);
+
+      expect(rooms.map((room) => room.id), contains('legacy-room'));
+    });
+
     test('getRecommendedLiveRooms boosts friend-hosted rooms', () async {
       await firestore.collection('rooms').doc('room-friend').set({
         'name': 'Friend Room',

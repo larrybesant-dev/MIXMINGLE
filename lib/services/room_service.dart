@@ -19,31 +19,20 @@ class RoomService {
   CollectionReference<Map<String, dynamic>> get _roomsCollection =>
       _firestore.collection('rooms');
 
-  Query<Map<String, dynamic>> _liveRoomsQuery({
-    required int limit,
-    required bool includeAdultRooms,
-  }) {
-    var query = _roomsCollection.where('isLive', isEqualTo: true);
-    if (!includeAdultRooms) {
-      query = query.where('isAdult', isEqualTo: false);
-    }
-    return query.limit(limit);
+  Query<Map<String, dynamic>> _liveRoomsQuery({required int limit}) {
+    return _roomsCollection.where('isLive', isEqualTo: true).limit(limit);
   }
 
   Query<Map<String, dynamic>> _upcomingRoomsQuery({
     required int limit,
-    required bool includeAdultRooms,
     required Timestamp now,
     required Timestamp cutoff,
   }) {
-    var query = _roomsCollection
+    return _roomsCollection
         .where('isLive', isEqualTo: false)
         .where('scheduledAt', isGreaterThanOrEqualTo: now)
-        .where('scheduledAt', isLessThanOrEqualTo: cutoff);
-    if (!includeAdultRooms) {
-      query = query.where('isAdult', isEqualTo: false);
-    }
-    return query.limit(limit);
+        .where('scheduledAt', isLessThanOrEqualTo: cutoff)
+        .limit(limit);
   }
 
   CollectionReference<Map<String, dynamic>> _participantsCollection(
@@ -89,11 +78,15 @@ class RoomService {
   }
 
   Future<List<RoomModel>> _filterActiveLiveRooms(
-    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
-  ) async {
+    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs, {
+    required bool includeAdultRooms,
+  }) async {
     final activeRooms = <RoomModel>[];
     for (final doc in docs) {
       final room = RoomModel.fromJson(doc.data(), doc.id);
+      if (!includeAdultRooms && room.isAdult) {
+        continue;
+      }
       try {
         if (await _hasFreshParticipants(doc.id)) {
           activeRooms.add(room);
@@ -126,10 +119,12 @@ class RoomService {
     int limit = 30,
     bool includeAdultRooms = false,
   }) {
-    return _liveRoomsQuery(
-      limit: limit,
-      includeAdultRooms: includeAdultRooms,
-    ).snapshots().asyncMap((snapshot) => _filterActiveLiveRooms(snapshot.docs));
+    return _liveRoomsQuery(limit: limit).snapshots().asyncMap(
+      (snapshot) => _filterActiveLiveRooms(
+        snapshot.docs,
+        includeAdultRooms: includeAdultRooms,
+      ),
+    );
   }
 
   /// Rooms scheduled to start in the next 48 hours, ordered soonest first.
@@ -143,13 +138,13 @@ class RoomService {
     );
     return _upcomingRoomsQuery(
       limit: limit,
-      includeAdultRooms: includeAdultRooms,
       now: now,
       cutoff: cutoff,
     ).snapshots().map((snap) {
       final rooms =
           snap.docs
               .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+              .where((room) => includeAdultRooms || !room.isAdult)
               .toList(growable: false)
             ..sort((a, b) {
               final scheduledA =
@@ -178,7 +173,6 @@ class RoomService {
     );
     final snapshot = await _upcomingRoomsQuery(
       limit: limit,
-      includeAdultRooms: includeAdultRooms,
       now: now,
       cutoff: cutoff,
     ).get();
@@ -186,6 +180,7 @@ class RoomService {
     final rooms =
         snapshot.docs
             .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+            .where((room) => includeAdultRooms || !room.isAdult)
             .toList(growable: false)
           ..sort((a, b) {
             final scheduledA =
@@ -207,12 +202,12 @@ class RoomService {
       return const <RoomModel>[];
     }
 
-    final snapshot = await _liveRoomsQuery(
-      limit: limit,
-      includeAdultRooms: includeAdultRooms,
-    ).get();
+    final snapshot = await _liveRoomsQuery(limit: limit).get();
 
-    return _filterActiveLiveRooms(snapshot.docs);
+    return _filterActiveLiveRooms(
+      snapshot.docs,
+      includeAdultRooms: includeAdultRooms,
+    );
   }
 
   Future<List<RoomModel>> getRecommendedLiveRooms({

@@ -21,16 +21,17 @@ class RoomBrowserScreen extends ConsumerStatefulWidget {
 }
 
 class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
-  static const List<({String label, String emoji, String? value})> _categories = [
-    (label: 'All Rooms', emoji: '✨', value: null),
-    (label: 'Music',     emoji: '🎵', value: 'music'),
-    (label: 'Talk',      emoji: '💬', value: 'talk'),
-    (label: 'Gaming',    emoji: '🎮', value: 'gaming'),
-    (label: 'Dance',     emoji: '💃', value: 'dance'),
-    (label: 'Dating',    emoji: '💕', value: 'dating'),
-    (label: 'Study',     emoji: '📚', value: 'study'),
-    (label: 'Art',       emoji: '🎨', value: 'art'),
-  ];
+  static const List<({String label, String emoji, String? value})> _categories =
+      [
+        (label: 'All Rooms', emoji: '✨', value: null),
+        (label: 'Music', emoji: '🎵', value: 'music'),
+        (label: 'Talk', emoji: '💬', value: 'talk'),
+        (label: 'Gaming', emoji: '🎮', value: 'gaming'),
+        (label: 'Dance', emoji: '💃', value: 'dance'),
+        (label: 'Dating', emoji: '💕', value: 'dating'),
+        (label: 'Study', emoji: '📚', value: 'study'),
+        (label: 'Art', emoji: '🎨', value: 'art'),
+      ];
 
   String? _selectedCategory;
   bool _showGrid = false;
@@ -41,7 +42,10 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(
-        () => setState(() => _searchQuery = _searchController.text.trim().toLowerCase()));
+      () => setState(
+        () => _searchQuery = _searchController.text.trim().toLowerCase(),
+      ),
+    );
     if (widget.initialCategory != null) {
       _selectedCategory = widget.initialCategory;
       _showGrid = true;
@@ -90,32 +94,35 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
 // ── Category directory ────────────────────────────────────────────────────────
 
 class _CategoryDirectory extends StatelessWidget {
-  const _CategoryDirectory({required this.categories, required this.onCategorySelected});
+  const _CategoryDirectory({
+    required this.categories,
+    required this.onCategorySelected,
+  });
 
   final List<({String label, String emoji, String? value})> categories;
   final void Function(String? value) onCategorySelected;
 
   // Per-category gradient pairs (dark → accent)
   static const Map<String?, List<Color>> _gradients = {
-    null:      [Color(0xFF1A1210), Color(0xFF3D2B10), Color(0xFFD4A853)],
-    'music':   [Color(0xFF140D14), Color(0xFF3A0F28), Color(0xFFC45E7A)],
-    'talk':    [Color(0xFF110E0A), Color(0xFF332208), Color(0xFFFFB74D)],
-    'gaming':  [Color(0xFF0B1410), Color(0xFF0D3020), Color(0xFF4CAF50)],
-    'dance':   [Color(0xFF140A14), Color(0xFF350A30), Color(0xFFFF6EB4)],
-    'dating':  [Color(0xFF140A0D), Color(0xFF3D0A1A), Color(0xFFFF6E84)],
-    'study':   [Color(0xFF0A0F18), Color(0xFF0D2040), Color(0xFF64B5F6)],
-    'art':     [Color(0xFF14100A), Color(0xFF3A2808), Color(0xFFFFCA28)],
+    null: [Color(0xFF1A1210), Color(0xFF3D2B10), Color(0xFFD4A853)],
+    'music': [Color(0xFF140D14), Color(0xFF3A0F28), Color(0xFFC45E7A)],
+    'talk': [Color(0xFF110E0A), Color(0xFF332208), Color(0xFFFFB74D)],
+    'gaming': [Color(0xFF0B1410), Color(0xFF0D3020), Color(0xFF4CAF50)],
+    'dance': [Color(0xFF140A14), Color(0xFF350A30), Color(0xFFFF6EB4)],
+    'dating': [Color(0xFF140A0D), Color(0xFF3D0A1A), Color(0xFFFF6E84)],
+    'study': [Color(0xFF0A0F18), Color(0xFF0D2040), Color(0xFF64B5F6)],
+    'art': [Color(0xFF14100A), Color(0xFF3A2808), Color(0xFFFFCA28)],
   };
 
   static const Map<String?, Color> _accents = {
-    null:      Color(0xFFD4A853),
-    'music':   Color(0xFFC45E7A),
-    'talk':    Color(0xFFFFB74D),
-    'gaming':  Color(0xFF4CAF50),
-    'dance':   Color(0xFFFF6EB4),
-    'dating':  Color(0xFFFF6E84),
-    'study':   Color(0xFF64B5F6),
-    'art':     Color(0xFFFFCA28),
+    null: Color(0xFFD4A853),
+    'music': Color(0xFFC45E7A),
+    'talk': Color(0xFFFFB74D),
+    'gaming': Color(0xFF4CAF50),
+    'dance': Color(0xFFFF6EB4),
+    'dating': Color(0xFFFF6E84),
+    'study': Color(0xFF64B5F6),
+    'art': Color(0xFFFFCA28),
   };
 
   @override
@@ -203,12 +210,16 @@ class _CategoryDirectory extends StatelessWidget {
             context.pageHorizontalPadding,
             32,
           ),
-          sliver: SliverLayoutBuilder(builder: (ctx, constraints) {
-            final w = constraints.crossAxisExtent;
-            final cols = w > 900 ? 4 : w > 600 ? 3 : 2;
-            return SliverGrid(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) {
+          sliver: SliverLayoutBuilder(
+            builder: (ctx, constraints) {
+              final w = constraints.crossAxisExtent;
+              final cols = w > 900
+                  ? 4
+                  : w > 600
+                  ? 3
+                  : 2;
+              return SliverGrid(
+                delegate: SliverChildBuilderDelegate((_, i) {
                   final cat = categories[i];
                   final grads = _gradients[cat.value] ?? _gradients[null]!;
                   final accent = _accents[cat.value] ?? VelvetNoir.primary;
@@ -219,17 +230,16 @@ class _CategoryDirectory extends StatelessWidget {
                     accent: accent,
                     onTap: () => onCategorySelected(cat.value),
                   );
-                },
-                childCount: categories.length,
-              ),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: cols,
-                childAspectRatio: 0.9,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-            );
-          }),
+                }, childCount: categories.length),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: cols,
+                  childAspectRatio: 0.9,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -306,7 +316,11 @@ class _GoLiveBanner extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 24),
+                    child: const Icon(
+                      Icons.mic_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -334,11 +348,16 @@ class _GoLiveBanner extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 7,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: Text(
                       'GO LIVE',
@@ -469,33 +488,36 @@ class _CategoryCard extends StatelessWidget {
 
 final _roomsByCategoryProvider = StreamProvider.autoDispose
     .family<List<RoomModel>, String?>((ref, category) {
-  // Keep browser ordering stable so cards do not jump around as people join
-  // or leave rooms. Newer rooms appear first and stay in place until the
-  // underlying set of live rooms changes.
-  Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-      .collection('rooms')
-      .where('isLive', isEqualTo: true)
-      .orderBy('createdAt', descending: true)
-      .limit(50);
+      Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+          .collection('rooms')
+          .where('isLive', isEqualTo: true)
+          .limit(50);
 
-  if (category != null) {
-    query = query.where('category', isEqualTo: category);
-  }
+      if (category != null) {
+        query = query.where('category', isEqualTo: category);
+      }
 
-  return query.snapshots().map((snap) {
-    final rooms = snap.docs
-        .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-        .toList();
-    rooms.sort((a, b) {
-      final aTs = a.createdAt?.seconds ?? 0;
-      final bTs = b.createdAt?.seconds ?? 0;
-      final byCreatedAt = bTs.compareTo(aTs);
-      if (byCreatedAt != 0) return byCreatedAt;
-      return a.id.compareTo(b.id);
+      return query.snapshots().map((snap) {
+        final rooms =
+            snap.docs
+                .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+                .toList(growable: false)
+              ..sort((a, b) {
+                final memberCompare = b.memberCount.compareTo(a.memberCount);
+                if (memberCompare != 0) {
+                  return memberCompare;
+                }
+                final aTs = a.updatedAt?.seconds ?? a.createdAt?.seconds ?? 0;
+                final bTs = b.updatedAt?.seconds ?? b.createdAt?.seconds ?? 0;
+                final byActivity = bTs.compareTo(aTs);
+                if (byActivity != 0) {
+                  return byActivity;
+                }
+                return a.id.compareTo(b.id);
+              });
+        return rooms;
+      });
     });
-    return rooms;
-  });
-});
 
 class _RoomListView extends ConsumerWidget {
   const _RoomListView({
@@ -531,8 +553,11 @@ class _RoomListView extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: VelvetNoir.onSurface, size: 20),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: VelvetNoir.onSurface,
+                    size: 20,
+                  ),
                   onPressed: onBack,
                 ),
                 const SizedBox(width: 4),
@@ -566,13 +591,21 @@ class _RoomListView extends ConsumerWidget {
               decoration: InputDecoration(
                 hintText: 'Search rooms...',
                 hintStyle: GoogleFonts.raleway(
-                    fontSize: 14, color: VelvetNoir.onSurfaceVariant),
-                prefixIcon: const Icon(Icons.search_rounded,
-                    color: VelvetNoir.onSurfaceVariant, size: 20),
+                  fontSize: 14,
+                  color: VelvetNoir.onSurfaceVariant,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: VelvetNoir.onSurfaceVariant,
+                  size: 20,
+                ),
                 suffixIcon: searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            color: VelvetNoir.onSurfaceVariant, size: 18),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: VelvetNoir.onSurfaceVariant,
+                          size: 18,
+                        ),
                         onPressed: () => searchController.clear(),
                       )
                     : null,
@@ -580,20 +613,24 @@ class _RoomListView extends ConsumerWidget {
                 fillColor: VelvetNoir.surfaceContainer,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      BorderSide(color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
+                  borderSide: BorderSide(
+                    color: VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      BorderSide(color: VelvetNoir.outlineVariant.withValues(alpha: 0.4)),
+                  borderSide: BorderSide(
+                    color: VelvetNoir.outlineVariant.withValues(alpha: 0.4),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: const BorderSide(color: VelvetNoir.primary),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -604,19 +641,22 @@ class _RoomListView extends ConsumerWidget {
             final rooms = searchQuery.isEmpty
                 ? allRooms
                 : allRooms
-                    .where((r) =>
-                        r.name.toLowerCase().contains(searchQuery) ||
-                        (r.description?.toLowerCase().contains(searchQuery) ??
-                            false))
-                    .toList();
+                      .where(
+                        (r) =>
+                            r.name.toLowerCase().contains(searchQuery) ||
+                            (r.description?.toLowerCase().contains(
+                                  searchQuery,
+                                ) ??
+                                false),
+                      )
+                      .toList();
             if (rooms.isEmpty) {
               return SliverFillRemaining(
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🎙️',
-                          style: TextStyle(fontSize: 48)),
+                      const Text('🎙️', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 12),
                       Text(
                         'No live rooms right now',
@@ -637,13 +677,16 @@ class _RoomListView extends ConsumerWidget {
                       const SizedBox(height: 20),
                       TextButton.icon(
                         onPressed: () => context.go('/create-room'),
-                        icon: const Icon(Icons.mic_rounded,
-                            color: VelvetNoir.primary),
+                        icon: const Icon(
+                          Icons.mic_rounded,
+                          color: VelvetNoir.primary,
+                        ),
                         label: Text(
                           'Start a Room',
                           style: GoogleFonts.raleway(
-                              color: VelvetNoir.primary,
-                              fontWeight: FontWeight.w700),
+                            color: VelvetNoir.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -651,37 +694,39 @@ class _RoomListView extends ConsumerWidget {
                 ),
               );
             }
-            return SliverLayoutBuilder(builder: (ctx, constraints) {
-              final cols = constraints.crossAxisExtent > 900
-                  ? 4
-                  : constraints.crossAxisExtent > 600
-                      ? 3
-                      : 2;
-              return SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  context.pageHorizontalPadding,
-                  0,
-                  context.pageHorizontalPadding,
-                  24,
-                ),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => LiveRoomCard(
-                      key: ValueKey(rooms[i].id),
-                      room: rooms[i],
-                      onTap: () => context.go('/room/${rooms[i].id}'),
+            return SliverLayoutBuilder(
+              builder: (ctx, constraints) {
+                final cols = constraints.crossAxisExtent > 900
+                    ? 4
+                    : constraints.crossAxisExtent > 600
+                    ? 3
+                    : 2;
+                return SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.pageHorizontalPadding,
+                    0,
+                    context.pageHorizontalPadding,
+                    24,
+                  ),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, i) => LiveRoomCard(
+                        key: ValueKey(rooms[i].id),
+                        room: rooms[i],
+                        onTap: () => context.go('/room/${rooms[i].id}'),
+                      ),
+                      childCount: rooms.length,
                     ),
-                    childCount: rooms.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: cols,
+                      childAspectRatio: 1.15,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
                   ),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cols,
-                    childAspectRatio: 1.15,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                ),
-              );
-            });
+                );
+              },
+            );
           },
           loading: () => const _RoomBrowserLoadingSliver(),
           error: (e, _) => SliverFillRemaining(
@@ -718,8 +763,8 @@ class _RoomBrowserLoadingSliver extends StatelessWidget {
           final cols = constraints.crossAxisExtent > 900
               ? 4
               : constraints.crossAxisExtent > 600
-                  ? 3
-                  : 2;
+              ? 3
+              : 2;
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (context, index) => Container(
