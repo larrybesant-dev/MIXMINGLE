@@ -10,11 +10,13 @@ import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
 import '../../../core/utils/network_image_url.dart';
 import '../../../features/feed/providers/user_providers.dart' as feed_user;
+import '../../../features/friends/models/friend_roster_entry.dart';
 import '../../../features/friends/providers/friends_providers.dart';
 import '../../../services/web_popout_service.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
 import '../models/message_model.dart';
+import '../../../models/user_model.dart';
 import '../providers/messaging_provider.dart';
 
 class ChatPaneView extends ConsumerStatefulWidget {
@@ -216,13 +218,17 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
             (participantId) => participantId != widget.userId,
             orElse: () => '',
           );
-    final roster = ref.watch(friendRosterProvider).valueOrNull ?? const [];
-    final rosterEntry = roster.cast<dynamic>().firstWhere(
-          (entry) => entry.friendId == otherUserId,
-          orElse: () => null,
-        );
+    final roster =
+        ref.watch(friendRosterProvider).valueOrNull ?? const <FriendRosterEntry>[];
+    FriendRosterEntry? rosterEntry;
+    for (final entry in roster) {
+      if (entry.friendId == otherUserId) {
+        rosterEntry = entry;
+        break;
+      }
+    }
     final otherUserAsync = otherUserId.isEmpty
-        ? const AsyncValue<dynamic>.data(null)
+        ? const AsyncValue<UserModel?>.data(null)
         : ref.watch(feed_user.userProvider(otherUserId));
     final displayName = conversation?.type == 'group'
         ? (conversation?.groupName ?? 'Group Chat')

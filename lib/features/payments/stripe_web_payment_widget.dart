@@ -74,7 +74,7 @@ class _StripeWebPaymentWidgetState
       // Integrate Crashlytics for error reporting (not on web)
       if (!kIsWeb) {
         try {
-          FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Stripe checkout session creation failed');
+          await FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Stripe checkout session creation failed');
         } catch (_) {
           FlutterError.reportError(FlutterErrorDetails(exception: e, stack: stack));
         }

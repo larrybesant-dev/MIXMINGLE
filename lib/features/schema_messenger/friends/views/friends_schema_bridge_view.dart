@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
@@ -172,7 +173,7 @@ class _FriendsSchemaBridgeViewState
         return;
       }
 
-      router.push('/messages/$conversationId');
+      unawaited(router.push('/messages/$conversationId'));
     } catch (error) {
       if (!mounted) {
         return;

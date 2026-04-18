@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/feed/providers/host_controls_providers.dart';
 import 'package:mixvy/features/room/providers/host_provider.dart';
-import 'package:mixvy/features/room/room_controller.dart';
 import 'package:mixvy/features/room/providers/message_providers.dart';
 import 'package:mixvy/features/room/providers/mic_access_provider.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
@@ -21,7 +20,10 @@ import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/features/room/providers/presence_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/features/room/room_controller.dart'
-    show roomParticipantCanBeShownAsTalking;
+    show
+        RoomMembershipState,
+        roomControllerProvider,
+        roomParticipantCanBeShownAsTalking;
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
 void main() {

@@ -20,7 +20,7 @@ class FollowersScreen extends ConsumerWidget {
 
     return AppPageScaffold(
       appBar: AppBar(title: const Text('Followers')),
-      body: AppAsyncValueView<List<dynamic>>(
+      body: AppAsyncValueView<List<UserFollow>>(
         value: followersAsync,
         fallbackContext: 'followers',
         isEmpty: (followers) => followers.isEmpty,
@@ -58,7 +58,7 @@ class FollowingScreen extends ConsumerWidget {
 
     return AppPageScaffold(
       appBar: AppBar(title: const Text('Following')),
-      body: AppAsyncValueView<List<dynamic>>(
+      body: AppAsyncValueView<List<UserFollow>>(
         value: followingAsync,
         fallbackContext: 'following',
         isEmpty: (following) => following.isEmpty,

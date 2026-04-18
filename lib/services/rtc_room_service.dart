@@ -9,15 +9,26 @@ import '../features/room/controllers/room_state.dart';
 /// implementations without changing any call sites.
 abstract class RtcRoomService {
   // ──────────────────────────────────────────────────────────────────────────
-  // Callbacks – concrete subclasses declare matching fields.
+  // Callbacks
   // ──────────────────────────────────────────────────────────────────────────
 
-  VoidCallback? onRemoteUserJoined;
-  VoidCallback? onRemoteUserLeft;
-  VoidCallback? onSpeakerActivityChanged;
-  VoidCallback? onLocalVideoCaptureChanged;
-  VoidCallback? onTokenWillExpire;
-  VoidCallback? onConnectionLost;
+  VoidCallback? get onRemoteUserJoined;
+  set onRemoteUserJoined(VoidCallback? value);
+
+  VoidCallback? get onRemoteUserLeft;
+  set onRemoteUserLeft(VoidCallback? value);
+
+  VoidCallback? get onSpeakerActivityChanged;
+  set onSpeakerActivityChanged(VoidCallback? value);
+
+  VoidCallback? get onLocalVideoCaptureChanged;
+  set onLocalVideoCaptureChanged(VoidCallback? value);
+
+  VoidCallback? get onTokenWillExpire;
+  set onTokenWillExpire(VoidCallback? value);
+
+  VoidCallback? get onConnectionLost;
+  set onConnectionLost(VoidCallback? value);
 
   // ──────────────────────────────────────────────────────────────────────────
   // State getters

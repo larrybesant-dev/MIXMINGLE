@@ -8,6 +8,7 @@ import '../../models/notification_model.dart';
 import '../providers/notification_provider.dart';
 import '../../core/logger.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
+import '../../services/notification_service.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 
@@ -49,7 +50,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     BuildContext context,
     String userId,
     NotificationModel notification,
-    dynamic service,
+    NotificationService service,
   ) async {
     if (!notification.isRead) {
       try {

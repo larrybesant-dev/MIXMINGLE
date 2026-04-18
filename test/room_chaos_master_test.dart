@@ -49,6 +49,24 @@ class _FakeRtcRoomService extends RtcRoomService {
   int broadcasterCalls = 0;
 
   @override
+  VoidCallback? onRemoteUserJoined;
+
+  @override
+  VoidCallback? onRemoteUserLeft;
+
+  @override
+  VoidCallback? onSpeakerActivityChanged;
+
+  @override
+  VoidCallback? onLocalVideoCaptureChanged;
+
+  @override
+  VoidCallback? onTokenWillExpire;
+
+  @override
+  VoidCallback? onConnectionLost;
+
+  @override
   List<int> get remoteUids => const <int>[];
 
   @override

@@ -391,7 +391,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   }
 
   // ── glassmorphic auth card ────────────────────────────────────────────────
-  Widget _authCard(dynamic authState) {
+  Widget _authCard(AuthState authState) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(

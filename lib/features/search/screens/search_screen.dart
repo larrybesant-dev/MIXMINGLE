@@ -108,7 +108,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          AppAsyncValueView<List<dynamic>>(
+          AppAsyncValueView<List<SearchHashtag>>(
             value: trendingAsync,
             fallbackContext: 'trending results',
             isEmpty: (hashtags) => hashtags.isEmpty,
@@ -142,7 +142,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       final usersAsync = _searchQuery.isEmpty
           ? ref.watch(browseAllUsersProvider)
           : ref.watch(searchUsersProvider(_searchQuery));
-      return AppAsyncValueView<List<dynamic>>(
+      return AppAsyncValueView<List<SearchUser>>(
         value: usersAsync,
         fallbackContext: 'users',
         isEmpty: (users) => users.isEmpty,
@@ -186,7 +186,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     } else if (_selectedTab == 1) {
       final postsAsync = ref.watch(searchPostsProvider(_searchQuery));
-      return AppAsyncValueView<List<dynamic>>(
+      return AppAsyncValueView<List<SearchPost>>(
         value: postsAsync,
         fallbackContext: 'posts',
         isEmpty: (posts) => posts.isEmpty,
@@ -214,7 +214,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     } else {
       final hashtagsAsync = ref.watch(searchHashtagsProvider(_searchQuery));
-      return AppAsyncValueView<List<dynamic>>(
+      return AppAsyncValueView<List<SearchHashtag>>(
         value: hashtagsAsync,
         fallbackContext: 'hashtags',
         isEmpty: (hashtags) => hashtags.isEmpty,

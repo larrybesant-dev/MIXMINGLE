@@ -66,7 +66,7 @@ class BookmarksScreen extends ConsumerWidget {
 class _BookmarkRemoveButton extends StatelessWidget {
   final String userId;
   final String bookmarkId;
-  final dynamic bookmarkController;
+  final BookmarkController bookmarkController;
 
   const _BookmarkRemoveButton({
     required this.userId,

@@ -97,7 +97,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       // Log signup event
       await AnalyticsService().logEvent('signup', params: {'method': 'email_password'});
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      await Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 }

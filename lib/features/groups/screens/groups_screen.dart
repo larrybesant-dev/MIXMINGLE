@@ -7,6 +7,7 @@ import '../../../core/theme.dart';
 import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/brand_ui_kit.dart';
+import '../models/group_model.dart';
 import '../providers/groups_provider.dart';
 
 class GroupsScreen extends ConsumerWidget {
@@ -47,7 +48,7 @@ class GroupsScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            AppAsyncValueView<List<dynamic>>(
+            AppAsyncValueView<List<Group>>(
               value: groupsAsync,
               fallbackContext: 'groups',
               isEmpty: (groups) => groups.isEmpty,
@@ -148,7 +149,7 @@ class GroupsScreen extends ConsumerWidget {
                   },
               ),
             ),
-            AppAsyncValueView<List<dynamic>>(
+            AppAsyncValueView<List<Group>>(
               value: userGroupsAsync,
               fallbackContext: 'your groups',
               isEmpty: (groups) => groups.isEmpty,

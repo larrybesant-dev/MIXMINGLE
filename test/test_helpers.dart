@@ -89,8 +89,10 @@ Future<void> testSetup() async {
             case 'setDouble':
             case 'setString':
             case 'setStringList':
-              final key = methodCall.arguments['key'] as String;
-              final value = methodCall.arguments['value'];
+              final arguments =
+                  Map<Object?, Object?>.from(methodCall.arguments as Map);
+              final key = arguments['key'] as String;
+              final value = arguments['value'];
               _sharedPrefsStore[key] = value;
               return true;
             case 'remove':

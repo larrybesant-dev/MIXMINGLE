@@ -81,7 +81,10 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
       }
 
       // Not yet matched — watch queue entry for server-side pairing
-      _queueSub?.cancel();
+      final existingQueueSub = _queueSub;
+      if (existingQueueSub != null) {
+        unawaited(existingQueueSub.cancel());
+      }
       _queueSub = _service.watchQueueEntry(uid).listen((entry) {
         if (!mounted) return;
         if (entry != null && entry.matched && entry.sessionId != null) {
@@ -105,12 +108,18 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
 
   void _watchSession(String sessionId, String uid) {
     setState(() => _queueSessionId = sessionId);
-    _sessionSub?.cancel();
+    final existingSessionSub = _sessionSub;
+    if (existingSessionSub != null) {
+      unawaited(existingSessionSub.cancel());
+    }
     _sessionSub = _service.watchSession(sessionId).listen((data) {
       if (!mounted || data == null) return;
       final roomId = data['roomId'] as String?;
       if (roomId != null) {
-        _sessionSub?.cancel();
+        final currentSessionSub = _sessionSub;
+        if (currentSessionSub != null) {
+          unawaited(currentSessionSub.cancel());
+        }
         _sessionSub = null;
         context.go('/room/$roomId');
       }
@@ -118,8 +127,14 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
   }
 
   void _leaveQueueMode() async {
-    _queueSub?.cancel();
-    _sessionSub?.cancel();
+    final queueSub = _queueSub;
+    if (queueSub != null) {
+      unawaited(queueSub.cancel());
+    }
+    final sessionSub = _sessionSub;
+    if (sessionSub != null) {
+      unawaited(sessionSub.cancel());
+    }
     _sessionSub = null;
     try {
       await _service.leaveQueue();

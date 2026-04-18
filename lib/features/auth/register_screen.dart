@@ -206,7 +206,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   // ── wide two-column layout ────────────────────────────────────────────────
-  Widget _wideLayout(dynamic authState) {
+  Widget _wideLayout(AuthState authState) {
     return Row(
       children: [
         Expanded(
@@ -256,7 +256,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   // ── narrow single-column layout ───────────────────────────────────────────
-  Widget _narrowLayout(dynamic authState) {
+  Widget _narrowLayout(AuthState authState) {
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         context.pageHorizontalPadding,
@@ -348,9 +348,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   // ── glassmorphic register card ────────────────────────────────────────────
-  Widget _registerCard(dynamic authState) {
-    final isLoading = authState.isLoading as bool;
-    final serverError = authState.error as String?;
+  Widget _registerCard(AuthState authState) {
+    final isLoading = authState.isLoading;
+    final serverError = authState.error;
     final errorText = _localError ?? serverError;
 
     return ClipRRect(

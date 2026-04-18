@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -419,7 +421,9 @@ class MessageRequestsSheet extends ConsumerWidget {
                                 );
                             if (context.mounted) {
                               Navigator.of(context).pop();
-                              GoRouter.of(context).push('/messages/${conversation.id}');
+                              unawaited(
+                                GoRouter.of(context).push('/messages/${conversation.id}'),
+                              );
                             }
                           },
                           style: TextButton.styleFrom(

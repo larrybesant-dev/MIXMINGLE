@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -323,7 +325,7 @@ class _MessageButton extends ConsumerWidget {
                 user2AvatarUrl: friend.avatarUrl,
               );
           navigator.pop();
-          router.push('/messages/$conversationId');
+          unawaited(router.push('/messages/$conversationId'));
         } catch (error) {
           messenger.showSnackBar(
             SnackBar(content: Text('Could not open chat: $error')),

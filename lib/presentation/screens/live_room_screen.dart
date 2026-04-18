@@ -4324,10 +4324,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               );
             }
             if (scrollController.hasClients) {
-              scrollController.animateTo(
-                scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
+              unawaited(
+                scrollController.animateTo(
+                  scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                ),
               );
             }
           } catch (e) {

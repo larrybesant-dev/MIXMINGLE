@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,9 +70,9 @@ class _UserProfilePopupSheetState
     if (widget.preloadedUser != null) {
       _profile = widget.preloadedUser;
       _loading = false;
-      _loadRelationship();
+      unawaited(_loadRelationship());
     } else {
-      _loadProfile();
+      unawaited(_loadProfile());
     }
   }
 
@@ -85,7 +87,7 @@ class _UserProfilePopupSheetState
           _profile = UserModel.fromJson({'id': doc.id, ...?doc.data()});
           _loading = false;
         });
-        _loadRelationship();
+        unawaited(_loadRelationship());
       } else if (mounted) {
         setState(() => _loading = false);
       }

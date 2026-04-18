@@ -517,7 +517,9 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
   Widget _buildBentoGrid(List<RoomModel> rooms) {
     if (rooms.isEmpty) return const SizedBox.shrink();
     final hero = rooms[0];
-    final secondary = rooms.length > 1 ? rooms.sublist(1, rooms.length.clamp(1, 3)) : [];
+    final List<RoomModel> secondary = rooms.length > 1
+        ? rooms.sublist(1, rooms.length.clamp(1, 3))
+        : const <RoomModel>[];
     final context = this.context;
 
     return SizedBox(

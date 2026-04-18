@@ -12,6 +12,7 @@ import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
 import 'leaderboard_provider.dart';
 import '../../presentation/providers/user_provider.dart';
+import '../../models/room_model.dart';
 import '../stories/widgets/stories_row.dart';
 import 'daily_checkin_card.dart';
 import 'leaderboard_strip.dart';
@@ -697,7 +698,7 @@ class _NewMemberChip extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _LiveNowTile extends StatelessWidget {
-  final dynamic room;
+  final RoomModel room;
   final VoidCallback onTap;
   const _LiveNowTile({super.key, required this.room, required this.onTap});
 
@@ -937,7 +938,7 @@ class _DiscoverPersonCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _PopularRoomCard extends StatelessWidget {
-  final dynamic room;
+  final RoomModel room;
   final VoidCallback onTap;
   const _PopularRoomCard({super.key, required this.room, required this.onTap});
 
@@ -1204,7 +1205,7 @@ int _nudgeTab(List<String> items) {
 
 class _ProfileNudge extends StatelessWidget {
   final List<String> setupItems;
-  final dynamic profileState;
+  final ProfileState profileState;
   const _ProfileNudge({required this.setupItems, required this.profileState});
 
   @override

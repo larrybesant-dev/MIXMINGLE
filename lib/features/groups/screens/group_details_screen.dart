@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/layout/app_layout.dart';
+import '../models/group_model.dart';
 import '../providers/groups_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -162,7 +163,7 @@ class GroupDetailsScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: AppAsyncValueView<List<dynamic>>(
+                child: AppAsyncValueView<List<GroupPost>>(
                   value: postsAsync,
                   fallbackContext: 'posts',
                   isEmpty: (posts) => posts.isEmpty,

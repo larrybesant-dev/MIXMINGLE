@@ -39,7 +39,7 @@ bool get _crashlyticsSupported =>
         defaultTargetPlatform == TargetPlatform.macOS);
 
 void main() async {
-  runZonedGuarded(
+  await runZonedGuarded(
     () async {
       _bootstrapLog('main() entered');
       WidgetsFlutterBinding.ensureInitialized();
@@ -128,7 +128,9 @@ void main() async {
             );
 
             if (_crashlyticsSupported) {
-              FirebaseCrashlytics.instance.recordFlutterError(details);
+              unawaited(
+                FirebaseCrashlytics.instance.recordFlutterError(details),
+              );
             }
           };
           _bootstrapLog('FlutterError handler installed');
@@ -142,10 +144,12 @@ void main() async {
             );
 
             if (_crashlyticsSupported) {
-              FirebaseCrashlytics.instance.recordError(
-                error,
-                stack,
-                fatal: true,
+              unawaited(
+                FirebaseCrashlytics.instance.recordError(
+                  error,
+                  stack,
+                  fatal: true,
+                ),
               );
             }
 
@@ -156,7 +160,9 @@ void main() async {
 
           // Crashlytics collection (only on Android/iOS/macOS)
           if (_crashlyticsSupported) {
-            FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+            await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+              true,
+            );
             _bootstrapLog('Crashlytics collection enabled');
           }
         } catch (e) {
@@ -237,10 +243,12 @@ void main() async {
       );
 
       if (_crashlyticsSupported) {
-        FirebaseCrashlytics.instance.recordError(
-          error,
-          stackTrace,
-          fatal: true,
+        unawaited(
+          FirebaseCrashlytics.instance.recordError(
+            error,
+            stackTrace,
+            fatal: true,
+          ),
         );
       }
     },
