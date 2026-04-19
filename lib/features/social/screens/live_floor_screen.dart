@@ -310,6 +310,7 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                   key: RoomLayoutV1.heroKey,
                   roomCount: previewRooms.length,
                   listenerCount: listenerCount,
+                  isLoading: roomsAsync.isLoading,
                   sortLabel: _sort.label,
                   onQuickJoin: () {
                     if (previewRooms.isNotEmpty) {
@@ -458,6 +459,7 @@ class LiveFloorHeroBanner extends StatelessWidget {
     required this.listenerCount,
     required this.onQuickJoin,
     required this.onStartRoom,
+    this.isLoading = false,
     this.sortLabel = 'Most Active',
   });
 
@@ -465,6 +467,7 @@ class LiveFloorHeroBanner extends StatelessWidget {
   final int listenerCount;
   final VoidCallback onQuickJoin;
   final VoidCallback onStartRoom;
+  final bool isLoading;
   final String sortLabel;
 
   @override
@@ -524,8 +527,16 @@ class LiveFloorHeroBanner extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _HeroStatPill(label: '$roomCount active rooms'),
-              _HeroStatPill(label: '$listenerCount listening live'),
+              _HeroStatPill(
+                label: isLoading
+                    ? 'Loading live rooms'
+                    : '$roomCount active rooms',
+              ),
+              _HeroStatPill(
+                label: isLoading
+                    ? 'Syncing listener counts'
+                    : '$listenerCount listening live',
+              ),
               _HeroStatPill(label: 'Sorted by $sortLabel'),
             ],
           ),
@@ -746,18 +757,19 @@ class _FloorLoadingShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        5,
-        (i) => Container(
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 24),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           height: 86,
           decoration: BoxDecoration(
             color: VelvetNoir.surfaceHigh,
             borderRadius: BorderRadius.circular(16),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
