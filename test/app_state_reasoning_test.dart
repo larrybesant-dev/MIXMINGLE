@@ -15,6 +15,8 @@ void main() {
 
       expect(reason.stateLabel, 'loading');
       expect(reason.primaryReason, contains('loading'));
+      expect(reason.confidence, StateReasonConfidence.medium);
+      expect(reason.confidenceLabel, 'expected delay');
     });
 
     test('reports filter-driven emptiness', () {
@@ -29,6 +31,7 @@ void main() {
 
       expect(reason.stateLabel, 'filtered');
       expect(reason.primaryReason, contains('filter'));
+      expect(reason.confidence, StateReasonConfidence.high);
     });
 
     test('reports backend emptiness when nothing exists', () {
@@ -43,6 +46,8 @@ void main() {
 
       expect(reason.stateLabel, 'empty');
       expect(reason.primaryReason, contains('No live rooms'));
+      expect(reason.confidence, StateReasonConfidence.confirmed);
+      expect(reason.confidenceLabel, 'confirmed backend');
     });
 
     test('reports ready state when items are visible', () {
@@ -57,6 +62,34 @@ void main() {
 
       expect(reason.stateLabel, 'ready');
       expect(reason.primaryReason, contains('visible'));
+      expect(reason.confidence, StateReasonConfidence.high);
+      expect(reason.confidenceLabel, 'high confidence');
+    });
+  });
+
+  group('explainLiveRoomHydration', () {
+    test('reports hydrating state with expected delay confidence', () {
+      final reason = explainLiveRoomHydration(
+        lifecycleLabel: 'hydrating',
+        userCount: 0,
+        pendingCount: 2,
+      );
+
+      expect(reason.stateLabel, 'hydrating');
+      expect(reason.confidence, StateReasonConfidence.medium);
+      expect(reason.confidenceLabel, 'expected delay');
+    });
+
+    test('reports ended state as confirmed', () {
+      final reason = explainLiveRoomHydration(
+        lifecycleLabel: 'ended',
+        userCount: 0,
+        pendingCount: 0,
+      );
+
+      expect(reason.stateLabel, 'ended');
+      expect(reason.confidence, StateReasonConfidence.confirmed);
+      expect(reason.confidenceLabel, 'confirmed state');
     });
   });
 }

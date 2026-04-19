@@ -6,15 +6,30 @@ class StateReasonSummary {
     required this.primaryReason,
     this.details = const <String>[],
     this.severity = StateReasonSeverity.info,
+    this.confidence = StateReasonConfidence.medium,
+    this.confidenceNote,
   });
 
   final String stateLabel;
   final String primaryReason;
   final List<String> details;
   final StateReasonSeverity severity;
+  final StateReasonConfidence confidence;
+  final String? confidenceNote;
+
+  String get confidenceLabel =>
+      confidenceNote ??
+      switch (confidence) {
+        StateReasonConfidence.low => 'low confidence',
+        StateReasonConfidence.medium => 'expected delay',
+        StateReasonConfidence.high => 'high confidence',
+        StateReasonConfidence.confirmed => 'confirmed state',
+      };
 }
 
 enum StateReasonSeverity { info, success, warning, error }
+
+enum StateReasonConfidence { low, medium, high, confirmed }
 
 StateReasonSummary explainCollectionVisibility({
   required String sourceName,
@@ -35,6 +50,8 @@ StateReasonSummary explainCollectionVisibility({
       primaryReason:
           'The $source are still loading, so the screen may look temporarily empty.',
       details: ['source=$source', 'filter=$filter'],
+      confidence: StateReasonConfidence.medium,
+      confidenceNote: 'expected delay',
     );
   }
 
@@ -46,6 +63,7 @@ StateReasonSummary explainCollectionVisibility({
           : 'The $source stream returned an error.',
       details: ['source=$source', 'filter=$filter'],
       severity: StateReasonSeverity.error,
+      confidence: StateReasonConfidence.high,
     );
   }
 
@@ -55,6 +73,8 @@ StateReasonSummary explainCollectionVisibility({
       primaryReason: 'No live rooms are currently available from the backend.',
       details: ['source=$source', 'filter=$filter', 'total=0'],
       severity: StateReasonSeverity.warning,
+      confidence: StateReasonConfidence.confirmed,
+      confidenceNote: 'confirmed backend',
     );
   }
 
@@ -64,6 +84,7 @@ StateReasonSummary explainCollectionVisibility({
       primaryReason: 'The current filter is hiding all available $source.',
       details: ['source=$source', 'filter=$filter', 'total=$totalCount'],
       severity: StateReasonSeverity.warning,
+      confidence: StateReasonConfidence.high,
     );
   }
 
@@ -74,14 +95,17 @@ StateReasonSummary explainCollectionVisibility({
           'Visibility or permission rules are currently hiding the available $source.',
       details: ['source=$source', 'filter=$filter', 'total=$totalCount'],
       severity: StateReasonSeverity.warning,
+      confidence: StateReasonConfidence.medium,
+      confidenceNote: 'moderate confidence',
     );
   }
 
   return StateReasonSummary(
     stateLabel: 'ready',
-    primaryReason: 'Visible $source are available and the screen is hydrated.',
+    primaryReason: 'There are visible $source and the screen is hydrated.',
     details: ['source=$source', 'filter=$filter', 'visible=$visibleCount'],
     severity: StateReasonSeverity.success,
+    confidence: StateReasonConfidence.high,
   );
 }
 
@@ -101,6 +125,7 @@ StateReasonSummary explainLiveRoomHydration({
       primaryReason: errorMessage!.trim(),
       details: ['lifecycle=$normalizedLifecycle', 'users=$userCount'],
       severity: StateReasonSeverity.error,
+      confidence: StateReasonConfidence.high,
     );
   }
 
@@ -111,6 +136,8 @@ StateReasonSummary explainLiveRoomHydration({
           'The room has ended, so active content is no longer expected.',
       details: ['lifecycle=$normalizedLifecycle'],
       severity: StateReasonSeverity.warning,
+      confidence: StateReasonConfidence.confirmed,
+      confidenceNote: 'confirmed state',
     );
   }
 
@@ -125,6 +152,8 @@ StateReasonSummary explainLiveRoomHydration({
         'users=$userCount',
         'pending=$pendingCount',
       ],
+      confidence: StateReasonConfidence.medium,
+      confidenceNote: 'expected delay',
     );
   }
 
@@ -134,6 +163,7 @@ StateReasonSummary explainLiveRoomHydration({
       primaryReason: 'No confirmed room members are present yet.',
       details: ['lifecycle=$normalizedLifecycle', 'pending=$pendingCount'],
       severity: StateReasonSeverity.warning,
+      confidence: StateReasonConfidence.low,
     );
   }
 
@@ -143,6 +173,7 @@ StateReasonSummary explainLiveRoomHydration({
         'Room state is active and confirmed participants are present.',
     details: ['lifecycle=$normalizedLifecycle', 'users=$userCount'],
     severity: StateReasonSeverity.success,
+    confidence: StateReasonConfidence.high,
   );
 }
 
@@ -200,6 +231,14 @@ class StateReasonCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
+              _FallbackChip(
+                label: 'state: ${summary.stateLabel}',
+                textColor: foreground,
+              ),
+              _FallbackChip(
+                label: 'confidence: ${summary.confidenceLabel}',
+                textColor: foreground,
+              ),
               if (metricChipBuilder != null)
                 ...metrics.map(metricChipBuilder!)
               else
