@@ -155,6 +155,8 @@ class RoomsVisibilityDebugPanel extends StatelessWidget {
       visibleCount: visibleRoomCount,
       filterLabel: 'all',
       errorMessage: hint,
+      isBackendConfirmed:
+          streamStateLabel != 'loading' && streamStateLabel != 'error',
     );
 
     return StateReasonCard(

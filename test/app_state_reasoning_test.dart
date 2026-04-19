@@ -34,7 +34,7 @@ void main() {
       expect(reason.confidence, StateReasonConfidence.high);
     });
 
-    test('reports backend emptiness when nothing exists', () {
+    test('reports cautious emptiness when backend confirmation is missing', () {
       final reason = explainCollectionVisibility(
         sourceName: 'rooms',
         isLoading: false,
@@ -45,7 +45,24 @@ void main() {
       );
 
       expect(reason.stateLabel, 'empty');
-      expect(reason.primaryReason, contains('No live rooms'));
+      expect(reason.primaryReason, contains('visible'));
+      expect(reason.confidence, StateReasonConfidence.low);
+      expect(reason.confidenceLabel, 'low confidence');
+    });
+
+    test('reports confirmed backend emptiness when explicitly verified', () {
+      final reason = explainCollectionVisibility(
+        sourceName: 'rooms',
+        isLoading: false,
+        hasError: false,
+        totalCount: 0,
+        visibleCount: 0,
+        filterLabel: 'all',
+        isBackendConfirmed: true,
+      );
+
+      expect(reason.stateLabel, 'empty');
+      expect(reason.primaryReason, contains('backend'));
       expect(reason.confidence, StateReasonConfidence.confirmed);
       expect(reason.confidenceLabel, 'confirmed backend');
     });

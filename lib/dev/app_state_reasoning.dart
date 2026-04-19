@@ -39,6 +39,7 @@ StateReasonSummary explainCollectionVisibility({
   required int visibleCount,
   required String filterLabel,
   String? errorMessage,
+  bool isBackendConfirmed = false,
 }) {
   final source = sourceName.trim().isEmpty ? 'items' : sourceName.trim();
   final filter = filterLabel.trim().isEmpty ? 'all' : filterLabel.trim();
@@ -70,11 +71,15 @@ StateReasonSummary explainCollectionVisibility({
   if (totalCount == 0) {
     return StateReasonSummary(
       stateLabel: 'empty',
-      primaryReason: 'No live rooms are currently available from the backend.',
+      primaryReason: isBackendConfirmed
+          ? 'No live rooms are currently available from the backend.'
+          : 'No visible $source have been confirmed yet from the current stream.',
       details: ['source=$source', 'filter=$filter', 'total=0'],
       severity: StateReasonSeverity.warning,
-      confidence: StateReasonConfidence.confirmed,
-      confidenceNote: 'confirmed backend',
+      confidence: isBackendConfirmed
+          ? StateReasonConfidence.confirmed
+          : StateReasonConfidence.low,
+      confidenceNote: isBackendConfirmed ? 'confirmed backend' : null,
     );
   }
 

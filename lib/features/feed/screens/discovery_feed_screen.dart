@@ -376,6 +376,8 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
       visibleCount: visibleRoomCount,
       filterLabel: selectedCategoryLabel,
       errorMessage: hint,
+      isBackendConfirmed:
+          streamStateLabel != 'loading' && streamStateLabel != 'error',
     );
 
     return StateReasonCard(
