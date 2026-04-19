@@ -99,11 +99,13 @@ class MicAccessController {
 
     final requestId = _requestDocId(requesterId, hostId);
     final requestRef = _requestCollection(roomId).doc(requestId);
-    final roomRef = _db.collection('rooms').doc(roomId);
     final now = DateTime.now();
     final requesterSnapshot = await _requestCollection(
       roomId,
     ).where('requesterId', isEqualTo: requesterId).get();
+    final pendingSnapshot = await _requestCollection(
+      roomId,
+    ).where('status', isEqualTo: 'pending').get();
 
     final relatedDocs = requesterSnapshot.docs;
     final conflictingPendingDocs = relatedDocs
@@ -130,10 +132,22 @@ class MicAccessController {
       throw StateError('Please wait a moment before raising your hand again.');
     }
 
+    final highestPendingPriority = pendingSnapshot.docs.fold<int>(0, (
+      maxPriority,
+      doc,
+    ) {
+      final data = doc.data();
+      final expiresAt = _asDateTime(data['expiresAt']);
+      if (expiresAt != null && !expiresAt.isAfter(now)) {
+        return maxPriority;
+      }
+      final docPriority = _asInt(data['priority'], fallback: 0);
+      return docPriority > maxPriority ? docPriority : maxPriority;
+    });
+
     var shouldNotifyHost = false;
 
     await _db.runTransaction((tx) async {
-      final roomSnapshot = await tx.get(roomRef);
       final existingSnapshot = await tx.get(requestRef);
       final existingData = existingSnapshot.data();
       final existingStatus = _asNullableString(existingData?['status']) ?? '';
@@ -146,9 +160,7 @@ class MicAccessController {
         return;
       }
 
-      final nextPriority =
-          priority ??
-          _asInt(roomSnapshot.data()?['micQueueSequence'], fallback: 0) + 1;
+      final nextPriority = priority ?? highestPendingPriority + 1;
 
       for (final conflictingDoc in conflictingPendingDocs) {
         tx.set(conflictingDoc.reference, {
@@ -158,10 +170,6 @@ class MicAccessController {
         }, SetOptions(merge: true));
       }
 
-      tx.set(roomRef, {
-        'micQueueSequence': nextPriority,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
       shouldNotifyHost = true;
       tx.set(requestRef, {
         'id': requestId,

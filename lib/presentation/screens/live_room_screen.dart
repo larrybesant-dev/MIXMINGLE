@@ -4224,6 +4224,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             : 'Crowd building';
         final isOnMic = participantHasMicSeat(effectiveSelfParticipant);
         final isMicFree = isOnMic || onMicCount < RoomState.maxSpeakers;
+        final pendingMicRequests =
+            (micRequestsAsync.valueOrNull ?? const <MicAccessRequestModel>[])
+                .where((request) => request.status == 'pending')
+                .toList(growable: false);
 
         Future<void> handleReleaseMic() async {
           try {
@@ -4351,6 +4355,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             liveRoomState.audioState != RoomAudioState.denied &&
             (allowMicRequests || onMicCount < RoomState.maxSpeakers) &&
             !hasPendingMicRequest;
+        final myQueueIndex = pendingMicRequests.indexWhere(
+          (request) => request.requesterId == user.id,
+        );
+        final myQueuePosition = myQueueIndex >= 0 ? myQueueIndex + 1 : null;
+        final micDebugState = isOnMic
+            ? 'on mic'
+            : hasPendingMicRequest
+            ? (myQueuePosition == null ? 'queued' : 'queue #$myQueuePosition')
+            : canRequestMic
+            ? 'ready'
+            : 'blocked';
+        final micDebugSync = micRequestsAsync.when(
+          data: (requests) => 'ready ${requests.length}',
+          loading: () => 'loading',
+          error: (error, _) => 'error',
+        );
         final VoidCallback? onGrabMicAction = isOnMic
             ? () => unawaited(handleReleaseMic())
             : hasPendingMicRequest
@@ -6136,6 +6156,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   child: const SizedBox.expand(),
                 ),
               ),
+              if (kEnableVisibilityDiagnostics)
+                Positioned(
+                  right: 8,
+                  bottom: 120,
+                  child: _MicDebugOverlay(
+                    roleLabel: role,
+                    stateLabel: micDebugState,
+                    requestStatus: activeMicRequest?.status ?? 'none',
+                    syncStatus: micDebugSync,
+                    pendingCount: pendingMicRequests.length,
+                    onMicCount: onMicCount,
+                  ),
+                ),
               // Debug inspector button — debug-only and centrally gated.
               if (kEnableVisibilityDiagnostics)
                 Positioned(
@@ -6310,6 +6343,64 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 // ---------------------------------------------------------------------------
 // Mobile tab bar button
 // ---------------------------------------------------------------------------
+
+class _MicDebugOverlay extends StatelessWidget {
+  const _MicDebugOverlay({
+    required this.roleLabel,
+    required this.stateLabel,
+    required this.requestStatus,
+    required this.syncStatus,
+    required this.pendingCount,
+    required this.onMicCount,
+  });
+
+  final String roleLabel;
+  final String stateLabel;
+  final String requestStatus;
+  final String syncStatus;
+  final int pendingCount;
+  final int onMicCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 200),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xE610131A),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0x55D4A853)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: DefaultTextStyle(
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Mic debug',
+                    style: TextStyle(
+                      color: Color(0xFFD4A853),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text('state: $stateLabel'),
+                  Text('role: $roleLabel • on mic $onMicCount'),
+                  Text('status: $requestStatus • queue $pendingCount'),
+                  Text('sync: $syncStatus'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _MobileTabBtn extends StatelessWidget {
   const _MobileTabBtn({
@@ -6585,120 +6676,128 @@ class _RoomRosterSidebar extends StatelessWidget {
         ).toLowerCase().compareTo(displayNameFor(b.userId).toLowerCase());
       });
 
+    final topSections = <Widget>[
+      _RosterHeader(
+        label: 'Talking Now',
+        icon: Icons.mic,
+        iconColor: const Color(0xFFC45E7A),
+      ),
+      if (speakingUserIds.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'Nobody on mic yet',
+            style: TextStyle(color: _kSubtle, fontSize: 12),
+          ),
+        )
+      else
+        ...speakingUserIds
+            .take(3)
+            .map(
+              (uid) => _RosterRow(
+                displayName: displayNameFor(uid),
+                vipLevel: vipLevelById[uid] ?? 0,
+                nameColor: _nameColor(vipLevelById[uid] ?? 0),
+                roleLabel: _roleLabel(participantByUserId[uid]),
+                isCurrentUser: uid == currentUserId,
+                isTalkingNow: true,
+                camOn: participantByUserId[uid]?.camOn ?? false,
+                trailingIcon: Icons.mic,
+                trailingColor: const Color(0xFFC45E7A),
+                isWatchingMe:
+                    isCurrentUserCamLive &&
+                    roomState.isWatchingMe(
+                      myUserId: currentUserId,
+                      otherUserId: uid,
+                    ),
+                onSecretMessage: onSecretMessage == null
+                    ? null
+                    : () => onSecretMessage!(participantByUserId[uid]!),
+                onDirectMessage: onWhisper == null
+                    ? null
+                    : () => onWhisper!(participantByUserId[uid]!),
+              ),
+            ),
+      const Divider(height: 1, thickness: 1, color: _kDivider),
+      _RosterHeader(
+        label: 'Mic Queue $pendingMicCount',
+        icon: Icons.queue_music,
+        iconColor: const Color(0xFFD4A853),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+        child: Text(
+          roomState.isSpeaker(currentUserId)
+              ? 'Use the top bar button to release your mic.'
+              : isMicFree
+              ? 'Use the top bar button to grab the mic.'
+              : 'Use the top bar button to join the mic queue.',
+          style: const TextStyle(color: _kSubtle, fontSize: 11),
+        ),
+      ),
+      const Divider(height: 1, thickness: 1, color: _kDivider),
+      _RosterHeader(
+        label: 'On Cam ${onCamParticipants.length}',
+        icon: Icons.videocam,
+        iconColor: const Color(0xFF4CAF50),
+      ),
+      if (onCamParticipants.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'No cameras live yet — be the first to go live',
+            style: TextStyle(color: _kSubtle, fontSize: 11),
+          ),
+        )
+      else
+        ...onCamParticipants
+            .take(8)
+            .map(
+              (p) => _RosterRow(
+                displayName: displayNameFor(p.userId),
+                vipLevel: vipLevelById[p.userId] ?? 0,
+                nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
+                gender: genderById[p.userId],
+                roleLabel: _roleLabel(p),
+                isCurrentUser: p.userId == currentUserId,
+                trailingIcon: Icons.videocam,
+                trailingColor: Colors.white38,
+                isTalkingNow: speakingUserIds.contains(p.userId),
+                camOn: true,
+                hasRecentChat: recentChatters.contains(p.userId),
+                isWatchingMe:
+                    isCurrentUserCamLive &&
+                    roomState.isWatchingMe(
+                      myUserId: currentUserId,
+                      otherUserId: p.userId,
+                    ),
+                onSecretMessage: onSecretMessage == null
+                    ? null
+                    : () => onSecretMessage!(p),
+                onDirectMessage: onWhisper == null ? null : () => onWhisper!(p),
+              ),
+            ),
+      const Divider(height: 1, thickness: 1, color: _kDivider),
+    ];
+
     return ColoredBox(
       color: _kBg,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Space for the floating AppBar above
           SizedBox(height: topPadding),
-          // ── Talking Now ──────────────────────────────────────
-          _RosterHeader(
-            label: 'Talking Now',
-            icon: Icons.mic,
-            iconColor: const Color(0xFFC45E7A),
-          ),
-          if (speakingUserIds.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                'Nobody on mic yet',
-                style: TextStyle(color: _kSubtle, fontSize: 12),
+          Flexible(
+            fit: FlexFit.loose,
+            child: SingleChildScrollView(
+              primary: false,
+              padding: EdgeInsets.zero,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: topSections,
               ),
-            )
-          else
-            ...speakingUserIds
-                .take(3)
-                .map(
-                  (uid) => _RosterRow(
-                    displayName: displayNameFor(uid),
-                    vipLevel: vipLevelById[uid] ?? 0,
-                    nameColor: _nameColor(vipLevelById[uid] ?? 0),
-                    roleLabel: _roleLabel(participantByUserId[uid]),
-                    isCurrentUser: uid == currentUserId,
-                    isTalkingNow: true,
-                    camOn: participantByUserId[uid]?.camOn ?? false,
-                    trailingIcon: Icons.mic,
-                    trailingColor: const Color(0xFFC45E7A),
-                    isWatchingMe:
-                        isCurrentUserCamLive &&
-                        roomState.isWatchingMe(
-                          myUserId: currentUserId,
-                          otherUserId: uid,
-                        ),
-                    onSecretMessage: onSecretMessage == null
-                        ? null
-                        : () => onSecretMessage!(participantByUserId[uid]!),
-                    onDirectMessage: onWhisper == null
-                        ? null
-                        : () => onWhisper!(participantByUserId[uid]!),
-                  ),
-                ),
-          const Divider(height: 1, thickness: 1, color: _kDivider),
-          // ── Mic Queue ────────────────────────────────────────
-          _RosterHeader(
-            label: 'Mic Queue $pendingMicCount',
-            icon: Icons.queue_music,
-            iconColor: const Color(0xFFD4A853),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-            child: Text(
-              roomState.isSpeaker(currentUserId)
-                  ? 'Use the top bar button to release your mic.'
-                  : isMicFree
-                  ? 'Use the top bar button to grab the mic.'
-                  : 'Use the top bar button to join the mic queue.',
-              style: const TextStyle(color: _kSubtle, fontSize: 11),
             ),
           ),
-          const Divider(height: 1, thickness: 1, color: _kDivider),
-          // ── On Cam ───────────────────────────────────────────
-          _RosterHeader(
-            label: 'On Cam ${onCamParticipants.length}',
-            icon: Icons.videocam,
-            iconColor: const Color(0xFF4CAF50),
-          ),
-          if (onCamParticipants.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                'No cameras live yet — be the first to go live',
-                style: TextStyle(color: _kSubtle, fontSize: 11),
-              ),
-            )
-          else
-            ...onCamParticipants
-                .take(8)
-                .map(
-                  (p) => _RosterRow(
-                    displayName: displayNameFor(p.userId),
-                    vipLevel: vipLevelById[p.userId] ?? 0,
-                    nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
-                    gender: genderById[p.userId],
-                    roleLabel: _roleLabel(p),
-                    isCurrentUser: p.userId == currentUserId,
-                    trailingIcon: Icons.videocam,
-                    trailingColor: Colors.white38,
-                    isTalkingNow: speakingUserIds.contains(p.userId),
-                    camOn: true,
-                    hasRecentChat: recentChatters.contains(p.userId),
-                    isWatchingMe:
-                        isCurrentUserCamLive &&
-                        roomState.isWatchingMe(
-                          myUserId: currentUserId,
-                          otherUserId: p.userId,
-                        ),
-                    onSecretMessage: onSecretMessage == null
-                        ? null
-                        : () => onSecretMessage!(p),
-                    onDirectMessage: onWhisper == null
-                        ? null
-                        : () => onWhisper!(p),
-                  ),
-                ),
-          const Divider(height: 1, thickness: 1, color: _kDivider),
-          // ── In Room ───────────────────────────────────────────
           _RosterHeader(
             label: 'In Room ${sorted.length}',
             icon: Icons.people_outline,

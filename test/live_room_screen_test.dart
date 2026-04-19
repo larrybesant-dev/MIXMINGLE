@@ -2005,6 +2005,96 @@ void main() {
     },
   );
 
+  testWidgets('LiveRoomScreen exposes dev mic diagnostics when queued', (
+    WidgetTester tester,
+  ) async {
+    await configureViewport(tester);
+    final firestore = FakeFirebaseFirestore();
+    await firestore.collection('rooms').doc('room-a').set({
+      'hostId': 'host-1',
+      'isLocked': false,
+      'slowModeSeconds': 0,
+    });
+    await firestore
+        .collection('rooms')
+        .doc('room-a')
+        .collection('mic_access_requests')
+        .doc('user-1_host-1')
+        .set({
+          'id': 'user-1_host-1',
+          'roomId': 'room-a',
+          'requesterId': 'user-1',
+          'hostId': 'host-1',
+          'status': 'pending',
+          'priority': 1,
+          'expiresAt': Timestamp.fromDate(
+            DateTime.now().add(const Duration(minutes: 5)),
+          ),
+          'createdAt': Timestamp.fromDate(DateTime.now()),
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
+        });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          currentParticipantProvider.overrideWith(
+            (ref, args) => Stream.value(
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ),
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomParticipantModel(
+                userId: 'host-1',
+                role: 'host',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+              RoomParticipantModel(
+                userId: 'user-1',
+                role: 'audience',
+                joinedAt: DateTime(2026, 1, 1),
+                lastActiveAt: DateTime(2026, 1, 1),
+              ),
+            ]),
+          ),
+          participantCountProvider.overrideWith(
+            (ref, roomId) => Stream.value(2),
+          ),
+          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          hostProvider.overrideWith(
+            (ref, roomId) => Stream.value(Host('host-1')),
+          ),
+          coHostsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <Cohost>[]),
+          ),
+          userProvider.overrideWithValue(
+            UserModel(
+              id: 'user-1',
+              email: 'user1@mixvy.com',
+              username: 'User One',
+              createdAt: DateTime(2026, 1, 1),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('Mic debug'), findsOneWidget);
+    expect(find.textContaining('queue #1'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   testWidgets('LiveRoomScreen renders member-role participant without crash', (
     WidgetTester tester,
   ) async {

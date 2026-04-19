@@ -338,6 +338,37 @@ void main() {
       },
     );
 
+    test('MicAccessController leaves the parent room doc untouched', () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'ownerId': 'host-1',
+        'micQueueSequence': 7,
+      });
+
+      final controller = MicAccessController(firestore);
+      await controller.requestAccess(
+        roomId: 'room-a',
+        requesterId: 'user-2',
+        hostId: 'host-1',
+      );
+
+      final roomSnapshot = await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .get();
+      final requestSnapshot = await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('mic_access_requests')
+          .doc('user-2_host-1')
+          .get();
+
+      expect(roomSnapshot.data()?['micQueueSequence'], 7);
+      expect(requestSnapshot.exists, isTrue);
+      expect(requestSnapshot.data()?['status'], 'pending');
+    });
+
     test('host authority survives delayed participant hydration', () async {
       final firestore = FakeFirebaseFirestore();
       await firestore.collection('rooms').doc('room-a').set({
@@ -556,247 +587,239 @@ void main() {
       },
     );
 
-    test(
-      'speaker-doc arrives before participant-doc: ghost speaker is pruned '
-      'until participant doc lands',
-      () async {
-        final now = DateTime(2026, 4, 15, 12, 0, 0);
-        final participantStream =
-            StreamController<List<RoomParticipantModel>>.broadcast();
-        final speakerStream = StreamController<List<String>>.broadcast();
+    test('speaker-doc arrives before participant-doc: ghost speaker is pruned '
+        'until participant doc lands', () async {
+      final now = DateTime(2026, 4, 15, 12, 0, 0);
+      final participantStream =
+          StreamController<List<RoomParticipantModel>>.broadcast();
+      final speakerStream = StreamController<List<String>>.broadcast();
 
-        final firestore = FakeFirebaseFirestore();
-        await firestore.collection('rooms').doc('room-ghost').set({
-          'hostId': 'host-1',
-          'isLocked': false,
-        });
-        final container = ProviderContainer(
-          overrides: [
-            roomFirestoreProvider.overrideWithValue(firestore),
-            roomDocStreamProvider.overrideWith(
-              (ref, roomId) => Stream.value({
-                'hostId': 'host-1',
-                'ownerId': 'host-1',
-                'speakerSyncVersion': 1,
-              }),
-            ),
-            participantsStreamProvider.overrideWith(
-              (ref, roomId) => participantStream.stream,
-            ),
-            roomSpeakerUserIdsProvider.overrideWith(
-              (ref, roomId) => speakerStream.stream,
-            ),
-          ],
-        );
-        final ghostSub = container.listen(
-          roomControllerProvider('room-ghost'),
-          (_, _) {},
-        );
-        addTearDown(() {
-          ghostSub.close();
-          container.dispose();
-          participantStream.close();
-          speakerStream.close();
-        });
-
-        final controller = container.read(
-          roomControllerProvider('room-ghost').notifier,
-        );
-        await controller.joinRoom('host-1', displayName: 'Host');
-
-        // Emit host participant so controller is hydrated.
-        participantStream.add([
-          RoomParticipantModel(
-            userId: 'host-1',
-            role: 'host',
-            joinedAt: now,
-            lastActiveAt: now,
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-ghost').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+      });
+      final container = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          roomDocStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value({
+              'hostId': 'host-1',
+              'ownerId': 'host-1',
+              'speakerSyncVersion': 1,
+            }),
           ),
-        ]);
-        await Future<void>.delayed(Duration.zero);
-
-        // Speaker doc arrives for 'ghost-speaker' who has no participant doc yet.
-        speakerStream.add(['host-1', 'ghost-speaker']);
-        await Future<void>.delayed(Duration.zero);
-
-        final stateAfterGhost =
-            container.read(roomControllerProvider('room-ghost'));
-        // ghost-speaker is NOT in userIds so must not appear in speakerIds.
-        expect(stateAfterGhost.speakerIds, isNot(contains('ghost-speaker')));
-
-        // Re-emit speaker IDs so the value is fresh when the participant doc
-        // arrives (broadcast streams don't replay to late subscribers).
-        speakerStream.add(['host-1', 'ghost-speaker']);
-        await Future<void>.delayed(Duration.zero);
-
-        // Participant doc for ghost-speaker arrives.
-        participantStream.add([
-          RoomParticipantModel(
-            userId: 'host-1',
-            role: 'host',
-            joinedAt: now,
-            lastActiveAt: now,
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => participantStream.stream,
           ),
-          RoomParticipantModel(
-            userId: 'ghost-speaker',
-            role: 'stage',
-            joinedAt: now,
-            lastActiveAt: now,
+          roomSpeakerUserIdsProvider.overrideWith(
+            (ref, roomId) => speakerStream.stream,
           ),
-        ]);
-        await Future<void>.delayed(Duration.zero);
+        ],
+      );
+      final ghostSub = container.listen(
+        roomControllerProvider('room-ghost'),
+        (_, _) {},
+      );
+      addTearDown(() {
+        ghostSub.close();
+        container.dispose();
+        participantStream.close();
+        speakerStream.close();
+      });
 
-        final stateAfterParticipant =
-            container.read(roomControllerProvider('room-ghost'));
-        // Now the speaker doc and participant doc are consistent.
-        expect(stateAfterParticipant.speakerIds, contains('ghost-speaker'));
-      },
-    );
+      final controller = container.read(
+        roomControllerProvider('room-ghost').notifier,
+      );
+      await controller.joinRoom('host-1', displayName: 'Host');
 
-    test(
-      'out-of-order join events: multiple users joining in rapid succession '
-      'all appear in userIds',
-      () async {
-        final now = DateTime(2026, 4, 15, 12, 0, 0);
-        final participantStream =
-            StreamController<List<RoomParticipantModel>>.broadcast();
-        final firestore = FakeFirebaseFirestore();
-        await firestore.collection('rooms').doc('room-rapid').set({
-          'hostId': 'host-1',
-          'isLocked': false,
-        });
+      // Emit host participant so controller is hydrated.
+      participantStream.add([
+        RoomParticipantModel(
+          userId: 'host-1',
+          role: 'host',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
 
-        final container = ProviderContainer(
-          overrides: [
-            roomFirestoreProvider.overrideWithValue(firestore),
-            roomDocStreamProvider.overrideWith(
-              (ref, roomId) =>
-                  Stream.value({'hostId': 'host-1', 'ownerId': 'host-1'}),
-            ),
-            participantsStreamProvider.overrideWith(
-              (ref, roomId) => participantStream.stream,
-            ),
-          ],
-        );
-        final rapidSub = container.listen(
-          roomControllerProvider('room-rapid'),
-          (_, _) {},
-        );
-        addTearDown(() {
-          rapidSub.close();
-          container.dispose();
-          participantStream.close();
-        });
+      // Speaker doc arrives for 'ghost-speaker' who has no participant doc yet.
+      speakerStream.add(['host-1', 'ghost-speaker']);
+      await Future<void>.delayed(Duration.zero);
 
-        final controller = container.read(
-          roomControllerProvider('room-rapid').notifier,
-        );
-        await controller.joinRoom('host-1', displayName: 'Host');
+      final stateAfterGhost = container.read(
+        roomControllerProvider('room-ghost'),
+      );
+      // ghost-speaker is NOT in userIds so must not appear in speakerIds.
+      expect(stateAfterGhost.speakerIds, isNot(contains('ghost-speaker')));
 
-        // Two new users appear in back-to-back Firestore snapshots.
-        participantStream.add([
-          RoomParticipantModel(
-            userId: 'host-1',
-            role: 'host',
-            joinedAt: now,
-            lastActiveAt: now,
+      // Re-emit speaker IDs so the value is fresh when the participant doc
+      // arrives (broadcast streams don't replay to late subscribers).
+      speakerStream.add(['host-1', 'ghost-speaker']);
+      await Future<void>.delayed(Duration.zero);
+
+      // Participant doc for ghost-speaker arrives.
+      participantStream.add([
+        RoomParticipantModel(
+          userId: 'host-1',
+          role: 'host',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+        RoomParticipantModel(
+          userId: 'ghost-speaker',
+          role: 'stage',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+
+      final stateAfterParticipant = container.read(
+        roomControllerProvider('room-ghost'),
+      );
+      // Now the speaker doc and participant doc are consistent.
+      expect(stateAfterParticipant.speakerIds, contains('ghost-speaker'));
+    });
+
+    test('out-of-order join events: multiple users joining in rapid succession '
+        'all appear in userIds', () async {
+      final now = DateTime(2026, 4, 15, 12, 0, 0);
+      final participantStream =
+          StreamController<List<RoomParticipantModel>>.broadcast();
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-rapid').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+      });
+
+      final container = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          roomDocStreamProvider.overrideWith(
+            (ref, roomId) =>
+                Stream.value({'hostId': 'host-1', 'ownerId': 'host-1'}),
           ),
-          RoomParticipantModel(
-            userId: 'user-a',
-            role: 'audience',
-            joinedAt: now,
-            lastActiveAt: now,
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => participantStream.stream,
           ),
-        ]);
-        await Future<void>.delayed(Duration.zero);
+        ],
+      );
+      final rapidSub = container.listen(
+        roomControllerProvider('room-rapid'),
+        (_, _) {},
+      );
+      addTearDown(() {
+        rapidSub.close();
+        container.dispose();
+        participantStream.close();
+      });
 
-        participantStream.add([
-          RoomParticipantModel(
-            userId: 'host-1',
-            role: 'host',
-            joinedAt: now,
-            lastActiveAt: now,
+      final controller = container.read(
+        roomControllerProvider('room-rapid').notifier,
+      );
+      await controller.joinRoom('host-1', displayName: 'Host');
+
+      // Two new users appear in back-to-back Firestore snapshots.
+      participantStream.add([
+        RoomParticipantModel(
+          userId: 'host-1',
+          role: 'host',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+        RoomParticipantModel(
+          userId: 'user-a',
+          role: 'audience',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+
+      participantStream.add([
+        RoomParticipantModel(
+          userId: 'host-1',
+          role: 'host',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+        RoomParticipantModel(
+          userId: 'user-a',
+          role: 'audience',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+        RoomParticipantModel(
+          userId: 'user-b',
+          role: 'audience',
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+
+      // Both users must appear in the resolved user set — per-user
+      // stabilization timers must not interfere with each other.
+      final state = container.read(roomControllerProvider('room-rapid'));
+      expect(state.userIds, containsAll(['user-a', 'user-b']));
+    });
+
+    test('host-role alignment: hostId pointing to audience-role participant is '
+        'corrected by _selfHeal within the same build cycle', () async {
+      final now = DateTime(2026, 4, 15, 12, 0, 0);
+      final participantStream =
+          StreamController<List<RoomParticipantModel>>.broadcast();
+
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-host-race').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+      });
+      final container = ProviderContainer(
+        overrides: [
+          roomFirestoreProvider.overrideWithValue(firestore),
+          // hostId is 'host-1' but the participant doc says 'audience' —
+          // simulates Firestore race between room doc and participant doc.
+          roomDocStreamProvider.overrideWith(
+            (ref, roomId) =>
+                Stream.value({'hostId': 'host-1', 'ownerId': 'host-1'}),
           ),
-          RoomParticipantModel(
-            userId: 'user-a',
-            role: 'audience',
-            joinedAt: now,
-            lastActiveAt: now,
+          participantsStreamProvider.overrideWith(
+            (ref, roomId) => participantStream.stream,
           ),
-          RoomParticipantModel(
-            userId: 'user-b',
-            role: 'audience',
-            joinedAt: now,
-            lastActiveAt: now,
-          ),
-        ]);
-        await Future<void>.delayed(Duration.zero);
+        ],
+      );
+      final raceSub = container.listen(
+        roomControllerProvider('room-host-race'),
+        (_, _) {},
+      );
+      addTearDown(() {
+        raceSub.close();
+        container.dispose();
+        participantStream.close();
+      });
 
-        // Both users must appear in the resolved user set — per-user
-        // stabilization timers must not interfere with each other.
-        final state = container.read(roomControllerProvider('room-rapid'));
-        expect(state.userIds, containsAll(['user-a', 'user-b']));
-      },
-    );
+      final controller = container.read(
+        roomControllerProvider('room-host-race').notifier,
+      );
+      await controller.joinRoom('host-1', displayName: 'Host');
 
-    test(
-      'host-role alignment: hostId pointing to audience-role participant is '
-      'corrected by _selfHeal within the same build cycle',
-      () async {
-        final now = DateTime(2026, 4, 15, 12, 0, 0);
-        final participantStream =
-            StreamController<List<RoomParticipantModel>>.broadcast();
+      // Participant doc arrives with stale 'audience' role for host-1.
+      participantStream.add([
+        RoomParticipantModel(
+          userId: 'host-1',
+          role: 'audience', // wrong — will be corrected by _selfHeal
+          joinedAt: now,
+          lastActiveAt: now,
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
 
-        final firestore = FakeFirebaseFirestore();
-        await firestore.collection('rooms').doc('room-host-race').set({
-          'hostId': 'host-1',
-          'isLocked': false,
-        });
-        final container = ProviderContainer(
-          overrides: [
-            roomFirestoreProvider.overrideWithValue(firestore),
-            // hostId is 'host-1' but the participant doc says 'audience' —
-            // simulates Firestore race between room doc and participant doc.
-            roomDocStreamProvider.overrideWith(
-              (ref, roomId) =>
-                  Stream.value({'hostId': 'host-1', 'ownerId': 'host-1'}),
-            ),
-            participantsStreamProvider.overrideWith(
-              (ref, roomId) => participantStream.stream,
-            ),
-          ],
-        );
-        final raceSub = container.listen(
-          roomControllerProvider('room-host-race'),
-          (_, _) {},
-        );
-        addTearDown(() {
-          raceSub.close();
-          container.dispose();
-          participantStream.close();
-        });
-
-        final controller = container.read(
-          roomControllerProvider('room-host-race').notifier,
-        );
-        await controller.joinRoom('host-1', displayName: 'Host');
-
-        // Participant doc arrives with stale 'audience' role for host-1.
-        participantStream.add([
-          RoomParticipantModel(
-            userId: 'host-1',
-            role: 'audience', // wrong — will be corrected by _selfHeal
-            joinedAt: now,
-            lastActiveAt: now,
-          ),
-        ]);
-        await Future<void>.delayed(Duration.zero);
-
-        final healed =
-            container.read(roomControllerProvider('room-host-race'));
-        // _selfHeal must have corrected the role to 'host'.
-        expect(healed.participantRolesByUser['host-1'], equals('host'));
-      },
-    );
+      final healed = container.read(roomControllerProvider('room-host-race'));
+      // _selfHeal must have corrected the role to 'host'.
+      expect(healed.participantRolesByUser['host-1'], equals('host'));
+    });
   });
 }
