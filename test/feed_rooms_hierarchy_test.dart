@@ -61,6 +61,32 @@ void main() {
     expect(find.byType(HomeDiscoverySection), findsOneWidget);
   });
 
+  testWidgets('rooms visibility inspector explains empty-state causes', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: RoomsVisibilityDebugPanel(
+            streamStateLabel: 'empty',
+            roomCount: 0,
+            visibleRoomCount: 0,
+            sortLabel: 'Most Active',
+            hint: 'No rooms currently match live visibility rules.',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Rooms Inspector'), findsOneWidget);
+    expect(find.text('stream: empty'), findsOneWidget);
+    expect(find.text('visible rooms: 0'), findsOneWidget);
+    expect(
+      find.text('No rooms currently match live visibility rules.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('rooms tab opens with an entry-focused hero state', (
     WidgetTester tester,
   ) async {

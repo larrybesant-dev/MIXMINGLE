@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -342,6 +343,73 @@ class HomeDiscoverySection extends StatelessWidget {
   }
 }
 
+class DiscoveryVisibilityDebugPanel extends StatelessWidget {
+  const DiscoveryVisibilityDebugPanel({
+    super.key,
+    required this.streamStateLabel,
+    required this.liveRoomCount,
+    required this.upcomingRoomCount,
+    required this.selectedCategoryLabel,
+    required this.hint,
+  });
+
+  final String streamStateLabel;
+  final int liveRoomCount;
+  final int upcomingRoomCount;
+  final String selectedCategoryLabel;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kDebugMode) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _npSurfaceHigh.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _npGhost),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Discovery Inspector',
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: _npPrimary,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PulseChip(label: 'stream: $streamStateLabel'),
+              _PulseChip(label: 'live rooms: $liveRoomCount'),
+              _PulseChip(label: 'upcoming: $upcomingRoomCount'),
+              _PulseChip(label: 'filter: $selectedCategoryLabel'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hint,
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              color: _npOnVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Discovery feed content ────────────────────────────────────────────────────
 class DiscoveryFeedContent extends ConsumerStatefulWidget {
   const DiscoveryFeedContent({super.key});
@@ -400,6 +468,19 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
               : room.stageUserIds.length + room.audienceUserIds.length),
     );
     final featuredRoomCount = liveRoomCount >= 3 ? 3 : liveRoomCount;
+    final discoveryStateLabel = feedState.error != null
+        ? 'error'
+        : filteredRooms.isEmpty
+            ? 'empty'
+            : 'ready';
+    final selectedCategoryLabel = _selectedCategory ?? 'all';
+    final discoveryHint = feedState.error != null
+        ? feedState.error!
+        : filteredRooms.isEmpty
+            ? (_selectedCategory == null
+                ? 'No live rooms currently passed visibility rules.'
+                : 'No live rooms match the selected category right now.')
+            : 'Rooms are visible and ranked normally.';
 
     HomeLayoutV1.debugAssertOrder(const <String>[
       HomeLayoutV1.livePulseSlotId,
@@ -447,6 +528,13 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  DiscoveryVisibilityDebugPanel(
+                    streamStateLabel: discoveryStateLabel,
+                    liveRoomCount: liveRoomCount,
+                    upcomingRoomCount: feedState.upcomingRooms.length,
+                    selectedCategoryLabel: selectedCategoryLabel,
+                    hint: discoveryHint,
+                  ),
                   const Padding(
                     padding: EdgeInsets.only(top: 2),
                     child: StoriesRow(),

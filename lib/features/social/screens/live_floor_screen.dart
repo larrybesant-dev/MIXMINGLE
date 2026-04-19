@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -120,6 +121,75 @@ class RoomsListSection extends StatelessWidget {
   }
 }
 
+class RoomsVisibilityDebugPanel extends StatelessWidget {
+  const RoomsVisibilityDebugPanel({
+    super.key,
+    required this.streamStateLabel,
+    required this.roomCount,
+    required this.visibleRoomCount,
+    required this.sortLabel,
+    required this.hint,
+  });
+
+  final String streamStateLabel;
+  final int roomCount;
+  final int visibleRoomCount;
+  final String sortLabel;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kDebugMode) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: VelvetNoir.surfaceHigh.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: VelvetNoir.outlineVariant.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rooms Inspector',
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: VelvetNoir.primary,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _HeroStatPill(label: 'stream: $streamStateLabel'),
+              _HeroStatPill(label: 'rooms seen: $roomCount'),
+              _HeroStatPill(label: 'visible rooms: $visibleRoomCount'),
+              _HeroStatPill(label: 'sort: $sortLabel'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hint,
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 class LiveFloorScreen extends ConsumerStatefulWidget {
   const LiveFloorScreen({super.key});
@@ -165,6 +235,20 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
               ? room.memberCount
               : room.stageUserIds.length + room.audienceUserIds.length),
     );
+    final streamStateLabel = roomsAsync.isLoading
+        ? 'loading'
+        : roomsAsync.hasError
+            ? 'error'
+            : previewRooms.isEmpty
+                ? 'empty'
+                : 'ready';
+    final visibilityHint = roomsAsync.isLoading
+        ? 'Waiting for the stabilized live room stream.'
+        : roomsAsync.hasError
+            ? 'The room stream returned an error, so visible rooms may be temporarily hidden.'
+            : previewRooms.isEmpty
+                ? 'No rooms currently match live visibility rules.'
+                : 'Rooms are visible and sorted for quick entry.';
 
     RoomLayoutV1.debugAssertOrder(const <String>[
       RoomLayoutV1.heroSlotId,
@@ -301,43 +385,59 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                 }).toList(growable: false),
               ),
               roomList: RoomsListSection(
-                child: roomsAsync.when(
-                  loading: () => const _FloorLoadingShimmer(),
-                  error: (e, _) => Padding(
-                    padding: EdgeInsets.all(hp),
-                    child: Center(
-                      child: Text(
-                        'Could not load live rooms.',
-                        style: GoogleFonts.raleway(
-                          color: VelvetNoir.onSurfaceVariant,
-                        ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(hp, 0, hp, 8),
+                      child: RoomsVisibilityDebugPanel(
+                        streamStateLabel: streamStateLabel,
+                        roomCount: roomsAsync.valueOrNull?.length ?? 0,
+                        visibleRoomCount: previewRooms.length,
+                        sortLabel: _sort.label,
+                        hint: visibilityHint,
                       ),
                     ),
-                  ),
-                  data: (rooms) {
-                    final sorted = _sorted(rooms);
-                    if (sorted.isEmpty) {
-                      return Padding(
-                        padding: EdgeInsets.all(hp),
-                        child: _EmptyFloor(
-                          onCreateRoom: () => context.go('/create-room'),
+                    Expanded(
+                      child: roomsAsync.when(
+                        loading: () => const _FloorLoadingShimmer(),
+                        error: (e, _) => Padding(
+                          padding: EdgeInsets.all(hp),
+                          child: Center(
+                            child: Text(
+                              'Could not load live rooms.',
+                              style: GoogleFonts.raleway(
+                                color: VelvetNoir.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
                         ),
-                      );
-                    }
+                        data: (rooms) {
+                          final sorted = _sorted(rooms);
+                          if (sorted.isEmpty) {
+                            return Padding(
+                              padding: EdgeInsets.all(hp),
+                              child: _EmptyFloor(
+                                onCreateRoom: () => context.go('/create-room'),
+                              ),
+                            );
+                          }
 
-                    return ListView.builder(
-                      padding: EdgeInsets.only(bottom: 100),
-                      itemCount: sorted.length,
-                      itemBuilder: (ctx, i) {
-                        final room = sorted[i];
-                        return _FloorRoomTile(
-                          room: room,
-                          rank: i + 1,
-                          onTap: () => context.go('/room/${room.id}'),
-                        );
-                      },
-                    );
-                  },
+                          return ListView.builder(
+                            padding: EdgeInsets.only(bottom: 100),
+                            itemCount: sorted.length,
+                            itemBuilder: (ctx, i) {
+                              final room = sorted[i];
+                              return _FloorRoomTile(
+                                room: room,
+                                rank: i + 1,
+                                onTap: () => context.go('/room/${room.id}'),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -94,17 +94,15 @@ class FeedController extends Notifier<FeedState> {
   Future<void> loadFeed() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final currentUserId = _auth.currentUser?.uid;
-      if (currentUserId == null || currentUserId.trim().isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Please sign in to load the discovery feed.',
-        );
-        return;
-      }
+      final currentUserId = _auth.currentUser?.uid.trim();
+      final isSignedIn = currentUserId != null && currentUserId.isNotEmpty;
 
-      final blockedIds = await _moderationService.getExcludedUserIds(currentUserId);
-      final viewerProfile = await _loadViewerProfile(currentUserId);
+      final blockedIds = isSignedIn
+          ? await _moderationService.getExcludedUserIds(currentUserId)
+          : <String>{};
+      final viewerProfile = isSignedIn
+          ? await _loadViewerProfile(currentUserId)
+          : const _FeedViewerProfile();
       final liveRooms = await _roomService.getRecommendedLiveRooms(
         limit: 20,
         friendIds: viewerProfile.friendIds,
