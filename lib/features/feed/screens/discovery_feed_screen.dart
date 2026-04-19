@@ -237,6 +237,111 @@ class _PulseChip extends StatelessWidget {
   }
 }
 
+class HomeLivePulseSection extends StatelessWidget {
+  const HomeLivePulseSection({
+    super.key,
+    required this.liveRoomCount,
+    required this.activeListenerCount,
+    required this.featuredRoomCount,
+    this.onOpenRooms,
+  });
+
+  final int liveRoomCount;
+  final int activeListenerCount;
+  final int featuredRoomCount;
+  final VoidCallback? onOpenRooms;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: HomeLayoutV1.livePulseKey,
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        context.sectionSpacing,
+        context.pageHorizontalPadding,
+        10,
+      ),
+      child: DiscoveryLivePulseBanner(
+        liveRoomCount: liveRoomCount,
+        activeListenerCount: activeListenerCount,
+        featuredRoomCount: featuredRoomCount,
+        onOpenRooms: onOpenRooms,
+      ),
+    );
+  }
+}
+
+class HomeFeaturedRoomsSection extends StatelessWidget {
+  const HomeFeaturedRoomsSection({
+    super.key,
+    required this.hasRooms,
+    required this.child,
+  });
+
+  final bool hasRooms;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: HomeLayoutV1.featuredRoomsKey,
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        context.sectionSpacing,
+        context.pageHorizontalPadding,
+        12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _DiscoverySectionHeader(
+            title: 'Featured Rooms',
+            subtitle:
+                'Highlighted for live momentum, friend activity, or a fresh start.',
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class HomeDiscoverySection extends StatelessWidget {
+  const HomeDiscoverySection({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: HomeLayoutV1.discoveryFeedKey,
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        context.sectionSpacing,
+        context.pageHorizontalPadding,
+        12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _DiscoverySectionHeader(
+            title: 'Discovery Feed',
+            subtitle: 'Stable layout, fresh activity underneath it.',
+            showLiveBadge: true,
+            gradientColors: <Color>[_npSecondary, _npPrimary],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
 // ── Discovery feed content ────────────────────────────────────────────────────
 class DiscoveryFeedContent extends ConsumerStatefulWidget {
   const DiscoveryFeedContent({super.key});
@@ -309,57 +414,26 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
-            key: HomeLayoutV1.livePulseKey,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                context.sectionSpacing,
-                horizontalPadding,
-                10,
-              ),
-              child: DiscoveryLivePulseBanner(
-                liveRoomCount: liveRoomCount,
-                activeListenerCount: activeListenerCount,
-                featuredRoomCount: featuredRoomCount,
-                onOpenRooms: () => context.go('/live'),
-              ),
+            child: HomeLivePulseSection(
+              liveRoomCount: liveRoomCount,
+              activeListenerCount: activeListenerCount,
+              featuredRoomCount: featuredRoomCount,
+              onOpenRooms: () => context.go('/live'),
             ),
           ),
 
           if (filteredRooms.isNotEmpty) ...[
             SliverToBoxAdapter(
-              key: HomeLayoutV1.featuredRoomsKey,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  context.sectionSpacing,
-                  horizontalPadding,
-                  12,
-                ),
-                child: const _DiscoverySectionHeader(
-                  title: 'Featured Rooms',
-                  subtitle:
-                      'Highlighted for live momentum, friend activity, or a fresh start.',
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: HomeFeaturedRoomsSection(
+                hasRooms: true,
                 child: _buildBentoGrid(filteredRooms, feedState.roomReasons),
               ),
             ),
           ] else ...[
             SliverToBoxAdapter(
-              key: HomeLayoutV1.featuredRoomsKey,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  context.sectionSpacing,
-                  horizontalPadding,
-                  0,
-                ),
-                child: AppEmptyView(
+              child: HomeFeaturedRoomsSection(
+                hasRooms: false,
+                child: const AppEmptyView(
                   title: 'No featured rooms right now',
                   message: 'When rooms go live, they will appear here first.',
                   icon: Icons.sensors_off_rounded,
@@ -369,35 +443,20 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           ],
 
           SliverToBoxAdapter(
-            key: HomeLayoutV1.discoveryFeedKey,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                context.sectionSpacing,
-                horizontalPadding,
-                12,
-              ),
-              child: const _DiscoverySectionHeader(
-                title: 'Discovery Feed',
-                subtitle: 'Stable layout, fresh activity underneath it.',
-                showLiveBadge: true,
-                gradientColors: <Color>[_npSecondary, _npPrimary],
+            child: HomeDiscoverySection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: StoriesRow(),
+                  ),
+                  _buildCategoryChips(),
+                  const _FriendsLiveSection(),
+                ],
               ),
             ),
           ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.only(top: 2),
-              child: const StoriesRow(),
-            ),
-          ),
-
-          SliverToBoxAdapter(
-            child: _buildCategoryChips(),
-          ),
-
-          const _FriendsLiveSection(),
 
           if (filteredRooms.length > 3)
             SliverPadding(
@@ -1611,7 +1670,7 @@ class _FriendsLiveSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    if (uid == null) return const SizedBox.shrink();
 
     final followingAsync = ref.watch(followingIdsProvider(uid));
     final feedState = ref.watch(feedControllerProvider);
@@ -1619,7 +1678,7 @@ class _FriendsLiveSection extends ConsumerWidget {
     return followingAsync.when(
       data: (followingIds) {
         if (followingIds.isEmpty) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
+          return const SizedBox.shrink();
         }
 
         final friendRooms = feedState.liveRooms
@@ -1628,67 +1687,63 @@ class _FriendsLiveSection extends ConsumerWidget {
             .toList();
 
         if (friendRooms.isEmpty) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
+          return const SizedBox.shrink();
         }
 
-        return SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.pageHorizontalPadding,
-                  context.sectionSpacing,
-                  context.pageHorizontalPadding,
-                  12,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 3,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_npSecondary, _npPrimary],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                0,
+                context.sectionSpacing,
+                0,
+                12,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [_npSecondary, _npPrimary],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Friends Live',
-                      style: GoogleFonts.raleway(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: _npOnSurface,
-                      ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Friends Live',
+                    style: GoogleFonts.raleway(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _npOnSurface,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 92,
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                scrollDirection: Axis.horizontal,
+                itemCount: friendRooms.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (ctx, i) => _LiveNowBubble(
+                  room: friendRooms[i],
+                  onTap: () => context.go('/room/${friendRooms[i].id}'),
                 ),
               ),
-              SizedBox(
-                height: 92,
-                child: ListView.separated(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.pageHorizontalPadding,
-                  ),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: friendRooms.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 14),
-                  itemBuilder: (ctx, i) => _LiveNowBubble(
-                    room: friendRooms[i],
-                    onTap: () => context.go('/room/${friendRooms[i].id}'),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
-      loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

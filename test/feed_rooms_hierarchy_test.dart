@@ -11,8 +11,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: DiscoveryLivePulseBanner(
-            key: HomeLayoutV1.livePulseKey,
+          body: HomeLivePulseSection(
             liveRoomCount: 3,
             activeListenerCount: 41,
             featuredRoomCount: 2,
@@ -21,6 +20,7 @@ void main() {
       ),
     );
 
+    expect(find.byType(HomeLivePulseSection), findsOneWidget);
     expect(find.byKey(HomeLayoutV1.livePulseKey), findsOneWidget);
     expect(find.text('Live Pulse'), findsOneWidget);
     expect(find.text('3 rooms live'), findsOneWidget);
@@ -30,30 +30,72 @@ void main() {
     expect(find.text('Live energy is moving right now.'), findsOneWidget);
   });
 
+  testWidgets('home feed uses locked section widgets', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              HomeLivePulseSection(
+                liveRoomCount: 3,
+                activeListenerCount: 41,
+                featuredRoomCount: 2,
+              ),
+              HomeFeaturedRoomsSection(
+                hasRooms: true,
+                child: SizedBox(height: 40),
+              ),
+              HomeDiscoverySection(
+                child: SizedBox(height: 40),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(HomeLivePulseSection), findsOneWidget);
+    expect(find.byType(HomeFeaturedRoomsSection), findsOneWidget);
+    expect(find.byType(HomeDiscoverySection), findsOneWidget);
+  });
+
   testWidgets('rooms tab opens with an entry-focused hero state', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: LiveFloorHeroBanner(
-            key: RoomLayoutV1.heroKey,
-            roomCount: 5,
-            listenerCount: 84,
-            sortLabel: 'Most Active',
-            onQuickJoin: () {},
-            onStartRoom: () {},
+          body: RoomsLayoutShell(
+            hero: LiveFloorHeroBanner(
+              key: RoomLayoutV1.heroKey,
+              roomCount: 5,
+              listenerCount: 84,
+              sortLabel: 'Most Active',
+              onQuickJoin: () {},
+              onStartRoom: () {},
+            ),
+            controls: const RoomsControlsSection(
+              sortLabel: 'Most Active',
+            ),
+            roomList: const RoomsListSection(
+              child: SizedBox(height: 120),
+            ),
           ),
         ),
       ),
     );
 
+    expect(find.byType(RoomsLayoutShell), findsOneWidget);
+    expect(find.byType(RoomsControlsSection), findsOneWidget);
+    expect(find.byType(RoomsListSection), findsOneWidget);
     expect(find.byKey(RoomLayoutV1.heroKey), findsOneWidget);
     expect(find.byKey(RoomLayoutV1.quickJoinKey), findsOneWidget);
     expect(find.text('Jump into a live room'), findsOneWidget);
     expect(find.text('5 active rooms'), findsOneWidget);
     expect(find.text('84 listening live'), findsOneWidget);
-    expect(find.text('Sorted by Most Active'), findsOneWidget);
+    expect(find.text('Sorted by Most Active'), findsWidgets);
     expect(find.text('Quick Join'), findsOneWidget);
     expect(find.text('Start a Room'), findsOneWidget);
   });

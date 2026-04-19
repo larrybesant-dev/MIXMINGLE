@@ -31,6 +31,95 @@ extension on _FloorSort {
   }
 }
 
+class RoomsLayoutShell extends StatelessWidget {
+  const RoomsLayoutShell({
+    super.key,
+    required this.hero,
+    required this.controls,
+    required this.roomList,
+  }) : assert(
+         true,
+         'RoomsLayoutShell requires hero, controls, and roomList sections.',
+       );
+
+  final Widget hero;
+  final Widget controls;
+  final Widget roomList;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        hero,
+        controls,
+        Expanded(child: roomList),
+      ],
+    );
+  }
+}
+
+class RoomsControlsSection extends StatelessWidget {
+  const RoomsControlsSection({
+    super.key,
+    required this.sortLabel,
+    this.controlChips = const <Widget>[],
+  });
+
+  final String sortLabel;
+  final List<Widget> controlChips;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: RoomLayoutV1.sortControlsKey,
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        4,
+        context.pageHorizontalPadding,
+        8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sorted by $sortLabel',
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ),
+          if (controlChips.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: controlChips),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class RoomsListSection extends StatelessWidget {
+  const RoomsListSection({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: RoomLayoutV1.roomCardsKey,
+      width: double.infinity,
+      child: child,
+    );
+  }
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 class LiveFloorScreen extends ConsumerStatefulWidget {
   const LiveFloorScreen({super.key});
@@ -87,76 +176,72 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
     return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       safeArea: false,
-      body: CustomScrollView(
-        slivers: [
-          // App bar
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: VelvetNoir.surface,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            title: Row(
-              children: [
-                Container(
-                  width: 8, height: 8,
-                  decoration: BoxDecoration(
-                    color: VelvetNoir.liveGlow,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: VelvetNoir.liveGlow.withValues(alpha: 0.6),
-                        blurRadius: 8,
+      body: Column(
+        children: [
+          Material(
+            color: VelvetNoir.surface,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(hp, 12, hp, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: VelvetNoir.liveGlow,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: VelvetNoir.liveGlow.withValues(alpha: 0.6),
+                            blurRadius: 8,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Rooms',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: VelvetNoir.onSurface,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.add_rounded, color: VelvetNoir.primary),
+                      tooltip: 'Start a Room',
+                      onPressed: () => context.go('/create-room'),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Rooms',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: VelvetNoir.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add_rounded, color: VelvetNoir.primary),
-                tooltip: 'Start a Room',
-                onPressed: () => context.go('/create-room'),
               ),
-            ],
+            ),
           ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(hp, 10, hp, 8),
-              child: LiveFloorHeroBanner(
-                key: RoomLayoutV1.heroKey,
-                roomCount: previewRooms.length,
-                listenerCount: listenerCount,
+          Expanded(
+            child: RoomsLayoutShell(
+              hero: Padding(
+                padding: EdgeInsets.fromLTRB(hp, 10, hp, 0),
+                child: LiveFloorHeroBanner(
+                  key: RoomLayoutV1.heroKey,
+                  roomCount: previewRooms.length,
+                  listenerCount: listenerCount,
+                  sortLabel: _sort.label,
+                  onQuickJoin: () {
+                    if (previewRooms.isNotEmpty) {
+                      context.go('/room/${previewRooms.first.id}');
+                      return;
+                    }
+                    context.go('/create-room');
+                  },
+                  onStartRoom: () => context.go('/create-room'),
+                ),
+              ),
+              controls: RoomsControlsSection(
                 sortLabel: _sort.label,
-                onQuickJoin: () {
-                  if (previewRooms.isNotEmpty) {
-                    context.go('/room/${previewRooms.first.id}');
-                    return;
-                  }
-                  context.go('/create-room');
-                },
-                onStartRoom: () => context.go('/create-room'),
-              ),
-            ),
-          ),
-
-          // Sort chips
-          SliverToBoxAdapter(
-            key: RoomLayoutV1.sortControlsKey,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(hp, 4, hp, 8),
-              child: Row(
-                children: _FloorSort.values.map((s) {
+                controlChips: _FloorSort.values.map((s) {
                   final selected = _sort == s;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -165,7 +250,9 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
                         decoration: BoxDecoration(
                           gradient: selected
                               ? const LinearGradient(
@@ -180,18 +267,19 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                           border: Border.all(
                             color: selected
                                 ? Colors.transparent
-                                : VelvetNoir.outlineVariant
-                                    .withValues(alpha: 0.4),
+                                : VelvetNoir.outlineVariant.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(s.icon,
-                                size: 13,
-                                color: selected
-                                    ? VelvetNoir.surface
-                                    : VelvetNoir.onSurfaceVariant),
+                            Icon(
+                              s.icon,
+                              size: 13,
+                              color: selected
+                                  ? VelvetNoir.surface
+                                  : VelvetNoir.onSurfaceVariant,
+                            ),
                             const SizedBox(width: 5),
                             Text(
                               s.label,
@@ -210,59 +298,50 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                       ),
                     ),
                   );
-                }).toList(),
+                }).toList(growable: false),
               ),
-            ),
-          ),
-
-          // Room list
-          roomsAsync.when(
-            loading: () => const SliverToBoxAdapter(
-              child: _FloorLoadingShimmer(),
-            ),
-            error: (e, _) => SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(hp),
-                child: Center(
-                  child: Text(
-                    'Could not load live rooms.',
-                    style: GoogleFonts.raleway(color: VelvetNoir.onSurfaceVariant),
-                  ),
-                ),
-              ),
-            ),
-            data: (rooms) {
-              final sorted = _sorted(rooms);
-              if (sorted.isEmpty) {
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    key: RoomLayoutV1.roomCardsKey,
+              roomList: RoomsListSection(
+                child: roomsAsync.when(
+                  loading: () => const _FloorLoadingShimmer(),
+                  error: (e, _) => Padding(
                     padding: EdgeInsets.all(hp),
-                    child: _EmptyFloor(
-                      onCreateRoom: () => context.go('/create-room'),
+                    child: Center(
+                      child: Text(
+                        'Could not load live rooms.',
+                        style: GoogleFonts.raleway(
+                          color: VelvetNoir.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
-                );
-              }
+                  data: (rooms) {
+                    final sorted = _sorted(rooms);
+                    if (sorted.isEmpty) {
+                      return Padding(
+                        padding: EdgeInsets.all(hp),
+                        child: _EmptyFloor(
+                          onCreateRoom: () => context.go('/create-room'),
+                        ),
+                      );
+                    }
 
-              return SliverList(
-                key: RoomLayoutV1.roomCardsKey,
-                delegate: SliverChildBuilderDelegate(
-                  (ctx, i) {
-                    final room = sorted[i];
-                    return _FloorRoomTile(
-                      room: room,
-                      rank: i + 1,
-                      onTap: () => context.go('/room/${room.id}'),
+                    return ListView.builder(
+                      padding: EdgeInsets.only(bottom: 100),
+                      itemCount: sorted.length,
+                      itemBuilder: (ctx, i) {
+                        final room = sorted[i];
+                        return _FloorRoomTile(
+                          room: room,
+                          rank: i + 1,
+                          onTap: () => context.go('/room/${room.id}'),
+                        );
+                      },
                     );
                   },
-                  childCount: sorted.length,
                 ),
-              );
-            },
+              ),
+            ),
           ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
