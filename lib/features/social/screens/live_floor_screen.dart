@@ -66,6 +66,15 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
   Widget build(BuildContext context) {
     final roomsAsync = ref.watch(roomsStreamProvider);
     final hp = context.pageHorizontalPadding;
+    final previewRooms = _sorted(roomsAsync.valueOrNull ?? const <RoomModel>[]);
+    final listenerCount = previewRooms.fold<int>(
+      0,
+      (sum, room) =>
+          sum +
+          (room.memberCount > 0
+              ? room.memberCount
+              : room.stageUserIds.length + room.audienceUserIds.length),
+    );
 
     return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
@@ -95,7 +104,7 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'The Floor',
+                  'Rooms',
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -111,6 +120,25 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                 onPressed: () => context.go('/create-room'),
               ),
             ],
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(hp, 10, hp, 8),
+              child: LiveFloorHeroBanner(
+                roomCount: previewRooms.length,
+                listenerCount: listenerCount,
+                sortLabel: _sort.label,
+                onQuickJoin: () {
+                  if (previewRooms.isNotEmpty) {
+                    context.go('/room/${previewRooms.first.id}');
+                    return;
+                  }
+                  context.go('/create-room');
+                },
+                onStartRoom: () => context.go('/create-room'),
+              ),
+            ),
           ),
 
           // Sort chips
@@ -230,6 +258,143 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
 }
 
 // ── Room tile with rank + hot badge ──────────────────────────────────────────
+class LiveFloorHeroBanner extends StatelessWidget {
+  const LiveFloorHeroBanner({
+    super.key,
+    required this.roomCount,
+    required this.listenerCount,
+    required this.onQuickJoin,
+    required this.onStartRoom,
+    this.sortLabel = 'Most Active',
+  });
+
+  final int roomCount;
+  final int listenerCount;
+  final VoidCallback onQuickJoin;
+  final VoidCallback onStartRoom;
+  final String sortLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [VelvetNoir.surfaceHigh, Color(0xFF241118)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: VelvetNoir.outlineVariant.withValues(alpha: 0.35),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: VelvetNoir.liveGlow,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: VelvetNoir.liveGlow.withValues(alpha: 0.55),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Jump into a live room',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: VelvetNoir.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _HeroStatPill(label: '$roomCount active rooms'),
+              _HeroStatPill(label: '$listenerCount listening live'),
+              _HeroStatPill(label: 'Sorted by $sortLabel'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'The layout stays familiar while the most relevant rooms rise to the top.',
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              color: VelvetNoir.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onQuickJoin,
+                  icon: const Icon(Icons.flash_on_rounded),
+                  label: const Text('Quick Join'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onStartRoom,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Start a Room'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroStatPill extends StatelessWidget {
+  const _HeroStatPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: VelvetNoir.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.raleway(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: VelvetNoir.onSurface,
+        ),
+      ),
+    );
+  }
+}
+
 class _FloorRoomTile extends StatelessWidget {
   const _FloorRoomTile({
     required this.room,

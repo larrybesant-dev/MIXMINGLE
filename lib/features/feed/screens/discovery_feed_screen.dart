@@ -117,6 +117,125 @@ class DiscoveryFeedScreen extends ConsumerWidget {
 // ── Logo wordmark ─────────────────────────────────────────────────────────────
 typedef _MixVyLogo = MixvyAppBarLogo;
 
+class DiscoveryLivePulseBanner extends StatelessWidget {
+  const DiscoveryLivePulseBanner({
+    super.key,
+    required this.liveRoomCount,
+    required this.activeListenerCount,
+    required this.featuredRoomCount,
+    this.onOpenRooms,
+  });
+
+  final int liveRoomCount;
+  final int activeListenerCount;
+  final int featuredRoomCount;
+  final VoidCallback? onOpenRooms;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_npSurfaceHighest, _npSurfaceHigh],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _npGhost),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: _npError,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'What’s happening now',
+                style: GoogleFonts.raleway(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: _npPrimary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Live energy is moving right now.',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: _npOnSurface,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PulseChip(label: '$liveRoomCount rooms live'),
+              _PulseChip(label: '$activeListenerCount listening now'),
+              _PulseChip(label: '$featuredRoomCount featured'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.icon(
+              onPressed: onOpenRooms,
+              icon: const Icon(Icons.meeting_room_rounded),
+              label: const Text('Go to Rooms'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PulseChip extends StatelessWidget {
+  const _PulseChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: _npSurface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _npGhost),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.raleway(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: _npOnSurface,
+        ),
+      ),
+    );
+  }
+}
+
 // ── Discovery feed content ────────────────────────────────────────────────────
 class DiscoveryFeedContent extends ConsumerStatefulWidget {
   const DiscoveryFeedContent({super.key});
@@ -165,6 +284,16 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             .where(
                 (r) => r.category?.toLowerCase() == _selectedCategory)
             .toList();
+    final liveRoomCount = feedState.liveRooms.length;
+    final activeListenerCount = feedState.liveRooms.fold<int>(
+      0,
+      (sum, room) =>
+          sum +
+          (room.memberCount > 0
+              ? room.memberCount
+              : room.stageUserIds.length + room.audienceUserIds.length),
+    );
+    final featuredRoomCount = liveRoomCount >= 3 ? 3 : liveRoomCount;
 
     return RefreshIndicator(
       color: _npPrimary,
@@ -172,10 +301,27 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
       onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
       child: CustomScrollView(
         slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                context.sectionSpacing,
+                horizontalPadding,
+                10,
+              ),
+              child: DiscoveryLivePulseBanner(
+                liveRoomCount: liveRoomCount,
+                activeListenerCount: activeListenerCount,
+                featuredRoomCount: featuredRoomCount,
+                onOpenRooms: () => context.go('/live'),
+              ),
+            ),
+          ),
+
           // Stories row
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.only(top: context.sectionSpacing),
+              padding: EdgeInsets.only(top: 2),
               child: const StoriesRow(),
             ),
           ),
@@ -189,7 +335,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           const _FriendsLiveSection(),
 
           if (filteredRooms.isNotEmpty) ...[
-            // "Trending Now" header
+            // "Featured Rooms" header
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -198,24 +344,37 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   horizontalPadding,
                   12,
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 3, height: 18,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_npPrimary, _npPrimaryDim],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
+                    Row(
+                      children: [
+                        Container(
+                          width: 3, height: 18,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [_npPrimary, _npPrimaryDim],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(2),
+                        const SizedBox(width: 8),
+                        Text('Featured Rooms',
+                            style: GoogleFonts.raleway(
+                                fontSize: 18, fontWeight: FontWeight.w700,
+                                color: _npOnSurface)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Highlighted for live momentum, friend activity, or a fresh start.',
+                      style: GoogleFonts.raleway(
+                        fontSize: 12,
+                        color: _npOnVariant,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text('Trending Now',
-                        style: GoogleFonts.raleway(
-                            fontSize: 18, fontWeight: FontWeight.w700,
-                            color: _npOnSurface)),
                   ],
                 ),
               ),
@@ -224,11 +383,11 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: _buildBentoGrid(filteredRooms),
+                child: _buildBentoGrid(filteredRooms, feedState.roomReasons),
               ),
             ),
 
-            // "Explore Live Rooms" header
+            // "More Rooms Going Live" header
             if (filteredRooms.length > 3)
               SliverToBoxAdapter(
                 child: Padding(
@@ -241,25 +400,40 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 3, height: 18,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [_npSecondary, _npPrimary],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                              borderRadius: BorderRadius.circular(2),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 3, height: 18,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [_npSecondary, _npPrimary],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text('More Rooms Going Live',
+                                    style: GoogleFonts.raleway(
+                                        fontSize: 18, fontWeight: FontWeight.w700,
+                                        color: _npOnSurface)),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('Explore Live Rooms',
+                            const SizedBox(height: 6),
+                            Text(
+                              'Stable layout, fresh activity underneath it.',
                               style: GoogleFonts.raleway(
-                                  fontSize: 18, fontWeight: FontWeight.w700,
-                                  color: _npOnSurface)),
-                        ],
+                                fontSize: 12,
+                                color: _npOnVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -317,6 +491,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                           return _RoomGridCard(
                             key: ValueKey(room.id),
                             room: room,
+                            reason: feedState.roomReasons[room.id] ?? 'Active now',
                             onTap: () => context.go('/room/${room.id}'),
                           );
                         },
@@ -514,7 +689,10 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     );
   }
 
-  Widget _buildBentoGrid(List<RoomModel> rooms) {
+  Widget _buildBentoGrid(
+    List<RoomModel> rooms,
+    Map<String, String> roomReasons,
+  ) {
     if (rooms.isEmpty) return const SizedBox.shrink();
     final hero = rooms[0];
     final List<RoomModel> secondary = rooms.length > 1
@@ -532,6 +710,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             flex: 2,
             child: _BentoHeroCard(
               room: hero,
+              reason: roomReasons[hero.id] ?? 'Active now',
               onTap: () => context.go('/room/${hero.id}'),
             ),
           ),
@@ -544,6 +723,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   Expanded(
                     child: _BentoSmallCard(
                       room: secondary[0],
+                      reason: roomReasons[secondary[0].id] ?? 'Active now',
                       onTap: () => context.go('/room/${secondary[0].id}'),
                     ),
                   ),
@@ -552,6 +732,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   Expanded(
                     child: _BentoSmallCard(
                       room: secondary[1],
+                      reason: roomReasons[secondary[1].id] ?? 'Active now',
                       onTap: () => context.go('/room/${secondary[1].id}'),
                     ),
                   ),
@@ -661,8 +842,13 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
 
 // ── Bento hero card ───────────────────────────────────────────────────────────
 class _BentoHeroCard extends ConsumerWidget {
-  const _BentoHeroCard({required this.room, required this.onTap});
+  const _BentoHeroCard({
+    required this.room,
+    required this.reason,
+    required this.onTap,
+  });
   final RoomModel room;
+  final String reason;
   final VoidCallback onTap;
 
   @override
@@ -700,6 +886,10 @@ class _BentoHeroCard extends ConsumerWidget {
             Positioned(
               top: 12, left: 12,
               child: _LiveBadge(),
+            ),
+            Positioned(
+              top: 12, right: 12,
+              child: _ReasonChip(label: reason),
             ),
             Positioned(
               bottom: 52, right: 12,
@@ -757,8 +947,13 @@ class _BentoHeroCard extends ConsumerWidget {
 
 // ── Bento small card ──────────────────────────────────────────────────────────
 class _BentoSmallCard extends StatelessWidget {
-  const _BentoSmallCard({required this.room, required this.onTap});
+  const _BentoSmallCard({
+    required this.room,
+    required this.reason,
+    required this.onTap,
+  });
   final RoomModel room;
+  final String reason;
   final VoidCallback onTap;
 
   @override
@@ -793,6 +988,7 @@ class _BentoSmallCard extends StatelessWidget {
               ),
             ),
             Positioned(top: 8, left: 8, child: _LiveBadge(small: true)),
+            Positioned(top: 8, right: 8, child: _ReasonChip(label: reason, small: true)),
             Positioned(
               bottom: 8, left: 8, right: 8,
               child: Text(
@@ -813,8 +1009,14 @@ class _BentoSmallCard extends StatelessWidget {
 
 // ── Room grid card ────────────────────────────────────────────────────────────
 class _RoomGridCard extends ConsumerWidget {
-  const _RoomGridCard({required this.room, required this.onTap, super.key});
+  const _RoomGridCard({
+    required this.room,
+    required this.reason,
+    required this.onTap,
+    super.key,
+  });
   final RoomModel room;
+  final String reason;
   final VoidCallback onTap;
 
   @override
@@ -837,6 +1039,7 @@ class _RoomGridCard extends ConsumerWidget {
               ),
             ),
             Positioned(top: 10, left: 10, child: _LiveBadge(small: true)),
+            Positioned(top: 10, right: 10, child: _ReasonChip(label: reason, small: true)),
             Positioned(
               bottom: 10, left: 10,
               child: _viewerPill(room.memberCount),
@@ -957,6 +1160,39 @@ class _UpcomingRoomTile extends StatelessWidget {
 }
 
 // ── Shared widgets ────────────────────────────────────────────────────────────
+class _ReasonChip extends StatelessWidget {
+  const _ReasonChip({required this.label, this.small = false});
+
+  final String label;
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(maxWidth: small ? 110 : 160),
+      padding: EdgeInsets.symmetric(
+        horizontal: small ? 6 : 8,
+        vertical: small ? 2 : 4,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0x99161A21),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _npGhost),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.raleway(
+          fontSize: small ? 9 : 10,
+          fontWeight: FontWeight.w700,
+          color: _npOnSurface,
+        ),
+      ),
+    );
+  }
+}
+
 class _LiveBadge extends StatelessWidget {
   const _LiveBadge({this.small = false});
   final bool small;

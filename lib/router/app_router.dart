@@ -12,6 +12,7 @@ import 'package:mixvy/features/profile/user_profile_screen.dart';
 import 'package:mixvy/features/social/screens/explore_screen.dart';
 import 'package:mixvy/features/social/screens/home_lobby_screen.dart';
 import 'package:mixvy/features/social/screens/live_floor_screen.dart';
+import 'package:mixvy/features/feed/screens/discovery_feed_screen.dart';
 import 'package:mixvy/features/social/screens/social_circle_screen.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 import 'package:mixvy/presentation/screens/notifications_screen.dart';
@@ -147,25 +148,41 @@ String? _currentAvatarUrl(Ref ref) {
 
 int _appShellIndexForLocation(String matchedLocation) {
   switch (matchedLocation) {
+    case '/':
+    case '/dashboard':
     case '/discover':
-      return 0;
-    case '/live':
-    case '/create-room':
-      return 1;
     case '/explore':
-    case '/rooms':
     case '/search':
     case '/trending':
-      return 2;
-    case '/social':
-    case '/friends':
+      return 0;
+    case '/live':
+    case '/rooms':
+    case '/create-room':
+    case '/speed-dating':
+      return 1;
     case '/messages':
     case '/messages/new':
     case '/messages/:conversationId':
+      return 2;
+    case '/social':
+    case '/friends':
+    case '/groups':
+    case '/group/:groupId':
+    case '/create-group':
+    case '/followers/:userId':
+    case '/following/:userId':
       return 3;
     case '/profile':
     case '/profile/:userId':
     case '/edit-profile':
+    case '/bookmarks':
+    case '/notifications':
+    case '/settings':
+    case '/verification':
+    case '/account':
+    case '/about':
+    case '/payments':
+    case '/vip':
       return 4;
     default:
       return 0;
@@ -339,7 +356,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/discover',
-            builder: (context, state) => const HomeLobbyScreen(),
+            builder: (context, state) => const DiscoveryFeedScreen(),
           ),
           GoRoute(
             path: '/live',

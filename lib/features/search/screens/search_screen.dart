@@ -70,24 +70,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
           Expanded(
-            child: Column(
-              children: [
-                TabBar(
-                  tabs: const [
-                    Tab(text: 'People'),
-                    Tab(text: 'Posts'),
-                    Tab(text: 'Hashtags'),
-                  ],
-                  onTap: (index) {
-                    setState(() => _selectedTab = index);
-                  },
-                ),
-                Expanded(
-                  child: _searchQuery.isEmpty && _selectedTab != 0
-                      ? _buildTrendingContent()
-                      : _buildSearchResults(),
-                ),
-              ],
+            child: DefaultTabController(
+              length: 3,
+              initialIndex: _selectedTab,
+              child: Column(
+                children: [
+                  TabBar(
+                    indicatorColor: Theme.of(context).colorScheme.primary,
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    unselectedLabelColor: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant,
+                    tabs: const [
+                      Tab(text: 'People'),
+                      Tab(text: 'Posts'),
+                      Tab(text: 'Hashtags'),
+                    ],
+                    onTap: (index) {
+                      setState(() => _selectedTab = index);
+                    },
+                  ),
+                  Expanded(
+                    child: _searchQuery.isEmpty && _selectedTab != 0
+                        ? _buildTrendingContent()
+                        : _buildSearchResults(),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -146,7 +155,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         value: usersAsync,
         fallbackContext: 'users',
         isEmpty: (users) => users.isEmpty,
-        empty: const AppEmptyView(title: 'No users found'),
+        empty: const AppEmptyView(
+          title: 'No people found',
+          message: 'Try a name, username, or explore the latest members.',
+        ),
         data: (users) => ListView.separated(
             itemCount: users.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
@@ -190,7 +202,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         value: postsAsync,
         fallbackContext: 'posts',
         isEmpty: (posts) => posts.isEmpty,
-        empty: const AppEmptyView(title: 'No posts found'),
+        empty: const AppEmptyView(
+          title: 'No posts found',
+          message: 'Try a broader keyword or switch tabs.',
+        ),
         data: (posts) => ListView.separated(
             itemCount: posts.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
@@ -218,7 +233,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         value: hashtagsAsync,
         fallbackContext: 'hashtags',
         isEmpty: (hashtags) => hashtags.isEmpty,
-        empty: const AppEmptyView(title: 'No hashtags found'),
+        empty: const AppEmptyView(
+          title: 'No hashtags found',
+          message: 'Try a different hashtag or phrase.',
+        ),
         data: (hashtags) => ListView.separated(
             itemCount: hashtags.length,
             separatorBuilder: (_, _) => const Divider(height: 1),

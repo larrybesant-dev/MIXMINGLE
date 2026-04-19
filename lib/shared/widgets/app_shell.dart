@@ -10,7 +10,8 @@ import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
-/// bottom nav bar (Home / Live / Explore / Circle / Profile).
+/// bottom nav bar built around a simpler feed-first structure:
+/// Home / Rooms / Messages / Groups / Profile.
 class AppShell extends ConsumerWidget {
   final Widget child;
   final int selectedIndex;
@@ -26,8 +27,8 @@ class AppShell extends ConsumerWidget {
   static const List<String> _roots = [
     '/discover',
     '/live',
-    '/explore',
-    '/social',
+    '/messages',
+    '/groups',
     '/profile',
   ];
 
@@ -131,23 +132,24 @@ class _VelvetBottomNav extends StatelessWidget {
                   _navItem(
                     context,
                     1,
-                    Icons.graphic_eq_rounded,
-                    Icons.graphic_eq_rounded,
-                    'Live',
+                    Icons.meeting_room_outlined,
+                    Icons.meeting_room_rounded,
+                    'Rooms',
                   ),
                   _navItem(
                     context,
                     2,
-                    Icons.explore_outlined,
-                    Icons.explore_rounded,
-                    'Explore',
+                    Icons.mail_outline_rounded,
+                    Icons.mail_rounded,
+                    'Messages',
+                    badgeCount: unreadMsgs,
                   ),
                   _navItem(
                     context,
                     3,
                     Icons.groups_2_outlined,
                     Icons.groups_2_rounded,
-                    'Circle',
+                    'Groups',
                   ),
                   _navItem(
                     context,
@@ -201,8 +203,9 @@ class _VelvetBottomNav extends StatelessWidget {
     int idx,
     IconData icon,
     IconData selectedIcon,
-    String label,
-  ) {
+    String label, {
+    int badgeCount = 0,
+  }) {
     final isSelected = selectedIndex == idx;
     final theme = Theme.of(context);
     final selectedColor = theme.colorScheme.primary;
@@ -240,10 +243,38 @@ class _VelvetBottomNav extends StatelessWidget {
                       ],
                     )
                   : null,
-              child: Icon(
-                isSelected ? selectedIcon : icon,
-                color: isSelected ? selectedColor : idleColor,
-                size: 22,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    isSelected ? selectedIcon : icon,
+                    color: isSelected ? selectedColor : idleColor,
+                    size: 22,
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: -8,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: VelvetNoir.error,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          badgeCount > 99 ? '99+' : '$badgeCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 3),
@@ -279,9 +310,9 @@ class _DesktopTopNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <({String label, IconData icon})>[
       (label: 'Home', icon: Icons.home_rounded),
-      (label: 'Live', icon: Icons.graphic_eq_rounded),
-      (label: 'Explore', icon: Icons.explore_rounded),
-      (label: 'Circle', icon: Icons.groups_2_rounded),
+      (label: 'Rooms', icon: Icons.meeting_room_rounded),
+      (label: 'Messages', icon: Icons.mail_rounded),
+      (label: 'Groups', icon: Icons.groups_2_rounded),
       (label: 'Profile', icon: Icons.person_rounded),
     ];
 
@@ -341,7 +372,7 @@ class _DesktopTopNav extends StatelessWidget {
                                   ? VelvetNoir.primary
                                   : VelvetNoir.onSurfaceVariant,
                             ),
-                            if (index == 0 && unreadMsgs > 0)
+                            if (index == 2 && unreadMsgs > 0)
                               Positioned(
                                 right: -8,
                                 top: -8,
