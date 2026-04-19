@@ -8,6 +8,7 @@ import 'package:mixvy/features/feed/providers/feed_providers.dart';
 import 'package:mixvy/features/social/widgets/social_room_card.dart';
 import 'package:mixvy/models/room_model.dart';
 import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
+import 'package:mixvy/shared/widgets/ui_stability_contract.dart';
 
 // ── Sort options ──────────────────────────────────────────────────────────────
 enum _FloorSort { mostSpeakers, mostListeners, newestLive }
@@ -76,6 +77,13 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
               : room.stageUserIds.length + room.audienceUserIds.length),
     );
 
+    RoomLayoutV1.debugAssertOrder(const <String>[
+      RoomLayoutV1.heroSlotId,
+      RoomLayoutV1.quickJoinSlotId,
+      RoomLayoutV1.sortControlsSlotId,
+      RoomLayoutV1.roomCardsSlotId,
+    ]);
+
     return AppPageScaffold(
       backgroundColor: VelvetNoir.surface,
       safeArea: false,
@@ -126,6 +134,7 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
             child: Padding(
               padding: EdgeInsets.fromLTRB(hp, 10, hp, 8),
               child: LiveFloorHeroBanner(
+                key: RoomLayoutV1.heroKey,
                 roomCount: previewRooms.length,
                 listenerCount: listenerCount,
                 sortLabel: _sort.label,
@@ -143,6 +152,7 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
 
           // Sort chips
           SliverToBoxAdapter(
+            key: RoomLayoutV1.sortControlsKey,
             child: Padding(
               padding: EdgeInsets.fromLTRB(hp, 4, hp, 8),
               child: Row(
@@ -226,6 +236,7 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
               if (sorted.isEmpty) {
                 return SliverToBoxAdapter(
                   child: Padding(
+                    key: RoomLayoutV1.roomCardsKey,
                     padding: EdgeInsets.all(hp),
                     child: _EmptyFloor(
                       onCreateRoom: () => context.go('/create-room'),
@@ -235,6 +246,7 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
               }
 
               return SliverList(
+                key: RoomLayoutV1.roomCardsKey,
                 delegate: SliverChildBuilderDelegate(
                   (ctx, i) {
                     final room = sorted[i];
@@ -349,6 +361,7 @@ class LiveFloorHeroBanner extends StatelessWidget {
             children: [
               Expanded(
                 child: FilledButton.icon(
+                  key: RoomLayoutV1.quickJoinKey,
                   onPressed: onQuickJoin,
                   icon: const Icon(Icons.flash_on_rounded),
                   label: const Text('Quick Join'),

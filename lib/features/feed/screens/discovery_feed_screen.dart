@@ -13,6 +13,7 @@ import '../../../core/utils/network_image_url.dart';
 import '../../../models/room_model.dart';
 import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
+import '../../../shared/widgets/ui_stability_contract.dart';
 import '../../../widgets/brand_ui_kit.dart';
 
 import '../../ads/ad_manager.dart';
@@ -166,7 +167,7 @@ class DiscoveryLivePulseBanner extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'What’s happening now',
+                'Live Pulse',
                 style: GoogleFonts.raleway(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -295,6 +296,12 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     );
     final featuredRoomCount = liveRoomCount >= 3 ? 3 : liveRoomCount;
 
+    HomeLayoutV1.debugAssertOrder(const <String>[
+      HomeLayoutV1.livePulseSlotId,
+      HomeLayoutV1.featuredRoomsSlotId,
+      HomeLayoutV1.discoveryFeedSlotId,
+    ]);
+
     return RefreshIndicator(
       color: _npPrimary,
       backgroundColor: _npSurfaceHigh,
@@ -302,6 +309,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
+            key: HomeLayoutV1.livePulseKey,
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 horizontalPadding,
@@ -318,25 +326,9 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             ),
           ),
 
-          // Stories row
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.only(top: 2),
-              child: const StoriesRow(),
-            ),
-          ),
-
-          // Category chips
-          SliverToBoxAdapter(
-            child: _buildCategoryChips(),
-          ),
-
-          // Friends Live — rooms hosted by people you follow
-          const _FriendsLiveSection(),
-
           if (filteredRooms.isNotEmpty) ...[
-            // "Featured Rooms" header
             SliverToBoxAdapter(
+              key: HomeLayoutV1.featuredRoomsKey,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
@@ -379,63 +371,79 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 ),
               ),
             ),
-            // Bento trending grid (hero + stacked)
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: _buildBentoGrid(filteredRooms, feedState.roomReasons),
               ),
             ),
+          ] else ...[
+            SliverToBoxAdapter(
+              key: HomeLayoutV1.featuredRoomsKey,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  context.sectionSpacing,
+                  horizontalPadding,
+                  0,
+                ),
+                child: AppEmptyView(
+                  title: 'No featured rooms right now',
+                  message: 'When rooms go live, they will appear here first.',
+                  icon: Icons.sensors_off_rounded,
+                ),
+              ),
+            ),
+          ],
 
-            // "More Rooms Going Live" header
-            if (filteredRooms.length > 3)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    context.sectionSpacing + 4,
-                    horizontalPadding,
-                    12,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+          SliverToBoxAdapter(
+            key: HomeLayoutV1.discoveryFeedKey,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                context.sectionSpacing,
+                horizontalPadding,
+                12,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 3, height: 18,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [_npSecondary, _npPrimary],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
+                            Container(
+                              width: 3, height: 18,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [_npSecondary, _npPrimary],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
                                 ),
-                                const SizedBox(width: 8),
-                                Text('More Rooms Going Live',
-                                    style: GoogleFonts.raleway(
-                                        fontSize: 18, fontWeight: FontWeight.w700,
-                                        color: _npOnSurface)),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Stable layout, fresh activity underneath it.',
-                              style: GoogleFonts.raleway(
-                                fontSize: 12,
-                                color: _npOnVariant,
+                                borderRadius: BorderRadius.circular(2),
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            Text('Discovery Feed',
+                                style: GoogleFonts.raleway(
+                                    fontSize: 18, fontWeight: FontWeight.w700,
+                                    color: _npOnSurface)),
                           ],
                         ),
-                      ),
-                      Container(
+                        const SizedBox(height: 6),
+                        Text(
+                          'Stable layout, fresh activity underneath it.',
+                          style: GoogleFonts.raleway(
+                            fontSize: 12,
+                            color: _npOnVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: _npSurfaceHigh,
@@ -459,71 +467,63 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   ),
                 ),
               ),
+            ),
 
-            // Grid of room cards
-            if (filteredRooms.length > 3)
-              SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                sliver: SliverLayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.crossAxisExtent;
-                    final crossAxisCount = width >= 980
-                        ? 4
-                        : width >= 720
-                            ? 3
-                            : 2;
-                    final aspectRatio = width >= 980
-                        ? 1.0
-                        : width >= 720
-                            ? 0.95
-                            : 1.0;
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: const StoriesRow(),
+            ),
+          ),
 
-                    return SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: aspectRatio,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (ctx, i) {
-                          final room = filteredRooms[i + 3];
-                          return _RoomGridCard(
-                            key: ValueKey(room.id),
-                            room: room,
-                            reason: feedState.roomReasons[room.id] ?? 'Active now',
-                            onTap: () => context.go('/room/${room.id}'),
-                          );
-                        },
-                        childCount: filteredRooms.length > 3
-                            ? filteredRooms.length - 3
-                            : 0,
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ] else ...[
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  context.sectionSpacing,
-                  horizontalPadding,
-                  0,
-                ),
-                child: AppEmptyView(
-                  title: 'No live rooms right now',
-                  message: 'Try another category or jump into Speed Dating.',
-                  icon: Icons.sensors_off_rounded,
-                  action: _gradientButton(
-                    label: 'Try Speed Dating',
-                    onTap: () => context.go('/speed-dating'),
-                  ),
-                ),
+          SliverToBoxAdapter(
+            child: _buildCategoryChips(),
+          ),
+
+          const _FriendsLiveSection(),
+
+          if (filteredRooms.length > 3)
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.crossAxisExtent;
+                  final crossAxisCount = width >= 980
+                      ? 4
+                      : width >= 720
+                          ? 3
+                          : 2;
+                  final aspectRatio = width >= 980
+                      ? 1.0
+                      : width >= 720
+                          ? 0.95
+                          : 1.0;
+
+                  return SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: aspectRatio,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, i) {
+                        final room = filteredRooms[i + 3];
+                        return _RoomGridCard(
+                          key: ValueKey(room.id),
+                          room: room,
+                          reason: feedState.roomReasons[room.id] ?? 'Active now',
+                          onTap: () => context.go('/room/${room.id}'),
+                        );
+                      },
+                      childCount: filteredRooms.length > 3
+                          ? filteredRooms.length - 3
+                          : 0,
+                    ),
+                  );
+                },
               ),
             ),
-          ],
 
           // Promo banner (free tier only)
           SliverToBoxAdapter(
