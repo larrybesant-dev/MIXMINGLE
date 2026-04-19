@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/ads/ad_manager.dart';
+import 'package:mixvy/features/feed/controllers/feed_controller.dart';
 import 'package:mixvy/features/profile/profile_controller.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -42,6 +43,16 @@ Widget _buildWidget(List<Override> overrides) {
 }
 
 void main() {
+  group('FeedState timing defaults', () {
+    test('starts in loading mode to avoid a first-frame empty flash', () {
+      const state = FeedState();
+
+      expect(state.isLoading, isTrue);
+      expect(state.liveRooms, isEmpty);
+      expect(state.trendingUsers, isEmpty);
+    });
+  });
+
   group('AdManager.shouldShowAds', () {
     test('returns true for Free membership', () {
       expect(AdManager.shouldShowAds('Free'), isTrue);

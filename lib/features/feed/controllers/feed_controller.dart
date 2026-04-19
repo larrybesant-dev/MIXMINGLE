@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,7 +17,7 @@ class FeedState {
   final List<UserModel> trendingUsers;
 
   const FeedState({
-    this.isLoading = false,
+    this.isLoading = true,
     this.error,
     this.liveRooms = const [],
     this.upcomingRooms = const [],
@@ -87,7 +86,8 @@ class FeedController extends Notifier<FeedState> {
     return _FeedViewerProfile(
       friendIds: List<String>.from(data['friends'] ?? const <String>[]).toSet(),
       canAccessAdultRooms:
-          data['adultModeEnabled'] == true && data['adultConsentAccepted'] == true,
+          data['adultModeEnabled'] == true &&
+          data['adultConsentAccepted'] == true,
     );
   }
 
@@ -130,11 +130,12 @@ class FeedController extends Notifier<FeedState> {
             .where('isPrivate', isEqualTo: false)
             .limit(40)
             .get();
-        final visibleUsers = usersSnap.docs
-            .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
-            .where((user) => !blockedIds.contains(user.id))
-            .toList()
-          ..sort((a, b) => b.coinBalance.compareTo(a.coinBalance));
+        final visibleUsers =
+            usersSnap.docs
+                .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
+                .where((user) => !blockedIds.contains(user.id))
+                .toList()
+              ..sort((a, b) => b.coinBalance.compareTo(a.coinBalance));
         trendingUsers = visibleUsers.take(10).toList(growable: false);
       } on FirebaseException catch (e, stackTrace) {
         logFirestoreError(
@@ -169,7 +170,10 @@ class FeedController extends Notifier<FeedState> {
       );
       state = state.copyWith(
         isLoading: false,
-        error: friendlyFirestoreMessage(e, fallbackContext: 'the discovery feed'),
+        error: friendlyFirestoreMessage(
+          e,
+          fallbackContext: 'the discovery feed',
+        ),
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
