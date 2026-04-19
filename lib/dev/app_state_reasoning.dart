@@ -146,6 +146,17 @@ StateReasonSummary explainLiveRoomHydration({
     );
   }
 
+  if (normalizedLifecycle == 'degraded') {
+    return StateReasonSummary(
+      stateLabel: 'degraded',
+      primaryReason:
+          'The room state is degraded, so presence or media may be temporarily out of sync.',
+      details: ['lifecycle=$normalizedLifecycle', 'users=$userCount'],
+      severity: StateReasonSeverity.warning,
+      confidence: StateReasonConfidence.high,
+    );
+  }
+
   if (normalizedLifecycle == 'initializing' ||
       normalizedLifecycle == 'hydrating') {
     return StateReasonSummary(

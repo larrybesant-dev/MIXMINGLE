@@ -108,5 +108,17 @@ void main() {
       expect(reason.confidence, StateReasonConfidence.confirmed);
       expect(reason.confidenceLabel, 'confirmed state');
     });
+
+    test('reports degraded lifecycle as degraded instead of empty', () {
+      final reason = explainLiveRoomHydration(
+        lifecycleLabel: 'degraded',
+        userCount: 0,
+        pendingCount: 0,
+      );
+
+      expect(reason.stateLabel, 'degraded');
+      expect(reason.primaryReason, contains('degraded'));
+      expect(reason.confidence, StateReasonConfidence.high);
+    });
   });
 }
