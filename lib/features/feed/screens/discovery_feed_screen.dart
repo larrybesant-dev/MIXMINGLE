@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/layout/app_layout.dart';
 import '../../../dev/app_debug_flags.dart';
+import '../../../dev/app_state_reasoning.dart';
 import '../../../core/utils/network_image_url.dart';
 import '../../../models/room_model.dart';
 import '../../../shared/widgets/app_page_scaffold.dart';
@@ -348,6 +349,7 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
     super.key,
     required this.streamStateLabel,
     required this.liveRoomCount,
+    required this.visibleRoomCount,
     required this.upcomingRoomCount,
     required this.selectedCategoryLabel,
     required this.hint,
@@ -355,6 +357,7 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
 
   final String streamStateLabel;
   final int liveRoomCount;
+  final int visibleRoomCount;
   final int upcomingRoomCount;
   final String selectedCategoryLabel;
   final String hint;
@@ -365,44 +368,31 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _npSurfaceHigh.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _npGhost),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Discovery Inspector',
-            style: GoogleFonts.raleway(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: _npPrimary,
-              letterSpacing: 0.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _PulseChip(label: 'stream: $streamStateLabel'),
-              _PulseChip(label: 'live rooms: $liveRoomCount'),
-              _PulseChip(label: 'upcoming: $upcomingRoomCount'),
-              _PulseChip(label: 'filter: $selectedCategoryLabel'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hint,
-            style: GoogleFonts.raleway(fontSize: 12, color: _npOnVariant),
-          ),
-        ],
-      ),
+    final summary = explainCollectionVisibility(
+      sourceName: 'rooms',
+      isLoading: streamStateLabel == 'loading',
+      hasError: streamStateLabel == 'error',
+      totalCount: liveRoomCount,
+      visibleCount: visibleRoomCount,
+      filterLabel: selectedCategoryLabel,
+      errorMessage: hint,
+    );
+
+    return StateReasonCard(
+      title: 'Discovery Inspector',
+      summary: summary,
+      metrics: [
+        'stream: $streamStateLabel',
+        'live rooms: $liveRoomCount',
+        'visible: $visibleRoomCount',
+        'upcoming: $upcomingRoomCount',
+        'filter: $selectedCategoryLabel',
+      ],
+      backgroundColor: _npSurfaceHigh.withValues(alpha: 0.94),
+      borderColor: _npGhost,
+      titleColor: _npPrimary,
+      textColor: _npOnVariant,
+      metricChipBuilder: (label) => _PulseChip(label: label),
     );
   }
 }
@@ -529,6 +519,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   DiscoveryVisibilityDebugPanel(
                     streamStateLabel: discoveryStateLabel,
                     liveRoomCount: liveRoomCount,
+                    visibleRoomCount: filteredRooms.length,
                     upcomingRoomCount: feedState.upcomingRooms.length,
                     selectedCategoryLabel: selectedCategoryLabel,
                     hint: discoveryHint,

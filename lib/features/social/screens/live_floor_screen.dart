@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/core/layout/app_layout.dart';
 import 'package:mixvy/dev/app_debug_flags.dart';
+import 'package:mixvy/dev/app_state_reasoning.dart';
 import 'package:mixvy/core/theme.dart';
 import 'package:mixvy/features/feed/providers/feed_providers.dart';
 import 'package:mixvy/features/social/widgets/social_room_card.dart';
@@ -146,49 +147,30 @@ class RoomsVisibilityDebugPanel extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: VelvetNoir.surfaceHigh.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: VelvetNoir.outlineVariant.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Rooms Inspector',
-            style: GoogleFonts.raleway(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: VelvetNoir.primary,
-              letterSpacing: 0.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _HeroStatPill(label: 'stream: $streamStateLabel'),
-              _HeroStatPill(label: 'rooms seen: $roomCount'),
-              _HeroStatPill(label: 'visible rooms: $visibleRoomCount'),
-              _HeroStatPill(label: 'sort: $sortLabel'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hint,
-            style: GoogleFonts.raleway(
-              fontSize: 12,
-              color: VelvetNoir.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+    final summary = explainCollectionVisibility(
+      sourceName: 'rooms',
+      isLoading: streamStateLabel == 'loading',
+      hasError: streamStateLabel == 'error',
+      totalCount: roomCount,
+      visibleCount: visibleRoomCount,
+      filterLabel: 'all',
+      errorMessage: hint,
+    );
+
+    return StateReasonCard(
+      title: 'Rooms Inspector',
+      summary: summary,
+      metrics: [
+        'stream: $streamStateLabel',
+        'rooms seen: $roomCount',
+        'visible rooms: $visibleRoomCount',
+        'sort: $sortLabel',
+      ],
+      backgroundColor: VelvetNoir.surfaceHigh.withValues(alpha: 0.94),
+      borderColor: VelvetNoir.outlineVariant.withValues(alpha: 0.35),
+      titleColor: VelvetNoir.primary,
+      textColor: VelvetNoir.onSurfaceVariant,
+      metricChipBuilder: (label) => _HeroStatPill(label: label),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_debug_flags.dart';
+import 'app_state_reasoning.dart';
 import '../features/room/controllers/live_room_controller.dart';
 import '../features/room/controllers/room_state.dart';
 import '../features/room/providers/participant_providers.dart';
@@ -27,6 +28,12 @@ class RoomInspectorPanel extends ConsumerWidget {
     final participantsAsync = ref.watch(participantsStreamProvider(roomId));
     final policyAsync = ref.watch(roomPolicyProvider(roomId));
     final modLogAsync = ref.watch(modLogStreamProvider(roomId));
+    final roomSummary = explainLiveRoomHydration(
+      lifecycleLabel: roomState.lifecycleState.name,
+      userCount: roomState.userIds.length,
+      pendingCount: roomState.pendingUserIds.length,
+      errorMessage: roomState.errorMessage,
+    );
 
     return Material(
       color: Colors.black.withValues(alpha: 0.88),
@@ -39,6 +46,16 @@ class RoomInspectorPanel extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
+            StateReasonCard(
+              title: 'WHY THIS ROOM LOOKS THIS WAY',
+              summary: roomSummary,
+              metrics: [
+                'state: ${roomSummary.stateLabel}',
+                'users: ${roomState.userIds.length}',
+                'pending: ${roomState.pendingUserIds.length}',
+              ],
+            ),
+            const SizedBox(height: 8),
             _SectionHeader(
               label: 'ROOM STATE',
               color: _lifecycleColor(roomState.lifecycleState),
