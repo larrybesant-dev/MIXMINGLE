@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/layout/app_layout.dart';
+import '../../../dev/app_debug_flags.dart';
 import '../../../core/utils/network_image_url.dart';
 import '../../../models/room_model.dart';
 import '../../../shared/widgets/app_page_scaffold.dart';
@@ -29,20 +29,22 @@ import '../../stories/providers/story_provider.dart';
 import '../../../presentation/providers/notification_provider.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
-const _npSurface        = Color(0xFF0D0A0C);
-const _npSurfaceHigh    = Color(0xFF241820);
+const _npSurface = Color(0xFF0D0A0C);
+const _npSurfaceHigh = Color(0xFF241820);
 const _npSurfaceHighest = Color(0xFF2A1C23);
-const _npPrimary        = Color(0xFFD4A853);
-const _npPrimaryDim     = Color(0xFF8C6020);
-const _npSecondary      = Color(0xFFC45E7A);
-const _npError          = Color(0xFFFF6E84);
-const _npOnSurface      = Color(0xFFF2EBE0);
-const _npOnVariant      = Color(0xFFB09080);
-const _npGhost          = Color(0x1A73757D);
+const _npPrimary = Color(0xFFD4A853);
+const _npPrimaryDim = Color(0xFF8C6020);
+const _npSecondary = Color(0xFFC45E7A);
+const _npError = Color(0xFFFF6E84);
+const _npOnSurface = Color(0xFFF2EBE0);
+const _npOnVariant = Color(0xFFB09080);
+const _npGhost = Color(0x1A73757D);
 
 // ── Host avatar provider ──────────────────────────────────────────────────────
-final _hostAvatarProvider =
-    FutureProvider.autoDispose.family<String?, String>((ref, hostId) async {
+final _hostAvatarProvider = FutureProvider.autoDispose.family<String?, String>((
+  ref,
+  hostId,
+) async {
   final doc = await FirebaseFirestore.instance
       .collection('users')
       .doc(hostId)
@@ -82,17 +84,21 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                 preferredSize: const Size.fromHeight(48),
                 child: DecoratedBox(
                   decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: _npGhost),
-                    ),
+                    border: Border(bottom: BorderSide(color: _npGhost)),
                   ),
                   child: TabBar(
                     labelColor: _npPrimary,
                     unselectedLabelColor: _npOnVariant,
                     indicatorColor: _npPrimary,
                     indicatorWeight: 2,
-                    labelStyle: GoogleFonts.raleway(fontWeight: FontWeight.w600, fontSize: 14),
-                    unselectedLabelStyle: GoogleFonts.raleway(fontWeight: FontWeight.w400, fontSize: 14),
+                    labelStyle: GoogleFonts.raleway(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    unselectedLabelStyle: GoogleFonts.raleway(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                    ),
                     tabs: const [
                       Tab(text: 'Discover'),
                       Tab(text: 'Following'),
@@ -105,10 +111,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: _LiveNowStrip()),
           ],
           body: const TabBarView(
-            children: [
-              DiscoveryFeedContent(),
-              _FollowingFeedTab(),
-            ],
+            children: [DiscoveryFeedContent(), _FollowingFeedTab()],
           ),
         ),
       ),
@@ -309,10 +312,7 @@ class HomeFeaturedRoomsSection extends StatelessWidget {
 }
 
 class HomeDiscoverySection extends StatelessWidget {
-  const HomeDiscoverySection({
-    super.key,
-    required this.child,
-  });
+  const HomeDiscoverySection({super.key, required this.child});
 
   final Widget child;
 
@@ -361,7 +361,7 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode) {
+    if (!kEnableVisibilityDiagnostics) {
       return const SizedBox.shrink();
     }
 
@@ -399,10 +399,7 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             hint,
-            style: GoogleFonts.raleway(
-              fontSize: 12,
-              color: _npOnVariant,
-            ),
+            style: GoogleFonts.raleway(fontSize: 12, color: _npOnVariant),
           ),
         ],
       ),
@@ -436,7 +433,9 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(feedControllerProvider.notifier).loadFeed());
+    Future.microtask(
+      () => ref.read(feedControllerProvider.notifier).loadFeed(),
+    );
   }
 
   @override
@@ -455,9 +454,8 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     final filteredRooms = _selectedCategory == null
         ? feedState.liveRooms
         : feedState.liveRooms
-            .where(
-                (r) => r.category?.toLowerCase() == _selectedCategory)
-            .toList();
+              .where((r) => r.category?.toLowerCase() == _selectedCategory)
+              .toList();
     final liveRoomCount = feedState.liveRooms.length;
     final activeListenerCount = feedState.liveRooms.fold<int>(
       0,
@@ -471,16 +469,16 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     final discoveryStateLabel = feedState.error != null
         ? 'error'
         : filteredRooms.isEmpty
-            ? 'empty'
-            : 'ready';
+        ? 'empty'
+        : 'ready';
     final selectedCategoryLabel = _selectedCategory ?? 'all';
     final discoveryHint = feedState.error != null
         ? feedState.error!
         : filteredRooms.isEmpty
-            ? (_selectedCategory == null
-                ? 'No live rooms currently passed visibility rules.'
-                : 'No live rooms match the selected category right now.')
-            : 'Rooms are visible and ranked normally.';
+        ? (_selectedCategory == null
+              ? 'No live rooms currently passed visibility rules.'
+              : 'No live rooms match the selected category right now.')
+        : 'Rooms are visible and ranked normally.';
 
     HomeLayoutV1.debugAssertOrder(const <String>[
       HomeLayoutV1.livePulseSlotId,
@@ -555,13 +553,13 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   final crossAxisCount = width >= 980
                       ? 4
                       : width >= 720
-                          ? 3
-                          : 2;
+                      ? 3
+                      : 2;
                   final aspectRatio = width >= 980
                       ? 1.0
                       : width >= 720
-                          ? 0.95
-                          : 1.0;
+                      ? 0.95
+                      : 1.0;
 
                   return SliverGrid(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -576,7 +574,8 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                         return _RoomGridCard(
                           key: ValueKey(room.id),
                           room: room,
-                          reason: feedState.roomReasons[room.id] ?? 'Active now',
+                          reason:
+                              feedState.roomReasons[room.id] ?? 'Active now',
                           onTap: () => context.go('/room/${room.id}'),
                         );
                       },
@@ -591,15 +590,19 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
 
           // Promo banner (free tier only)
           SliverToBoxAdapter(
-            child: Builder(builder: (ctx) {
-              final profileMembership = ref.watch(
+            child: Builder(
+              builder: (ctx) {
+                final profileMembership = ref.watch(
                   profileControllerProvider.select(
-                      (s) => s.membershipLevel ?? 'Free'));
-              if (!AdManager.shouldShowAds(profileMembership)) {
-                return const SizedBox.shrink();
-              }
-              return _buildPromoBanner(ctx);
-            }),
+                    (s) => s.membershipLevel ?? 'Free',
+                  ),
+                );
+                if (!AdManager.shouldShowAds(profileMembership)) {
+                  return const SizedBox.shrink();
+                }
+                return _buildPromoBanner(ctx);
+              },
+            ),
           ),
 
           // Trending users
@@ -615,7 +618,8 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 child: Row(
                   children: [
                     Container(
-                      width: 3, height: 18,
+                      width: 3,
+                      height: 18,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [_npPrimary, _npSecondary],
@@ -626,10 +630,14 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('Trending Creators',
-                        style: GoogleFonts.raleway(
-                            fontSize: 18, fontWeight: FontWeight.w700,
-                            color: _npOnSurface)),
+                    Text(
+                      'Trending Creators',
+                      style: GoogleFonts.raleway(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _npOnSurface,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -668,34 +676,36 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 child: Row(
                   children: [
                     Container(
-                      width: 3, height: 18,
+                      width: 3,
+                      height: 18,
                       decoration: BoxDecoration(
                         color: _npSurfaceHighest,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('Upcoming Rooms',
-                        style: GoogleFonts.raleway(
-                            fontSize: 18, fontWeight: FontWeight.w700,
-                            color: _npOnSurface)),
+                    Text(
+                      'Upcoming Rooms',
+                      style: GoogleFonts.raleway(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _npOnSurface,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (ctx, i) {
-                  final room = feedState.upcomingRooms[i];
-                  final scheduledAt = room.scheduledAt?.toDate();
-                  return _UpcomingRoomTile(
-                    key: ValueKey(room.id),
-                    room: room,
-                    scheduledAt: scheduledAt,
-                  );
-                },
-                childCount: feedState.upcomingRooms.length,
-              ),
+              delegate: SliverChildBuilderDelegate((ctx, i) {
+                final room = feedState.upcomingRooms[i];
+                final scheduledAt = room.scheduledAt?.toDate();
+                return _UpcomingRoomTile(
+                  key: ValueKey(room.id),
+                  room: room,
+                  scheduledAt: scheduledAt,
+                );
+              }, childCount: feedState.upcomingRooms.length),
             ),
           ],
 
@@ -838,23 +848,36 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                    colors: [_npPrimary, _npPrimaryDim]),
+                  colors: [_npPrimary, _npPrimaryDim],
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.bolt_rounded, color: _npSurface, size: 20),
+              child: const Icon(
+                Icons.bolt_rounded,
+                color: _npSurface,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Upgrade to Premium',
-                      style: GoogleFonts.raleway(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14, color: _npOnSurface)),
-                  Text('Remove ads & unlock exclusive rooms.',
-                      style: GoogleFonts.raleway(
-                          fontSize: 12, color: _npOnVariant)),
+                  Text(
+                    'Upgrade to Premium',
+                    style: GoogleFonts.raleway(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: _npOnSurface,
+                    ),
+                  ),
+                  Text(
+                    'Remove ads & unlock exclusive rooms.',
+                    style: GoogleFonts.raleway(
+                      fontSize: 12,
+                      color: _npOnVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -862,16 +885,24 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             GestureDetector(
               onTap: () => ctx.go('/payments'),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                      colors: [_npPrimary, _npPrimaryDim]),
+                    colors: [_npPrimary, _npPrimaryDim],
+                  ),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text('Upgrade',
-                    style: GoogleFonts.raleway(
-                        fontSize: 12, fontWeight: FontWeight.w700,
-                        color: _npSurface)),
+                child: Text(
+                  'Upgrade',
+                  style: GoogleFonts.raleway(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _npSurface,
+                  ),
+                ),
               ),
             ),
           ],
@@ -879,7 +910,6 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
       ),
     );
   }
-
 }
 
 class _DiscoverySectionHeader extends StatelessWidget {
@@ -933,10 +963,7 @@ class _DiscoverySectionHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   subtitle!,
-                  style: GoogleFonts.raleway(
-                    fontSize: 12,
-                    color: _npOnVariant,
-                  ),
+                  style: GoogleFonts.raleway(fontSize: 12, color: _npOnVariant),
                 ),
               ],
             ],
@@ -1010,7 +1037,9 @@ class _BentoHeroCard extends ConsumerWidget {
               ),
             ),
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Container(
                 height: 120,
                 decoration: const BoxDecoration(
@@ -1022,20 +1051,17 @@ class _BentoHeroCard extends ConsumerWidget {
                 ),
               ),
             ),
+            Positioned(top: 12, left: 12, child: _LiveBadge()),
+            Positioned(top: 12, right: 12, child: _ReasonChip(label: reason)),
             Positioned(
-              top: 12, left: 12,
-              child: _LiveBadge(),
-            ),
-            Positioned(
-              top: 12, right: 12,
-              child: _ReasonChip(label: reason),
-            ),
-            Positioned(
-              bottom: 52, right: 12,
+              bottom: 52,
+              right: 12,
               child: _viewerPill(room.memberCount),
             ),
             Positioned(
-              bottom: 12, left: 12, right: 12,
+              bottom: 12,
+              left: 12,
+              right: 12,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -1045,21 +1071,26 @@ class _BentoHeroCard extends ConsumerWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.raleway(
-                        fontSize: 16, fontWeight: FontWeight.w700,
-                        color: _npOnSurface),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _npOnSurface,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       ClipOval(
                         child: SizedBox(
-                          width: 20, height: 20,
+                          width: 20,
+                          height: 20,
                           child: avatarAsync.when(
                             data: (url) => url != null
                                 ? CachedNetworkImage(
-                                    imageUrl: url, fit: BoxFit.cover,
+                                    imageUrl: url,
+                                    fit: BoxFit.cover,
                                     errorWidget: (_, _, _) =>
-                                        Container(color: _npPrimaryDim))
+                                        Container(color: _npPrimaryDim),
+                                  )
                                 : Container(color: _npPrimaryDim),
                             loading: () => Container(color: _npPrimaryDim),
                             error: (_, _) => Container(color: _npPrimaryDim),
@@ -1070,7 +1101,9 @@ class _BentoHeroCard extends ConsumerWidget {
                       Text(
                         'Host',
                         style: GoogleFonts.raleway(
-                            fontSize: 12, color: _npOnVariant),
+                          fontSize: 12,
+                          color: _npOnVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -1114,7 +1147,9 @@ class _BentoSmallCard extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Container(
                 height: 60,
                 decoration: const BoxDecoration(
@@ -1127,16 +1162,24 @@ class _BentoSmallCard extends StatelessWidget {
               ),
             ),
             Positioned(top: 8, left: 8, child: _LiveBadge(small: true)),
-            Positioned(top: 8, right: 8, child: _ReasonChip(label: reason, small: true)),
             Positioned(
-              bottom: 8, left: 8, right: 8,
+              top: 8,
+              right: 8,
+              child: _ReasonChip(label: reason, small: true),
+            ),
+            Positioned(
+              bottom: 8,
+              left: 8,
+              right: 8,
               child: Text(
                 room.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.raleway(
-                    fontSize: 12, fontWeight: FontWeight.w600,
-                    color: _npOnSurface),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _npOnSurface,
+                ),
               ),
             ),
           ],
@@ -1178,33 +1221,46 @@ class _RoomGridCard extends ConsumerWidget {
               ),
             ),
             Positioned(top: 10, left: 10, child: _LiveBadge(small: true)),
-            Positioned(top: 10, right: 10, child: _ReasonChip(label: reason, small: true)),
             Positioned(
-              bottom: 10, left: 10,
+              top: 10,
+              right: 10,
+              child: _ReasonChip(label: reason, small: true),
+            ),
+            Positioned(
+              bottom: 10,
+              left: 10,
               child: _viewerPill(room.memberCount),
             ),
             Positioned(
-              bottom: 36, left: 10, right: 10,
+              bottom: 36,
+              left: 10,
+              right: 10,
               child: Text(
                 room.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.raleway(
-                    fontSize: 13, fontWeight: FontWeight.w600,
-                    color: _npOnSurface),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _npOnSurface,
+                ),
               ),
             ),
             Positioned(
-              bottom: 10, right: 10,
+              bottom: 10,
+              right: 10,
               child: ClipOval(
                 child: SizedBox(
-                  width: 24, height: 24,
+                  width: 24,
+                  height: 24,
                   child: avatarAsync.when(
                     data: (url) => url != null
                         ? CachedNetworkImage(
-                            imageUrl: url, fit: BoxFit.cover,
+                            imageUrl: url,
+                            fit: BoxFit.cover,
                             errorWidget: (_, _, _) =>
-                                Container(color: _npPrimaryDim))
+                                Container(color: _npPrimaryDim),
+                          )
                         : Container(color: _npPrimaryDim),
                     loading: () => Container(color: _npPrimaryDim),
                     error: (_, _) => Container(color: _npPrimaryDim),
@@ -1243,27 +1299,38 @@ class _UpcomingRoomTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: _npPrimary.withAlpha(30),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Center(child: Text('📅', style: TextStyle(fontSize: 22))),
+            child: const Center(
+              child: Text('📅', style: TextStyle(fontSize: 22)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(room.name,
-                    style: GoogleFonts.raleway(
-                        fontWeight: FontWeight.w700, fontSize: 14,
-                        color: _npOnSurface)),
+                Text(
+                  room.name,
+                  style: GoogleFonts.raleway(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: _npOnSurface,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 scheduledAt == null
-                    ? Text('Scheduled',
+                    ? Text(
+                        'Scheduled',
                         style: GoogleFonts.raleway(
-                            fontSize: 12, color: _npOnVariant))
+                          fontSize: 12,
+                          color: _npOnVariant,
+                        ),
+                      )
                     : _RoomCountdown(scheduledAt: scheduledAt!),
               ],
             ),
@@ -1287,9 +1354,10 @@ class _UpcomingRoomTile extends StatelessWidget {
                 border: Border.all(color: _npPrimary.withAlpha(80)),
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Text('Remind',
-                  style: GoogleFonts.raleway(
-                      fontSize: 12, color: _npPrimary)),
+              child: Text(
+                'Remind',
+                style: GoogleFonts.raleway(fontSize: 12, color: _npPrimary),
+              ),
             ),
           ),
         ],
@@ -1340,24 +1408,28 @@ class _LiveBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-          horizontal: small ? 6 : 8, vertical: small ? 2 : 4),
+        horizontal: small ? 6 : 8,
+        vertical: small ? 2 : 4,
+      ),
       decoration: BoxDecoration(
         color: _npError.withAlpha(230),
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-              color: _npError.withAlpha(80),
-              blurRadius: small ? 6 : 10,
-              spreadRadius: 1),
+            color: _npError.withAlpha(80),
+            blurRadius: small ? 6 : 10,
+            spreadRadius: 1,
+          ),
         ],
       ),
       child: Text(
         '● LIVE',
         style: GoogleFonts.raleway(
-            fontSize: small ? 9 : 10,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            letterSpacing: 0.5),
+          fontSize: small ? 9 : 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -1377,8 +1449,11 @@ Widget _viewerPill(int count) {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.remove_red_eye_outlined,
-                size: 12, color: _npOnVariant),
+            const Icon(
+              Icons.remove_red_eye_outlined,
+              size: 12,
+              color: _npOnVariant,
+            ),
             const SizedBox(width: 4),
             Text(
               count > 999 ? '${(count / 1000).toStringAsFixed(1)}k' : '$count',
@@ -1416,11 +1491,10 @@ class _FollowingFeedTab extends ConsumerWidget {
         if (maps.isEmpty) {
           return AppEmptyView(
             title: 'No posts from people you follow yet',
-            message: 'Find more creators and your following feed will update live.',
+            message:
+                'Find more creators and your following feed will update live.',
             icon: Icons.people_outline_rounded,
-            action: _FollowFeedActionButton(
-              onTap: () => context.go('/search'),
-            ),
+            action: _FollowFeedActionButton(onTap: () => context.go('/search')),
           );
         }
         final posts = maps.map((m) {
@@ -1430,8 +1504,7 @@ class _FollowingFeedTab extends ConsumerWidget {
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: posts.length,
-          separatorBuilder: (_, _) =>
-              Divider(height: 1, color: _npGhost),
+          separatorBuilder: (_, _) => Divider(height: 1, color: _npGhost),
           itemBuilder: (context, i) =>
               PostCard(post: posts[i], currentUserId: uid),
         );
@@ -1476,7 +1549,10 @@ class _RoomCountdownState extends State<_RoomCountdown> {
     if (_remaining.isNegative) {
       return Text(
         'Going live now!',
-        style: GoogleFonts.raleway(color: _npSecondary, fontWeight: FontWeight.w600),
+        style: GoogleFonts.raleway(
+          color: _npSecondary,
+          fontWeight: FontWeight.w600,
+        ),
       );
     }
     final String label;
@@ -1485,12 +1561,15 @@ class _RoomCountdownState extends State<_RoomCountdown> {
       final s = _remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
       label = 'Going live in ${m}m ${s}s';
     } else if (_remaining.inHours < 24) {
-      label = 'In ${_remaining.inHours}h ${_remaining.inMinutes.remainder(60)}m';
+      label =
+          'In ${_remaining.inHours}h ${_remaining.inMinutes.remainder(60)}m';
     } else {
       label = 'In ${_remaining.inDays}d';
     }
-    return Text(label,
-        style: GoogleFonts.raleway(fontSize: 12, color: _npOnVariant));
+    return Text(
+      label,
+      style: GoogleFonts.raleway(fontSize: 12, color: _npOnVariant),
+    );
   }
 }
 
@@ -1518,7 +1597,8 @@ class _LiveNowStrip extends ConsumerWidget {
           child: Row(
             children: [
               Container(
-                width: 7, height: 7,
+                width: 7,
+                height: 7,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: _npError,
@@ -1528,8 +1608,10 @@ class _LiveNowStrip extends ConsumerWidget {
               Text(
                 'Live Now',
                 style: GoogleFonts.raleway(
-                  fontSize: 13, fontWeight: FontWeight.w700,
-                  color: _npError, letterSpacing: 0.3,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: _npError,
+                  letterSpacing: 0.3,
                 ),
               ),
               const SizedBox(width: 6),
@@ -1542,8 +1624,10 @@ class _LiveNowStrip extends ConsumerWidget {
                 child: Text(
                   '${rooms.length}',
                   style: GoogleFonts.raleway(
-                      fontSize: 11, fontWeight: FontWeight.w600,
-                      color: _npError),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _npError,
+                  ),
                 ),
               ),
             ],
@@ -1552,7 +1636,9 @@ class _LiveNowStrip extends ConsumerWidget {
         SizedBox(
           height: 92,
           child: ListView.separated(
-            padding: EdgeInsets.symmetric(horizontal: context.pageHorizontalPadding),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.pageHorizontalPadding,
+            ),
             scrollDirection: Axis.horizontal,
             itemCount: rooms.length,
             separatorBuilder: (_, _) => const SizedBox(width: 14),
@@ -1612,8 +1698,13 @@ class _LiveNowBubble extends ConsumerWidget {
   final VoidCallback onTap;
 
   static const _categoryEmoji = {
-    'music': '🎵', 'gaming': '🎮', 'dating': '❤️', 'talk': '💬',
-    'tech': '💻',  'art': '🎨',   'dance': '💃',
+    'music': '🎵',
+    'gaming': '🎮',
+    'dating': '❤️',
+    'talk': '💬',
+    'tech': '💻',
+    'art': '🎨',
+    'dance': '💃',
   };
 
   @override
@@ -1637,7 +1728,8 @@ class _LiveNowBubble extends ConsumerWidget {
               children: [
                 // Gradient ring: gold → rose wine
                 Container(
-                  width: 58, height: 58,
+                  width: 58,
+                  height: 58,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: SweepGradient(
@@ -1647,7 +1739,7 @@ class _LiveNowBubble extends ConsumerWidget {
                   padding: const EdgeInsets.all(2.5),
                   child: ClipOval(
                     child: avatarAsync.when(
-                        data: (url) => url != null
+                      data: (url) => url != null
                           ? CachedNetworkImage(
                               imageUrl: url,
                               fit: BoxFit.cover,
@@ -1663,9 +1755,13 @@ class _LiveNowBubble extends ConsumerWidget {
                 // Member count badge
                 if (memberCount > 0)
                   Positioned(
-                    bottom: -2, right: -2,
+                    bottom: -2,
+                    right: -2,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: _npSurface,
                         borderRadius: BorderRadius.circular(8),
@@ -1676,8 +1772,10 @@ class _LiveNowBubble extends ConsumerWidget {
                             ? '${(memberCount / 1000).toStringAsFixed(1)}k'
                             : '$memberCount',
                         style: GoogleFonts.raleway(
-                            fontSize: 9, fontWeight: FontWeight.w700,
-                            color: _npOnVariant),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: _npOnVariant,
+                        ),
                       ),
                     ),
                   ),
@@ -1690,8 +1788,10 @@ class _LiveNowBubble extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GoogleFonts.raleway(
-                  fontSize: 10, fontWeight: FontWeight.w500,
-                  color: _npOnVariant),
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: _npOnVariant,
+              ),
             ),
           ],
         ),
@@ -1727,7 +1827,10 @@ class _NotificationBell extends ConsumerWidget {
       icon: unreadCount > 0
           ? Badge(
               label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
-              child: const Icon(Icons.notifications_outlined, color: _npOnVariant),
+              child: const Icon(
+                Icons.notifications_outlined,
+                color: _npOnVariant,
+              ),
             )
           : const Icon(Icons.notifications_outlined, color: _npOnVariant),
     );
@@ -1782,12 +1885,7 @@ class _FriendsLiveSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                0,
-                context.sectionSpacing,
-                0,
-                12,
-              ),
+              padding: EdgeInsets.fromLTRB(0, context.sectionSpacing, 0, 12),
               child: Row(
                 children: [
                   Container(
@@ -1835,4 +1933,3 @@ class _FriendsLiveSection extends ConsumerWidget {
     );
   }
 }
-

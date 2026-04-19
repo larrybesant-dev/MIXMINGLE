@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/core/layout/app_layout.dart';
+import 'package:mixvy/dev/app_debug_flags.dart';
 import 'package:mixvy/core/theme.dart';
 import 'package:mixvy/features/feed/providers/feed_providers.dart';
 import 'package:mixvy/features/social/widgets/social_room_card.dart';
@@ -17,17 +17,23 @@ enum _FloorSort { mostSpeakers, mostListeners, newestLive }
 extension on _FloorSort {
   String get label {
     switch (this) {
-      case _FloorSort.mostSpeakers:  return 'Most Active';
-      case _FloorSort.mostListeners: return 'Most Listeners';
-      case _FloorSort.newestLive:    return 'Newest Live';
+      case _FloorSort.mostSpeakers:
+        return 'Most Active';
+      case _FloorSort.mostListeners:
+        return 'Most Listeners';
+      case _FloorSort.newestLive:
+        return 'Newest Live';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case _FloorSort.mostSpeakers:  return Icons.mic_rounded;
-      case _FloorSort.mostListeners: return Icons.people_alt_rounded;
-      case _FloorSort.newestLive:    return Icons.new_releases_rounded;
+      case _FloorSort.mostSpeakers:
+        return Icons.mic_rounded;
+      case _FloorSort.mostListeners:
+        return Icons.people_alt_rounded;
+      case _FloorSort.newestLive:
+        return Icons.new_releases_rounded;
     }
   }
 }
@@ -104,10 +110,7 @@ class RoomsControlsSection extends StatelessWidget {
 }
 
 class RoomsListSection extends StatelessWidget {
-  const RoomsListSection({
-    super.key,
-    required this.child,
-  });
+  const RoomsListSection({super.key, required this.child});
 
   final Widget child;
 
@@ -139,7 +142,7 @@ class RoomsVisibilityDebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode) {
+    if (!kEnableVisibilityDiagnostics) {
       return const SizedBox.shrink();
     }
 
@@ -205,17 +208,25 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
     final list = List<RoomModel>.from(rooms);
     switch (_sort) {
       case _FloorSort.mostSpeakers:
-        list.sort((a, b) => b.stageUserIds.length.compareTo(a.stageUserIds.length));
+        list.sort(
+          (a, b) => b.stageUserIds.length.compareTo(a.stageUserIds.length),
+        );
       case _FloorSort.mostListeners:
         list.sort((a, b) {
-          final aMem = a.memberCount > 0 ? a.memberCount : a.stageUserIds.length + a.audienceUserIds.length;
-          final bMem = b.memberCount > 0 ? b.memberCount : b.stageUserIds.length + b.audienceUserIds.length;
+          final aMem = a.memberCount > 0
+              ? a.memberCount
+              : a.stageUserIds.length + a.audienceUserIds.length;
+          final bMem = b.memberCount > 0
+              ? b.memberCount
+              : b.stageUserIds.length + b.audienceUserIds.length;
           return bMem.compareTo(aMem);
         });
       case _FloorSort.newestLive:
         list.sort((a, b) {
-          final aTime = a.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bTime = b.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final aTime =
+              a.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime =
+              b.createdAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
           return bTime.compareTo(aTime);
         });
     }
@@ -238,17 +249,17 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
     final streamStateLabel = roomsAsync.isLoading
         ? 'loading'
         : roomsAsync.hasError
-            ? 'error'
-            : previewRooms.isEmpty
-                ? 'empty'
-                : 'ready';
+        ? 'error'
+        : previewRooms.isEmpty
+        ? 'empty'
+        : 'ready';
     final visibilityHint = roomsAsync.isLoading
         ? 'Waiting for the stabilized live room stream.'
         : roomsAsync.hasError
-            ? 'The room stream returned an error, so visible rooms may be temporarily hidden.'
-            : previewRooms.isEmpty
-                ? 'No rooms currently match live visibility rules.'
-                : 'Rooms are visible and sorted for quick entry.';
+        ? 'The room stream returned an error, so visible rooms may be temporarily hidden.'
+        : previewRooms.isEmpty
+        ? 'No rooms currently match live visibility rules.'
+        : 'Rooms are visible and sorted for quick entry.';
 
     RoomLayoutV1.debugAssertOrder(const <String>[
       RoomLayoutV1.heroSlotId,
@@ -295,7 +306,10 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.add_rounded, color: VelvetNoir.primary),
+                      icon: const Icon(
+                        Icons.add_rounded,
+                        color: VelvetNoir.primary,
+                      ),
                       tooltip: 'Start a Room',
                       onPressed: () => context.go('/create-room'),
                     ),
@@ -325,64 +339,68 @@ class _LiveFloorScreenState extends ConsumerState<LiveFloorScreen> {
               ),
               controls: RoomsControlsSection(
                 sortLabel: _sort.label,
-                controlChips: _FloorSort.values.map((s) {
-                  final selected = _sort == s;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _sort = s),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: selected
-                              ? const LinearGradient(
-                                  colors: [
-                                    VelvetNoir.primary,
-                                    VelvetNoir.primaryDim,
-                                  ],
-                                )
-                              : null,
-                          color: selected ? null : VelvetNoir.surfaceHigh,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: selected
-                                ? Colors.transparent
-                                : VelvetNoir.outlineVariant.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              s.icon,
-                              size: 13,
-                              color: selected
-                                  ? VelvetNoir.surface
-                                  : VelvetNoir.onSurfaceVariant,
+                controlChips: _FloorSort.values
+                    .map((s) {
+                      final selected = _sort == s;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _sort = s),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
                             ),
-                            const SizedBox(width: 5),
-                            Text(
-                              s.label,
-                              style: GoogleFonts.raleway(
-                                fontSize: 12,
-                                fontWeight: selected
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
+                            decoration: BoxDecoration(
+                              gradient: selected
+                                  ? const LinearGradient(
+                                      colors: [
+                                        VelvetNoir.primary,
+                                        VelvetNoir.primaryDim,
+                                      ],
+                                    )
+                                  : null,
+                              color: selected ? null : VelvetNoir.surfaceHigh,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
                                 color: selected
-                                    ? VelvetNoir.surface
-                                    : VelvetNoir.onSurfaceVariant,
+                                    ? Colors.transparent
+                                    : VelvetNoir.outlineVariant.withValues(
+                                        alpha: 0.4,
+                                      ),
                               ),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  s.icon,
+                                  size: 13,
+                                  color: selected
+                                      ? VelvetNoir.surface
+                                      : VelvetNoir.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  s.label,
+                                  style: GoogleFonts.raleway(
+                                    fontSize: 12,
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                    color: selected
+                                        ? VelvetNoir.surface
+                                        : VelvetNoir.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(growable: false),
+                      );
+                    })
+                    .toList(growable: false),
               ),
               roomList: RoomsListSection(
                 child: Column(
@@ -610,18 +628,9 @@ class _FloorRoomTile extends StatelessWidget {
     return Stack(
       children: [
         SocialRoomCard(room: room, onTap: onTap),
-        if (_isHot)
-          Positioned(
-            top: 12,
-            right: 22,
-            child: _HotBadge(),
-          ),
+        if (_isHot) Positioned(top: 12, right: 22, child: _HotBadge()),
         if (rank <= 3)
-          Positioned(
-            left: 24,
-            bottom: 12,
-            child: _RankBadge(rank: rank),
-          ),
+          Positioned(left: 24, bottom: 12, child: _RankBadge(rank: rank)),
       ],
     );
   }
@@ -713,14 +722,18 @@ class _EmptyFloor extends StatelessWidget {
             Text(
               'Be the first to open the floor.',
               style: GoogleFonts.raleway(
-                  fontSize: 14, color: VelvetNoir.onSurfaceVariant),
+                fontSize: 14,
+                color: VelvetNoir.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24),
             GestureDetector(
               onTap: onCreateRoom,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 28, vertical: 14),
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [VelvetNoir.primary, VelvetNoir.primaryDim],

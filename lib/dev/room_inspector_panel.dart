@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app_debug_flags.dart';
 import '../features/room/controllers/live_room_controller.dart';
 import '../features/room/controllers/room_state.dart';
 import '../features/room/providers/participant_providers.dart';
@@ -21,7 +21,7 @@ class RoomInspectorPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!kDebugMode) return const SizedBox.shrink();
+    if (!kEnableVisibilityDiagnostics) return const SizedBox.shrink();
 
     final roomState = ref.watch(liveRoomControllerProvider(roomId));
     final participantsAsync = ref.watch(participantsStreamProvider(roomId));
@@ -57,7 +57,11 @@ class RoomInspectorPanel extends ConsumerWidget {
             _KV('speakers', '${roomState.speakerIds.length}'),
             _KV('pending', '${roomState.pendingUserIds.length}'),
             if (roomState.errorMessage?.isNotEmpty == true)
-              _KV('ERROR', roomState.errorMessage!, valueColor: Colors.redAccent),
+              _KV(
+                'ERROR',
+                roomState.errorMessage!,
+                valueColor: Colors.redAccent,
+              ),
             const SizedBox(height: 8),
 
             // ── Policy ──────────────────────────────────────────────────────
@@ -77,7 +81,8 @@ class RoomInspectorPanel extends ConsumerWidget {
                 ],
               ),
               loading: () => const _Pill('loading…'),
-              error: (e, _) => _Pill('policy error: $e', color: Colors.redAccent),
+              error: (e, _) =>
+                  _Pill('policy error: $e', color: Colors.redAccent),
             ),
             const SizedBox(height: 8),
 
@@ -142,7 +147,10 @@ class RoomInspectorPanel extends ConsumerWidget {
             const SizedBox(height: 8),
 
             // ── Mod Log ──────────────────────────────────────────────────────
-            const _SectionHeader(label: 'MOD LOG (last 20)', color: Color(0xFFFFCC80)),
+            const _SectionHeader(
+              label: 'MOD LOG (last 20)',
+              color: Color(0xFFFFCC80),
+            ),
             modLogAsync.when(
               data: (entries) {
                 if (entries.isEmpty) {
@@ -152,9 +160,7 @@ class RoomInspectorPanel extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: entries.map((entry) {
                     final action = entry['action']?.toString() ?? '?';
-                    final actor = _shortId(
-                      entry['actorId']?.toString() ?? '',
-                    );
+                    final actor = _shortId(entry['actorId']?.toString() ?? '');
                     final target = _shortId(
                       entry['targetId']?.toString() ?? '',
                     );
@@ -343,7 +349,7 @@ class RoomInspectorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode) return const SizedBox.shrink();
+    if (!kEnableVisibilityDiagnostics) return const SizedBox.shrink();
     return FloatingActionButton.small(
       heroTag: 'room_inspector_$roomId',
       tooltip: 'Room Inspector',

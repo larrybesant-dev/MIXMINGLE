@@ -53,6 +53,7 @@ import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/providers/user_cam_permissions_provider.dart';
 import '../../features/room/providers/cam_view_request_provider.dart';
 import '../../features/room/providers/room_slot_provider.dart';
+import '../../dev/app_debug_flags.dart';
 import '../../dev/room_inspector_panel.dart';
 import '../../features/room/room_permissions.dart';
 import '../../features/room/models/room_theme_model.dart';
@@ -3804,7 +3805,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           _appliedMediaRole,
           fallback: _asString(participant?.role, fallback: 'audience'),
         ).toLowerCase();
-        final role = (!liveRoomState.isRoomFullyHydrated &&
+        final role =
+            (!liveRoomState.isRoomFullyHydrated &&
                 resolvedRole == 'audience' &&
                 (localRoleHint == 'stage' ||
                     localRoleHint == 'trusted_speaker'))
@@ -6134,8 +6136,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   child: const SizedBox.expand(),
                 ),
               ),
-              // Debug inspector button — only visible in kDebugMode builds.
-              if (kDebugMode)
+              // Debug inspector button — debug-only and centrally gated.
+              if (kEnableVisibilityDiagnostics)
                 Positioned(
                   right: 8,
                   bottom: 72,
