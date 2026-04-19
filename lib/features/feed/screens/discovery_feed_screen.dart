@@ -288,8 +288,8 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     final liveRoomCount = feedState.liveRooms.length;
     final activeListenerCount = feedState.liveRooms.fold<int>(
       0,
-      (sum, room) =>
-          sum +
+      (total, room) =>
+          total +
           (room.memberCount > 0
               ? room.memberCount
               : room.stageUserIds.length + room.audienceUserIds.length),
@@ -336,38 +336,10 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                   horizontalPadding,
                   12,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 3, height: 18,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [_npPrimary, _npPrimaryDim],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('Featured Rooms',
-                            style: GoogleFonts.raleway(
-                                fontSize: 18, fontWeight: FontWeight.w700,
-                                color: _npOnSurface)),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
+                child: const _DiscoverySectionHeader(
+                  title: 'Featured Rooms',
+                  subtitle:
                       'Highlighted for live momentum, friend activity, or a fresh start.',
-                      style: GoogleFonts.raleway(
-                        fontSize: 12,
-                        color: _npOnVariant,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -405,69 +377,14 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 horizontalPadding,
                 12,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 3, height: 18,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [_npSecondary, _npPrimary],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('Discovery Feed',
-                                style: GoogleFonts.raleway(
-                                    fontSize: 18, fontWeight: FontWeight.w700,
-                                    color: _npOnSurface)),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Stable layout, fresh activity underneath it.',
-                          style: GoogleFonts.raleway(
-                            fontSize: 12,
-                            color: _npOnVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _npSurfaceHigh,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: _npGhost),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(width: 6, height: 6,
-                                decoration: const BoxDecoration(
-                                    shape: BoxShape.circle, color: _npError)),
-                            const SizedBox(width: 4),
-                            Text('LIVE', style: GoogleFonts.raleway(
-                                fontSize: 10, fontWeight: FontWeight.w700,
-                                color: _npError, letterSpacing: 0.8)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: const _DiscoverySectionHeader(
+                title: 'Discovery Feed',
+                subtitle: 'Stable layout, fresh activity underneath it.',
+                showLiveBadge: true,
+                gradientColors: <Color>[_npSecondary, _npPrimary],
               ),
             ),
+          ),
 
           SliverToBoxAdapter(
             child: Padding(
@@ -816,26 +733,101 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     );
   }
 
-  Widget _gradientButton({required String label, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [_npPrimary, _npPrimaryDim],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(999),
-          boxShadow: [
-            BoxShadow(color: _npPrimaryDim.withAlpha(60), blurRadius: 16)
-          ],
+}
+
+class _DiscoverySectionHeader extends StatelessWidget {
+  const _DiscoverySectionHeader({
+    required this.title,
+    this.subtitle,
+    this.showLiveBadge = false,
+    this.gradientColors = const <Color>[_npPrimary, _npPrimaryDim],
+  });
+
+  final String title;
+  final String? subtitle;
+  final bool showLiveBadge;
+  final List<Color> gradientColors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: gradientColors,
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: GoogleFonts.raleway(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _npOnSurface,
+                    ),
+                  ),
+                ],
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  subtitle!,
+                  style: GoogleFonts.raleway(
+                    fontSize: 12,
+                    color: _npOnVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-        child: Text(label,
-            style: GoogleFonts.raleway(
-                fontSize: 14, fontWeight: FontWeight.w700,
-                color: _npSurface)),
-      ),
+        if (showLiveBadge)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _npSurfaceHigh,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _npGhost),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _npError,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'LIVE',
+                  style: GoogleFonts.raleway(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _npError,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

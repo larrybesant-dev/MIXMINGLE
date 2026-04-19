@@ -10,7 +10,6 @@ import 'package:mixvy/features/onboarding/onboarding_screen.dart';
 import 'package:mixvy/features/splash/splash_screen.dart';
 import 'package:mixvy/features/profile/user_profile_screen.dart';
 import 'package:mixvy/features/social/screens/explore_screen.dart';
-import 'package:mixvy/features/social/screens/home_lobby_screen.dart';
 import 'package:mixvy/features/social/screens/live_floor_screen.dart';
 import 'package:mixvy/features/feed/screens/discovery_feed_screen.dart';
 import 'package:mixvy/features/social/screens/social_circle_screen.dart';
