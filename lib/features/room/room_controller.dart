@@ -523,10 +523,22 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
   bool _isPlaceholderDisplayName(String value) {
     final normalized = value.trim();
-    final generatedHandlePattern = RegExp(r'^(User|Guest) [A-Z0-9]{1,4}$');
+    final generatedHandlePattern = RegExp(r'^(User|Guest|Member) [A-Z0-9]{1,4}$');
+    final opaqueIdPattern = RegExp(r'^[A-Za-z0-9_-]{20,}$');
     return normalized.isEmpty ||
         normalized == 'MixVy User' ||
-        generatedHandlePattern.hasMatch(normalized);
+        normalized == 'MixVy Member' ||
+        generatedHandlePattern.hasMatch(normalized) ||
+        opaqueIdPattern.hasMatch(normalized);
+  }
+
+  String _safeRoomDisplayName(String userId) {
+    final compact = userId.trim().replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+    if (compact.isEmpty) {
+      return 'MixVy Member';
+    }
+    final suffix = compact.substring(0, compact.length < 4 ? compact.length : 4);
+    return 'Member $suffix';
   }
 
   @protected
@@ -564,7 +576,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
       result[userId] = RoomSessionSnapshot(
         userId: userId,
-        displayName: existingName.isNotEmpty ? existingName : userId,
+        displayName: existingName.isNotEmpty
+            ? existingName
+            : _safeRoomDisplayName(userId),
         role: effectiveRole,
         joinedAt: existing?.joinedAt ?? participant.joinedAt,
       );
@@ -576,7 +590,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         currentUserId,
         () => RoomSessionSnapshot(
           userId: currentUserId,
-          displayName: currentUserId,
+          displayName: _safeRoomDisplayName(currentUserId),
           role: currentUserId == hostId ? 'host' : 'audience',
           joinedAt: _joinedAt,
         ),
@@ -1046,7 +1060,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       displayName: normalizedDisplayName.isNotEmpty
           ? normalizedDisplayName
           : (_sessionSnapshotsByUser[normalizedUserId]?.displayName ??
-                normalizedUserId),
+                _safeRoomDisplayName(normalizedUserId)),
       role: normalizeRoomRole(
         _sessionSnapshotsByUser[normalizedUserId]?.role,
         fallbackRole: roomRoleAudience,
@@ -1121,7 +1135,8 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       userId: normalizedUserId,
       displayName: normalizedDisplayName.isNotEmpty
           ? normalizedDisplayName
-          : (existingSnapshot?.displayName ?? normalizedUserId),
+          : (existingSnapshot?.displayName ??
+                _safeRoomDisplayName(normalizedUserId)),
       role: normalizeRoomRole(
         existingSnapshot?.role,
         fallbackRole: roomRoleAudience,

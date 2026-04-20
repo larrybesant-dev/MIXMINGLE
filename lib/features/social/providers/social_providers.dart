@@ -134,6 +134,7 @@ final forYouRoomsProvider = FutureProvider.family
     .autoDispose<List<RoomModel>, String>((ref, userId) async {
       if (userId.isEmpty) return const [];
       final firestore = ref.watch(firestoreProvider);
+      final roomService = ref.watch(roomServiceProvider);
 
       // Load user interests.
       List<String> interests = const [];
@@ -155,50 +156,55 @@ final forYouRoomsProvider = FutureProvider.family
         'chill',
       };
       final cats = interests
-          .map((i) => i.toLowerCase())
+          .map((i) => i.toLowerCase().trim())
           .where(validCats.contains)
           .take(3)
-          .toList();
+          .toSet();
+
+      final liveRooms = await roomService.getLiveRooms(
+        limit: 60,
+        includeAdultRooms: false,
+      );
 
       if (cats.isEmpty) {
-        // Generic fallback: most-active live rooms.
-        final snap = await firestore
-            .collection('rooms')
-            .where('isLive', isEqualTo: true)
-            .where('isAdult', isEqualTo: false)
-            .orderBy('memberCount', descending: true)
-            .limit(12)
-            .get();
-        return snap.docs
-            .map((d) => RoomModel.fromJson(d.data(), d.id))
-            .toList(growable: false);
-      }
-
-      // Fetch up to 5 rooms per interest category.
-      final rooms = <RoomModel>[];
-      final seen = <String>{};
-      for (final cat in cats) {
-        try {
-          final snap = await firestore
-              .collection('rooms')
-              .where('isLive', isEqualTo: true)
-              .where('isAdult', isEqualTo: false)
-              .where('category', isEqualTo: cat)
-              .orderBy('memberCount', descending: true)
-              .limit(5)
-              .get();
-          for (final doc in snap.docs) {
-            if (seen.add(doc.id)) {
-              rooms.add(RoomModel.fromJson(doc.data(), doc.id));
+        final sorted = liveRooms.toList(growable: false)
+          ..sort((a, b) {
+            final memberCompare = b.memberCount.compareTo(a.memberCount);
+            if (memberCompare != 0) {
+              return memberCompare;
             }
-          }
-        } on FirebaseException {
-          continue;
-        }
+            final updatedA =
+                a.updatedAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final updatedB =
+                b.updatedAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return updatedB.compareTo(updatedA);
+          });
+        return sorted.take(12).toList(growable: false);
       }
 
-      rooms.sort((a, b) => b.memberCount.compareTo(a.memberCount));
-      return rooms.take(12).toList(growable: false);
+      final matched = liveRooms
+          .where((room) {
+            final roomCategory = room.category?.trim().toLowerCase();
+            return roomCategory != null && cats.contains(roomCategory);
+          })
+          .toList(growable: false);
+
+      if (matched.isEmpty) {
+        return liveRooms.take(12).toList(growable: false);
+      }
+
+      matched.sort((a, b) {
+        final memberCompare = b.memberCount.compareTo(a.memberCount);
+        if (memberCompare != 0) {
+          return memberCompare;
+        }
+        final updatedA =
+            a.updatedAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final updatedB =
+            b.updatedAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return updatedB.compareTo(updatedA);
+      });
+      return matched.take(12).toList(growable: false);
     });
 
 // ── New live rooms (recent) ───────────────────────────────────────────────────

@@ -317,10 +317,14 @@ class ProfileController extends Notifier<ProfileState> {
       await _profileService.saveProfile(
         userId: userId,
         userData: {
+          'uid': userId,
           'username': normalizedUsername,
           'usernameLower': normalizedUsername.toLowerCase(),
+          'displayName': normalizedUsername,
           'email': normalizedEmail,
+          'photoUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
           'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
+          'isComplete': normalizedUsername.isNotEmpty,
           'coverPhotoUrl': normalizedCover.isEmpty ? null : normalizedCover,
           'galleryUrls': normalizedGallery,
           'introVideoUrl': normalizedVideo.isEmpty ? null : normalizedVideo,

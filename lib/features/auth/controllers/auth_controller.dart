@@ -334,7 +334,10 @@ class AuthController extends Notifier<AuthState> {
         password: password,
       );
       if (cred.user != null) {
-        await _ensureUserDocument(cred.user!);
+        await _ensureUserDocument(
+          cred.user!,
+          preferredUsername: normalizedUsername,
+        );
       }
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
       AppTelemetry.updateAuthState(

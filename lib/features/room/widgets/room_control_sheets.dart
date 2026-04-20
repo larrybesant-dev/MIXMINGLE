@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
+import '../../../presentation/providers/user_provider.dart';
 import '../controllers/room_state.dart';
 
 class RoomUserPresentation {
@@ -94,7 +95,7 @@ class RoomParticipantActionSheet extends StatelessWidget {
                 userPresentation.displayName,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              subtitle: Text(participant.userId),
+              subtitle: const Text('Room member'),
             ),
             const SizedBox(height: 10),
             Wrap(spacing: 8, runSpacing: 8, children: chips),
@@ -189,7 +190,9 @@ class RoomRosterSheet extends StatelessWidget {
                   final participant = sortedParticipants[index];
                   final presentation =
                       presentationByUserId[participant.userId] ??
-                      RoomUserPresentation(displayName: participant.userId);
+                      RoomUserPresentation(
+                        displayName: resolvePublicUsername(uid: participant.userId),
+                      );
                   final role = normalizeRoomRole(
                     participant.role,
                     fallbackRole: roomRoleAudience,

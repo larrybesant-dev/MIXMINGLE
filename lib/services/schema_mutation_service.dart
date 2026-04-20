@@ -15,11 +15,15 @@ class SchemaMutationService {
   final FirebaseFirestore _firestore;
 
   static const Set<String> _identityFields = <String>{
+    'uid',
     'username',
     'usernameLower',
+    'displayName',
     'email',
+    'photoUrl',
     'bio',
     'isPrivate',
+    'isComplete',
   };
 
   static const Set<String> _profilePublicFields = <String>{
@@ -76,6 +80,9 @@ class SchemaMutationService {
     final existingUsername = _normalizeUsername(
       (existingData['username'] as String?)?.trim(),
     );
+    final existingDisplayName = _normalizeUsername(
+      (existingData['displayName'] as String?)?.trim(),
+    );
     final authDisplayName = _normalizeUsername(user.displayName);
     final emailHandle = _emailHandleFrom(user.email);
     final normalizedPreferredUsername = _normalizeUsername(preferredUsername);
@@ -95,11 +102,21 @@ class SchemaMutationService {
             emailHandle: emailHandle,
             uid: user.uid,
           );
+    final publicDisplayName = existingDisplayName.isNotEmpty
+        ? existingDisplayName
+        : (authDisplayName.isNotEmpty ? authDisplayName : publicUsername);
+    final isComplete =
+        existingData['isComplete'] == true ||
+        normalizedPreferredUsername.isNotEmpty;
 
     final identityPayload = <String, dynamic>{
+      'uid': user.uid,
       'username': publicUsername,
       'usernameLower': publicUsername.toLowerCase(),
+      'displayName': publicDisplayName,
       'email': user.email ?? '',
+      'photoUrl': user.photoURL ?? existingData['photoUrl'],
+      'isComplete': isComplete,
       'updatedAt': now,
     };
 

@@ -70,7 +70,7 @@ class UserModel {
         id: _stringOrEmpty(json['id'] ?? json['uid']),
         email: _stringOrEmpty(json['email']),
         username: _resolvedUsername(json),
-        avatarUrl: _stringOrNull(json['avatarUrl']),
+        avatarUrl: _stringOrNull(json['avatarUrl'] ?? json['photoUrl']),
         coverPhotoUrl: _stringOrNull(json['coverPhotoUrl']),
         galleryUrls: _stringList(json['galleryUrls']),
         introVideoUrl: _stringOrNull(json['introVideoUrl']),
@@ -173,11 +173,20 @@ class UserModel {
     return fallback;
   }
 
+  String get uid => id;
+  String get displayName => username;
+  String? get photoUrl => avatarUrl;
+  bool get isComplete => username.trim().isNotEmpty;
+
   Map<String, dynamic> toJson() => {
         'id': id,
+        'uid': id,
         'email': email,
         'username': username,
+        'displayName': username,
         'avatarUrl': avatarUrl,
+        'photoUrl': avatarUrl,
+        'isComplete': isComplete,
         'coverPhotoUrl': coverPhotoUrl,
         'galleryUrls': galleryUrls,
         'introVideoUrl': introVideoUrl,

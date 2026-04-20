@@ -66,7 +66,9 @@ class UserModel {
         id: _stringOrEmpty(json['id'] ?? json['uid']),
         email: _stringOrEmpty(json['email']),
         username: _resolvedUsername(json),
-        avatarUrl: sanitizeNetworkImageUrl(_stringOrNull(json['avatarUrl'])),
+        avatarUrl: sanitizeNetworkImageUrl(
+          _stringOrNull(json['avatarUrl'] ?? json['photoUrl']),
+        ),
         coverPhotoUrl: sanitizeNetworkImageUrl(_stringOrNull(json['coverPhotoUrl'])),
         bio: _stringOrNull(json['bio']),
         aboutMe: _stringOrNull(json['aboutMe']),
@@ -166,11 +168,20 @@ class UserModel {
     return 'Member $suffix';
   }
 
+  String get uid => id;
+  String get displayName => username;
+  String? get photoUrl => avatarUrl;
+  bool get isComplete => username.trim().isNotEmpty;
+
   Map<String, dynamic> toJson() => {
         'id': id,
+        'uid': id,
         'email': email,
         'username': username,
+        'displayName': username,
         'avatarUrl': avatarUrl,
+        'photoUrl': avatarUrl,
+        'isComplete': isComplete,
         'coverPhotoUrl': coverPhotoUrl,
         'bio': bio,
         'aboutMe': aboutMe,

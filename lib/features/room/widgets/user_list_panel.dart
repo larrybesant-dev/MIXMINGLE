@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../models/room_participant_model.dart';
 import '../../../features/room/controllers/room_state.dart';
 import '../../../features/room/providers/presence_provider.dart';
+import '../../../presentation/providers/user_provider.dart';
 import 'room_user_tile.dart';
 
 /// A Paltalk-style always-visible user list panel for the room.
@@ -124,7 +125,9 @@ class UserListPanel extends StatelessWidget {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final p = onStage[index];
                   return RoomUserTile(
-                    displayName: displayNameById[p.userId] ?? p.userId,
+                    displayName:
+                        displayNameById[p.userId] ??
+                        resolvePublicUsername(uid: p.userId),
                     avatarUrl: avatarUrlById[p.userId],
                     role: p.role,
                     isMicOn: p.micOn,
@@ -152,7 +155,9 @@ class UserListPanel extends StatelessWidget {
               delegate: SliverChildBuilderDelegate((context, index) {
                 final p = audience[index];
                 final isOnline = onlineIds.contains(p.userId);
-                final displayName = displayNameById[p.userId] ?? p.userId;
+                final displayName =
+                    displayNameById[p.userId] ??
+                    resolvePublicUsername(uid: p.userId);
                 final avatarUrl = avatarUrlById[p.userId];
                 final isMe = p.userId == currentUserId;
                 final customStatus = presenceList
@@ -253,7 +258,9 @@ class UserListPanel extends StatelessWidget {
       ),
       child: Center(
         child: RoomUserTile(
-          displayName: displayNameById[host.userId] ?? host.userId,
+          displayName:
+              displayNameById[host.userId] ??
+              resolvePublicUsername(uid: host.userId),
           avatarUrl: avatarUrlById[host.userId],
           role: host.role,
           isMicOn: host.micOn,

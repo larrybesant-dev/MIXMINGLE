@@ -13,51 +13,45 @@ import '../../features/messaging/panes/messages_pane_view.dart';
 import '../../features/messaging/screens/new_message_screen.dart';
 import 'desktop_messenger_shell.dart';
 
-enum MessengerRouteKind {
-  inbox,
-  compose,
-  conversation,
-  friends,
-}
+enum MessengerRouteKind { inbox, compose, conversation, friends }
 
 class MessengerRouteState {
-  const MessengerRouteState._({
-    required this.kind,
-    this.conversationId,
-  });
+  const MessengerRouteState._({required this.kind, this.conversationId});
 
   final MessengerRouteKind kind;
   final String? conversationId;
 
+  static String _routePath(GoRouterState state) => state.uri.path;
+
   static bool matches(GoRouterState state) {
-    switch (state.matchedLocation) {
-      case '/messages':
-      case '/messages/new':
-      case '/messages/:conversationId':
-      case '/friends':
-        return true;
-      default:
-        return false;
-    }
+    final path = _routePath(state);
+    return path == '/messages' ||
+        path == '/messages/new' ||
+        path == '/friends' ||
+        (path.startsWith('/messages/') && path.length > '/messages/'.length);
   }
 
   static MessengerRouteState fromGoRouterState(GoRouterState state) {
-    switch (state.matchedLocation) {
-      case '/messages':
-        return const MessengerRouteState._(kind: MessengerRouteKind.inbox);
-      case '/messages/new':
-        return const MessengerRouteState._(kind: MessengerRouteKind.compose);
-      case '/messages/:conversationId':
-        final conversationId = state.pathParameters['conversationId'];
-        return MessengerRouteState._(
-          kind: MessengerRouteKind.conversation,
-          conversationId: conversationId,
-        );
-      case '/friends':
-        return const MessengerRouteState._(kind: MessengerRouteKind.friends);
-      default:
-        throw ArgumentError('Unsupported messenger route: ${state.matchedLocation}');
+    final path = _routePath(state);
+
+    if (path == '/messages') {
+      return const MessengerRouteState._(kind: MessengerRouteKind.inbox);
     }
+    if (path == '/messages/new') {
+      return const MessengerRouteState._(kind: MessengerRouteKind.compose);
+    }
+    if (path == '/friends') {
+      return const MessengerRouteState._(kind: MessengerRouteKind.friends);
+    }
+    if (path.startsWith('/messages/') && path.length > '/messages/'.length) {
+      final conversationId = state.pathParameters['conversationId'];
+      return MessengerRouteState._(
+        kind: MessengerRouteKind.conversation,
+        conversationId: conversationId,
+      );
+    }
+
+    throw ArgumentError('Unsupported messenger route: $path');
   }
 }
 
@@ -90,30 +84,27 @@ class MessengerShellRouteView extends ConsumerWidget {
 
     return switch (routeState.kind) {
       MessengerRouteKind.inbox => _MobileInboxRoute(
-          userId: userId,
-          child: child,
-        ),
+        userId: userId,
+        child: child,
+      ),
       MessengerRouteKind.compose => AppPageScaffold(
-          appBar: AppBar(title: const Text('New Message')),
-          body: child,
-        ),
+        appBar: AppBar(title: const Text('New Message')),
+        body: child,
+      ),
       MessengerRouteKind.conversation => AppPageScaffold(
-          appBar: AppBar(title: Text(username)),
-          body: child,
-        ),
+        appBar: AppBar(title: Text(username)),
+        body: child,
+      ),
       MessengerRouteKind.friends => AppPageScaffold(
-          appBar: AppBar(title: const Text('Friends')),
-          body: child,
-        ),
+        appBar: AppBar(title: const Text('Friends')),
+        body: child,
+      ),
     };
   }
 }
 
 class _MobileInboxRoute extends ConsumerWidget {
-  const _MobileInboxRoute({
-    required this.userId,
-    required this.child,
-  });
+  const _MobileInboxRoute({required this.userId, required this.child});
 
   final String userId;
   final Widget child;
@@ -164,10 +155,7 @@ Widget buildMessengerRouteChild({
 }) {
   switch (routeState.kind) {
     case MessengerRouteKind.inbox:
-      return MessagesSchemaBridgeView(
-        userId: userId,
-        username: username,
-      );
+      return MessagesSchemaBridgeView(userId: userId, username: username);
     case MessengerRouteKind.compose:
       return NewMessagePaneView(
         userId: userId,

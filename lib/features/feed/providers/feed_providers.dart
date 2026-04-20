@@ -18,8 +18,8 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
   return FeedRepository(ref.read(firestoreProvider));
 });
 
-final postsStreamProvider = StreamProvider<List<PostModel>>((ref) {
-  return ref.read(feedRepositoryProvider).postsStream();
+final postsStreamProvider = FutureProvider.autoDispose<List<PostModel>>((ref) {
+  return ref.read(feedRepositoryProvider).getPostsFeed();
 });
 
 final userPostsStreamProvider = StreamProvider.family<List<PostModel>, String>((
@@ -43,8 +43,10 @@ final roomsStreamProvider = StreamProvider<List<RoomModel>>((ref) {
   return ref.read(roomServiceProvider).watchLiveRooms(limit: 50);
 });
 
-final eventsStreamProvider = StreamProvider<List<EventModel>>((ref) {
-  return ref.read(feedRepositoryProvider).eventsStream();
+final eventsStreamProvider = FutureProvider.autoDispose<List<EventModel>>((
+  ref,
+) {
+  return ref.read(feedRepositoryProvider).getEventsFeed();
 });
 
 /// Dashboard metrics do not need live Firestore listeners on every page load.

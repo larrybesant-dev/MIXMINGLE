@@ -2420,7 +2420,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     required String currentUserId,
     required String currentUsername,
   }) {
-    final fallbackName = senderId == currentUserId ? currentUsername : senderId;
+    final fallbackName = senderId == currentUserId ? currentUsername : null;
     return getDisplayName(
       uid: senderId,
       resolvedDisplayName: _senderDisplayNameById[senderId],
@@ -2806,9 +2806,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             presentationByUserId[target.userId]?.avatarUrl,
                       );
                   if (!mounted) return;
-                  final peerName =
+                  final targetName =
                       presentationByUserId[target.userId]?.displayName ??
-                      target.userId;
+                      resolvePublicUsername(uid: target.userId);
+                  final peerName = targetName;
                   final peerAvatar =
                       presentationByUserId[target.userId]?.avatarUrl;
                   if (kIsWeb) {
@@ -2847,10 +2848,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 try {
                   if (isFollowing) {
                     await followService.unfollowUser(target.userId);
-                    _showSnackBar('Unfollowed ${target.userId}.');
+                    _showSnackBar('Unfollowed $targetName.');
                   } else {
                     await followService.followUser(target.userId);
-                    _showSnackBar('Now following ${target.userId}.');
+                    _showSnackBar('Now following $targetName.');
                   }
                 } catch (e) {
                   _showSnackBar('Could not update follow status: $e');
@@ -2909,10 +2910,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 try {
                   if (target.isMuted) {
                     await roomController.unmuteUser(target.userId);
-                    _showSnackBar('${target.userId} can chat again.');
+                    _showSnackBar('$targetName can chat again.');
                   } else {
                     await roomController.muteUser(target.userId);
-                    _showSnackBar('${target.userId} was muted.');
+                    _showSnackBar('$targetName was muted.');
                   }
                 } catch (e) {
                   _showSnackBar('Could not update mute status: $e');
@@ -2931,10 +2932,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 try {
                   if (target.role == 'moderator') {
                     await roomController.demoteToAudience(target.userId);
-                    _showSnackBar('${target.userId} is now audience.');
+                    _showSnackBar('$targetName is now audience.');
                   } else {
                     await roomController.promoteToModerator(target.userId);
-                    _showSnackBar('${target.userId} is now a moderator.');
+                    _showSnackBar('$targetName is now a moderator.');
                   }
                 } catch (e) {
                   _showSnackBar('Could not update moderator role: $e');
@@ -2953,10 +2954,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 try {
                   if (target.role == 'cohost') {
                     await roomController.demoteToAudience(target.userId);
-                    _showSnackBar('${target.userId} moved to the audience.');
+                    _showSnackBar('$targetName moved to the audience.');
                   } else {
                     await roomController.promoteToCohost(target.userId);
-                    _showSnackBar('${target.userId} invited to the stage.');
+                    _showSnackBar('$targetName invited to the stage.');
                   }
                 } catch (e) {
                   _showSnackBar('Could not update role: $e');
@@ -2978,7 +2979,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           liveRoomControllerProvider(widget.roomId).notifier,
                         )
                         .demoteSpeaker(target.userId);
-                    _showSnackBar('${target.userId} removed from mic.');
+                    final targetName =
+                        presentationByUserId[target.userId]?.displayName ??
+                        resolvePublicUsername(uid: target.userId);
+                    _showSnackBar('$targetName removed from mic.');
                   } else {
                     await ref
                         .read(
@@ -2988,7 +2992,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           actorUserId: currentUserId,
                           targetUserId: target.userId,
                         );
-                    _showSnackBar('${target.userId} invited to the mic!');
+                    final targetName =
+                        presentationByUserId[target.userId]?.displayName ??
+                        resolvePublicUsername(uid: target.userId);
+                    _showSnackBar('$targetName invited to the mic!');
                   }
                 } catch (e) {
                   _showSnackBar('Could not update mic: $e');
@@ -3004,9 +3011,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   await ref
                       .read(liveRoomControllerProvider(widget.roomId).notifier)
                       .setSpotlightUser(target.userId);
-                  _showSnackBar(
-                    '${presentationByUserId[target.userId]?.displayName ?? target.userId} is now spotlighted!',
-                  );
+                  final targetName =
+                      presentationByUserId[target.userId]?.displayName ??
+                      resolvePublicUsername(uid: target.userId);
+                  _showSnackBar('$targetName is now spotlighted!');
                 } catch (e) {
                   _showSnackBar('Could not spotlight user: $e');
                 }
@@ -3021,7 +3029,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 final confirmed = await _confirmAction(
                   title: 'Transfer ownership',
                   message:
-                      'Make ${target.userId} the new room host? You will be moved to cohost.',
+                      'Make $targetName the new room host? You will be moved to cohost.',
                   confirmLabel: 'Transfer',
                 );
                 if (!confirmed) {
@@ -3031,7 +3039,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   await roomController.transferHost(
                     targetUserId: target.userId,
                   );
-                  _showSnackBar('${target.userId} is now the room host.');
+                  _showSnackBar('$targetName is now the room host.');
                 } catch (e) {
                   _showSnackBar('Could not transfer ownership: $e');
                 }
@@ -3048,7 +3056,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 try {
                   if (target.isBanned) {
                     await roomController.unbanUser(target.userId);
-                    _showSnackBar('${target.userId} was unbanned.');
+                    _showSnackBar('$targetName was unbanned.');
                   } else {
                     final confirmed = await _confirmAction(
                       title: 'Ban user',
@@ -3060,7 +3068,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       return;
                     }
                     await roomController.banUser(target.userId);
-                    _showSnackBar('${target.userId} was banned.');
+                    _showSnackBar('$targetName was banned.');
                   }
                 } catch (e) {
                   _showSnackBar('Could not update ban status: $e');
@@ -3076,7 +3084,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 final confirmed = await _confirmAction(
                   title: 'Remove user',
                   message:
-                      'This kicks ${target.userId} out of the room right now.',
+                      'This kicks $targetName out of the room right now.',
                   confirmLabel: 'Remove',
                 );
                 if (!confirmed) {
@@ -3084,7 +3092,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 }
                 try {
                   await roomController.removeUser(target.userId);
-                  _showSnackBar('${target.userId} was removed from the room.');
+                  _showSnackBar('$targetName was removed from the room.');
                 } catch (e) {
                   _showSnackBar('Could not remove user: $e');
                 }
@@ -3109,7 +3117,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               : target,
           userPresentation:
               presentationByUserId[target.userId] ??
-              RoomUserPresentation(displayName: target.userId),
+              RoomUserPresentation(displayName: targetName),
           currentUserId: currentUserId,
           hostUserId: hostId,
           actions: actions,
@@ -3146,7 +3154,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final currentUser = ref.read(userProvider);
     if (currentUser == null) return;
 
-    final targetName = _senderDisplayNameById[target.userId] ?? target.userId;
+    final targetName =
+        _senderDisplayNameById[target.userId] ??
+        resolvePublicUsername(uid: target.userId);
 
     final trimmed = _secretMessageController.text.trim();
     if (trimmed.isEmpty) return;

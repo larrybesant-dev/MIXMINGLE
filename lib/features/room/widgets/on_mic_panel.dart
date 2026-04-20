@@ -110,7 +110,9 @@ class OnMicPanel extends ConsumerWidget {
                 separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final p = sorted[index];
-                  final name = displayNameById[p.userId] ?? p.userId;
+                  final name =
+                      displayNameById[p.userId] ??
+                      resolvePublicUsername(uid: p.userId);
                   final isMe = p.userId == currentUserId;
                   return RoomUserTile(
                     displayName: name,

@@ -418,7 +418,11 @@ async function ensureUserExists(uid, firestore = db, defaultBalance = 100) {
   if (!userSnap.exists) {
     await userRef.set({
       uid,
+      username: null,
+      displayName: null,
+      photoUrl: null,
       balance: defaultBalance,
+      isComplete: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     }, {merge: true});
   }

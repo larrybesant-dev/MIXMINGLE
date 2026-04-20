@@ -10,6 +10,7 @@ import '../providers/mic_access_provider.dart';
 import '../providers/room_policy_provider.dart';
 import '../providers/participant_providers.dart';
 import '../../feed/providers/host_controls_providers.dart';
+import '../../../presentation/providers/user_provider.dart';
 import '../../../services/room_audio_cues.dart';
 import 'background_picker_sheet.dart';
 import '../models/room_theme_model.dart';
@@ -881,6 +882,7 @@ class _ParticipantTile extends ConsumerWidget {
       liveRoomControllerProvider(roomId).notifier,
     );
     final isSelf = participant.userId == currentUserId;
+    final displayName = resolvePublicUsername(uid: participant.userId);
 
     final roleColor = switch (participant.role) {
       'host' => const Color(0xFFFFD700),
@@ -893,16 +895,14 @@ class _ParticipantTile extends ConsumerWidget {
       leading: CircleAvatar(
         backgroundColor: roleColor.withValues(alpha: 0.3),
         child: Text(
-          participant.userId.isNotEmpty
-              ? participant.userId[0].toUpperCase()
-              : '?',
+          displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
           style: TextStyle(color: roleColor, fontWeight: FontWeight.bold),
         ),
       ),
       title: Row(
         children: [
           Flexible(
-            child: Text(participant.userId, overflow: TextOverflow.ellipsis),
+            child: Text(displayName, overflow: TextOverflow.ellipsis),
           ),
           if (isSelf)
             Container(
@@ -1089,7 +1089,9 @@ class _ModeratorsTab extends ConsumerWidget {
               )
             else
               ...mods.map(
-                (p) => Card(
+                (p) {
+                  final displayName = resolvePublicUsername(uid: p.userId);
+                  return Card(
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor:
@@ -1110,7 +1112,7 @@ class _ModeratorsTab extends ConsumerWidget {
                             : VelvetNoir.secondary,
                       ),
                     ),
-                    title: Text(p.userId),
+                    title: Text(displayName),
                     subtitle: Text(
                       p.role.toUpperCase(),
                       style: const TextStyle(fontSize: 11),
@@ -1133,7 +1135,7 @@ class _ModeratorsTab extends ConsumerWidget {
                                 builder: (_) => AlertDialog(
                                   title: const Text('Transfer host?'),
                                   content: Text(
-                                    'Make ${p.userId} the new room host? You will become co-host.',
+                                    'Make $displayName the new room host? You will become co-host.',
                                   ),
                                   actions: [
                                     TextButton(
@@ -1183,13 +1185,15 @@ class _ModeratorsTab extends ConsumerWidget {
               )
             else
               ...eligible.map(
-                (p) => ListTile(
+                (p) {
+                  final displayName = resolvePublicUsername(uid: p.userId);
+                  return ListTile(
                   leading: CircleAvatar(
                     child: Text(
-                      p.userId.isNotEmpty ? p.userId[0].toUpperCase() : '?',
+                      displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
                     ),
                   ),
-                  title: Text(p.userId),
+                  title: Text(displayName),
                   trailing: Wrap(
                     spacing: 4,
                     children: [

@@ -8,9 +8,12 @@ import '../../models/user_model.dart';
 bool isAnonymousDisplayName(String value) {
   final normalized = value.trim();
   final generatedHandlePattern = RegExp(r'^(User|Guest|Member) [A-Z0-9]{1,4}$');
+  final opaqueIdPattern = RegExp(r'^[A-Za-z0-9_-]{20,}$');
   return normalized.isEmpty ||
       normalized == 'MixVy User' ||
-      generatedHandlePattern.hasMatch(normalized);
+      normalized == 'MixVy Member' ||
+      generatedHandlePattern.hasMatch(normalized) ||
+      opaqueIdPattern.hasMatch(normalized);
 }
 
 String getDisplayName({
