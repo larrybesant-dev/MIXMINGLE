@@ -13,12 +13,12 @@ import 'package:mixvy/shared/widgets/app_page_scaffold.dart';
 
 // ── Category data ─────────────────────────────────────────────────────────────
 const _categories = [
-  (label: 'Music',   emoji: '🎵', value: 'music',  color: Color(0xFF7C3AED)),
-  (label: 'Talk',    emoji: '💬', value: 'talk',   color: Color(0xFF10B981)),
-  (label: 'Dating',  emoji: '💕', value: 'dating', color: Color(0xFFEC4899)),
-  (label: 'Chill',   emoji: '🍃', value: 'chill',  color: Color(0xFF64748B)),
-  (label: 'Gaming',  emoji: '🎮', value: 'gaming', color: Color(0xFF0EA5E9)),
-  (label: 'Art',     emoji: '🎨', value: 'art',    color: Color(0xFFF59E0B)),
+  (label: 'Music', emoji: '🎵', value: 'music', color: VelvetNoir.secondaryBright),
+  (label: 'Talk', emoji: '💬', value: 'talk', color: VelvetNoir.primary),
+  (label: 'Dating', emoji: '💕', value: 'dating', color: VelvetNoir.secondary),
+  (label: 'Chill', emoji: '🍃', value: 'chill', color: VelvetNoir.surfaceBright),
+  (label: 'Gaming', emoji: '🎮', value: 'gaming', color: VelvetNoir.primaryDim),
+  (label: 'Art', emoji: '🎨', value: 'art', color: VelvetNoir.onSurfaceVariant),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────

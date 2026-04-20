@@ -2091,7 +2091,22 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('Mic debug'), findsOneWidget);
+    expect(find.text('Mic lab'), findsOneWidget);
     expect(find.textContaining('queue #1'), findsOneWidget);
+    expect(find.textContaining('sync:'), findsOneWidget);
+    expect(find.textContaining('req:'), findsOneWidget);
+    expect(find.textContaining('version:'), findsOneWidget);
+    expect(find.textContaining('source:'), findsOneWidget);
+    expect(find.textContaining('last action:'), findsOneWidget);
+    expect(find.textContaining('snapshot:'), findsOneWidget);
+
+    await tester.tap(find.text('Mic lab'));
+    await tester.pump();
+
+    expect(find.text('Delay 0ms'), findsOneWidget);
+    expect(find.text('Jitter off'), findsOneWidget);
+    expect(find.text('Fail next'), findsOneWidget);
+    expect(find.text('Sync now'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
   });
 

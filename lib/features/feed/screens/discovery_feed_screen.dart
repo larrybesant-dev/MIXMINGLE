@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/layout/app_layout.dart';
+import '../../../core/theme.dart';
 import '../../../dev/app_debug_flags.dart';
 import '../../../dev/app_state_reasoning.dart';
 import '../../../core/utils/network_image_url.dart';
@@ -29,17 +30,17 @@ import '../widgets/trending_user_card.dart';
 import '../../stories/providers/story_provider.dart';
 import '../../../presentation/providers/notification_provider.dart';
 
-// ── Neon Pulse colour aliases ─────────────────────────────────────────────────
-const _npSurface = Color(0xFF0D0A0C);
-const _npSurfaceHigh = Color(0xFF241820);
-const _npSurfaceHighest = Color(0xFF2A1C23);
-const _npPrimary = Color(0xFFD4A853);
-const _npPrimaryDim = Color(0xFF8C6020);
-const _npSecondary = Color(0xFFC45E7A);
-const _npError = Color(0xFFFF6E84);
-const _npOnSurface = Color(0xFFF2EBE0);
-const _npOnVariant = Color(0xFFB09080);
-const _npGhost = Color(0x1A73757D);
+// ── Velvet Noir brand aliases ────────────────────────────────────────────────
+const _npSurface = VelvetNoir.surface;
+const _npSurfaceHigh = VelvetNoir.surfaceBright;
+const _npSurfaceHighest = VelvetNoir.surfaceHighest;
+const _npPrimary = VelvetNoir.primary;
+const _npPrimaryDim = VelvetNoir.primaryDim;
+const _npSecondary = VelvetNoir.secondaryBright;
+const _npError = VelvetNoir.liveGlow;
+const _npOnSurface = VelvetNoir.onSurface;
+const _npOnVariant = VelvetNoir.onSurfaceVariant;
+const _npGhost = Color(0x1A4A2E35);
 
 // ── Host avatar provider ──────────────────────────────────────────────────────
 final _hostAvatarProvider = FutureProvider.autoDispose.family<String?, String>((

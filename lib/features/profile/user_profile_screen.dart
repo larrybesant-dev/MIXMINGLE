@@ -928,9 +928,9 @@ class _OwnProfileHeroCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF141414),
+            VelvetNoir.surfaceHigh,
             VelvetNoir.secondary.withValues(alpha: 0.58),
-            const Color(0xFF090909),
+            VelvetNoir.surface,
           ],
         ),
         borderRadius: BorderRadius.circular(24),

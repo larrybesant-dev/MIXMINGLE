@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:math' as math;
 
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../config/agora_constants.dart';
 import '../../core/telemetry/app_telemetry.dart';
+import '../../models/mic_access_request_model.dart';
 import '../../models/moderation_model.dart';
 import '../../models/message_model.dart';
 import '../../models/presence_model.dart';
@@ -253,6 +256,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _isSendingSecretMessage = false;
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
+  String? _lastMicDebugAction;
+  DateTime? _lastMicDebugActionAt;
+  String? _lastMicDebugResult;
+  bool _isMicDebugAwaitingSync = false;
+  bool _showMicDebugLab = false;
+  bool _micDebugFailNextRequest = false;
+  bool _micDebugJitterEnabled = false;
+  bool _micQueueActionInFlight = false;
+  int _expectedMicTruthVersion = 0;
+  int _lastAppliedMicTruthVersion = 0;
+  String _lastMicTruthSource = 'none';
+  Duration _micDebugInjectedDelay = Duration.zero;
 
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
   int _maxBroadcasters = 4;
@@ -279,6 +294,173 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
     }
     return fallback;
+  }
+
+  String _formatDebugClock(DateTime? value) {
+    if (value == null) {
+      return '—';
+    }
+    final local = value.toLocal();
+    String twoDigits(int input) => input.toString().padLeft(2, '0');
+    return '${twoDigits(local.hour)}:${twoDigits(local.minute)}:${twoDigits(local.second)}';
+  }
+
+  String _shortMicDebugError(Object error) {
+    final message = error.toString().replaceAll('\n', ' ').trim();
+    if (message.contains('permission-denied')) {
+      return 'error permission-denied';
+    }
+    if (message.startsWith('Bad state: ')) {
+      final trimmed = message.substring('Bad state: '.length).trim();
+      return 'error ${trimmed.isEmpty ? 'state' : trimmed}';
+    }
+    if (message.length > 42) {
+      return '${message.substring(0, 42)}…';
+    }
+    return message.isEmpty ? 'error' : message;
+  }
+
+  String _shortMicDebugRequestId(String? requestId) {
+    final compact = (requestId ?? '')
+        .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
+        .toUpperCase();
+    if (compact.isEmpty) {
+      return '—';
+    }
+    return compact.length <= 4
+        ? compact
+        : compact.substring(compact.length - 4);
+  }
+
+  DateTime? _asNullableDateTime(dynamic value) {
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    return null;
+  }
+
+  int _nextMicTruthVersion() {
+    final candidate = DateTime.now().microsecondsSinceEpoch;
+    return candidate > _expectedMicTruthVersion
+        ? candidate
+        : _expectedMicTruthVersion + 1;
+  }
+
+  int _extractMicTruthVersion({
+    Map<String, dynamic>? roomData,
+    MicAccessRequestModel? request,
+  }) {
+    final explicitVersion = roomData?['roomVersion'];
+    if (explicitVersion is int) {
+      return explicitVersion;
+    }
+    final roomUpdatedAt = _asNullableDateTime(roomData?['updatedAt']);
+    if (roomUpdatedAt != null) {
+      return roomUpdatedAt.microsecondsSinceEpoch;
+    }
+    if (request != null) {
+      return request.updatedAt.microsecondsSinceEpoch;
+    }
+    return 0;
+  }
+
+  String _shortMicTruthVersion(int version) {
+    if (version <= 0) {
+      return '—';
+    }
+    final text = version.toString();
+    return text.length <= 6 ? text : text.substring(text.length - 6);
+  }
+
+  void _noteMicDebugAction(String action) {
+    if (!kEnableVisibilityDiagnostics || !mounted) {
+      return;
+    }
+    setState(() {
+      _lastMicDebugAction = action;
+      _lastMicDebugActionAt = DateTime.now();
+      _lastMicDebugResult = 'waiting';
+      _isMicDebugAwaitingSync = true;
+      _expectedMicTruthVersion = _nextMicTruthVersion();
+      _lastMicTruthSource = 'local';
+    });
+  }
+
+  void _noteMicDebugResult(String result, {bool awaitingSync = false}) {
+    if (!kEnableVisibilityDiagnostics || !mounted) {
+      return;
+    }
+    setState(() {
+      _lastMicDebugResult = result;
+      _isMicDebugAwaitingSync = awaitingSync;
+    });
+  }
+
+  String get _micDebugDelayLabel =>
+      '${_micDebugInjectedDelay.inMilliseconds}ms';
+
+  String get _micDebugJitterLabel => _micDebugJitterEnabled ? '0-800ms' : 'off';
+
+  void _cycleMicDebugDelay() {
+    if (!kEnableVisibilityDiagnostics || !mounted) {
+      return;
+    }
+    final next = switch (_micDebugInjectedDelay.inMilliseconds) {
+      0 => const Duration(milliseconds: 500),
+      500 => const Duration(milliseconds: 1000),
+      1000 => const Duration(milliseconds: 1500),
+      _ => Duration.zero,
+    };
+    setState(() => _micDebugInjectedDelay = next);
+    _noteMicDebugResult('delay ${next.inMilliseconds}ms');
+  }
+
+  Future<void> _applyMicDebugRequestHarness() async {
+    if (!kEnableVisibilityDiagnostics) {
+      return;
+    }
+    if (_micDebugInjectedDelay > Duration.zero) {
+      await Future<void>.delayed(_micDebugInjectedDelay);
+    }
+    if (_micDebugJitterEnabled) {
+      final jitterMs = math.Random().nextInt(801);
+      if (jitterMs > 0) {
+        await Future<void>.delayed(Duration(milliseconds: jitterMs));
+      }
+    }
+    if (_micDebugFailNextRequest) {
+      if (mounted) {
+        setState(() => _micDebugFailNextRequest = false);
+      }
+      throw StateError('debug injected-failure');
+    }
+  }
+
+  bool _beginMicQueueAction(String action) {
+    if (_micQueueActionInFlight) {
+      _noteMicDebugResult('blocked duplicate-$action');
+      return false;
+    }
+    if (mounted) {
+      setState(() => _micQueueActionInFlight = true);
+    } else {
+      _micQueueActionInFlight = true;
+    }
+    return true;
+  }
+
+  void _endMicQueueAction() {
+    if (mounted) {
+      setState(() => _micQueueActionInFlight = false);
+    } else {
+      _micQueueActionInFlight = false;
+    }
   }
 
   bool get _hasFirebaseApp {
@@ -3821,22 +4003,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             requesterId: user.id,
           )),
         );
-        final activeMicRequest = myMicRequestAsync.valueOrNull;
-        final hasPendingMicRequest = activeMicRequest?.isPending ?? false;
-        final hasMicPermission = activeMicRequest?.status != 'denied';
-        if (liveRoomState.micRequested != hasPendingMicRequest ||
-            liveRoomState.hasMicPermission != hasMicPermission) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              ref
-                  .read(liveRoomControllerProvider(widget.roomId).notifier)
-                  .updateAudioContext(
-                    micRequested: hasPendingMicRequest,
-                    hasMicPermission: hasMicPermission,
-                  );
-            }
-          });
-        }
+        final rawActiveMicRequest = myMicRequestAsync.valueOrNull;
         // Skip role-media sync when the user has an active camera slot.
         // They are already in broadcaster state; re-applying would call
         // enableVideo() a second time and disrupt the live camera track.
@@ -3886,6 +4053,48 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           }
         }
         final roomData = roomDocData;
+        final snapshotTruthVersion = _extractMicTruthVersion(
+          roomData: roomData,
+          request: rawActiveMicRequest,
+        );
+        final hasStaleMicSnapshot =
+            _expectedMicTruthVersion > 0 &&
+            snapshotTruthVersion > 0 &&
+            snapshotTruthVersion < _expectedMicTruthVersion;
+        final activeMicRequest = hasStaleMicSnapshot
+            ? null
+            : rawActiveMicRequest;
+        final hasPendingMicRequest = activeMicRequest?.isPending ?? false;
+        final hasMicPermission = activeMicRequest?.status != 'denied';
+        if (!hasStaleMicSnapshot &&
+            snapshotTruthVersion > 0 &&
+            snapshotTruthVersion > _lastAppliedMicTruthVersion) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted ||
+                snapshotTruthVersion <= _lastAppliedMicTruthVersion) {
+              return;
+            }
+            setState(() {
+              _lastAppliedMicTruthVersion = snapshotTruthVersion;
+              _lastMicTruthSource = activeMicRequest == null
+                  ? 'room'
+                  : 'remote';
+            });
+          });
+        }
+        if (liveRoomState.micRequested != hasPendingMicRequest ||
+            liveRoomState.hasMicPermission != hasMicPermission) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref
+                  .read(liveRoomControllerProvider(widget.roomId).notifier)
+                  .updateAudioContext(
+                    micRequested: hasPendingMicRequest,
+                    hasMicPermission: hasMicPermission,
+                  );
+            }
+          });
+        }
         final roomTheme = RoomTheme.fromJson(
           roomData?['theme'] is Map<String, dynamic>
               ? roomData!['theme'] as Map<String, dynamic>
@@ -4224,12 +4433,27 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             : 'Crowd building';
         final isOnMic = participantHasMicSeat(effectiveSelfParticipant);
         final isMicFree = isOnMic || onMicCount < RoomState.maxSpeakers;
-        final pendingMicRequests =
+        final rawPendingMicRequests =
             (micRequestsAsync.valueOrNull ?? const <MicAccessRequestModel>[])
                 .where((request) => request.status == 'pending')
                 .toList(growable: false);
+        final pendingMicRequests = hasStaleMicSnapshot
+            ? rawPendingMicRequests
+                  .where((request) {
+                    return _extractMicTruthVersion(
+                          roomData: roomData,
+                          request: request,
+                        ) >=
+                        _expectedMicTruthVersion;
+                  })
+                  .toList(growable: false)
+            : rawPendingMicRequests;
 
         Future<void> handleReleaseMic() async {
+          if (!_beginMicQueueAction('release')) {
+            return;
+          }
+          _noteMicDebugAction('release');
           try {
             await ref
                 .read(liveRoomControllerProvider(widget.roomId).notifier)
@@ -4241,19 +4465,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 _mediaController.setMicMuted(true);
               }
             }
+            _noteMicDebugResult('released', awaitingSync: true);
             if (mounted) _showSnackBar('Mic released.');
           } catch (e) {
+            _noteMicDebugResult(_shortMicDebugError(e));
             if (mounted) {
               _showSnackBar('Could not release mic: $e');
             }
+          } finally {
+            _endMicQueueAction();
           }
         }
 
         Future<void> handleRequestMic() async {
+          if (!_beginMicQueueAction('request')) {
+            return;
+          }
+          _noteMicDebugAction('request');
           try {
+            await _applyMicDebugRequestHarness();
             final result = await ref
                 .read(liveRoomControllerProvider(widget.roomId).notifier)
                 .requestMic(userId: user.id);
+            _noteMicDebugResult(
+              result == MicRequestResult.grabbed ? 'grabbed' : 'queued',
+              awaitingSync: true,
+            );
             if (mounted) {
               _showSnackBar(
                 result == MicRequestResult.grabbed
@@ -4262,9 +4499,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               );
             }
           } catch (e) {
+            _noteMicDebugResult(_shortMicDebugError(e));
             if (mounted) {
               _showSnackBar('Could not request mic: $e');
             }
+          } finally {
+            _endMicQueueAction();
           }
         }
 
@@ -4273,17 +4513,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           if (pendingRequestId.isEmpty) {
             return;
           }
+          if (!_beginMicQueueAction('cancel')) {
+            return;
+          }
+          _noteMicDebugAction('cancel');
           try {
             await ref
                 .read(liveRoomControllerProvider(widget.roomId).notifier)
                 .cancelMicRequest(pendingRequestId);
+            _noteMicDebugResult('cancelled', awaitingSync: true);
             if (mounted) {
               _showSnackBar('You left the mic queue.');
             }
           } catch (e) {
+            _noteMicDebugResult(_shortMicDebugError(e));
             if (mounted) {
               _showSnackBar('Could not update your mic request: $e');
             }
+          } finally {
+            _endMicQueueAction();
           }
         }
 
@@ -4359,19 +4607,70 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           (request) => request.requesterId == user.id,
         );
         final myQueuePosition = myQueueIndex >= 0 ? myQueueIndex + 1 : null;
-        final micDebugState = isOnMic
+        final micDebugState = _micQueueActionInFlight
+            ? 'submitting'
+            : isOnMic
             ? 'on mic'
             : hasPendingMicRequest
             ? (myQueuePosition == null ? 'queued' : 'queue #$myQueuePosition')
             : canRequestMic
             ? 'ready'
             : 'blocked';
-        final micDebugSync = micRequestsAsync.when(
-          data: (requests) => 'ready ${requests.length}',
-          loading: () => 'loading',
-          error: (error, _) => 'error',
-        );
-        final VoidCallback? onGrabMicAction = isOnMic
+        final latestMicSnapshotAt =
+            <DateTime>[
+              if (activeMicRequest != null) activeMicRequest.updatedAt,
+              for (final request in pendingMicRequests) request.updatedAt,
+            ].fold<DateTime?>(null, (latest, timestamp) {
+              if (latest == null || timestamp.isAfter(latest)) {
+                return timestamp;
+              }
+              return latest;
+            });
+        final micSyncConfirmed =
+            _isMicDebugAwaitingSync &&
+            ((_lastMicDebugAction == 'request' &&
+                    (hasPendingMicRequest || isOnMic)) ||
+                (_lastMicDebugAction == 'cancel' && !hasPendingMicRequest) ||
+                (_lastMicDebugAction == 'release' && !isOnMic));
+        if (micSyncConfirmed) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || !_isMicDebugAwaitingSync) {
+              return;
+            }
+            setState(() => _isMicDebugAwaitingSync = false);
+          });
+        }
+        final micDebugSync = hasStaleMicSnapshot
+            ? 'stale ignored'
+            : micRequestsAsync.hasError ||
+                  ((_lastMicDebugResult ?? '').startsWith('error'))
+            ? 'error'
+            : (micRequestsAsync.isLoading ||
+                  _isMicDebugAwaitingSync ||
+                  _isMicActionInFlight)
+            ? 'waiting'
+            : 'in sync';
+        final micDebugSignalColor = micDebugSync == 'error'
+            ? const Color(0xFFFF6E84)
+            : micDebugSync == 'waiting'
+            ? const Color(0xFFD4A853)
+            : const Color(0xFF4CAF50);
+        final micDebugLastAction = _lastMicDebugAction == null
+            ? '—'
+            : '${_lastMicDebugAction!} @ ${_formatDebugClock(_lastMicDebugActionAt)}';
+        final micDebugLastResult = _lastMicDebugResult ?? 'idle';
+        final micDebugLastSnapshot = _formatDebugClock(latestMicSnapshotAt);
+        final micDebugRequestId = _shortMicDebugRequestId(activeMicRequest?.id);
+        final micDebugVersionLabel =
+            '${_shortMicTruthVersion(_lastAppliedMicTruthVersion)} → ${_shortMicTruthVersion(_expectedMicTruthVersion)}';
+        final micDebugSource = hasStaleMicSnapshot
+            ? 'stale ignored'
+            : _micQueueActionInFlight
+            ? 'local'
+            : (activeMicRequest == null ? _lastMicTruthSource : 'remote');
+        final VoidCallback? onGrabMicAction = _micQueueActionInFlight
+            ? null
+            : isOnMic
             ? () => unawaited(handleReleaseMic())
             : hasPendingMicRequest
             ? () => unawaited(handleCancelMicRequest())
@@ -6159,14 +6458,66 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               if (kEnableVisibilityDiagnostics)
                 Positioned(
                   right: 8,
+                  bottom: 168,
+                  child: _MicDebugControlPanel(
+                    expanded: _showMicDebugLab,
+                    delayLabel: _micDebugDelayLabel,
+                    jitterLabel: _micDebugJitterLabel,
+                    failNextArmed: _micDebugFailNextRequest,
+                    jitterEnabled: _micDebugJitterEnabled,
+                    onToggleExpanded: () =>
+                        setState(() => _showMicDebugLab = !_showMicDebugLab),
+                    onCycleDelay: _cycleMicDebugDelay,
+                    onToggleJitter: () {
+                      setState(
+                        () => _micDebugJitterEnabled = !_micDebugJitterEnabled,
+                      );
+                      _noteMicDebugResult(
+                        _micDebugJitterEnabled
+                            ? 'jitter ${_micDebugJitterLabel}'
+                            : 'jitter off',
+                      );
+                    },
+                    onToggleFailNext: () => setState(
+                      () =>
+                          _micDebugFailNextRequest = !_micDebugFailNextRequest,
+                    ),
+                    onSyncNow: () {
+                      _noteMicDebugAction('sync');
+                      _noteMicDebugResult('sync requested', awaitingSync: true);
+                      unawaited(
+                        ref
+                            .read(
+                              liveRoomControllerProvider(
+                                widget.roomId,
+                              ).notifier,
+                            )
+                            .syncPresenceNow(forceSync: true),
+                      );
+                    },
+                    onClearMine: activeMicRequest == null
+                        ? null
+                        : () => unawaited(handleCancelMicRequest()),
+                  ),
+                ),
+              if (kEnableVisibilityDiagnostics)
+                Positioned(
+                  right: 8,
                   bottom: 120,
                   child: _MicDebugOverlay(
                     roleLabel: role,
                     stateLabel: micDebugState,
                     requestStatus: activeMicRequest?.status ?? 'none',
                     syncStatus: micDebugSync,
+                    signalColor: micDebugSignalColor,
                     pendingCount: pendingMicRequests.length,
                     onMicCount: onMicCount,
+                    requestIdLabel: micDebugRequestId,
+                    versionLabel: micDebugVersionLabel,
+                    sourceLabel: micDebugSource,
+                    lastActionLabel: micDebugLastAction,
+                    lastResultLabel: micDebugLastResult,
+                    lastSnapshotLabel: micDebugLastSnapshot,
                   ),
                 ),
               // Debug inspector button — debug-only and centrally gated.
@@ -6344,22 +6695,168 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 // Mobile tab bar button
 // ---------------------------------------------------------------------------
 
+class _MicDebugControlPanel extends StatelessWidget {
+  const _MicDebugControlPanel({
+    required this.expanded,
+    required this.delayLabel,
+    required this.jitterLabel,
+    required this.failNextArmed,
+    required this.jitterEnabled,
+    required this.onToggleExpanded,
+    required this.onCycleDelay,
+    required this.onToggleJitter,
+    required this.onToggleFailNext,
+    required this.onSyncNow,
+    this.onClearMine,
+  });
+
+  final bool expanded;
+  final String delayLabel;
+  final String jitterLabel;
+  final bool failNextArmed;
+  final bool jitterEnabled;
+  final VoidCallback onToggleExpanded;
+  final VoidCallback onCycleDelay;
+  final VoidCallback onToggleJitter;
+  final VoidCallback onToggleFailNext;
+  final VoidCallback onSyncNow;
+  final VoidCallback? onClearMine;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xE610131A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x44D4A853)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton.icon(
+              onPressed: onToggleExpanded,
+              icon: Icon(
+                expanded ? Icons.expand_less : Icons.tune,
+                size: 16,
+                color: const Color(0xFFD4A853),
+              ),
+              label: const Text('Mic lab'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFD4A853),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+              ),
+            ),
+            if (expanded)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 220),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: onCycleDelay,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0x55D4A853)),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text('Delay $delayLabel'),
+                    ),
+                    FilledButton.tonal(
+                      onPressed: onToggleJitter,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: jitterEnabled
+                            ? const Color(0x444CAF50)
+                            : const Color(0x3310131A),
+                        foregroundColor: jitterEnabled
+                            ? const Color(0xFF72E48A)
+                            : const Color(0xFFD4A853),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(
+                        jitterEnabled ? 'Jitter $jitterLabel' : 'Jitter off',
+                      ),
+                    ),
+                    FilledButton.tonal(
+                      onPressed: onToggleFailNext,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: failNextArmed
+                            ? const Color(0x44FF6E84)
+                            : const Color(0x3310131A),
+                        foregroundColor: failNextArmed
+                            ? const Color(0xFFFF6E84)
+                            : const Color(0xFFD4A853),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(failNextArmed ? 'Fail armed' : 'Fail next'),
+                    ),
+                    OutlinedButton(
+                      onPressed: onSyncNow,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0x554CAF50)),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Text('Sync now'),
+                    ),
+                    if (onClearMine != null)
+                      OutlinedButton(
+                        onPressed: onClearMine,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Color(0x55C45E7A)),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: const Text('Clear mine'),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MicDebugOverlay extends StatelessWidget {
   const _MicDebugOverlay({
     required this.roleLabel,
     required this.stateLabel,
     required this.requestStatus,
     required this.syncStatus,
+    required this.signalColor,
     required this.pendingCount,
     required this.onMicCount,
+    required this.requestIdLabel,
+    required this.versionLabel,
+    required this.sourceLabel,
+    required this.lastActionLabel,
+    required this.lastResultLabel,
+    required this.lastSnapshotLabel,
   });
 
   final String roleLabel;
   final String stateLabel;
   final String requestStatus;
   final String syncStatus;
+  final Color signalColor;
   final int pendingCount;
   final int onMicCount;
+  final String requestIdLabel;
+  final String versionLabel;
+  final String sourceLabel;
+  final String lastActionLabel;
+  final String lastResultLabel;
+  final String lastSnapshotLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -6370,7 +6867,7 @@ class _MicDebugOverlay extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xE610131A),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0x55D4A853)),
+            border: Border.all(color: signalColor.withValues(alpha: 0.55)),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -6380,18 +6877,30 @@ class _MicDebugOverlay extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Mic debug',
-                    style: TextStyle(
-                      color: Color(0xFFD4A853),
-                      fontWeight: FontWeight.w800,
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, size: 8, color: signalColor),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Mic debug',
+                        style: TextStyle(
+                          color: Color(0xFFD4A853),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text('state: $stateLabel'),
                   Text('role: $roleLabel • on mic $onMicCount'),
                   Text('status: $requestStatus • queue $pendingCount'),
                   Text('sync: $syncStatus'),
+                  Text('req: $requestIdLabel'),
+                  Text('version: $versionLabel'),
+                  Text('source: $sourceLabel'),
+                  Text('last action: $lastActionLabel'),
+                  Text('last result: $lastResultLabel'),
+                  Text('snapshot: $lastSnapshotLabel'),
                 ],
               ),
             ),
