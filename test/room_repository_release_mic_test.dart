@@ -4,6 +4,25 @@ import 'package:mixvy/features/room/repository/room_repository.dart';
 
 void main() {
   test(
+    'loadUserLookup falls back to displayName when username is missing',
+    () async {
+      final firestore = FakeFirebaseFirestore();
+      final repository = RoomRepository(firestore: firestore);
+
+      await firestore.collection('users').doc('host-1').set({
+        'displayName': 'DJ Curve',
+        'avatarUrl': 'https://example.com/avatar.png',
+        'vipLevel': 3,
+      });
+
+      final lookup = await repository.loadUserLookup(const ['host-1']);
+
+      expect(lookup['host-1']?.profileUsername, 'DJ Curve');
+      expect(lookup['host-1']?.vipLevel, 3);
+    },
+  );
+
+  test(
     'releaseMic demotes non-staff to audience without mutating room fields',
     () async {
       final firestore = FakeFirebaseFirestore();

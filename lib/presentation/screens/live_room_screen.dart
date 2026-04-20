@@ -6251,6 +6251,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             onMicCount: onMicCount,
                             watchingCount: watchingCamCount,
                             isQuiet: roomFeelsQuiet,
+                            compact: true,
                             primaryActionLabel: roomPrimaryActionLabel,
                             onPrimaryAction: roomPrimaryAction,
                             secondaryActionLabel: roomSecondaryActionLabel,
@@ -7565,6 +7566,7 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
     required this.onMicCount,
     required this.watchingCount,
     required this.isQuiet,
+    this.compact = false,
     this.primaryActionLabel,
     this.onPrimaryAction,
     this.secondaryActionLabel,
@@ -7579,6 +7581,7 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
   final int onMicCount;
   final int watchingCount;
   final bool isQuiet;
+  final bool compact;
   final String? primaryActionLabel;
   final VoidCallback? onPrimaryAction;
   final String? secondaryActionLabel;
@@ -7593,7 +7596,9 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: compact
+          ? const EdgeInsets.fromLTRB(10, 8, 10, 8)
+          : const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -7640,9 +7645,9 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
                   child: Text(
                     title,
                     key: ValueKey<String>(title),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
+                      fontSize: compact ? 12 : 13,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -7672,10 +7677,10 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: compact ? 8 : 10),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               _PresenceStatPill(
                 label: 'Here',
@@ -7689,44 +7694,49 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
                 icon: Icons.mic_none_rounded,
                 color: secondaryAccent,
               ),
-              _PresenceStatPill(
-                label: 'Watching',
-                value: watchingCount,
-                icon: Icons.visibility_outlined,
-                color: const Color(0xFF9B2535),
-              ),
+              if (!compact || watchingCount > 0)
+                _PresenceStatPill(
+                  label: 'Watching',
+                  value: watchingCount,
+                  icon: Icons.visibility_outlined,
+                  color: const Color(0xFF9B2535),
+                ),
             ],
           ),
-          const SizedBox(height: 6),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            child: Text(
-              summary,
-              key: ValueKey<String>(summary),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+          if (summary.trim().isNotEmpty) ...[
+            SizedBox(height: compact ? 4 : 6),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: Text(
+                summary,
+                key: ValueKey<String>(summary),
+                maxLines: compact ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: compact ? 10 : 11,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 3),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            child: Text(
-              prompt,
-              key: ValueKey<String>(prompt),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 10,
-                height: 1.25,
+          ],
+          if (!compact && prompt.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: Text(
+                prompt,
+                key: ValueKey<String>(prompt),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  fontSize: 10,
+                  height: 1.25,
+                ),
               ),
             ),
-          ),
+          ],
           if ((primaryActionLabel?.trim().isNotEmpty ?? false) ||
               (secondaryActionLabel?.trim().isNotEmpty ?? false)) ...[
             const SizedBox(height: 10),
@@ -7750,7 +7760,8 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
                     ),
                     child: Text(primaryActionLabel!),
                   ),
-                if (secondaryActionLabel?.trim().isNotEmpty ?? false)
+                if (!compact &&
+                    (secondaryActionLabel?.trim().isNotEmpty ?? false))
                   OutlinedButton(
                     onPressed: onSecondaryAction,
                     style: OutlinedButton.styleFrom(

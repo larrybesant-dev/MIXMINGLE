@@ -224,12 +224,15 @@ class RoomRepository {
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
+        final user = UserModel.fromJson({...data, 'id': doc.id});
         final vip = data['vipLevel'];
-        final avatar = _asString(data['avatarUrl']);
         final gender = _asString(data['gender']);
+        final resolvedDisplayName = user.username.trim();
         results[doc.id] = RoomUserLookup(
-          profileUsername: _asString(data['username']),
-          avatarUrl: avatar.isEmpty ? null : avatar,
+          profileUsername: resolvedDisplayName.isEmpty
+              ? null
+              : resolvedDisplayName,
+          avatarUrl: user.avatarUrl,
           vipLevel: vip is int ? vip : (vip is num ? vip.toInt() : 0),
           gender: gender.isEmpty ? null : gender,
         );
