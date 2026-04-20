@@ -36,6 +36,35 @@ enum RoomAction {
   manageCameraViewer,
 }
 
+bool _isAnonymousRoomDisplayName(String value, String userId) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) {
+    return true;
+  }
+
+  final normalizedUserId = userId.trim();
+  final generatedHandlePattern = RegExp(r'^(User|Guest|Member) [A-Z0-9]{1,4}$');
+  final opaqueIdPattern = RegExp(r'^[A-Za-z0-9_-]{20,}$');
+
+  return trimmed == normalizedUserId ||
+      trimmed == 'MixVy User' ||
+      trimmed == 'MixVy Member' ||
+      generatedHandlePattern.hasMatch(trimmed) ||
+      opaqueIdPattern.hasMatch(trimmed);
+}
+
+String _safeRoomMemberName(String userId) {
+  final compact = userId
+      .trim()
+      .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
+      .toUpperCase();
+  if (compact.isEmpty) {
+    return 'MixVy Member';
+  }
+  final suffix = compact.substring(0, compact.length < 4 ? compact.length : 4);
+  return 'Member $suffix';
+}
+
 class RoomStateMachine {
   const RoomStateMachine._();
 
@@ -514,17 +543,21 @@ class RoomState {
   String displayNameFor(String userId, {String fallbackName = ''}) {
     final normalized = userId.trim();
     if (normalized.isEmpty) {
-      return fallbackName.trim().isEmpty ? 'MixVy User' : fallbackName.trim();
+      final trimmedFallback = fallbackName.trim();
+      return trimmedFallback.isEmpty ? 'MixVy User' : trimmedFallback;
     }
+
     final snapshotName = snapshotFor(normalized)?.displayName.trim() ?? '';
-    if (snapshotName.isNotEmpty) {
+    if (!_isAnonymousRoomDisplayName(snapshotName, normalized)) {
       return snapshotName;
     }
+
     final trimmedFallback = fallbackName.trim();
-    if (trimmedFallback.isNotEmpty) {
+    if (!_isAnonymousRoomDisplayName(trimmedFallback, normalized)) {
       return trimmedFallback;
     }
-    return normalized;
+
+    return _safeRoomMemberName(normalized);
   }
 
   String roleFor(String userId) {
@@ -545,7 +578,10 @@ class RoomState {
       return fallbackRole;
     }
 
-    final resolvedRole = normalizeRoomRole(roleFor(normalized), fallbackRole: '');
+    final resolvedRole = normalizeRoomRole(
+      roleFor(normalized),
+      fallbackRole: '',
+    );
     if (resolvedRole.isNotEmpty) {
       return resolvedRole;
     }

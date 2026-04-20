@@ -3254,7 +3254,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       uid: currentUserId,
       resolvedDisplayName: resolvedCurrentUsername,
       fallbackName: hydratedCurrentDisplayName.isEmpty
-          ? currentUserId
+          ? resolvePublicUsername(uid: currentUserId)
           : hydratedCurrentDisplayName,
     );
 
@@ -3268,7 +3268,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     for (final participantId in participantIds) {
       presentationByUserId.putIfAbsent(
         participantId,
-        () => RoomUserPresentation(displayName: participantId),
+        () => RoomUserPresentation(
+          displayName: resolvePublicUsername(uid: participantId),
+        ),
       );
     }
 
@@ -3649,9 +3651,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           itemBuilder: (context, index) {
                             final member = selectableMembers[index];
                             final allowed = selected.contains(member.userId);
-                            final displayName =
-                                _senderDisplayNameById[member.userId] ??
-                                member.userId;
+                            final displayName = getDisplayName(
+                              uid: member.userId,
+                              resolvedDisplayName:
+                                  _senderDisplayNameById[member.userId],
+                              fallbackName: resolvePublicUsername(
+                                uid: member.userId,
+                              ),
+                            );
                             return SwitchListTile.adaptive(
                               value: allowed,
                               title: Text(displayName),
@@ -7690,29 +7697,33 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             child: Text(
               summary,
               key: ValueKey<String>(summary),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             child: Text(
               prompt,
               key: ValueKey<String>(prompt),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 11,
-                height: 1.3,
+                fontSize: 10,
+                height: 1.25,
               ),
             ),
           ),
@@ -7729,9 +7740,11 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: accent.withValues(alpha: 0.18),
                       foregroundColor: accent,
+                      minimumSize: const Size(0, 34),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                        horizontal: 10,
+                        vertical: 6,
                       ),
                       visualDensity: VisualDensity.compact,
                     ),
@@ -7742,12 +7755,14 @@ class _RoomPresenceEnergyCard extends StatelessWidget {
                     onPressed: onSecondaryAction,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 34),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       side: BorderSide(
                         color: Colors.white.withValues(alpha: 0.25),
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                        horizontal: 10,
+                        vertical: 6,
                       ),
                       visualDensity: VisualDensity.compact,
                     ),

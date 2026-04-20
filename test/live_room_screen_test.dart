@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1688,9 +1689,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('People in room'), findsOneWidget);
-    expect(find.text('host-1'), findsWidgets);
+    expect(find.textContaining('host-1'), findsNothing);
     expect(find.text('User One'), findsWidgets);
-    expect(find.text('user-2'), findsWidgets);
+    expect(find.textContaining('user-2'), findsNothing);
+    expect(find.text('Member HOST'), findsWidgets);
+    expect(find.text('Member USER'), findsWidgets);
     await tester.pump(const Duration(seconds: 3));
   });
 
@@ -1770,8 +1773,9 @@ void main() {
     ); // let bottom sheet open
 
     expect(find.text('People in room'), findsOneWidget);
-    expect(find.text('host-1'), findsWidgets);
+    expect(find.textContaining('host-1'), findsNothing);
     expect(find.text('User One'), findsWidgets);
+    expect(find.text('Member HOST'), findsWidgets);
     await tester.pump(const Duration(seconds: 3));
   });
 
