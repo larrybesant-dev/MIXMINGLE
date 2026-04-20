@@ -12,7 +12,7 @@ import '../../widgets/mixvy_drawer.dart';
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
 /// bottom nav bar built around a simpler feed-first structure:
 /// Home / Rooms / Messages / Groups / Profile.
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   final Widget child;
   final int selectedIndex;
   final bool useDesktopMessengerLayout;
@@ -33,11 +33,80 @@ class AppShell extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  bool _showDesktopSidebar = true;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDesktopMessengerLayout =
-        context.isExpandedLayout && useDesktopMessengerLayout;
+        context.isExpandedLayout && widget.useDesktopMessengerLayout;
     final unreadMsgs = ref.watch(unreadMessageCountProvider);
+    final useDockedSidebar =
+        context.screenWidth >= AppBreakpoints.expanded &&
+        !isDesktopMessengerLayout;
+
+    final bodyContent = useDockedSidebar
+        ? Stack(
+            children: [
+              Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    width: _showDesktopSidebar ? 310 : 0,
+                    child: _showDesktopSidebar
+                        ? DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: VelvetNoir.surfaceLow.withValues(
+                                alpha: 0.96,
+                              ),
+                              border: Border(
+                                right: BorderSide(
+                                  color: theme.colorScheme.outline.withValues(
+                                    alpha: 0.16,
+                                  ),
+                                ),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.18),
+                                  blurRadius: 22,
+                                  offset: const Offset(4, 0),
+                                ),
+                              ],
+                            ),
+                            child: SafeArea(
+                              right: false,
+                              child: MixVyDrawer(
+                                embedded: true,
+                                onClose: () {
+                                  setState(() => _showDesktopSidebar = false);
+                                },
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  Expanded(child: widget.child),
+                ],
+              ),
+              Positioned(
+                left: _showDesktopSidebar ? 294 : 8,
+                top: 18,
+                child: _DesktopSidebarToggle(
+                  isOpen: _showDesktopSidebar,
+                  onTap: () {
+                    setState(() => _showDesktopSidebar = !_showDesktopSidebar);
+                  },
+                ),
+              ),
+            ],
+          )
+        : widget.child;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -45,23 +114,31 @@ class AppShell extends ConsumerWidget {
           ? PreferredSize(
               preferredSize: const Size.fromHeight(72),
               child: _DesktopTopNav(
-                selectedIndex: selectedIndex,
+                selectedIndex: widget.selectedIndex,
                 unreadMsgs: unreadMsgs,
-                onTap: (i) => context.go(_roots[i]),
+                onTap: (i) => context.go(AppShell._roots[i]),
               ),
             )
           : null,
-      drawer: isDesktopMessengerLayout ? null : const MixVyDrawer(),
-      body: child,
+      drawer: (isDesktopMessengerLayout || useDockedSidebar)
+          ? null
+          : const MixVyDrawer(),
+      body: bodyContent,
       bottomNavigationBar: isDesktopMessengerLayout
           ? null
           : Builder(
               builder: (context) => _VelvetBottomNav(
-                selectedIndex: selectedIndex,
+                selectedIndex: widget.selectedIndex,
                 unreadMsgs: unreadMsgs,
                 compact: context.isCompactLayout,
-                onTap: (i) => context.go(_roots[i]),
-                onMenuTap: () => Scaffold.maybeOf(context)?.openDrawer(),
+                onTap: (i) => context.go(AppShell._roots[i]),
+                onMenuTap: useDockedSidebar
+                    ? () {
+                        setState(
+                          () => _showDesktopSidebar = !_showDesktopSidebar,
+                        );
+                      }
+                    : () => Scaffold.maybeOf(context)?.openDrawer(),
               ),
             ),
     );
@@ -292,7 +369,49 @@ class _VelvetBottomNav extends StatelessWidget {
       ),
     );
   }
+}
 
+class _DesktopSidebarToggle extends StatelessWidget {
+  const _DesktopSidebarToggle({required this.isOpen, required this.onTap});
+
+  final bool isOpen;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: VelvetNoir.surfaceHigh.withValues(alpha: 0.92),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: VelvetNoir.primary.withValues(alpha: 0.28),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Tooltip(
+            message: isOpen ? 'Hide menu' : 'Show menu',
+            child: Icon(
+              isOpen ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+              color: VelvetNoir.primary,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _DesktopTopNav extends StatelessWidget {
@@ -378,7 +497,9 @@ class _DesktopTopNav extends StatelessWidget {
                                 top: -8,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 1),
+                                    horizontal: 5,
+                                    vertical: 1,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: VelvetNoir.error,
                                     borderRadius: BorderRadius.circular(999),
@@ -403,8 +524,9 @@ class _DesktopTopNav extends StatelessWidget {
                                 ? VelvetNoir.primary
                                 : VelvetNoir.onSurfaceVariant,
                             fontSize: 12,
-                            fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                           ),
                         ),
                       ],
