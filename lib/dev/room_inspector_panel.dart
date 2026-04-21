@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_debug_flags.dart';
 import 'app_state_reasoning.dart';
 import '../features/room/controllers/live_room_controller.dart';
+import '../features/room/providers/room_live_state_provider.dart';
 import '../features/room/controllers/room_state.dart';
 import '../features/room/providers/participant_providers.dart';
 import '../features/room/providers/room_policy_provider.dart';
@@ -28,6 +29,7 @@ class RoomInspectorPanel extends ConsumerWidget {
     final participantsAsync = ref.watch(participantsStreamProvider(roomId));
     final policyAsync = ref.watch(roomPolicyProvider(roomId));
     final modLogAsync = ref.watch(modLogStreamProvider(roomId));
+    final liveStateAsync = ref.watch(roomLiveStateProvider(roomId));
     final roomSummary = explainLiveRoomHydration(
       lifecycleLabel: roomState.lifecycleState.name,
       userCount: roomState.userIds.length,
@@ -79,6 +81,94 @@ class RoomInspectorPanel extends ConsumerWidget {
                 roomState.errorMessage!,
                 valueColor: Colors.redAccent,
               ),
+            const SizedBox(height: 8),
+
+            // ── Pipeline / Contract (collapsed by default — detail view) ─────
+            Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+              ),
+              child: ExpansionTile(
+                initiallyExpanded: false,
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                iconColor: const Color(0xFFCE93D8),
+                collapsedIconColor: const Color(0xFF78909C),
+                title: const Text(
+                  'PIPELINE',
+                  style: TextStyle(
+                    color: Color(0xFFCE93D8),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                children: [
+                  liveStateAsync.when(
+                    data: (s) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _KV(
+                          'title',
+                          s.title.isEmpty ? '(empty)' : s.title,
+                        ),
+                        _KV('messages', '${s.messages.length}'),
+                        _KV('participants', '${s.participants.length}'),
+                        _KV('typing', '${s.typingUsers.length}'),
+                        _KV('schema', 'v$kRoomSchemaVersion'),
+                      ],
+                    ),
+                    loading: () => const _Pill('loading…'),
+                    error: (e, _) =>
+                        _Pill('pipeline error: $e', color: Colors.redAccent),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // ── Last Diff ────────────────────────────────────────────────────
+            const _SectionHeader(
+              label: 'LAST DIFF',
+              color: Color(0xFFCE93D8),
+            ),
+            Builder(builder: (context) {
+              final diff = RoomContractGuard.lastDiff;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _KV(
+                    'summary',
+                    diff.summary,
+                    valueColor: diff.hasChanges
+                        ? const Color(0xFFCE93D8)
+                        : null,
+                  ),
+                  _KV(
+                    'msg\u0394',
+                    _deltaStr(diff.messageCountDelta),
+                    valueColor: _deltaColor(diff.messageCountDelta),
+                  ),
+                  _KV(
+                    'part\u0394',
+                    _deltaStr(diff.participantCountDelta),
+                    valueColor: _deltaColor(diff.participantCountDelta),
+                  ),
+                  _KV(
+                    'typ\u0394',
+                    _deltaStr(diff.typingCountDelta),
+                    valueColor: _deltaColor(diff.typingCountDelta),
+                  ),
+                  if (diff.titleChanged)
+                    const _Pill(
+                      'title changed',
+                      color: Color(0xFFCE93D8),
+                    ),
+                ],
+              );
+            }),
             const SizedBox(height: 8),
 
             // ── Policy ──────────────────────────────────────────────────────
@@ -239,6 +329,17 @@ class RoomInspectorPanel extends ConsumerWidget {
     if (action.contains('demote')) return const Color(0xFFEF9A9A);
     if (action.contains('force_release')) return Colors.orangeAccent;
     return const Color(0xFFE0E0E0);
+  }
+
+  static String _deltaStr(int delta) {
+    if (delta == 0) return '0';
+    return delta > 0 ? '+$delta' : '$delta';
+  }
+
+  static Color _deltaColor(int delta) {
+    if (delta > 0) return const Color(0xFFA5D6A7); // green
+    if (delta < 0) return Colors.orangeAccent;     // orange
+    return const Color(0xFF78909C);                 // grey
   }
 
   static String _fmtTs(dynamic value) {
