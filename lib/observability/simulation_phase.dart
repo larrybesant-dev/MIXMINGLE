@@ -11,5 +11,8 @@ class SimulationPhase {
     _currentPhase = null;
   }
 
-  static String get current => _currentPhase ?? "UNKNOWN";
+  static String get current {
+    print("Current phase: $_currentPhase");
+    return _currentPhase ?? "UNKNOWN";
+  }
 }
