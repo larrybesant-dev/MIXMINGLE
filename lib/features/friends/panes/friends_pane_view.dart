@@ -263,7 +263,7 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                   ),
                 ),
                 if (_recentlyActiveExpanded)
-                  for (var i = 0; i < recentlyActiveEntries.length; i++) ..[
+                  for (var i = 0; i < recentlyActiveEntries.length; i++) ...[
                     FriendTile(
                       key: ValueKey('recent-${recentlyActiveEntries[i].friendId}'),
                       user: recentlyActiveEntries[i].user,

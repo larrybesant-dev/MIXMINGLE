@@ -1,4 +1,3 @@
-import 'simulation_phase.dart';
 import 'runtime_telemetry.dart';
 
 class EventTimeline {

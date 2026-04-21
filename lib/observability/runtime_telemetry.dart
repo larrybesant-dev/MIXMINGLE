@@ -36,10 +36,12 @@ class RuntimeTelemetry {
   // REBUILD TRACKING
   // ─────────────────────────────
 
-  static void recordRebuild(String widget, SimulationContext ctx) {
+  static void recordRebuild(String widget, [SimulationContext? ctx]) {
     _rebuildCounts[widget] = (_rebuildCounts[widget] ?? 0) + 1;
     _lastEvent[widget] = DateTime.now();
-    print("[${ctx.phase}] Rebuild recorded for: $widget, Total: ${_rebuildCounts[widget]}");
+    if (ctx != null) {
+      print("[${ctx.phase}] Rebuild recorded for: $widget, Total: ${_rebuildCounts[widget]}");
+    }
   }
 
   static Map<String, int> snapshotRebuilds() => Map.from(_rebuildCounts);

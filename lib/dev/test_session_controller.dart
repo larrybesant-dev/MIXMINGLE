@@ -1,11 +1,13 @@
 import '../observability/runtime_telemetry.dart';
 import '../observability/production_alerts.dart';
 import '../observability/event_timeline.dart';
-import '../observability/runtime_telemetry.dart';
 
 class TestSessionController {
   static String? _activeSession;
   static SimulationContext? _context;
+  static final EventTimeline _timeline = EventTimeline();
+
+  static EventTimeline get timeline => _timeline;
 
   static void startSession(String name) {
     _activeSession = name;
@@ -13,7 +15,7 @@ class TestSessionController {
 
     RuntimeTelemetry.reset();
     ProductionAlertSystem.reset();
-    EventTimeline.clear();
+    _timeline.clear();
 
     print("🧪 TEST SESSION STARTED: $name");
   }
@@ -27,7 +29,7 @@ class TestSessionController {
     print("Alerts: ${ProductionAlertSystem.alerts.length}");
 
     print("📊 EVENT TIMELINE:");
-    for (final e in EventTimeline.events) {
+    for (final e in _timeline.events) {
       print("${e['time']} | ${e['type']} | ${e['source']} | Phase: ${e['phase']}");
     }
 

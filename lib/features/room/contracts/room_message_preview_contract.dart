@@ -1,4 +1,4 @@
-import '../../models/message_model.dart';
+import 'package:mixvy/models/message_model.dart';
 
 class RoomMessagePreviewContract {
   static bool shouldRebuild(List<MessageModel> oldMsgs, List<MessageModel> newMsgs) {

@@ -70,3 +70,25 @@ class RoomPermissions {
     return isHost(actorRole) || canManageStageRole(actorRole);
   }
 }
+
+const Duration _ejectGraceWindow = Duration(seconds: 10);
+
+bool shouldEjectJoinedUserFromRoom({
+  required bool hasTrackedRoomJoin,
+  bool isJoiningRoom = false,
+  bool hasCurrentParticipant = false,
+  bool isUserInResolvedRoomState = false,
+  RoomMembershipState membershipState = RoomMembershipState.absent,
+  DateTime? lastConfirmedMembershipAt,
+  DateTime? now,
+}) {
+  if (!hasTrackedRoomJoin) return false;
+  if (isJoiningRoom) return false;
+  if (hasCurrentParticipant) return false;
+  if (isUserInResolvedRoomState) return false;
+  if (membershipState.shouldDeferRemoval) return false;
+  final lastMembership = lastConfirmedMembershipAt;
+  if (lastMembership == null) return false;
+  final effectiveNow = now ?? DateTime.now();
+  return effectiveNow.difference(lastMembership) > _ejectGraceWindow;
+}

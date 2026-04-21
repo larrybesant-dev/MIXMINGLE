@@ -1,4 +1,4 @@
-import '../../models/presence_model.dart';
+import '../providers/presence_provider.dart';
 
 class RoomActivityContract {
   static bool shouldRebuild(List<RoomPresenceModel> oldPresence, List<RoomPresenceModel> newPresence, Map<String, bool> oldTyping, Map<String, bool> newTyping) {

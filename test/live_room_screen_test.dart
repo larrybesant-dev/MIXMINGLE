@@ -24,7 +24,8 @@ import 'package:mixvy/features/room/room_controller.dart'
     show
         RoomMembershipState,
         roomControllerProvider,
-        roomParticipantCanBeShownAsTalking;
+        roomParticipantCanBeShownAsTalking,
+        shouldEjectJoinedUserFromRoom;
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
 void main() {

@@ -7,7 +7,7 @@ class RoomMetaState {
   RoomMetaState({required this.roomDoc});
 }
 
-final roomMetaStateProvider = StreamProvider.family<RoomMetaState, String>((ref, roomId) async* {
+final roomMetaStateProvider = StreamProvider.autoDispose.family<RoomMetaState, String>((ref, roomId) async* {
   Map<String, dynamic>? previous;
   await for (final doc in ref.watch(roomDocStreamProvider(roomId).stream)) {
     if (previous != null && !RoomMetaContract.shouldRebuild(previous, doc)) {

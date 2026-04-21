@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 export '../../models/room_participant_model.dart'
     show roomParticipantCanBeShownAsTalking;
 
+export 'room_permissions.dart' show shouldEjectJoinedUserFromRoom;
+
 export 'controllers/room_state.dart'
     show
         LiveRoomPhase,

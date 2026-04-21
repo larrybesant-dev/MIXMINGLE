@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/feed/providers/typing_providers.dart';
+import 'package:rxdart/rxdart.dart';
+import '../../feed/providers/typing_providers.dart';
 import 'presence_provider.dart';
-import '../../models/presence_model.dart';
 import '../contracts/room_activity_contract.dart';
 
 class RoomActivityState {
@@ -10,7 +10,7 @@ class RoomActivityState {
   RoomActivityState({required this.presence, required this.typing});
 }
 
-final roomActivityStateProvider = StreamProvider.family<RoomActivityState, String>((ref, roomId) async* {
+final roomActivityStateProvider = StreamProvider.autoDispose.family<RoomActivityState, String>((ref, roomId) async* {
   List<RoomPresenceModel>? previousPresence;
   Map<String, bool>? previousTyping;
   final presenceStream = ref.watch(roomPresenceStreamProvider(roomId).stream);

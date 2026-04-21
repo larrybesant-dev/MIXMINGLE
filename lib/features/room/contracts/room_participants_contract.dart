@@ -1,4 +1,4 @@
-import '../../models/room_participant_model.dart';
+import 'package:mixvy/models/room_participant_model.dart';
 
 bool _sameSet(List<RoomParticipantModel> a, List<RoomParticipantModel> b) {
   final aIds = a.map((e) => e.userId).toSet();
