@@ -25,9 +25,9 @@ import '../providers/user_provider.dart';
 import '../../features/room/controllers/live_room_controller.dart';
 import '../../features/room/controllers/live_room_media_controller.dart';
 import '../../features/room/controllers/webrtc_controller.dart';
-import '../../features/room/providers/participant_providers.dart';
-import '../../features/room/providers/message_providers.dart';
-import '../../features/room/providers/presence_provider.dart';
+// Removed old providers: participantsStreamProvider, messageStreamProvider, roomPresenceStreamProvider, typingStreamProvider
+// Retained only roomLiveStateProvider for data sourcing
+import 'package:mixvy/features/room/providers/room_live_state_provider.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/widgets/camera_wall.dart';
@@ -217,7 +217,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   Timer? _roomEntryMomentTimer;
   bool _showRoomEntryMoment = false;
   int _lastRenderedMessageCount = 0;
-  final Set<String> _recentChatters = {};
+  // Removed local `_recentChatters` variable
   final Map<String, Timer> _recentChatterTimers = {};
   final Set<String> _shownGiftEventIds = {};
   final List<_GiftToast> _giftToasts = [];
@@ -259,7 +259,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
   final Map<String, String?> _senderGenderById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
-  RoomParticipantModel? _secretComposerTarget;
+  // Removed local `_secretComposerTarget` variable
   bool _isSendingSecretMessage = false;
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
@@ -2345,9 +2345,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   void _markRecentChatter(String senderId) {
     if (!mounted) return;
     _recentChatterTimers[senderId]?.cancel();
-    setState(() => _recentChatters.add(senderId));
+    // No longer updating local _recentChatters; handled by roomLiveStateProvider
     _recentChatterTimers[senderId] = Timer(const Duration(seconds: 4), () {
-      if (mounted) setState(() => _recentChatters.remove(senderId));
+      // No local _recentChatters to update
       _recentChatterTimers.remove(senderId);
     });
   }
@@ -3967,6 +3967,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     ref.watch(liveRoomMediaControllerProvider(widget.roomId));
+    // Updated to use `roomState.messagePreview.recentChatters` from `roomLiveStateProvider`
+    final roomState = ref.watch(roomLiveStateProvider(widget.roomId));
     if (user == null) {
       return const AppPageScaffold(
         safeArea: false,
@@ -7023,6 +7025,8 @@ class _RoomRosterSidebar extends StatelessWidget {
           presence.userId.trim(),
     };
     final hasPresenceSnapshot = presenceList.isNotEmpty;
+    // Replace `recentChatters` with `roomState.messagePreview.recentChatters`
+    final recentChatters = roomState.messagePreview.recentChatters;
     for (final roomUserId in roomState.users) {
       final normalizedUserId = roomUserId.trim();
       final shouldIncludeFromSharedState =
