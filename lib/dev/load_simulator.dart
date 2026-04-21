@@ -1,42 +1,39 @@
 import 'dart:async';
 import '../observability/runtime_telemetry.dart';
 import '../observability/event_timeline.dart';
-import '../observability/simulation_phase.dart';
 
 class LoadSimulator {
-  static void runTypingStorm(String roomId) {
-    SimulationPhase.start("typing_storm");
-    print("Running typing storm for room: \$roomId");
+  final EventTimeline timeline;
+
+  LoadSimulator(this.timeline);
+
+  void runTypingStorm(String roomId, SimulationContext ctx) {
+    print("[${ctx.phase}] Running typing storm for room: $roomId");
     for (int i = 0; i < 20; i++) {
       Future.delayed(Duration(milliseconds: i * 200), () {
-        EventTimeline.record("SIM_EVENT", "typing:\$roomId");
-        RuntimeTelemetry.recordRebuild("SIM:typing:\$roomId");
+        timeline.record("SIM_EVENT", "typing:$roomId", ctx);
+        RuntimeTelemetry.recordRebuild("SIM:typing:$roomId", ctx);
       });
     }
-    SimulationPhase.end();
   }
 
-  static void runMessageBurst(String roomId) {
-    SimulationPhase.start("message_burst");
-    print("Running message burst for room: \$roomId");
+  void runMessageBurst(String roomId, SimulationContext ctx) {
+    print("[${ctx.phase}] Running message burst for room: $roomId");
     for (int i = 0; i < 30; i++) {
       Future.delayed(Duration(milliseconds: i * 150), () {
-        EventTimeline.record("SIM_EVENT", "message:\$roomId");
-        RuntimeTelemetry.recordRebuild("SIM:message:\$roomId");
+        timeline.record("SIM_EVENT", "message:$roomId", ctx);
+        RuntimeTelemetry.recordRebuild("SIM:message:$roomId", ctx);
       });
     }
-    SimulationPhase.end();
   }
 
-  static void runPresenceFlap(String userId) {
-    SimulationPhase.start("presence_flap");
-    print("Running presence flap for user: \$userId");
+  void runPresenceFlap(String userId, SimulationContext ctx) {
+    print("[${ctx.phase}] Running presence flap for user: $userId");
     for (int i = 0; i < 10; i++) {
       Future.delayed(Duration(milliseconds: i * 500), () {
-        EventTimeline.record("SIM_EVENT", "presence:\$userId");
-        RuntimeTelemetry.recordRebuild("SIM:presence:\$userId");
+        timeline.record("SIM_EVENT", "presence:$userId", ctx);
+        RuntimeTelemetry.recordRebuild("SIM:presence:$userId", ctx);
       });
     }
-    SimulationPhase.end();
   }
 }

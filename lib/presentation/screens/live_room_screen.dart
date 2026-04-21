@@ -15,8 +15,11 @@ import '../../core/telemetry/app_telemetry.dart';
 import '../../models/mic_access_request_model.dart';
 import '../../models/moderation_model.dart';
 import '../../models/message_model.dart';
+import 'package:mixvy/models/message_model.dart';
 import '../../models/presence_model.dart';
+import 'package:mixvy/features/room/providers/presence_provider.dart';
 import '../../models/room_participant_model.dart';
+import 'package:mixvy/models/room_participant_model.dart';
 import '../providers/friend_provider.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/controllers/live_room_controller.dart';
@@ -58,6 +61,8 @@ import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/providers/user_cam_permissions_provider.dart';
 import '../../features/room/providers/cam_view_request_provider.dart';
 import '../../features/room/providers/room_slot_provider.dart';
+import 'package:mixvy/features/room/providers/room_live_state_provider.dart';
+import 'package:mixvy/features/room/providers/cam_view_request_provider.dart';
 import '../../dev/app_debug_flags.dart';
 import '../../dev/room_inspector_panel.dart';
 import '../../features/room/room_permissions.dart';
@@ -667,13 +672,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       await warmService.initialize(credentials.appId);
       // Don't join the channel — just getting the SDK ready.
       await warmService.dispose();
-      if (mounted) {
-        _preWarmDone = true;
+        if (mounted) {
+          _preWarmDone = true;
+        }
+        _logLiveRoom('prewarm:done');
+      } catch (e) {
+        // Pre-warm is best-effort; failures are silent.
+        _logLiveRoom('prewarm:failed (non-fatal)', error: e);
       }
-      _logLiveRoom('prewarm:done');
-    } catch (e) {
-      // Pre-warm is best-effort; failures are silent.
-      _logLiveRoom('prewarm:failed (non-fatal)', error: e);
     }
   }
 

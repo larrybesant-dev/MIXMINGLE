@@ -1,20 +1,20 @@
 import 'simulation_phase.dart';
+import 'runtime_telemetry.dart';
 
 class EventTimeline {
-  static final List<Map<String, dynamic>> _events = [];
+  final List<Map<String, dynamic>> _events = [];
 
-  static void record(String type, String source) {
-    final currentPhase = SimulationPhase.current;
+  void record(String type, String source, SimulationContext ctx) {
     _events.add({
       "type": type,
       "source": source,
-      "phase": currentPhase,
+      "phase": ctx.phase,
       "time": DateTime.now().millisecondsSinceEpoch,
     });
-    print("Event recorded: type=$type, source=$source, phase=$currentPhase");
+    print("[${ctx.phase}] Event recorded: type=$type, source=$source");
   }
 
-  static List<Map<String, dynamic>> get events => List.unmodifiable(_events);
+  List<Map<String, dynamic>> get events => List.unmodifiable(_events);
 
-  static void clear() => _events.clear();
+  void clear() => _events.clear();
 }

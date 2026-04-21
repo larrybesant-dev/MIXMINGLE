@@ -5,17 +5,20 @@ import 'package:mixvy/observability/simulation_phase.dart';
 void main() {
   TestSessionController.startSession("ROOM_LOAD_VALIDATION");
 
-  SimulationPhase.start("typing_storm");
+  final typingStormPhase = SimulationPhase("typing_storm");
+  typingStormPhase.start();
   LoadSimulator.runTypingStorm("room_1");
-  SimulationPhase.end();
+  typingStormPhase.end();
 
-  SimulationPhase.start("message_burst");
+  final messageBurstPhase = SimulationPhase("message_burst");
+  messageBurstPhase.start();
   LoadSimulator.runMessageBurst("room_1");
-  SimulationPhase.end();
+  messageBurstPhase.end();
 
-  SimulationPhase.start("presence_flap");
+  final presenceFlapPhase = SimulationPhase("presence_flap");
+  presenceFlapPhase.start();
   LoadSimulator.runPresenceFlap("user_1");
-  SimulationPhase.end();
+  presenceFlapPhase.end();
 
   Future.delayed(const Duration(seconds: 5), () {
     TestSessionController.endSession();
