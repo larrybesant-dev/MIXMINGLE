@@ -31,5 +31,5 @@ final roomLiveStateProvider =
         typing: activity.typing,
       );
     },
-  );
+  ).debounceTime(const Duration(milliseconds: 50));
 });
