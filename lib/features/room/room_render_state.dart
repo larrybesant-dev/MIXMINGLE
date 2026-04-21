@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'controllers/live_room_media_controller.dart';
-import 'controllers/room_state.dart';
+import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Layout axis

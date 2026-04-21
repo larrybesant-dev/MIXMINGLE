@@ -127,7 +127,9 @@ class RtdbPresenceService {
     _camOn = camOn;
     try {
       await _sessionRef(userId).update(_onlinePayload());
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[RTDB] setCamOn update failed (non-fatal): $e');
+    }
   }
 
   Future<void> setMicOn(String userId, {required bool micOn}) async {
@@ -135,7 +137,9 @@ class RtdbPresenceService {
     _micOn = micOn;
     try {
       await _sessionRef(userId).update(_onlinePayload());
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[RTDB] setMicOn update failed (non-fatal): $e');
+    }
   }
 
   Future<void> disconnect(String userId) async {

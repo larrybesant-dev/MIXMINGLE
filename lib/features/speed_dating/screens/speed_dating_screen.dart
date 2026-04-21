@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -138,7 +139,11 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     _sessionSub = null;
     try {
       await _service.leaveQueue();
-    } catch (_) {}
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[SpeedDating] leaveQueue failed: $e\n$stack');
+      }
+    }
     if (mounted) {
       setState(() {
         _queueMode = false;

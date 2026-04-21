@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -107,7 +108,11 @@ class _UserProfilePopupSheetState
         _isFriend = friendIds.contains(widget.userId);
         _isBlocked = blocked;
       });
-    } catch (_) {}
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[UserProfilePopup] _loadRelationship failed: $e\n$stack');
+      }
+    }
   }
 
   Color _vipColor(int level) {

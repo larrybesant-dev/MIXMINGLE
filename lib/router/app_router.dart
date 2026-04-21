@@ -146,6 +146,16 @@ String? _currentAvatarUrl(Ref ref) {
 }
 
 int _appShellIndexForLocation(String matchedLocation) {
+  // Dynamic routes must be checked before the switch — GoRouter resolves
+  // path parameters so the matched location will be e.g. '/messages/abc123',
+  // not the template '/messages/:conversationId'.
+  if (matchedLocation.startsWith('/messages/')) return 2;
+  if (matchedLocation.startsWith('/profile/')) return 4;
+  if (matchedLocation.startsWith('/group/')) return 3;
+  if (matchedLocation.startsWith('/followers/')) return 3;
+  if (matchedLocation.startsWith('/following/')) return 3;
+  if (matchedLocation.startsWith('/stories/')) return 0;
+
   switch (matchedLocation) {
     case '/':
     case '/dashboard':
@@ -161,18 +171,13 @@ int _appShellIndexForLocation(String matchedLocation) {
       return 1;
     case '/messages':
     case '/messages/new':
-    case '/messages/:conversationId':
       return 2;
     case '/social':
     case '/friends':
     case '/groups':
-    case '/group/:groupId':
     case '/create-group':
-    case '/followers/:userId':
-    case '/following/:userId':
       return 3;
     case '/profile':
-    case '/profile/:userId':
     case '/edit-profile':
     case '/bookmarks':
     case '/notifications':

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -94,7 +95,11 @@ class _FloatingWhisperPanelWidgetState
             senderAvatarUrl: currentUser.avatarUrl,
             content: text,
           );
-    } catch (_) {}
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[FloatingWhisperPanel] sendMessage failed: $e\n$stack');
+      }
+    }
   }
 
   @override

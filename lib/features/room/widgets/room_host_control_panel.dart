@@ -1171,8 +1171,8 @@ class _ModeratorsTab extends ConsumerWidget {
                       ],
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
             const SizedBox(height: 16),
             _SectionHeader('Add Moderator'),
             if (eligible.isEmpty)
@@ -1214,8 +1214,8 @@ class _ModeratorsTab extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
-              ),
+                );
+              }),
             const SizedBox(height: 32),
             // ── Danger Zone: End Room ──────────────────────────────────────
             _SectionHeader('Danger Zone'),

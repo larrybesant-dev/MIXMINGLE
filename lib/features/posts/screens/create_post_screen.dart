@@ -326,11 +326,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ? null
                       : _pickVideo,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.emoji_emotions),
-                  tooltip: 'Emoji picker not enabled in beta',
-                  onPressed: null,
-                ),
+// Emoji picker intentionally hidden until implemented.
+                // IconButton(
+                //   icon: const Icon(Icons.emoji_emotions),
+                //   onPressed: null,
+                // ),
               ],
             ),
           ],

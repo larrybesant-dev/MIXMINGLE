@@ -1,6 +1,8 @@
 class PaymentService {
 	Future<void> processPayment(double amount) async {
-		// Stripe-ready structure
-		await Future.delayed(Duration(seconds: 1));
+		throw UnimplementedError(
+			'processPayment is not implemented. '
+			'Wire PaymentService → Firebase Function → Stripe before enabling payments.',
+		);
 	}
 }

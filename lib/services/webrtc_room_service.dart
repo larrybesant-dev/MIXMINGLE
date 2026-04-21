@@ -591,7 +591,9 @@ class WebRtcRoomService extends RtcRoomService {
             for (final peer in _peers.values) {
               try {
                 await peer.pc.addTrack(track, _localStream!);
-              } catch (_) {}
+              } catch (e) {
+                _log('addTrack to active peer failed (non-fatal): $e');
+              }
             }
           }
           _log(
@@ -808,7 +810,9 @@ class WebRtcRoomService extends RtcRoomService {
   void _teardownMixer() {
     try {
       _mixerCtx?.close();
-    } catch (_) {}
+    } catch (e) {
+      _log('AudioContext mixer close failed (non-fatal): $e');
+    }
     _mixerCtx = null;
     _mixerDest = null;
   }
@@ -827,7 +831,9 @@ class WebRtcRoomService extends RtcRoomService {
             if (jsSender != null) {
               await jsSender.replaceTrack(jsTrack).toDart;
             }
-          } catch (_) {}
+          } catch (e) {
+            _log('replaceTrack failed (non-fatal): $e');
+          }
         }
       }
     }
@@ -911,7 +917,9 @@ class WebRtcRoomService extends RtcRoomService {
     for (final pc in _answerPcs.values) {
       try {
         await pc.close();
-      } catch (_) {}
+      } catch (e) {
+        _log('answerPc.close failed during dispose (non-fatal): $e');
+      }
     }
     _answerPcs.clear();
 
@@ -940,7 +948,9 @@ class WebRtcRoomService extends RtcRoomService {
     if (_roomId != null) {
       try {
         await _peersCol.doc(_localUserId).delete();
-      } catch (_) {}
+      } catch (e) {
+        _log('WebRTC presence delete failed (non-fatal): $e');
+      }
     }
 
     _localVad?.dispose();
@@ -984,7 +994,9 @@ class WebRtcRoomService extends RtcRoomService {
         data['streamRefreshAt'] = FieldValue.serverTimestamp();
       }
       await _peersCol.doc(_localUserId).update(data);
-    } catch (_) {}
+    } catch (e) {
+      _log('_updatePresence Firestore write failed (non-fatal): $e');
+    }
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -1341,7 +1353,9 @@ class WebRtcRoomService extends RtcRoomService {
     if (stalePc != null) {
       try {
         await stalePc.close();
-      } catch (_) {}
+      } catch (e) {
+        _log('stale PC close failed (non-fatal): $e');
+      }
     }
 
     final callRef = _callsCol.doc(callId);
@@ -1487,7 +1501,9 @@ class WebRtcRoomService extends RtcRoomService {
       _clearIceCandidateScope('broadcaster:$callId');
       try {
         pc?.close();
-      } catch (_) {}
+      } catch (e) {
+        _log('stale answerPc.close failed (non-fatal): $e');
+      }
     }
     _log('closed ${staleCallIds.length} stale answer PC(s) for stream handoff');
   }
@@ -1694,10 +1710,14 @@ class _PeerEntry {
     renderer.srcObject = null;
     try {
       await renderer.dispose();
-    } catch (_) {}
+    } catch (e) {
+      developer.log('renderer.dispose failed (non-fatal): $e', name: 'WebRTC');
+    }
     try {
       await pc.close();
-    } catch (_) {}
+    } catch (e) {
+      developer.log('pc.close failed (non-fatal): $e', name: 'WebRTC');
+    }
   }
 }
 
@@ -1818,7 +1838,9 @@ class _VadMonitor {
     _currentLevel = 0.0;
     try {
       _ctx?.close();
-    } catch (_) {}
+    } catch (e) {
+      developer.log('VAD AudioContext close failed (non-fatal): $e', name: 'WebRTC');
+    }
     _ctx = null;
     _analyser = null;
   }

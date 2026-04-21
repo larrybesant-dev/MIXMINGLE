@@ -2380,7 +2380,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (userId == null || userId.isEmpty) return;
     try {
       await _roomController.setTyping(userId: userId, isTyping: false);
-    } catch (_) {}
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[LiveRoom] _clearTypingStatus failed: $e\n$stack');
+      }
+    }
   }
 
   void _appendEmoji(String emoji) {
@@ -2786,7 +2790,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         // define their own local copy, and guarantees every action refers to
         // the same immutable name snapshot for this sheet invocation.
         final targetName =
-            presentationByUserId[target.userId]?.displayName?.trim().isNotEmpty ==
+            presentationByUserId[target.userId]?.displayName.trim().isNotEmpty ==
                     true
                 ? presentationByUserId[target.userId]!.displayName
                 : resolvePublicUsername(uid: target.userId);
@@ -3595,7 +3599,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       try {
         final slotService = ref.read(roomSlotServiceProvider);
         await slotService.releaseSlot(widget.roomId, userId);
-      } catch (_) {}
+      } catch (e, stack) {
+        _logLiveRoom('releaseSlot failed (non-fatal): $e', error: e, stackTrace: stack);
+      }
       _mediaController.setClaimedSlotId(null);
     }
 
@@ -3606,8 +3612,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       await ref
           .read(liveRoomControllerProvider(widget.roomId).notifier)
           .leaveRoom();
-    } catch (_) {
+    } catch (e, stack) {
       // Best-effort cleanup when users leave a room.
+      _logLiveRoom('leaveRoom cleanup error (non-fatal): $e', error: e, stackTrace: stack);
     } finally {
       _joinedUserId = null;
       AppTelemetry.clearRoomState();
@@ -3643,7 +3650,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           resolved.putIfAbsent(id, () => resolvePublicUsername(uid: id));
         }
         if (mounted) setState(() => _senderDisplayNameById.addAll(resolved));
-      } catch (_) {}
+      } catch (e, stack) {
+        _logLiveRoom('loadUserLookup failed (non-fatal): $e', error: e, stackTrace: stack);
+      }
     }
     if (!mounted) return;
     final selected = Set<String>.from(currentAllowedViewers);
