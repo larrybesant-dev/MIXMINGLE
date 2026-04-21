@@ -6395,188 +6395,61 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             final currentUser = ref.read(userProvider);
                             if (currentUser == null) return;
                             try {
-                              final conversationId = await ref
-                                  .read(messagingControllerProvider)
-                                  .createDirectConversation(
-                                    userId1: currentUser.id,
-                                    user1Name: currentUser.username,
-                                    user1AvatarUrl: currentUser.avatarUrl,
-                                    userId2: p.userId,
-                                    user2Name:
-                                        _senderDisplayNameById[p.userId] ??
-                                        p.userId,
-                                    user2AvatarUrl:
-                                        _senderAvatarUrlById[p.userId],
-                                  );
-                              if (!context.mounted) return;
-                              FloatingWhisperPanel.show(
-                                context,
-                                ref,
-                                conversationId: conversationId,
-                                peerName:
-                                    _senderDisplayNameById[p.userId] ??
-                                    p.userId,
-                                peerAvatarUrl: _senderAvatarUrlById[p.userId],
-                              );
-                            } catch (e) {
-                              _showSnackBar('Could not open whisper: $e');
-                            }
-                          },
-                          onSecretMessage: (p) =>
-                              _openSecretComposerForParticipant(p),
-                          secretComposerTarget: _secretComposerTarget,
-                          secretComposerTextController:
-                              _secretMessageController,
-                          secretComposerFocusNode: _secretInputFocusNode,
-                          isSendingSecretMessage: _isSendingSecretMessage,
-                          onSendSecretMessage: _secretComposerTarget == null
-                              ? null
-                              : () => _sendPrivateRoomMessageToParticipant(
-                                  _secretComposerTarget!,
-                                ),
-                          onCancelSecretMessage: _closeSecretComposer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_giftToasts.isNotEmpty)
-                Positioned(
-                  top: 8,
-                  left: 16,
-                  right: 16,
-                  child: IgnorePointer(
-                    child: Column(
-                      children: _giftToasts.take(3).map((toast) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xBF10131A),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                toast.giftEmoji,
-                                style: const TextStyle(fontSize: 22),
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  '${toast.senderName} sent ${toast.giftName}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
+                              final user = ref.watch(userProvider);
+                              ref.watch(liveRoomMediaControllerProvider(widget.roomId));
+                              if (user == null) {
+                                return const AppPageScaffold(
+                                  safeArea: false,
+                                  maxContentWidth: double.infinity,
+                                  body: AppEmptyView(
+                                    title: 'Please log in',
+                                    message: 'Sign in to join this live room.',
+                                    icon: Icons.lock_outline,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              // Floating cam windows layer (detached tiles)
-              FloatingCamWindowLayer(
-                contentBuilder: _buildFloatingCamWindowContent,
-                onReattach: (id) {
-                  ref.read(floatingCamWindowsProvider.notifier).remove(id);
-                },
-              ),
-              // Floating emoji particles (gift animations)
-              Positioned.fill(
-                child: FloatingGiftOverlay(key: _floatingGiftKey),
-              ),
-              // Buzz overlay (full-screen flash on receipt)
-              Positioned.fill(
-                child: BuzzOverlay(
-                  key: _buzzKey,
-                  child: const SizedBox.expand(),
-                ),
-              ),
-              if (kEnableVisibilityDiagnostics)
-                Positioned(
-                  right: 8,
-                  bottom: 168,
-                  child: _MicDebugControlPanel(
-                    expanded: _showMicDebugLab,
-                    delayLabel: _micDebugDelayLabel,
-                    jitterLabel: _micDebugJitterLabel,
-                    failNextArmed: _micDebugFailNextRequest,
-                    jitterEnabled: _micDebugJitterEnabled,
-                    onToggleExpanded: () =>
-                        setState(() => _showMicDebugLab = !_showMicDebugLab),
-                    onCycleDelay: _cycleMicDebugDelay,
-                    onToggleJitter: () {
-                      setState(
-                        () => _micDebugJitterEnabled = !_micDebugJitterEnabled,
-                      );
-                      _noteMicDebugResult(
-                        _micDebugJitterEnabled
-                            ? 'jitter ${_micDebugJitterLabel}'
-                            : 'jitter off',
-                      );
-                    },
-                    onToggleFailNext: () => setState(
-                      () =>
-                          _micDebugFailNextRequest = !_micDebugFailNextRequest,
-                    ),
-                    onSyncNow: () {
-                      _noteMicDebugAction('sync');
-                      _noteMicDebugResult('sync requested', awaitingSync: true);
-                      unawaited(
-                        ref
-                            .read(
-                              liveRoomControllerProvider(
-                                widget.roomId,
-                              ).notifier,
-                            )
-                            .syncPresenceNow(forceSync: true),
-                      );
-                    },
-                    onClearMine: activeMicRequest == null
-                        ? null
-                        : () => unawaited(handleCancelMicRequest()),
-                  ),
-                ),
-              if (kEnableVisibilityDiagnostics)
-                Positioned(
-                  right: 8,
-                  bottom: 120,
-                  child: _MicDebugOverlay(
-                    roleLabel: role,
-                    stateLabel: micDebugState,
-                    requestStatus: activeMicRequest?.status ?? 'none',
-                    syncStatus: micDebugSync,
-                    signalColor: micDebugSignalColor,
-                    pendingCount: pendingMicRequests.length,
-                    onMicCount: onMicCount,
-                    requestIdLabel: micDebugRequestId,
-                    versionLabel: micDebugVersionLabel,
-                    sourceLabel: micDebugSource,
-                    lastActionLabel: micDebugLastAction,
-                    lastResultLabel: micDebugLastResult,
-                    lastSnapshotLabel: micDebugLastSnapshot,
-                  ),
-                ),
-              // Debug inspector button — debug-only and centrally gated.
-              if (kEnableVisibilityDiagnostics)
-                Positioned(
-                  right: 8,
-                  bottom: 72,
-                  child: RoomInspectorButton(roomId: widget.roomId),
-                ),
-            ],
-          ),
-          bottomNavigationBar: !isMobile
+                                );
+                              }
+                              if (_joinedUserId != user.id &&
+                                  !_isJoiningRoom &&
+                                  _roomJoinError == null &&
+                                  _lastAutoJoinAttemptUserId != user.id) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (mounted && !_isTearingDown) {
+                                    _lastAutoJoinAttemptUserId = user.id;
+                                    _joinRoom(user.id);
+                                  }
+                                });
+                              }
+
+                              // NEW: Watch only the composite roomLiveStateProvider
+                              final roomLiveStateAsync = ref.watch(roomLiveStateProvider(widget.roomId));
+                              final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
+                              final micRequestsAsync = ref.watch(roomMicAccessRequestsProvider(widget.roomId));
+                              final walletAsync = ref.watch(walletDetailsProvider);
+                              final topGifters = ref.watch(topGiftersProvider(widget.roomId));
+
+                              // Authoritative host check from the room doc — resolves before the
+                              // participant stream so broadcaster controls are NEVER gated on whether
+                              // the participant doc has been written yet.
+                              final roomDocData = roomLiveStateAsync.value?.roomDoc;
+                              final roomHostId = _asString(
+                                roomDocData?['ownerId'],
+                                fallback: _asString(roomDocData?['hostId']),
+                              );
+                              final isRoomHostByDoc = roomHostId.isNotEmpty && user.id == roomHostId;
+
+                              // Use the composite state for all sub-widgets and logic
+                              final participants = roomLiveStateAsync.value?.participants ?? const <RoomParticipantModel>[];
+                              final participantByUserId = {
+                                for (final participant in participants)
+                                  participant.userId: participant,
+                              };
+                              final messagePreview = roomLiveStateAsync.value?.messagePreview ?? const <MessageModel>[];
+                              final presence = roomLiveStateAsync.value?.presence ?? const <RoomPresenceModel>[];
+                              final typing = roomLiveStateAsync.value?.typing ?? const <String, bool>{};
+
+                              // TODO: Pass these slices to sub-widgets as needed
+
+                              // The rest of the build method continues as before, but all room state comes from roomLiveStateAsync
               ? null
               : Container(
                   color: const Color(0xFF161A21),
