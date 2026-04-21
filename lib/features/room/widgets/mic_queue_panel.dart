@@ -108,18 +108,47 @@ class _MicQueuePanelState extends ConsumerState<MicQueuePanel> {
               // Header
               Container(
                 height: 28,
-                color: npSurfaceHigh,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF140E22), Color(0xFF0B0A12)],
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.mic_none, color: npPrimary, size: 14),
+                    const Icon(
+                      Icons.waving_hand_outlined,
+                      color: Color(0xFFD4A853),
+                      size: 13,
+                    ),
                     const SizedBox(width: 6),
-                    Text(
-                      'Mic Queue  •  ${pending.length}',
-                      style: const TextStyle(
-                        color: npPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                    const Expanded(
+                      child: Text(
+                        'WAITING TO SPEAK',
+                        style: TextStyle(
+                          color: Color(0xFFD4A853),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0x50D4A853),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${pending.length}',
+                        style: const TextStyle(
+                          color: Color(0xFFD4A853),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],

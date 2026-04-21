@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/room_participant_model.dart';
+import '../../../presentation/providers/user_provider.dart';
 import '../controllers/live_room_controller.dart';
 import '../providers/participant_providers.dart';
 import 'room_user_tile.dart';
@@ -27,9 +28,7 @@ class OnMicPanel extends ConsumerWidget {
   /// Display-name lookup keyed by userId (same map used by UserListPanel).
   final Map<String, String> displayNameById;
 
-  static const _kSurface = Color(0xFF0B0B0B);
-  static const _kSurfaceHigh = Color(0xFF1C1617);
-  static const _kGold = Color(0xFFD4AF37);
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,8 +56,8 @@ class OnMicPanel extends ConsumerWidget {
   Widget _buildPanel(BuildContext context, List<RoomParticipantModel> sorted) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: _kSurface,
-        border: Border(top: BorderSide(color: Color(0x14FFFFFF))),
+        color: Color(0xFF0B0A12),
+        border: Border(top: BorderSide(color: Color(0x207C5FFF))),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -66,48 +65,79 @@ class OnMicPanel extends ConsumerWidget {
         children: [
           // ── Header ───────────────────────────────────────────────────
           Container(
-            height: 28,
-            color: _kSurfaceHigh,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            height: 30,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF16122A), Color(0xFF0B0A12)],
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 const _PulsingMicIcon(),
                 const SizedBox(width: 6),
-                Text(
-                  'On Mic  •  ${sorted.length}',
-                  style: const TextStyle(
-                    color: _kGold,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
+                const Text(
+                  'ON STAGE',
+                  style: TextStyle(
+                    color: Color(0xFFD4A853),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
                   ),
                 ),
+                const SizedBox(width: 6),
+                if (sorted.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0x509B2535),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${sorted.length}',
+                      style: const TextStyle(
+                        color: Color(0xFFFF6E84),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
           if (sorted.isEmpty)
             const Padding(
-              padding: EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Text(
-                'Nobody on mic yet',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
+              padding: EdgeInsets.fromLTRB(14, 10, 14, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.mic_none, color: Color(0x60D4A853), size: 14),
+                  SizedBox(width: 6),
+                  Text(
+                    'Stage is open',
+                    style: TextStyle(
+                      color: Color(0x80D4A853),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ),
             )
           else
             SizedBox(
-              height: 104,
+              height: 116,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
+                  horizontal: 10,
+                  vertical: 8,
                 ),
                 itemCount: sorted.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final p = sorted[index];
                   final name =
@@ -122,7 +152,7 @@ class OnMicPanel extends ConsumerWidget {
                     isMe: isMe,
                     micExpiresAt: p.micExpiresAt,
                     layout: RoomUserTileLayout.grid,
-                    compact: true,
+                    compact: false,
                   );
                 },
               ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
@@ -93,7 +94,7 @@ class LiveRoomAppBarActions extends StatelessWidget {
           onToggleMic: onToggleMic,
           onToggleVideo: onToggleVideo,
           onLongPressVideo: onLongPressVideo,
-          showSystemAudioButton: false,
+          showSystemAudioButton: kIsWeb,
           showGrabMicButton: true,
           isOnMic: isOnMic,
           isMicFree: isMicFree,

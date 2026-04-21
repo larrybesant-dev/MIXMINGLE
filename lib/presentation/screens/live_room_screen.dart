@@ -44,6 +44,8 @@ import '../../features/room/widgets/room_host_control_panel.dart';
 import '../../features/room/widgets/live_room_app_bar_actions.dart';
 import '../../features/room/widgets/live_room_app_bar_status.dart';
 import '../../features/room/widgets/live_room_media_action_strip.dart';
+import '../../features/room/widgets/live_stage_spotlight.dart';
+import '../../features/room/room_render_state.dart';
 import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
@@ -495,6 +497,28 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   Set<int> get _requestedLowQualityRemoteUids =>
       _mediaState.requestedLowQualityRemoteUids;
   int get _localViewEpoch => _mediaState.localViewEpoch;
+
+  /// Derives the single composite render state from all RTC inputs.
+  ///
+  /// Layout ([StageViewMode]) and system health ([RoomSystemCondition]) are
+  /// separate axes — an error overlays the stage rather than replacing it.
+  bool get _hasAnyVideoTile {
+    final service = _agoraService;
+    if (service == null) return false;
+    final hasRemote = service.remoteUids.isNotEmpty;
+    final hasLocal = _isVideoEnabled && service.isLocalVideoCapturing;
+    return hasRemote || hasLocal;
+  }
+
+  /// Reads the current [RoomRenderState] from the upstream provider.
+  ///
+  /// [deriveRoomRenderState] runs in the Riverpod graph — the screen is a
+  /// pure renderer over this value. No layout or health logic lives here.
+  RoomRenderState get _renderState => deriveRoomRenderState(
+        mediaState: _mediaState,
+        hasRtcService: _agoraService != null,
+        hasVideoStreams: _hasAnyVideoTile,
+      );
 
   @override
   void initState() {
@@ -2757,6 +2781,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           liveRoomControllerProvider(widget.roomId).notifier,
         );
 
+        // Resolve once at builder scope — used by all action closures.
+        // Prevents "targetName not defined" errors in closures that don't
+        // define their own local copy, and guarantees every action refers to
+        // the same immutable name snapshot for this sheet invocation.
+        final targetName =
+            presentationByUserId[target.userId]?.displayName?.trim().isNotEmpty ==
+                    true
+                ? presentationByUserId[target.userId]!.displayName
+                : resolvePublicUsername(uid: target.userId);
+
         final actions = <RoomActionItem>[
           RoomActionItem(
             label: 'View profile',
@@ -2806,30 +2840,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             presentationByUserId[target.userId]?.avatarUrl,
                       );
                   if (!mounted) return;
-                  final targetName =
-                      presentationByUserId[target.userId]?.displayName ??
-                      resolvePublicUsername(uid: target.userId);
-                  final peerName = targetName;
                   final peerAvatar =
                       presentationByUserId[target.userId]?.avatarUrl;
                   if (kIsWeb) {
                     WebPopoutService().openWhisperWindow(
                       target.userId,
-                      peerName,
+                      targetName,
                     );
                   } else if (defaultTargetPlatform == TargetPlatform.windows ||
                       defaultTargetPlatform == TargetPlatform.macOS ||
                       defaultTargetPlatform == TargetPlatform.linux) {
                     await DesktopWindowService().openWhisperWindow(
                       target.userId,
-                      peerName,
+                      targetName,
                     );
                   } else {
                     FloatingWhisperPanel.show(
                       context,
                       ref,
                       conversationId: conversationId,
-                      peerName: peerName,
+                      peerName: targetName,
                       peerAvatarUrl: peerAvatar,
                     );
                   }
@@ -2979,9 +3009,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           liveRoomControllerProvider(widget.roomId).notifier,
                         )
                         .demoteSpeaker(target.userId);
-                    final targetName =
-                        presentationByUserId[target.userId]?.displayName ??
-                        resolvePublicUsername(uid: target.userId);
                     _showSnackBar('$targetName removed from mic.');
                   } else {
                     await ref
@@ -2992,9 +3019,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           actorUserId: currentUserId,
                           targetUserId: target.userId,
                         );
-                    final targetName =
-                        presentationByUserId[target.userId]?.displayName ??
-                        resolvePublicUsername(uid: target.userId);
                     _showSnackBar('$targetName invited to the mic!');
                   }
                 } catch (e) {
@@ -3011,9 +3035,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   await ref
                       .read(liveRoomControllerProvider(widget.roomId).notifier)
                       .setSpotlightUser(target.userId);
-                  final targetName =
-                      presentationByUserId[target.userId]?.displayName ??
-                      resolvePublicUsername(uid: target.userId);
                   _showSnackBar('$targetName is now spotlighted!');
                 } catch (e) {
                   _showSnackBar('Could not spotlight user: $e');
@@ -4958,9 +4979,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 top: 0,
                 bottom: 0,
                 width: camsW,
-                child: _agoraService != null
-                    ? Builder(
-                        builder: (context) {
+                child: Builder(
+                    builder: (context) {
                           final rawMaxBc = roomData?['maxBroadcasters'];
                           final slotCount = rawMaxBc is num
                               ? rawMaxBc.toInt()
@@ -5056,14 +5076,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 );
                               })
                               .toList(growable: false);
+                          final showLocalTile =
+                              (_agoraService?.isLocalVideoCapturing ?? false) &&
+                              !localIsFloating;
+                          // Render from composite state — layout and error
+                          // are independent axes. Derivation lives in
+                          // deriveRoomRenderState(), not in this widget.
+                          final renderState = _renderState;
+                          switch (renderState.layout) {
+                            case StageViewMode.noSession:
+                            case StageViewMode.spotlight:
+                              return LiveStageSpotlight(
+                                roomId: widget.roomId,
+                                roomName: roomName,
+                                displayNameById: _senderDisplayNameById,
+                                avatarUrlById: _senderAvatarUrlById,
+                                viewerCount: participantsInRoom.length,
+                                primaryActionLabel: roomPrimaryActionLabel,
+                                onPrimaryAction: roomPrimaryAction,
+                              );
+                            case StageViewMode.cameraWall:
+                              break;
+                          }
                           return CameraWall(
                             roomId: widget.roomId,
                             roomName: roomName,
                             localLabel: currentSessionDisplayName,
-                            showLocalTile:
-                                (_agoraService?.isLocalVideoCapturing ??
-                                    false) &&
-                                !localIsFloating,
+                            showLocalTile: showLocalTile,
                             localHasMic: liveRoomState.isSpeaker(user.id),
                             localSpeaking: liveRoomState.isSpeaker(user.id),
                             localViewerCount: liveRoomState.viewerCountFor(
@@ -5136,28 +5175,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             },
                           );
                         },
-                      )
-                    : const ColoredBox(
-                        color: Color(0xFF0D0A0C),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('🔴', style: TextStyle(fontSize: 48)),
-                              SizedBox(height: 12),
-                              Text(
-                                "You're live 🔴\nInvite people or start the vibe",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
+
               ),
               // ── CHAT COLUMN RESIZE HANDLE ─────────────────────────────
               Positioned(
@@ -5258,7 +5277,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   ),
                 ),
               // ── CALL ERROR BANNER ─────────────────────────────────────
-              if (_callError != null)
+              // Reads from _renderState.condition — layout is unaffected.
+              if (_renderState.hasError)
                 Positioned(
                   top: spotlightName != null ? 38 : 0,
                   left: 0,
@@ -5273,7 +5293,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _callError!,
+                          _renderState.errorMessage ?? '',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -5300,7 +5320,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   ),
                 ),
               // ── CONNECTING PROGRESS ───────────────────────────────────
-              if (_isCallConnecting)
+              if (_renderState.isReconnecting)
                 const Positioned(
                   top: 0,
                   left: 0,
@@ -5308,7 +5328,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   child: LinearProgressIndicator(),
                 ),
               Positioned(
-                top: _callError != null
+                top: _renderState.hasError
                     ? (spotlightName != null ? 112 : 72)
                     : (spotlightName != null ? 40 : 8),
                 left: 12,
@@ -5586,9 +5606,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 width: isMobile ? screenWidth : _chatColW,
                 child: DecoratedBox(
                   decoration: const BoxDecoration(
-                    color: Color(0xFF16181F),
+                    color: Color(0xFF0F1018),
                     border: Border(
-                      left: BorderSide(color: Color(0xFF2E2F3A), width: 1),
+                      left: BorderSide(color: Color(0x407C5FFF), width: 1),
                     ),
                   ),
                   child: Row(
@@ -5596,10 +5616,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                     children: [
                       Expanded(
                         child: DockablePanel(
-                          title: 'Room Chat',
+                          title: 'Chat',
                           icon: Icons.chat_bubble_outline,
-                          backgroundColor: const Color(0xFF16181F),
-                          headerColor: const Color(0xFF23253A),
+                          backgroundColor: const Color(0xFF0F1018),
+                          headerColor: const Color(0xFF16192A),
                           actions: [
                             panelMoveBtn(
                               'chat',
@@ -6236,7 +6256,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 bottom: 0,
                 width: isMobile ? screenWidth : kUsersW,
                 child: ColoredBox(
-                  color: const Color(0xFF161A21),
+                  color: const Color(0xFF0D0C14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -6272,7 +6292,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       Container(
                         height: 32,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF241820),
+                          color: Color(0xFF1A1020),
                           border: Border(
                             left: BorderSide(
                               color: Color(0xFF2E2F3A),
@@ -6291,7 +6311,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             const SizedBox(width: 6),
                             const Expanded(
                               child: Text(
-                                'Users',
+                                'People',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -6302,13 +6322,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             panelMoveBtn(
                               'users',
                               -1,
-                              tooltip: 'Move Users left',
+                              tooltip: 'Move People left',
                               icon: Icons.chevron_left,
                             ),
                             panelMoveBtn(
                               'users',
                               1,
-                              tooltip: 'Move Users right',
+                              tooltip: 'Move People right',
                               icon: Icons.chevron_right,
                             ),
                           ],
@@ -6688,7 +6708,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           localAudioLevel: _agoraService?.localAudioLevel ?? 0,
                           onToggleMic: _toggleMic,
                           onToggleVideo: _toggleVideo,
-                          showSystemAudioButton: false,
+                          showSystemAudioButton: kIsWeb,
                           onToggleSystemAudio: _toggleSystemAudio,
                           showMicLevel: false,
                         ),

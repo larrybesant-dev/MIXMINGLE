@@ -44,14 +44,23 @@ class MessengerRouteState {
       return const MessengerRouteState._(kind: MessengerRouteKind.friends);
     }
     if (path.startsWith('/messages/') && path.length > '/messages/'.length) {
-      final conversationId = state.pathParameters['conversationId'];
+      // pathParameters may be empty at the ShellRoute level; extract the
+      // conversationId directly from the path as the reliable source.
+      final fromParams = state.pathParameters['conversationId'];
+      final fromPath =
+          path.substring('/messages/'.length).split('/').first;
+      final conversationId =
+          (fromParams != null && fromParams.isNotEmpty) ? fromParams : fromPath;
       return MessengerRouteState._(
         kind: MessengerRouteKind.conversation,
-        conversationId: conversationId,
+        conversationId: conversationId.isNotEmpty ? conversationId : null,
       );
     }
 
-    throw ArgumentError('Unsupported messenger route: $path');
+    // Unknown sub-path — fall back to inbox instead of crashing.
+    // This can happen during rapid navigations or hot-reload state transitions.
+    assert(false, 'Unhandled messenger route: $path');
+    return const MessengerRouteState._(kind: MessengerRouteKind.inbox);
   }
 }
 

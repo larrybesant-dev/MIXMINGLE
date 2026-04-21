@@ -319,11 +319,6 @@ class RoomRepository {
         : roomRoleStage;
 
     final batch = _firestore.batch();
-    batch.set(_roomRef(roomId), {
-      'maxSpeakers': maxSpeakers,
-      'speakerSyncVersion': 1,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
     batch.set(_speakerRef(roomId, normalizedUserId), {
       'userId': normalizedUserId,
       if (resolvedDisplayName.isNotEmpty) 'name': resolvedDisplayName,
@@ -332,7 +327,6 @@ class RoomRepository {
     }, SetOptions(merge: true));
     batch.set(_participantRef(roomId, normalizedUserId), {
       'userId': normalizedUserId,
-      'role': participantRole,
       'micOn': true,
       'isMuted': false,
       'lastActiveAt': FieldValue.serverTimestamp(),
