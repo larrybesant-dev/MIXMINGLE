@@ -639,22 +639,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                           ),
                         ),
                         const SizedBox(width: 10),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            Clipboard.setData(
-                              ClipboardData(
-                                text:
-                                    'https://mixvy.app/profile/${widget.userId}',
-                              ),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Profile link copied!'),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.share_outlined),
-                          label: const Text('Share'),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Clipboard.setData(
+                                ClipboardData(
+                                  text:
+                                      'https://mixvy.app/profile/${widget.userId}',
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Profile link copied!'),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.share_outlined),
+                            label: const Text('Share'),
+                          ),
                         ),
                       ],
                     ),

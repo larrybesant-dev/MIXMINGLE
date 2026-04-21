@@ -151,7 +151,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: VelvetNoir.primary,
       foregroundColor: VelvetNoir.surface,
-      minimumSize: const Size(double.infinity, 52),
+      minimumSize: const Size(88, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       textStyle: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6)),
       elevation: 0,
@@ -161,7 +161,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: VelvetNoir.primary,
       foregroundColor: VelvetNoir.surface,
-      minimumSize: const Size(double.infinity, 52),
+      minimumSize: const Size(88, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       textStyle: _raleway(
         GoogleFonts.raleway(
@@ -176,7 +176,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: VelvetNoir.primary,
       side: const BorderSide(color: VelvetNoir.primary, width: 1.5),
-      minimumSize: const Size(double.infinity, 52),
+      minimumSize: const Size(88, 52),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       textStyle: _raleway(GoogleFonts.raleway(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 0.6)),
     ),

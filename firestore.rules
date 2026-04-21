@@ -51,11 +51,17 @@ service cloud.firestore {
 
     function onlyIdentityFieldsAllowed() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'uid',
+        'id',
         'username',
         'usernameLower',
+        'displayName',
         'email',
+        'photoUrl',
+        'avatarUrl',
         'bio',
         'isPrivate',
+        'isComplete',
         'updatedAt'
       ]);
     }
