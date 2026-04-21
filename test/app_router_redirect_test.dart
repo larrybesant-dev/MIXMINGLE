@@ -119,5 +119,49 @@ void main() {
 
       expect(result, '/legal/terms');
     });
+
+    test('encodes deep link in from-param when auth is loading', () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/room/abc123',
+        uid: null,
+        authLoading: true,
+        isFirstRun: () async => false,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
+      );
+
+      expect(result, '/splash?from=%2Froom%2Fabc123');
+    });
+
+    test('restores deep link from from-param after auth resolves on splash',
+        () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/splash',
+        uid: 'user-1',
+        authLoading: false,
+        isFirstRun: () async => false,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
+        redirectFrom: '/room/abc123',
+      );
+
+      expect(result, '/room/abc123');
+    });
+
+    test('does not restore from-param when destination is an auth route',
+        () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/splash',
+        uid: 'user-1',
+        authLoading: false,
+        isFirstRun: () async => false,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
+        redirectFrom: '/login',
+      );
+
+      // /login is blocked — falls back to /discover
+      expect(result, '/discover');
+    });
   });
 }

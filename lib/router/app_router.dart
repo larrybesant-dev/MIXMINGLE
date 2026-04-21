@@ -208,6 +208,20 @@ final legalAcceptedCheckProvider = Provider<LegalAcceptedCheck>((ref) {
   return () => service.hasAcceptedCurrentLegal();
 });
 
+/// Returns true for routes that are safe to deep-link back to after auth.
+/// Excludes auth, legal, onboarding, and splash routes.
+bool _isPreservableDeepLink(String path) {
+  if (path.isEmpty || path == '/' || path == '/splash') return false;
+  const _blocked = [
+    '/login', '/register', '/onboarding', '/404',
+  ];
+  if (_blocked.contains(path)) return false;
+  if (path.startsWith('/legal/') || path.startsWith('/after-dark')) {
+    return false;
+  }
+  return true;
+}
+
 Future<String?> evaluateAppRedirect({
   required String matchedLocation,
   required String? uid,
@@ -216,6 +230,9 @@ Future<String?> evaluateAppRedirect({
   required ProfileCompleteCheck isProfileComplete,
   required LegalAcceptedCheck isLegalAccepted,
   bool isRouteError = false,
+  // Optional: the decoded value of the 'from' query param carried through splash.
+  // Set by the router redirect when the user landed on /splash?from=...
+  String? redirectFrom,
 }) async {
   if (isRouteError || matchedLocation == '/404') {
     return null;
@@ -225,7 +242,14 @@ Future<String?> evaluateAppRedirect({
   if (matchedLocation.startsWith('/after-dark')) return null;
 
   if (authLoading) {
-    return matchedLocation == '/splash' ? null : '/splash';
+    if (matchedLocation == '/splash') return null;
+    // Preserve the intended deep link through the auth-loading pause so that
+    // a web refresh on e.g. /room/abc123 comes back to that room once auth
+    // resolves, rather than silently dropping the user at /discover.
+    final encodedFrom = _isPreservableDeepLink(matchedLocation)
+        ? '?from=${Uri.encodeComponent(matchedLocation)}'
+        : '';
+    return '/splash$encodedFrom';
   }
 
   final loggedIn = uid != null;
@@ -249,7 +273,17 @@ Future<String?> evaluateAppRedirect({
   if (loggedIn) {
     final profileComplete = await isProfileComplete(uid);
     if (!profileComplete && !isProfile) return '/profile';
-    if (profileComplete && (isLoggingIn || isSplash)) return '/discover';
+    if (profileComplete && (isLoggingIn || isSplash)) {
+      // If auth resolved while we were holding a deep-link destination,
+      // go there directly instead of /discover.
+      if (isSplash &&
+          redirectFrom != null &&
+          redirectFrom.isNotEmpty &&
+          _isPreservableDeepLink(redirectFrom)) {
+        return redirectFrom;
+      }
+      return '/discover';
+    }
   }
   if (!loggedIn && isSplash) return '/login';
   return null;
@@ -276,6 +310,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           isProfileComplete: profileCompleteCheck,
           isLegalAccepted: legalAcceptedCheck,
           isRouteError: state.error != null,
+          redirectFrom: state.uri.queryParameters['from'],
         );
       } catch (error, stackTrace) {
         developer.log(
