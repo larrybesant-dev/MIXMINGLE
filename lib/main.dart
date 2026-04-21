@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:observability/alert_scheduler.dart';
 
 import 'package:mixvy/firebase_options.dart';
 import 'package:flutter/foundation.dart'
@@ -40,6 +41,7 @@ bool get _crashlyticsSupported =>
         defaultTargetPlatform == TargetPlatform.macOS);
 
 void main() async {
+  AlertScheduler.start();
   await runZonedGuarded(
     () async {
       _bootstrapLog('main() entered');
