@@ -424,17 +424,25 @@ class MessagingController {
   }
 
   /// Updates the typing heartbeat for [userId] in [conversationId].
-  /// Call with [isTyping: true] on text change and [isTyping: false] on send/blur.
+  /// Writes to a lightweight ephemeral subcollection instead of the
+  /// conversation document so message sends do not trigger the typing stream.
   Future<void> updateTypingStatus({
     required String conversationId,
     required String userId,
     required bool isTyping,
   }) async {
-    final ref = _firestore.collection('conversations').doc(conversationId);
+    final typingRef = _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('ephemeral')
+        .doc('typing');
     if (isTyping) {
-      await ref.update({'typingStatus.$userId': FieldValue.serverTimestamp()});
+      await typingRef.set(
+        {'users.$userId': FieldValue.serverTimestamp()},
+        SetOptions(merge: true),
+      );
     } else {
-      await ref.update({'typingStatus.$userId': FieldValue.delete()});
+      await typingRef.update({'users.$userId': FieldValue.delete()});
     }
   }
 }
@@ -463,22 +471,29 @@ final messageReactionsProvider = StreamProvider.family<Map<String, String>,
 });
 
 /// Emits the set of user IDs that are currently typing in [conversationId].
+/// Subscribes to the lightweight `ephemeral/typing` subcollection doc so
+/// message sends (which mutate the parent conversation doc) do not trigger
+/// unnecessary re-emits here.
 final typingUsersProvider =
-    StreamProvider.family<Set<String>, String>((ref, conversationId) {
+    StreamProvider.autoDispose.family<Set<String>, String>((ref, conversationId) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('conversations')
       .doc(conversationId)
+      .collection('ephemeral')
+      .doc('typing')
       .snapshots()
       .map((doc) {
-    final raw = doc.data()?['typingStatus'] as Map<String, dynamic>?;
+    final raw = doc.data()?['users'] as Map<String, dynamic>?;
     if (raw == null) return <String>{};
     final now = DateTime.now();
     return raw.entries
         .where((e) {
           final ts = e.value;
           if (ts is Timestamp) {
-            return now.difference(ts.toDate()).inSeconds < 8;
+            // Write timeout is 4 s + up to ~2 s network round-trip.
+            // Read TTL must be > write timeout to prevent premature flicker.
+            return now.difference(ts.toDate()).inSeconds < 10;
           }
           return false;
         })

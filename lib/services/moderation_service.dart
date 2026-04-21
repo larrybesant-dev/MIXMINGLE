@@ -11,6 +11,12 @@ class ModerationService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth? _auth;
 
+  // In-memory cache: userId → (result, fetchedAt). Blocks rarely change so
+  // caching for 5 minutes eliminates repeated Firestore reads on every
+  // conversations snapshot event.
+  static final Map<String, ({Set<String> ids, DateTime fetchedAt})>
+      _excludedCache = {};
+
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
       final trimmed = value.trim();
@@ -115,6 +121,12 @@ class ModerationService {
       return const <String>{};
     }
 
+    final cached = _excludedCache[userId];
+    if (cached != null &&
+        DateTime.now().difference(cached.fetchedAt).inMinutes < 5) {
+      return cached.ids;
+    }
+
     final results = await Future.wait([
       _firestore.collection('blocks').where('blockerUserId', isEqualTo: userId).get(),
       _firestore.collection('blocks').where('blockedUserId', isEqualTo: userId).get(),
@@ -123,7 +135,7 @@ class ModerationService {
     final blockedByCurrent = results[0];
     final blockingCurrent = results[1];
 
-    return {
+    final ids = <String>{
       ...blockedByCurrent.docs
           .map((doc) => _asString(doc.data()['blockedUserId']))
           .where((id) => id.isNotEmpty),
@@ -131,6 +143,8 @@ class ModerationService {
           .map((doc) => _asString(doc.data()['blockerUserId']))
           .where((id) => id.isNotEmpty),
     };
+    _excludedCache[userId] = (ids: ids, fetchedAt: DateTime.now());
+    return ids;
   }
 
   Future<bool> hasBlockingRelationship(String firstUserId, String secondUserId) async {

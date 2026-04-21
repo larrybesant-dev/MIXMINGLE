@@ -11,6 +11,7 @@ import '../../messaging/providers/messaging_provider.dart';
 import '../models/friend_roster_entry.dart';
 import '../providers/friends_providers.dart';
 import '../widgets/friend_tile.dart';
+import '../../../utils/presence_classifier.dart';
 
 class FriendsPaneView extends ConsumerStatefulWidget {
   const FriendsPaneView({super.key, this.showHeader = true});
@@ -26,7 +27,8 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
   String _query = '';
   bool _onlineExpanded = true;
   bool _inRoomsExpanded = true;
-  bool _offlineExpanded = true;
+  bool _recentlyActiveExpanded = true;
+  bool _offlineExpanded = false;
 
   @override
   void dispose() {
@@ -81,8 +83,11 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
         final onlineEntries = filtered
             .where((e) => e.isOnline && (e.roomId ?? '').isEmpty)
             .toList(growable: false);
+        final recentlyActiveEntries = filtered
+            .where((e) => e.isRecentlyActive)
+            .toList(growable: false);
         final offlineEntries = filtered
-            .where((e) => !e.isOnline)
+            .where((e) => !e.isOnline && !e.isRecentlyActive)
             .toList(growable: false);
         final activeCount = onlineEntries.length + inRoomEntries.length;
 
@@ -246,6 +251,51 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
 
               const SizedBox(height: 4),
 
+              // ── RECENTLY ACTIVE ───────────────────────────────────────
+              if (recentlyActiveEntries.isNotEmpty) ...[                
+                _RichSectionHeader(
+                  label: 'RECENTLY ACTIVE',
+                  count: recentlyActiveEntries.length,
+                  accentColor: const Color(0xFFF59E0B),
+                  isExpanded: _recentlyActiveExpanded,
+                  onToggle: () => setState(
+                    () => _recentlyActiveExpanded = !_recentlyActiveExpanded,
+                  ),
+                ),
+                if (_recentlyActiveExpanded)
+                  for (var i = 0; i < recentlyActiveEntries.length; i++) ..[
+                    FriendTile(
+                      key: ValueKey('recent-${recentlyActiveEntries[i].friendId}'),
+                      user: recentlyActiveEntries[i].user,
+                      statusLabel: _lastSeenLabel(recentlyActiveEntries[i]),
+                      statusColor: const Color(0xFFF59E0B),
+                      actions: [
+                        FriendTileAction(
+                          label: 'Message',
+                          icon: Icons.chat_bubble_outline_rounded,
+                          onPressed: () => _openConversation(
+                            context,
+                            currentUser,
+                            recentlyActiveEntries[i].user,
+                          ),
+                        ),
+                      ],
+                      onTap: () => _openConversation(
+                        context,
+                        currentUser,
+                        recentlyActiveEntries[i].user,
+                      ),
+                    ),
+                    if (i < recentlyActiveEntries.length - 1)
+                      const Divider(
+                        indent: 72,
+                        height: 1,
+                        color: Color(0x18F7EDE2),
+                      ),
+                  ],
+                const SizedBox(height: 4),
+              ],
+
               // ── OFFLINE ───────────────────────────────────────────────
               _RichSectionHeader(
                 label: 'OFFLINE',
@@ -343,15 +393,8 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
     }
   }
 
-  String _lastSeenLabel(FriendRosterEntry entry) {
-    final lastSeen = entry.lastSeen;
-    if (lastSeen == null) return 'Offline';
-    final delta = DateTime.now().difference(lastSeen);
-    if (delta.inMinutes < 1) return 'Last seen just now';
-    if (delta.inMinutes < 60) return 'Last seen ${delta.inMinutes}m ago';
-    if (delta.inHours < 24) return 'Last seen ${delta.inHours}h ago';
-    return 'Last seen ${delta.inDays}d ago';
-  }
+  String _lastSeenLabel(FriendRosterEntry entry) =>
+      PresenceClassifier.lastSeenLabel(entry.lastSeen);
 }
 
 // ── Supporting widgets ────────────────────────────────────────────────────────

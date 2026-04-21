@@ -944,8 +944,20 @@ service cloud.firestore {
             .hasOnly(['lastMessage', 'lastMessageId', 'lastMessagePreview',
                       'lastMessageSenderId', 'lastMessageAt', 'updatedAt',
                       'isArchived', 'unreadCounts', 'lastReadAt',
-                      'status', 'typingStatus']);
+                      'status']);
       allow delete: if false;
+
+      // Lightweight ephemeral subcollection for typing indicators.
+      // Isolated from the parent doc so message sends do not trigger
+      // the typing stream.
+      match /ephemeral/{docId} {
+        allow read: if signedIn()
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+              .data.participantIds.hasAny([request.auth.uid]);
+        allow write: if signedIn()
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+              .data.participantIds.hasAny([request.auth.uid]);
+      }
 
       match /messages/{messageId} {
         allow read: if signedIn()

@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import 'package:mixvy/firebase_options.dart';
 import 'package:flutter/foundation.dart'
@@ -77,6 +78,9 @@ void main() async {
             options: DefaultFirebaseOptions.currentPlatform,
           );
           _bootstrapLog('Firebase initialized');
+
+          // Suppress verbose RTDB SDK logs (connection state, pings, etc.).
+          FirebaseDatabase.instance.setLoggingEnabled(false);
 
           if (kIsWeb) {
             await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);

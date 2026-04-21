@@ -39,7 +39,7 @@ final userPostsStreamProvider = StreamProvider.family<List<PostModel>, String>((
       );
 });
 
-final roomsStreamProvider = StreamProvider<List<RoomModel>>((ref) {
+final roomsStreamProvider = StreamProvider.autoDispose<List<RoomModel>>((ref) {
   return ref.read(roomServiceProvider).watchLiveRooms(limit: 50);
 });
 

@@ -89,7 +89,7 @@ final currentFriendIdsProvider = FutureProvider.autoDispose<List<String>>((ref) 
       .toList(growable: false);
 });
 
-final friendsListProvider = StreamProvider<List<UserModel>>((ref) {
+final friendsListProvider = StreamProvider.autoDispose<List<UserModel>>((ref) {
   final userId = ref.watch(currentFriendUserIdProvider);
   if (userId == null) return const Stream<List<UserModel>>.empty();
   return ref.watch(friendServiceProvider).watchFriends(userId);
