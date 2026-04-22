@@ -58,69 +58,72 @@ class MixVyDrawer extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            if (!embedded && Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-            if (!isSelected) {
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (!embedded) {
+            // Close the drawer, then navigate after the frame so the context
+            // is still valid and the drawer animation doesn't compete.
+            Navigator.of(context).maybePop();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go(route);
-            }
-          },
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: isSelected
-                  ? LinearGradient(
-                      colors: [
-                        VelvetNoir.primary.withValues(alpha: 0.14),
-                        VelvetNoir.secondary.withValues(alpha: 0.10),
-                      ],
-                    )
-                  : null,
+            });
+          } else {
+            context.go(route);
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: [
+                      VelvetNoir.primary.withValues(alpha: 0.14),
+                      VelvetNoir.secondary.withValues(alpha: 0.10),
+                    ],
+                  )
+                : null,
+            color: isSelected
+                ? null
+                : VelvetNoir.surfaceHigh.withValues(alpha: 0.38),
+            border: Border.all(
               color: isSelected
-                  ? null
-                  : VelvetNoir.surfaceHigh.withValues(alpha: 0.38),
-              border: Border.all(
-                color: isSelected
-                    ? VelvetNoir.primary.withValues(alpha: 0.30)
-                    : VelvetNoir.outlineVariant.withValues(alpha: 0.36),
-              ),
+                  ? VelvetNoir.primary.withValues(alpha: 0.30)
+                  : VelvetNoir.outlineVariant.withValues(alpha: 0.36),
             ),
-            child: ListTile(
-              leading: badgeCount > 0
-                  ? Badge(
-                      label: Text(badgeCount > 99 ? '99+' : '$badgeCount'),
-                      child: Icon(
-                        icon,
-                        color: isSelected
-                            ? VelvetNoir.primary
-                            : VelvetNoir.onSurface.withValues(alpha: 0.9),
-                      ),
-                    )
-                  : Icon(
+          ),
+          child: ListTile(
+            leading: badgeCount > 0
+                ? Badge(
+                    label: Text(badgeCount > 99 ? '99+' : '$badgeCount'),
+                    child: Icon(
                       icon,
                       color: isSelected
                           ? VelvetNoir.primary
                           : VelvetNoir.onSurface.withValues(alpha: 0.9),
                     ),
-              title: Text(
-                title,
-                style: GoogleFonts.raleway(
-                  color: VelvetNoir.onSurface,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                ),
+                  )
+                : Icon(
+                    icon,
+                    color: isSelected
+                        ? VelvetNoir.primary
+                        : VelvetNoir.onSurface.withValues(alpha: 0.9),
+                  ),
+            title: Text(
+              title,
+              style: GoogleFonts.raleway(
+                color: VelvetNoir.onSurface,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
-              trailing: isSelected
-                  ? const Icon(
-                      Icons.chevron_right_rounded,
-                      color: VelvetNoir.primary,
-                    )
-                  : null,
             ),
+            trailing: isSelected
+                ? const Icon(
+                    Icons.chevron_right_rounded,
+                    color: VelvetNoir.primary,
+                  )
+                : null,
           ),
         ),
       ),

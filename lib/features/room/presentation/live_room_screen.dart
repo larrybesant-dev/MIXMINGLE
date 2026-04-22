@@ -40,6 +40,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late StateController<RtcRoomService?> _rtcServiceNotifier;
   RtcRoomService? _rtcService;
 
+  // "Connected to Room" one-shot banner.
+  bool _connectedBannerVisible = false;
+  bool _connectedShown = false;
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +104,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
       _rtcService = service;
       _rtcServiceNotifier.state = service;
+      // ── Show "Connected to Room" banner (once per room entry) ───────────
+      if (mounted && !_connectedShown) {
+        _connectedShown = true;
+        setState(() => _connectedBannerVisible = true);
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _connectedBannerVisible = false);
+        });
+      }
     } catch (e) {
       // RTC failure is non-fatal: Firestore presence + chat still work.
       developer.log('RTC join failed: $e', name: 'LiveRoomScreen');
@@ -141,6 +153,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         roomId: widget.roomId,
         roomState: liveState,
         reconnecting: snapshot.isLoading || snapshot.hasError,
+        showConnectedBanner: _connectedBannerVisible,
       );
     }
 
@@ -264,11 +277,13 @@ class _RoomScaffold extends StatelessWidget {
   final String roomId;
   final RoomLiveState roomState;
   final bool reconnecting;
+  final bool showConnectedBanner;
 
   const _RoomScaffold({
     required this.roomId,
     required this.roomState,
     required this.reconnecting,
+    this.showConnectedBanner = false,
   });
 
   @override
@@ -288,6 +303,40 @@ class _RoomScaffold extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: _kMaxBodyWidth),
           child: Column(
             children: [
+              // ── "Connected to Room" one-shot banner ─────────────────────
+              AnimatedOpacity(
+                opacity: showConnectedBanner ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: showConnectedBanner
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        color: Colors.green.shade800.withValues(alpha: 0.92),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.circle,
+                              size: 10,
+                              color: Colors.greenAccent,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '🟢  Connected to room',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               if (reconnecting) const _ReconnectingBanner(),
               Expanded(
                 child: _MessageList(messages: roomState.messages),
@@ -482,6 +531,7 @@ class _RoomActionBar extends ConsumerStatefulWidget {
 
 class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
   bool _micActive = false;
+  bool _micConnecting = false;
   bool get _audioShareAvailable => false;
   bool _sharingAudio = false;
 
@@ -489,16 +539,24 @@ class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
     final service = ref.read(rtcServiceProvider(widget.roomId));
     if (service == null) return;
 
+    setState(() => _micConnecting = true);
+
     if (!_micActive) {
       try {
         await service.setBroadcaster(true);
         await service.mute(false);
         if (!mounted) return;
-        setState(() => _micActive = true);
+        setState(() {
+          _micActive = true;
+          _micConnecting = false;
+        });
       } catch (e) {
         developer.log('_toggleMic: enable failed — $e', name: 'LiveRoomScreen');
         if (!mounted) return;
-        setState(() => _micActive = false);
+        setState(() {
+          _micActive = false;
+          _micConnecting = false;
+        });
       }
     } else {
       try {
@@ -508,7 +566,10 @@ class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
         developer.log('_toggleMic: disable failed — $e', name: 'LiveRoomScreen');
       }
       if (!mounted) return;
-      setState(() => _micActive = false);
+      setState(() {
+        _micActive = false;
+        _micConnecting = false;
+      });
     }
   }
 
@@ -522,6 +583,7 @@ class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
     final cs = Theme.of(context).colorScheme;
     // Mic button is active only once the RTC channel has connected.
     final rtcReady = ref.watch(rtcServiceProvider(widget.roomId)) != null;
+    final micEnabled = rtcReady && !_micConnecting;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -534,20 +596,56 @@ class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
         child: Row(
           children: [
             // ── Mic ──────────────────────────────────────────────────────
-            IconButton.filledTonal(
-              tooltip: !rtcReady
-                  ? 'Connecting to room…'
-                  : (_micActive ? 'Mute mic' : 'Unmute mic'),
-              onPressed: rtcReady ? () => _toggleMic() : null,
-              style: rtcReady && !_micActive
-                  ? IconButton.styleFrom(
-                      backgroundColor: cs.errorContainer,
-                      foregroundColor: cs.onErrorContainer,
-                    )
-                  : null,
-              icon: Icon(
-                _micActive ? Icons.mic_rounded : Icons.mic_off_rounded,
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _micConnecting
+                    ? Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: cs.primary,
+                          ),
+                        ),
+                      )
+                    : IconButton.filledTonal(
+                        tooltip: !rtcReady
+                            ? 'Connecting to room…'
+                            : (_micActive ? 'Mute mic' : 'Unmute mic'),
+                        onPressed: micEnabled ? () => _toggleMic() : null,
+                        style: micEnabled && _micActive
+                            ? IconButton.styleFrom(
+                                backgroundColor: cs.error,
+                                foregroundColor: cs.onError,
+                              )
+                            : micEnabled && !_micActive
+                                ? IconButton.styleFrom(
+                                    backgroundColor: cs.errorContainer,
+                                    foregroundColor: cs.onErrorContainer,
+                                  )
+                                : null,
+                        icon: Icon(
+                          _micActive
+                              ? Icons.mic_rounded
+                              : Icons.mic_off_rounded,
+                        ),
+                      ),
+                Text(
+                  _micConnecting
+                      ? 'Connecting…'
+                      : _micActive
+                          ? 'You are speaking'
+                          : 'Muted',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: _micActive ? cs.error : cs.onSurfaceVariant,
+                    fontWeight: _micActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 4),
             // ── Audio share (no-op until getDisplayMedia integration) ────

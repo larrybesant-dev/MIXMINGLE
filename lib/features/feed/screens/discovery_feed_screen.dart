@@ -422,6 +422,18 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
   ];
 
   String? _selectedCategory;
+  String? _joiningRoomId;
+
+  void _joinRoom(String roomId) {
+    if (_joiningRoomId != null) return;
+    setState(() => _joiningRoomId = roomId);
+    context.go('/room/$roomId');
+    // Clear the joining state after a short window so the button re-enables
+    // if the user navigates back before the new screen mounts.
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _joiningRoomId = null);
+    });
+  }
 
   @override
   void initState() {
@@ -485,6 +497,13 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
       onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
       child: CustomScrollView(
         slivers: [
+          // ── Hero CTA — "Join a Room" / "Start Your Own Room" ──────────
+          SliverToBoxAdapter(
+            child: _HeroJoinCard(
+              firstRoom: filteredRooms.isNotEmpty ? filteredRooms[0] : null,
+            ),
+          ),
+
           SliverToBoxAdapter(
             child: HomeLivePulseSection(
               liveRoomCount: liveRoomCount,
@@ -570,7 +589,8 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                           room: room,
                           reason:
                               feedState.roomReasons[room.id] ?? 'Active now',
-                          onTap: () => context.go('/room/${room.id}'),
+                          joining: _joiningRoomId == room.id,
+                          onTap: () => _joinRoom(room.id),
                         );
                       },
                       childCount: filteredRooms.length > 3
@@ -724,6 +744,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           final cat = _categories[i];
           final selected = _selectedCategory == cat.value;
           return GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => setState(() => _selectedCategory = cat.value),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -779,7 +800,8 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
             child: _BentoHeroCard(
               room: hero,
               reason: roomReasons[hero.id] ?? 'Active now',
-              onTap: () => context.go('/room/${hero.id}'),
+              joining: _joiningRoomId == hero.id,
+              onTap: () => _joinRoom(hero.id),
             ),
           ),
           const SizedBox(width: 8),
@@ -792,7 +814,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                     child: _BentoSmallCard(
                       room: secondary[0],
                       reason: roomReasons[secondary[0].id] ?? 'Active now',
-                      onTap: () => context.go('/room/${secondary[0].id}'),
+                      onTap: () => _joinRoom(secondary[0].id),
                     ),
                   ),
                 if (secondary.length > 1) ...[
@@ -801,7 +823,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                     child: _BentoSmallCard(
                       room: secondary[1],
                       reason: roomReasons[secondary[1].id] ?? 'Active now',
-                      onTap: () => context.go('/room/${secondary[1].id}'),
+                      onTap: () => _joinRoom(secondary[1].id),
                     ),
                   ),
                 ],
@@ -1006,10 +1028,12 @@ class _BentoHeroCard extends ConsumerWidget {
     required this.room,
     required this.reason,
     required this.onTap,
+    this.joining = false,
   });
   final RoomModel room;
   final String reason;
   final VoidCallback onTap;
+  final bool joining;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1099,7 +1123,55 @@ class _BentoHeroCard extends ConsumerWidget {
                           color: _npOnVariant,
                         ),
                       ),
+                      const Spacer(),
+                      // Live stats
+                      _LiveStatPill(
+                        icon: '🔥',
+                        count: room.memberCount > 0
+                            ? room.memberCount
+                            : room.stageUserIds.length +
+                                  room.audienceUserIds.length,
+                        label: 'listening',
+                      ),
+                      const SizedBox(width: 6),
+                      _LiveStatPill(
+                        icon: '🎤',
+                        count: room.stageUserIds.length,
+                        label: 'speaking',
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: joining ? null : onTap,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _npPrimary,
+                        foregroundColor: _npSurface,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: joining
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: _npSurface,
+                              ),
+                            )
+                          : Text(
+                              'JOIN',
+                              style: GoogleFonts.raleway(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                    ),
                   ),
                 ],
               ),
@@ -1189,80 +1261,129 @@ class _RoomGridCard extends ConsumerWidget {
     required this.room,
     required this.reason,
     required this.onTap,
+    this.joining = false,
     super.key,
   });
   final RoomModel room;
   final String reason;
   final VoidCallback onTap;
+  final bool joining;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final avatarAsync = ref.watch(_hostAvatarProvider(room.hostId));
+    final listenerCount = room.memberCount > 0
+        ? room.memberCount
+        : room.stageUserIds.length + room.audienceUserIds.length;
+    final speakerCount = room.stageUserIds.length;
+
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1C1C2E), _npSurfaceHigh],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1C1C2E), _npSurfaceHigh],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top: LIVE badge + reason chip
+              Row(
+                children: [
+                  _LiveBadge(small: true),
+                  const Spacer(),
+                  _ReasonChip(label: reason, small: true),
+                ],
               ),
-            ),
-            Positioned(top: 10, left: 10, child: _LiveBadge(small: true)),
-            Positioned(
-              top: 10,
-              right: 10,
-              child: _ReasonChip(label: reason, small: true),
-            ),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: _viewerPill(room.memberCount),
-            ),
-            Positioned(
-              bottom: 36,
-              left: 10,
-              right: 10,
-              child: Text(
-                room.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.raleway(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _npOnSurface,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 10,
-              right: 10,
-              child: ClipOval(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: avatarAsync.when(
-                    data: (url) => url != null
-                        ? CachedNetworkImage(
-                            imageUrl: url,
-                            fit: BoxFit.cover,
-                            errorWidget: (_, _, _) =>
-                                Container(color: _npPrimaryDim),
-                          )
-                        : Container(color: _npPrimaryDim),
-                    loading: () => Container(color: _npPrimaryDim),
-                    error: (_, _) => Container(color: _npPrimaryDim),
+              const SizedBox(height: 8),
+              // Room name + host avatar
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      room.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.raleway(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _npOnSurface,
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 6),
+                  ClipOval(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: avatarAsync.when(
+                        data: (url) => url != null
+                            ? CachedNetworkImage(
+                                imageUrl: url,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, _, _) =>
+                                    Container(color: _npPrimaryDim),
+                              )
+                            : Container(color: _npPrimaryDim),
+                        loading: () => Container(color: _npPrimaryDim),
+                        error: (_, _) => Container(color: _npPrimaryDim),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Stats row
+              Row(
+                children: [
+                  _LiveStatPill(icon: '🔥', count: listenerCount, label: ''),
+                  const SizedBox(width: 4),
+                  _LiveStatPill(icon: '🎤', count: speakerCount, label: ''),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // JOIN button
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: joining ? null : onTap,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _npPrimary,
+                    foregroundColor: _npSurface,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    minimumSize: const Size(0, 30),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: joining
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: _npSurface,
+                          ),
+                        )
+                      : Text(
+                          'JOIN',
+                          style: GoogleFonts.raleway(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1458,6 +1579,42 @@ Widget _viewerPill(int count) {
       ),
     ),
   );
+}
+
+/// Compact stat pill used in room cards to show listener / speaker counts.
+class _LiveStatPill extends StatelessWidget {
+  const _LiveStatPill({
+    required this.icon,
+    required this.count,
+    required this.label,
+  });
+  final String icon;
+  final int count;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final display =
+        count > 999 ? '${(count / 1000).toStringAsFixed(1)}k' : '$count';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0x80161A21),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 10)),
+          const SizedBox(width: 3),
+          Text(
+            label.isEmpty ? display : '$display $label',
+            style: GoogleFonts.raleway(fontSize: 10, color: _npOnSurface),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Following feed tab ────────────────────────────────────────────────────────
@@ -1785,6 +1942,136 @@ class _LiveNowBubble extends ConsumerWidget {
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
                 color: _npOnVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Hero Join / Start Room card ───────────────────────────────────────────────
+/// Dominant CTA card at the top of the Discover feed.
+/// Two actions: join the first live room (if any), or start your own room.
+class _HeroJoinCard extends StatelessWidget {
+  const _HeroJoinCard({this.firstRoom});
+  final RoomModel? firstRoom;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLiveRoom = firstRoom != null;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        context.pageHorizontalPadding,
+        16,
+        context.pageHorizontalPadding,
+        4,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1C1240), Color(0xFF1A0A0E), Color(0xFF0B0B0B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: _npPrimary.withValues(alpha: 0.28)),
+          boxShadow: [
+            BoxShadow(
+              color: _npError.withValues(alpha: 0.14),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _npError,
+                  ),
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  '🎤  Live Now',
+                  style: GoogleFonts.raleway(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: _npError,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              hasLiveRoom
+                  ? firstRoom!.name.isNotEmpty
+                        ? firstRoom!.name
+                        : 'Someone is live right now'
+                  : 'Be the first to go live',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: _npOnSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: hasLiveRoom
+                    ? () => context.go('/room/${firstRoom!.id}')
+                    : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _npPrimary,
+                  foregroundColor: _npSurface,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.meeting_room_rounded),
+                label: Text(
+                  hasLiveRoom ? 'Join a Room' : 'No rooms live yet',
+                  style: GoogleFonts.raleway(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/create-room'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _npPrimary,
+                  side: BorderSide(color: _npPrimary.withValues(alpha: 0.6)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.mic_rounded),
+                label: Text(
+                  'Start Your Own Room',
+                  style: GoogleFonts.raleway(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
               ),
             ),
           ],
