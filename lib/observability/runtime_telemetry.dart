@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class SimulationContext {
   final String phase;
 
@@ -15,7 +17,7 @@ class RuntimeTelemetry {
 
   static void registerListener(String key) {
     _listenerCounts.update(key, (v) => v + 1, ifAbsent: () => 1);
-    print("Listener registered: $key, Total: ${_listenerCounts[key]}");
+    debugPrint("Listener registered: $key, Total: ${_listenerCounts[key]}");
   }
 
   static void unregisterListener(String key) {
@@ -26,7 +28,7 @@ class RuntimeTelemetry {
       } else {
         _listenerCounts[key] = next;
       }
-      print("Listener unregistered: $key, Remaining: ${_listenerCounts[key] ?? 0}");
+      debugPrint("Listener unregistered: $key, Remaining: ${_listenerCounts[key] ?? 0}");
     }
   }
 
@@ -40,7 +42,7 @@ class RuntimeTelemetry {
     _rebuildCounts[widget] = (_rebuildCounts[widget] ?? 0) + 1;
     _lastEvent[widget] = DateTime.now();
     if (ctx != null) {
-      print("[${ctx.phase}] Rebuild recorded for: $widget, Total: ${_rebuildCounts[widget]}");
+      debugPrint("[${ctx.phase}] Rebuild recorded for: $widget, Total: ${_rebuildCounts[widget]}");
     }
   }
 

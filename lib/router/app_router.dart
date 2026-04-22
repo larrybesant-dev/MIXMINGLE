@@ -214,10 +214,10 @@ final legalAcceptedCheckProvider = Provider<LegalAcceptedCheck>((ref) {
 /// Excludes auth, legal, onboarding, and splash routes.
 bool _isPreservableDeepLink(String path) {
   if (path.isEmpty || path == '/' || path == '/splash') return false;
-  const _blocked = [
+  const blocked = [
     '/login', '/register', '/onboarding', '/404',
   ];
-  if (_blocked.contains(path)) return false;
+  if (blocked.contains(path)) return false;
   if (path.startsWith('/legal/') || path.startsWith('/after-dark')) {
     return false;
   }

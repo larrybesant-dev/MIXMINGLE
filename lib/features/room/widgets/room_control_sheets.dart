@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
@@ -271,25 +271,6 @@ class RoomRosterSheet extends StatelessWidget {
     return 4;
   }
 
-  static IconData _roleIcon(
-    RoomParticipantModel participant,
-    String hostUserId,
-  ) {
-    final role = normalizeRoomRole(participant.role, fallbackRole: '');
-    if (participant.userId == hostUserId || isHostLikeRole(role)) {
-      return Icons.workspace_premium;
-    }
-    if (role == roomRoleModerator) {
-      return Icons.shield_outlined;
-    }
-    if (role == roomRoleCohost) {
-      return Icons.mic;
-    }
-    if (role == roomRoleStage) {
-      return Icons.record_voice_over_outlined;
-    }
-    return Icons.person;
-  }
 }
 
 class _RoleChip extends StatelessWidget {

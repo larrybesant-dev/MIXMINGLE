@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../observability/runtime_telemetry.dart';
 import '../observability/event_timeline.dart';
 
@@ -8,7 +9,7 @@ class LoadSimulator {
   LoadSimulator(this.timeline);
 
   void runTypingStorm(String roomId, SimulationContext ctx) {
-    print("[${ctx.phase}] Running typing storm for room: $roomId");
+    debugPrint("[${ctx.phase}] Running typing storm for room: $roomId");
     for (int i = 0; i < 20; i++) {
       Future.delayed(Duration(milliseconds: i * 200), () {
         timeline.record("SIM_EVENT", "typing:$roomId", ctx);
@@ -18,7 +19,7 @@ class LoadSimulator {
   }
 
   void runMessageBurst(String roomId, SimulationContext ctx) {
-    print("[${ctx.phase}] Running message burst for room: $roomId");
+    debugPrint("[${ctx.phase}] Running message burst for room: $roomId");
     for (int i = 0; i < 30; i++) {
       Future.delayed(Duration(milliseconds: i * 150), () {
         timeline.record("SIM_EVENT", "message:$roomId", ctx);
@@ -28,7 +29,7 @@ class LoadSimulator {
   }
 
   void runPresenceFlap(String userId, SimulationContext ctx) {
-    print("[${ctx.phase}] Running presence flap for user: $userId");
+    debugPrint("[${ctx.phase}] Running presence flap for user: $userId");
     for (int i = 0; i < 10; i++) {
       Future.delayed(Duration(milliseconds: i * 500), () {
         timeline.record("SIM_EVENT", "presence:$userId", ctx);

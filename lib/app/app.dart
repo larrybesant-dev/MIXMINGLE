@@ -82,7 +82,7 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
   }
 
   Widget _buildBootShell({String message = 'Starting MixVy...'}) {
-    Widget body = Scaffold(
+    final Widget body = Scaffold(
       backgroundColor: VelvetNoir.surface,
       body: Center(
         child: Column(

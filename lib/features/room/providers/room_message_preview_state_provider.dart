@@ -10,6 +10,7 @@ class RoomMessagePreviewState {
 
 final roomMessagePreviewStateProvider = StreamProvider.autoDispose.family<RoomMessagePreviewState, String>((ref, roomId) async* {
   List<MessageModel>? previous;
+  // ignore: deprecated_member_use
   await for (final messages in ref.watch(messageStreamProvider(roomId).stream)) {
     if (previous != null && !RoomMessagePreviewContract.shouldRebuild(previous, messages)) {
       continue;

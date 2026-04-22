@@ -8,6 +8,7 @@ import '../controllers/webrtc_controller.dart';
 import '../providers/message_providers.dart';
 import '../repository/room_repository.dart';
 import '../providers/room_live_state_provider.dart';
+import '../../../models/message_model.dart';
 import '../providers/rtc_service_provider.dart';
 import '../room_controller.dart';
 import '../../../dev/room_inspector_panel.dart';
@@ -398,7 +399,7 @@ class _ReconnectingBanner extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _MessageList extends StatelessWidget {
-  final List messages;
+  final List<MessageModel> messages;
   const _MessageList({required this.messages});
 
   @override

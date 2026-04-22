@@ -787,7 +787,6 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     final List<RoomModel> secondary = rooms.length > 1
         ? rooms.sublist(1, rooms.length.clamp(1, 3))
         : const <RoomModel>[];
-    final context = this.context;
 
     return SizedBox(
       height: 280,

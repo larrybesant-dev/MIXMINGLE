@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../observability/runtime_telemetry.dart';
 import '../observability/production_alerts.dart';
 import '../observability/event_timeline.dart';
@@ -17,20 +18,20 @@ class TestSessionController {
     ProductionAlertSystem.reset();
     _timeline.clear();
 
-    print("🧪 TEST SESSION STARTED: $name");
+    debugPrint("🧪 TEST SESSION STARTED: $name");
   }
 
   static void endSession() {
-    print("🧪 TEST SESSION COMPLETE");
+    debugPrint("🧪 TEST SESSION COMPLETE");
 
-    print("📊 FINAL METRICS:");
-    print("Listeners: ${RuntimeTelemetry.listeners}");
-    print("Rebuilds: ${RuntimeTelemetry.rebuilds}");
-    print("Alerts: ${ProductionAlertSystem.alerts.length}");
+    debugPrint("📊 FINAL METRICS:");
+    debugPrint("Listeners: ${RuntimeTelemetry.listeners}");
+    debugPrint("Rebuilds: ${RuntimeTelemetry.rebuilds}");
+    debugPrint("Alerts: ${ProductionAlertSystem.alerts.length}");
 
-    print("📊 EVENT TIMELINE:");
+    debugPrint("📊 EVENT TIMELINE:");
     for (final e in _timeline.events) {
-      print("${e['time']} | ${e['type']} | ${e['source']} | Phase: ${e['phase']}");
+      debugPrint("${e['time']} | ${e['type']} | ${e['source']} | Phase: ${e['phase']}");
     }
 
     _activeSession = null;

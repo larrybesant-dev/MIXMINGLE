@@ -1,13 +1,15 @@
+import 'package:flutter/foundation.dart';
+
 class SimulationPhase {
   final String phase;
 
   SimulationPhase(this.phase);
 
   void start() {
-    print("🧪 PHASE START: $phase");
+    debugPrint("🧪 PHASE START: $phase");
   }
 
   void end() {
-    print("🧪 PHASE END: $phase");
+    debugPrint("🧪 PHASE END: $phase");
   }
 }

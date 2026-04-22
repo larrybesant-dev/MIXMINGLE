@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'runtime_telemetry.dart';
 
 class EventTimeline {
@@ -10,7 +11,7 @@ class EventTimeline {
       "phase": ctx.phase,
       "time": DateTime.now().millisecondsSinceEpoch,
     });
-    print("[${ctx.phase}] Event recorded: type=$type, source=$source");
+    debugPrint("[${ctx.phase}] Event recorded: type=$type, source=$source");
   }
 
   List<Map<String, dynamic>> get events => List.unmodifiable(_events);
