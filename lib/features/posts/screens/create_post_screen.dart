@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../widgets/safe_network_avatar.dart';
 
 import '../../../core/layout/app_layout.dart';
 import '../../../shared/widgets/app_page_scaffold.dart';
@@ -230,13 +231,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundImage: widget.avatarUrl != null
-                      ? CachedNetworkImageProvider(widget.avatarUrl!)
-                      : null,
-                  child: widget.avatarUrl == null
-                      ? Text(widget.username[0].toUpperCase())
-                      : null,
+                SafeNetworkAvatar(
+                  radius: 20,
+                  avatarUrl: widget.avatarUrl,
+                  fallbackText: widget.username.isNotEmpty
+                      ? widget.username[0].toUpperCase()
+                      : '?',
                 ),
                 const SizedBox(width: 12),
                 Column(

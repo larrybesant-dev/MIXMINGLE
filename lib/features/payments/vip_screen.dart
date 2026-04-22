@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -318,6 +320,123 @@ class _ToggleChip extends StatelessWidget {
 // Tier card
 // ─────────────────────────────────────────────────────────────────────────────
 
+Future<void> _showWaitlistDialog(
+  BuildContext context,
+  String tier,
+  Color accentColor,
+) async {
+  final emailCtrl = TextEditingController(
+    text: FirebaseAuth.instance.currentUser?.email ?? '',
+  );
+  var submitted = false;
+
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDialogState) => AlertDialog(
+        backgroundColor: const Color(0xFF141414),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: accentColor.withValues(alpha: 0.3)),
+        ),
+        title: Text(
+          submitted ? 'You\'re on the list!' : 'Join the $tier Waitlist',
+          style: GoogleFonts.playfairDisplay(
+            color: accentColor,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: submitted
+            ? Text(
+                'We\'ll notify you when $tier launches. Stay tuned.',
+                style: GoogleFonts.raleway(color: const Color(0xFFF7EDE2)),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$tier is coming soon. Drop your email and we\'ll reach out first.',
+                    style: GoogleFonts.raleway(
+                      color: const Color(0xFFF7EDE2).withValues(alpha: 0.8),
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    style:
+                        GoogleFonts.raleway(color: const Color(0xFFF7EDE2)),
+                    decoration: InputDecoration(
+                      hintText: 'your@email.com',
+                      hintStyle: GoogleFonts.raleway(
+                        color:
+                            const Color(0xFFF7EDE2).withValues(alpha: 0.4),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            color: accentColor.withValues(alpha: 0.4)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: accentColor),
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                    ),
+                  ),
+                ],
+              ),
+        actions: submitted
+            ? [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text('Close',
+                      style: GoogleFonts.raleway(color: accentColor)),
+                ),
+              ]
+            : [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.raleway(
+                      color: const Color(0xFFF7EDE2).withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final email = emailCtrl.text.trim();
+                    if (email.isEmpty || !email.contains('@')) return;
+                    await FirebaseFirestore.instance
+                        .collection('vip_waitlist')
+                        .add({
+                      'email': email,
+                      'tier': tier,
+                      'userId': FirebaseAuth.instance.currentUser?.uid,
+                      'createdAt': FieldValue.serverTimestamp(),
+                    });
+                    setDialogState(() => submitted = true);
+                  },
+                  child: Text(
+                    'Notify Me',
+                    style: GoogleFonts.raleway(
+                      color: accentColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+      ),
+    ),
+  );
+
+  emailCtrl.dispose();
+}
+
 class _TierCard extends StatelessWidget {
   final String tier;
   final String tagline;
@@ -481,14 +600,7 @@ class _TierCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('$tier subscription coming soon!'),
-                          backgroundColor: accentColor.withValues(alpha: 0.8),
-                        ),
-                      );
-                    },
+                    onPressed: () => _showWaitlistDialog(context, tier, accentColor),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: accentColor,

@@ -166,12 +166,22 @@ class _UserProfilePopupSheetState
             // Avatar + name
             Row(
               children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundImage: profile.avatarUrl != null
-                      ? CachedNetworkImageProvider(profile.avatarUrl!)
-                      : null,
-                  child: profile.avatarUrl == null ? Text(initials, style: const TextStyle(fontSize: 28)) : null,
+                ClipOval(
+                  child: profile.avatarUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: profile.avatarUrl!,
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => CircleAvatar(
+                            radius: 36,
+                            child: Text(initials, style: const TextStyle(fontSize: 28)),
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 36,
+                          child: Text(initials, style: const TextStyle(fontSize: 28)),
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mixvy/models/moderation_model.dart';
@@ -962,24 +963,18 @@ class _OwnProfileHeroCard extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: CircleAvatar(
+                child: SafeNetworkAvatar(
                   radius: 34,
+                  avatarUrl: avatarUrl,
                   backgroundColor: VelvetNoir.surfaceHigh,
-                  backgroundImage: (avatarUrl ?? '').trim().isNotEmpty
-                      ? CachedNetworkImageProvider(avatarUrl!.trim())
-                      : null,
-                  child: (avatarUrl ?? '').trim().isEmpty
-                      ? Text(
-                          displayName.isNotEmpty
-                              ? displayName.characters.first.toUpperCase()
-                              : 'M',
-                          style: GoogleFonts.playfairDisplay(
-                            color: VelvetNoir.primary,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        )
-                      : null,
+                  fallbackText: displayName.isNotEmpty
+                      ? displayName.characters.first.toUpperCase()
+                      : 'M',
+                  fallbackTextStyle: GoogleFonts.playfairDisplay(
+                    color: VelvetNoir.primary,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),

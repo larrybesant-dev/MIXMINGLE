@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/layout/app_layout.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import '../providers/search_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
@@ -165,13 +166,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             itemBuilder: (context, index) {
               final user = users[index];
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: user.avatarUrl != null
-                      ? CachedNetworkImageProvider(user.avatarUrl!)
-                      : null,
-                  child: user.avatarUrl == null
-                      ? Text(user.username[0].toUpperCase())
-                      : null,
+                leading: SafeNetworkAvatar(
+                  radius: 20,
+                  avatarUrl: user.avatarUrl,
+                  fallbackText: user.username.isNotEmpty
+                      ? user.username[0].toUpperCase()
+                      : '?',
                 ),
                 title: Row(
                   children: [

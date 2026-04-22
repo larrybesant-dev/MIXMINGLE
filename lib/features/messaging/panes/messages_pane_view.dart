@@ -10,6 +10,7 @@ import '../../../core/layout/app_layout.dart';
 import '../../../core/theme.dart';
 import '../../../models/presence_model.dart';
 import '../../../shared/widgets/async_state_view.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import '../../friends/providers/friends_providers.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
@@ -595,26 +596,20 @@ class _ConversationTile extends ConsumerWidget {
                             ]
                           : null,
                     ),
-                    child: CircleAvatar(
+                    child: SafeNetworkAvatar(
                       radius: 20,
+                      avatarUrl: avatarUrl,
                       backgroundColor: isGroup
                           ? VelvetNoir.secondary.withValues(alpha: 0.18)
                           : VelvetNoir.primaryDim,
-                      backgroundImage: avatarUrl != null
-                          ? CachedNetworkImageProvider(avatarUrl)
-                          : null,
-                      child: avatarUrl == null
-                          ? Text(
-                              displayName.isNotEmpty
-                                  ? displayName[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                color: VelvetNoir.onSurface,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 13,
-                              ),
-                            )
-                          : null,
+                      fallbackText: displayName.isNotEmpty
+                          ? displayName[0].toUpperCase()
+                          : '?',
+                      fallbackTextStyle: const TextStyle(
+                        color: VelvetNoir.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                   if (unread)

@@ -3,11 +3,16 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../controllers/webrtc_controller.dart';
 import '../providers/message_providers.dart';
+import '../repository/room_repository.dart';
 import '../providers/room_live_state_provider.dart';
+import '../providers/rtc_service_provider.dart';
+import '../room_controller.dart';
 import '../../../dev/room_inspector_panel.dart';
+import '../../../presentation/providers/user_provider.dart';
+import '../../../services/rtc_room_service.dart';
 
 // Wide-screen cap — prevents the chat from stretching across a 1440px monitor.
 const double _kMaxBodyWidth = 720;
@@ -30,9 +35,96 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 }
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
+  // Cached so lifecycle calls are safe after widget deactivation.
+  late RoomController _roomController;
+  late StateController<RtcRoomService?> _rtcServiceNotifier;
+  RtcRoomService? _rtcService;
+
+  @override
+  void initState() {
+    super.initState();
+    _roomController =
+        ref.read(roomControllerProvider(widget.roomId).notifier);
+    // Cache notifier now — ref.read is unsafe inside dispose().
+    _rtcServiceNotifier =
+        ref.read(rtcServiceProvider(widget.roomId).notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoJoin());
+  }
+
+  Future<void> _autoJoin() async {
+    if (!mounted) return;
+    final user = ref.read(userProvider);
+    if (user == null) return;
+
+    // ── 1. Firestore presence join ──────────────────────────────────────────
+    await _roomController.joinRoom(
+      user.id,
+      displayName: user.username,
+      avatarUrl: user.avatarUrl,
+    );
+    if (!mounted) return;
+
+    // ── 2. RTC audio channel join ───────────────────────────────────────────
+    // Web: WebRtcRoomService (Firestore signaling, no SDK download).
+    // Native: AgoraService (needs real token — handled by platform flag inside
+    //         createTransport).  Start muted / audience; user enables mic.
+    try {
+      final webrtcCtrl = ref.read(webrtcControllerProvider);
+      // Fetch TURN credentials from Cloud Function so P2P works across
+      // different networks and NAT types. Falls back to STUN-only on error.
+      final iceServers = await ref
+          .read(roomRepositoryProvider)
+          .fetchIceServers();
+      // TODO(debug): remove before production release
+      developer.log(
+        'ICE servers at join: $iceServers',
+        name: 'LiveRoomScreen',
+      );
+      final service = await webrtcCtrl.createTransport(
+        userId: user.id,
+        iceServers: iceServers,
+      );
+      // appId is empty-string for WebRtcRoomService (ignored); Agora path
+      // requires a real appId from Firebase Functions (not web target).
+      await service.initialize('');
+      await service.joinRoom(
+        '',             // token — WebRtcRoomService ignores it
+        widget.roomId,
+        _stableUid(user.id),
+        publishMicrophoneTrackOnJoin: false, // start muted; user unmutes
+        publishCameraTrackOnJoin: false,
+      );
+      if (!mounted) {
+        await service.dispose();
+        return;
+      }
+      _rtcService = service;
+      _rtcServiceNotifier.state = service;
+    } catch (e) {
+      // RTC failure is non-fatal: Firestore presence + chat still work.
+      developer.log('RTC join failed: $e', name: 'LiveRoomScreen');
+    }
+  }
+
+  /// Deterministic positive int UID from a userId string.
+  /// Must be stable within a session. On Flutter Web, Dart2JS String.hashCode
+  /// is deterministic; this helper makes the intent explicit.
+  static int _stableUid(String userId) {
+    var h = 0;
+    for (final c in userId.codeUnits) {
+      h = (h * 31 + c) & 0x7FFFFFFF;
+    }
+    return h == 0 ? 1 : h;
+  }
+
   @override
   void dispose() {
-    // Reset the diff tracker so the next room starts with a clean baseline.
+    // ── RTC teardown (safe: uses cached references) ─────────────────────────
+    _rtcService?.dispose().ignore();
+    _rtcServiceNotifier.state = null;
+    // ── Firestore session teardown ───────────────────────────────────────────
+    _roomController.leaveRoom().ignore();
+    // Reset diff tracker so the next room starts with a clean baseline.
     RoomContractGuard.reset();
     super.dispose();
   }
@@ -203,8 +295,7 @@ class _RoomScaffold extends StatelessWidget {
               _TypingIndicator(
                 typingUsers: roomState.typingUsers.keys.toList(),
               ),
-              const _RoomActionBar(),
-              _MessageInput(roomId: roomId),
+              _RoomActionBar(roomId: roomId),
             ],
           ),
         ),
@@ -376,146 +467,61 @@ class _MessageInputState extends ConsumerState<_MessageInput> {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROOM ACTION BAR
-//
-// Current state: pure UI scaffolding — no RTC or audio implementation.
-//
-// INTENDED RTC INTEGRATION (do not implement here yet):
-//
-//   MIC:
-//     • getUserMedia({ audio: true }) via RtcRoomService.setBroadcaster()
-//     • _micActive → replace setState with ref.read(rtcMicProvider.notifier)
-//     • Mute path → RtcRoomService.mute(true/false)
-//
-//   SCREEN / AUDIO SHARE:
-//     • getDisplayMedia({ video: true, audio: true }) — web only
-//     • _audioShareAvailable → replace with ref.watch(roomCapabilityProvider)
-//       which checks kIsWeb && navigator.mediaDevices.getDisplayMedia support
-//     • _sharingAudio → replace setState with ref.read(audioShareProvider.notifier)
-//     • _startScreenShare / _stopScreenShare wired to RtcRoomService
-//
-//   STREAM LIFECYCLE:
-//     • Tracks cleaned up in provider dispose(), not here
-//     • This widget becomes ConsumerStatefulWidget at integration time
-//
-// DOES NOT touch sendMessageProvider or messaging pipeline.
+// Mic and screen-share controls. Wired to RtcRoomService via rtcServiceProvider.
+// Mic button is disabled until the RTC channel connects (service != null).
+// Screen share remains a no-op until getDisplayMedia integration lands.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _RoomActionBar extends StatefulWidget {
-  const _RoomActionBar();
+class _RoomActionBar extends ConsumerStatefulWidget {
+  final String roomId;
+  const _RoomActionBar({required this.roomId});
 
   @override
-  State<_RoomActionBar> createState() => _RoomActionBarState();
+  ConsumerState<_RoomActionBar> createState() => _RoomActionBarState();
 }
 
-class _RoomActionBarState extends State<_RoomActionBar> {
-  // ── Audio UI state block ────────────────────────────────────────────────────
-  // All three fields below are UI-only. They move to provider watchers together
-  // during RTC integration — do not scatter them across the widget.
-
-  /// true = mic is live/publishing; false = muted.
-  /// Initial value: false — mic starts off until user explicitly enables it.
+class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
   bool _micActive = false;
-
-  /// Active microphone [MediaStream] acquired via getUserMedia.
-  /// Null when mic is off or not yet requested.
-  MediaStream? _micStream;
-
-  /// Capability gate: whether getDisplayMedia is available for this session.
-  /// TODO(rtc): replace with `kIsWeb && _checkGetDisplayMediaSupport()` once
-  /// RTC integration lands. Keep false until then so the button stays disabled.
   bool get _audioShareAvailable => false;
-
-  /// true = screen/system audio share is currently active.
-  /// Override via audioShareProvider.notifier on wiring.
   bool _sharingAudio = false;
 
-  // ── RTC lifecycle ────────────────────────────────────────────────────────────
-
-  /// Acquires or releases the microphone via getUserMedia.
-  /// Mic state (_micActive) is only updated AFTER the async operation resolves
-  /// so the UI never shows an optimistic state that getUserMedia then denies.
   Future<void> _toggleMic() async {
+    final service = ref.read(rtcServiceProvider(widget.roomId));
+    if (service == null) return;
+
     if (!_micActive) {
-      // ── Enable mic ────────────────────────────────────────────────────────
-      // Reuse an existing stream if one is already open (prevents double-capture).
-      if (_micStream != null) {
+      try {
+        await service.setBroadcaster(true);
+        await service.mute(false);
         if (!mounted) return;
         setState(() => _micActive = true);
-        return;
-      }
-      try {
-        final stream = await navigator.mediaDevices.getUserMedia({
-          'audio': true,
-          'video': false,
-        });
-        if (!mounted) {
-          // Widget was disposed while awaiting — clean up immediately.
-          for (final track in stream.getAudioTracks()) {
-            await track.stop();
-          }
-          return;
-        }
-        setState(() {
-          _micStream = stream;
-          _micActive = true;
-        });
       } catch (e) {
-        developer.log('_toggleMic: getUserMedia failed — $e',
-            name: 'LiveRoomScreen');
-        // Permission denied or hardware error — revert to off, no crash.
+        developer.log('_toggleMic: enable failed — $e', name: 'LiveRoomScreen');
         if (!mounted) return;
-        setState(() {
-          _micActive = false;
-          _micStream = null;
-        });
+        setState(() => _micActive = false);
       }
     } else {
-      // ── Disable mic ───────────────────────────────────────────────────────
-      _stopMicStream();
+      try {
+        await service.mute(true);
+        await service.setBroadcaster(false);
+      } catch (e) {
+        developer.log('_toggleMic: disable failed — $e', name: 'LiveRoomScreen');
+      }
       if (!mounted) return;
       setState(() => _micActive = false);
     }
   }
 
-  /// Stops all audio tracks and clears the stream reference.
-  void _stopMicStream() {
-    final stream = _micStream;
-    if (stream == null) return;
-    for (final track in stream.getAudioTracks()) {
-      track.stop();
-    }
-    _micStream = null;
-  }
-
-  /// TODO(rtc): call getDisplayMedia({ video: true, audio: true }),
-  /// attach resulting stream to RtcRoomService, then update _sharingAudio.
-  Future<void> _startScreenShare() async { // ignore: unused_element
-    // No-op until RTC integration.
-    if (!mounted) return;
-    setState(() => _sharingAudio = true);
-  }
-
-  /// TODO(rtc): stop getDisplayMedia tracks, detach from RtcRoomService,
-  /// then update _sharingAudio.
   Future<void> _stopScreenShare() async {
-    // No-op until RTC integration.
     if (!mounted) return;
     setState(() => _sharingAudio = false);
   }
 
-  // ── Lifecycle ────────────────────────────────────────────────────────────────
-
-  @override
-  void dispose() {
-    _stopMicStream();
-    super.dispose();
-  }
-
-  // ── Build ───────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Mic button is active only once the RTC channel has connected.
+    final rtcReady = ref.watch(rtcServiceProvider(widget.roomId)) != null;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -528,12 +534,12 @@ class _RoomActionBarState extends State<_RoomActionBar> {
         child: Row(
           children: [
             // ── Mic ──────────────────────────────────────────────────────
-            // Active (publishing):   mic_rounded,    default tonal
-            // Muted:                 mic_off_rounded, errorContainer tint
             IconButton.filledTonal(
-              tooltip: _micActive ? 'Mute mic' : 'Unmute mic',
-              onPressed: () => _toggleMic(),  // async — fire and forget
-              style: !_micActive
+              tooltip: !rtcReady
+                  ? 'Connecting to room…'
+                  : (_micActive ? 'Mute mic' : 'Unmute mic'),
+              onPressed: rtcReady ? () => _toggleMic() : null,
+              style: rtcReady && !_micActive
                   ? IconButton.styleFrom(
                       backgroundColor: cs.errorContainer,
                       foregroundColor: cs.onErrorContainer,
@@ -544,14 +550,7 @@ class _RoomActionBarState extends State<_RoomActionBar> {
               ),
             ),
             const SizedBox(width: 4),
-            // ── Audio share ──────────────────────────────────────────────
-            // Disabled (capability absent):
-            //   onPressed null → Flutter filledTonal auto-greys icon + bg
-            //   tooltip explains reason
-            // Inactive (available, not sharing):
-            //   screen_share_outlined, default tonal
-            // Active (sharing):
-            //   graphic_eq ("turntable"), primaryContainer tint
+            // ── Audio share (no-op until getDisplayMedia integration) ────
             IconButton.filledTonal(
               tooltip: !_audioShareAvailable
                   ? 'Screen sharing unavailable (web permission required)'
@@ -561,11 +560,7 @@ class _RoomActionBarState extends State<_RoomActionBar> {
               onPressed: !_audioShareAvailable
                   ? null
                   : () async {
-                      if (_sharingAudio) {
-                        await _stopScreenShare();
-                      } else {
-                        await _startScreenShare();
-                      }
+                      if (_sharingAudio) await _stopScreenShare();
                     },
               style: _audioShareAvailable && _sharingAudio
                   ? IconButton.styleFrom(
@@ -579,7 +574,6 @@ class _RoomActionBarState extends State<_RoomActionBar> {
                     : Icons.screen_share_outlined,
               ),
             ),
-            // Spacer keeps buttons left-anchored; future action slots go here.
             const Spacer(),
           ],
         ),

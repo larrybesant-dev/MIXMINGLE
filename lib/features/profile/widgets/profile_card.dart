@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme.dart';
+import '../../../widgets/safe_network_avatar.dart';
 
 enum ProfilePresenceState { online, recentlyActive, inRoom, offline }
 
@@ -115,24 +116,18 @@ class ProfileHeader extends StatelessWidget {
                       ),
                     ],
             ),
-            child: CircleAvatar(
+            child: SafeNetworkAvatar(
               radius: 36,
+              avatarUrl: avatarUrl,
               backgroundColor: VelvetNoir.surfaceHigh,
-              backgroundImage: (avatarUrl ?? '').isEmpty
-                  ? null
-                  : CachedNetworkImageProvider(avatarUrl!),
-              child: (avatarUrl ?? '').isNotEmpty
-                  ? null
-                  : Text(
-                      displayName.isNotEmpty
-                          ? displayName[0].toUpperCase()
-                          : '?',
-                      style: GoogleFonts.raleway(
-                        color: VelvetNoir.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 26,
-                      ),
-                    ),
+              fallbackText: displayName.isNotEmpty
+                  ? displayName[0].toUpperCase()
+                  : '?',
+              fallbackTextStyle: GoogleFonts.raleway(
+                color: VelvetNoir.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 26,
+              ),
             ),
           ),
           const SizedBox(height: 10),

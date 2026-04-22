@@ -54,6 +54,7 @@ import '../features/after_dark/widgets/after_dark_shell.dart';
 import '../shared/widgets/app_shell.dart';
 import '../shared/widgets/messenger_shell_route.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
+import 'package:mixvy/features/auth/screens/forgot_password_screen.dart';
 import 'package:mixvy/features/auth/providers/admin_provider.dart';
 import '../features/auth/register_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -334,6 +335,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
 import '../../../presentation/providers/user_provider.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import '../controllers/room_state.dart';
 
 class RoomUserPresentation {
@@ -83,13 +84,9 @@ class RoomParticipantActionSheet extends StatelessWidget {
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundImage: _avatarImageProvider(
-                  userPresentation.avatarUrl,
-                ),
-                child: _avatarImageProvider(userPresentation.avatarUrl) == null
-                    ? const Icon(Icons.person)
-                    : null,
+              leading: SafeNetworkAvatar(
+                radius: 20,
+                avatarUrl: userPresentation.avatarUrl,
               ),
               title: Text(
                 userPresentation.displayName,
@@ -215,15 +212,10 @@ class RoomRosterSheet extends StatelessWidget {
                     leading: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        CircleAvatar(
-                          backgroundImage: _avatarImageProvider(
-                            presentation.avatarUrl,
-                          ),
-                          child:
-                              _avatarImageProvider(presentation.avatarUrl) ==
-                                  null
-                              ? Icon(_roleIcon(participant, hostUserId))
-                              : null,
+                        SafeNetworkAvatar(
+                          radius: 20,
+                          avatarUrl: presentation.avatarUrl,
+                          fallbackText: null,
                         ),
                         Positioned(
                           right: -2,
@@ -298,14 +290,6 @@ class RoomRosterSheet extends StatelessWidget {
     }
     return Icons.person;
   }
-}
-
-ImageProvider<Object>? _avatarImageProvider(String? avatarUrl) {
-  final value = avatarUrl?.trim();
-  if (value == null || value.isEmpty) {
-    return null;
-  }
-  return CachedNetworkImageProvider(value);
 }
 
 class _RoleChip extends StatelessWidget {

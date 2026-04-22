@@ -82,35 +82,42 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
   }
 
   Widget _buildBootShell({String message = 'Starting MixVy...'}) {
+    Widget body = Scaffold(
+      backgroundColor: VelvetNoir.surface,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(color: VelvetNoir.primary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: const TextStyle(
+                color: VelvetNoir.onSurface,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
     return MaterialApp(
       title: 'MixVy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: midnightCreativeTheme,
-      home: Scaffold(
-        backgroundColor: VelvetNoir.surface,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(color: VelvetNoir.primary),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                style: const TextStyle(
-                  color: VelvetNoir.onSurface,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      home: body,
+      // On web, Flutter reads the browser URL and tries to navigate there via
+      // the plain Navigator.  Without a catch-all route the framework logs
+      // "Could not navigate to initial route" and falls back to '/'.
+      // Returning the boot shell for every unknown path suppresses that warning
+      // while keeping the correct loading UX.
+      onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => body),
     );
   }
 

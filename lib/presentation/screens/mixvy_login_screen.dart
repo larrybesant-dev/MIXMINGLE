@@ -93,26 +93,6 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     }
   }
 
-  Future<void> _resetPassword() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      await _showMessage(
-        'Enter your email first to reset password',
-        isError: true,
-      );
-      return;
-    }
-    final authController = ref.read(authControllerProvider.notifier);
-    await authController.resetPassword(email);
-    if (!mounted) return;
-    final authState = ref.read(authControllerProvider);
-    if (authState.error != null) {
-      await _showMessage(authState.error ?? '', isError: true);
-      return;
-    }
-    await _showMessage('Password reset email sent');
-  }
-
   Future<void> _signInWithGoogle() async {
     final authController = ref.read(authControllerProvider.notifier);
     await authController.signInWithGoogle();
@@ -517,7 +497,9 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: authState.isLoading ? null : _resetPassword,
+                      onPressed: authState.isLoading
+                          ? null
+                          : () => context.push('/forgot-password'),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 0,

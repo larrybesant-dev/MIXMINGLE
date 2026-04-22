@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../widgets/safe_network_avatar.dart';
 import '../../core/layout/app_layout.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
@@ -629,24 +630,18 @@ class _NewMemberChip extends StatelessWidget {
                   color: VelvetNoir.primary.withValues(alpha: 0.25),
                   border: Border.all(color: VelvetNoir.primary, width: 2),
                 ),
-                child: CircleAvatar(
+                child: SafeNetworkAvatar(
                   radius: 26,
+                  avatarUrl: avatarUrl,
                   backgroundColor: VelvetNoir.surfaceHigh,
-                  backgroundImage: avatarUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(avatarUrl)
-                      : null,
-                  child: avatarUrl.isEmpty
-                      ? Text(
-                          user.username.isNotEmpty
-                              ? user.username[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: VelvetNoir.primary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                          ),
-                        )
-                      : null,
+                  fallbackText: user.username.isNotEmpty
+                      ? user.username[0].toUpperCase()
+                      : '?',
+                  fallbackTextStyle: const TextStyle(
+                    color: VelvetNoir.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
                 ),
               ),
               Positioned(

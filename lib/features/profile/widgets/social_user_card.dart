@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import 'profile_card.dart';
 
 class SocialUserCard extends StatelessWidget {
@@ -60,23 +61,17 @@ class SocialUserCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: statusColor, width: 2),
                     ),
-                    child: CircleAvatar(
+                    child: SafeNetworkAvatar(
                       radius: 24,
+                      avatarUrl: avatarUrl,
                       backgroundColor: VelvetNoir.surface,
-                      backgroundImage: (avatarUrl ?? '').isEmpty
-                          ? null
-                          : CachedNetworkImageProvider(avatarUrl!),
-                      child: (avatarUrl ?? '').isEmpty
-                          ? Text(
-                              displayName.isEmpty
-                                  ? '?'
-                                  : displayName[0].toUpperCase(),
-                              style: GoogleFonts.raleway(
-                                fontWeight: FontWeight.w800,
-                                color: VelvetNoir.primary,
-                              ),
-                            )
-                          : null,
+                      fallbackText: displayName.isEmpty
+                          ? '?'
+                          : displayName[0].toUpperCase(),
+                      fallbackTextStyle: GoogleFonts.raleway(
+                        fontWeight: FontWeight.w800,
+                        color: VelvetNoir.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

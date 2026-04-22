@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import '../providers/story_provider.dart';
 
 /// Full-screen story viewer for a single user's stories.
@@ -212,15 +213,13 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Row(
                         children: [
-                          CircleAvatar(
+                          SafeNetworkAvatar(
                             radius: 18,
+                            avatarUrl: story.userAvatarUrl,
                             backgroundColor: Colors.white24,
-                            backgroundImage: story.userAvatarUrl != null
-                                ? CachedNetworkImageProvider(story.userAvatarUrl!)
-                                : null,
-                            child: story.userAvatarUrl == null
-                                ? const Icon(Icons.person, color: Colors.white, size: 18)
-                                : null,
+                            fallbackTextStyle: const TextStyle(
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(

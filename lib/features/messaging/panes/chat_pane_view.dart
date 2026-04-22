@@ -13,6 +13,7 @@ import '../../../features/feed/providers/user_providers.dart' as feed_user;
 import '../../../features/friends/models/friend_roster_entry.dart';
 import '../../../features/friends/providers/friends_providers.dart';
 import '../../../services/web_popout_service.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
 import '../models/message_model.dart';
@@ -253,24 +254,18 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
+                SafeNetworkAvatar(
                   radius: 22,
+                  avatarUrl: displayAvatarUrl,
                   backgroundColor: VelvetNoir.primaryDim,
-                  backgroundImage: displayAvatarUrl != null
-                    ? CachedNetworkImageProvider(displayAvatarUrl)
-                      : null,
-                  child: displayAvatarUrl == null
-                      ? Text(
-                      displayName.isNotEmpty
-                        ? displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        )
-                      : null,
+                  fallbackText: displayName.isNotEmpty
+                      ? displayName[0].toUpperCase()
+                      : '?',
+                  fallbackTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -415,24 +410,18 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           if (!isOwn) ...[
-                            CircleAvatar(
+                            SafeNetworkAvatar(
                               radius: 14,
+                              avatarUrl: message.senderAvatarUrl,
                               backgroundColor: VelvetNoir.primaryDim,
-                              backgroundImage: message.senderAvatarUrl != null
-                                ? CachedNetworkImageProvider(message.senderAvatarUrl!)
-                                  : null,
-                              child: message.senderAvatarUrl == null
-                                  ? Text(
-                                  message.senderName.isNotEmpty
-                                    ? message.senderName[0].toUpperCase()
-                                          : '?',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                  : null,
+                              fallbackText: message.senderName.isNotEmpty
+                                  ? message.senderName[0].toUpperCase()
+                                  : '?',
+                              fallbackTextStyle: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(width: 6),
                           ],

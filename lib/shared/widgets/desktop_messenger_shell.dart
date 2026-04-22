@@ -11,6 +11,7 @@ import '../../features/friends/models/friend_roster_entry.dart';
 import '../../features/friends/providers/friends_providers.dart';
 import '../../features/messaging/models/conversation_model.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
+import '../../widgets/safe_network_avatar.dart';
 import 'messenger_shell_route.dart';
 import '../../models/presence_model.dart';
 import '../../models/user_model.dart';
@@ -549,13 +550,17 @@ class _FriendRosterRowState extends State<_FriendRosterRow> {
           ),
           child: Row(
             children: [
-              CircleAvatar(
+              SafeNetworkAvatar(
                 radius: 24,
+                avatarUrl: avatarUrl,
                 backgroundColor: VelvetNoir.surfaceHighest,
-                backgroundImage: avatarUrl == null ? null : CachedNetworkImageProvider(avatarUrl),
-                child: avatarUrl == null
-                    ? Text(widget.entry.user.username.isNotEmpty ? widget.entry.user.username[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
-                    : null,
+                fallbackText: widget.entry.user.username.isNotEmpty
+                    ? widget.entry.user.username[0].toUpperCase()
+                    : '?',
+                fallbackTextStyle: const TextStyle(
+                  color: VelvetNoir.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 180),
@@ -655,10 +660,7 @@ class _RecentConversationRowState extends State<_RecentConversationRow> {
 
   @override
   Widget build(BuildContext context) {
-    final avatarImage = switch (widget.avatarUrl) {
-      final url? => CachedNetworkImageProvider(url),
-      null => null,
-    };
+    final avatarUrl = widget.avatarUrl;
     final backgroundColor = widget.isSelected
         ? VelvetNoir.primary.withValues(alpha: 0.12)
         : _isHovered
@@ -699,13 +701,17 @@ class _RecentConversationRowState extends State<_RecentConversationRow> {
           ),
           child: Row(
             children: [
-              CircleAvatar(
+              SafeNetworkAvatar(
                 radius: 24,
+                avatarUrl: avatarUrl,
                 backgroundColor: VelvetNoir.surfaceHighest,
-                backgroundImage: avatarImage,
-                child: widget.avatarUrl == null
-                    ? Text(widget.displayName.isNotEmpty ? widget.displayName[0].toUpperCase() : '?', style: const TextStyle(color: VelvetNoir.primary, fontWeight: FontWeight.w800))
-                    : null,
+                fallbackText: widget.displayName.isNotEmpty
+                    ? widget.displayName[0].toUpperCase()
+                    : '?',
+                fallbackTextStyle: const TextStyle(
+                  color: VelvetNoir.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 180),

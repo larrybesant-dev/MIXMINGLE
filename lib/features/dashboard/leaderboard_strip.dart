@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../widgets/safe_network_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
@@ -100,21 +101,15 @@ class _LeaderCard extends StatelessWidget {
             Stack(
               alignment: Alignment.topLeft,
               children: [
-                CircleAvatar(
+                SafeNetworkAvatar(
                   radius: 22,
+                  avatarUrl: user.avatarUrl,
                   backgroundColor: VelvetNoir.surfaceHighest,
-                  backgroundImage: user.avatarUrl != null
-                      ? CachedNetworkImageProvider(user.avatarUrl!)
-                      : null,
-                  child: user.avatarUrl == null
-                      ? Text(
-                          user.username.isNotEmpty
-                              ? user.username[0].toUpperCase()
-                              : '?',
-                          style:
-                              const TextStyle(color: VelvetNoir.onSurfaceVariant),
-                        )
-                      : null,
+                  fallbackText: user.username.isNotEmpty
+                      ? user.username[0].toUpperCase()
+                      : '?',
+                  fallbackTextStyle:
+                      const TextStyle(color: VelvetNoir.onSurfaceVariant),
                 ),
                 if (rank <= 3)
                   Container(

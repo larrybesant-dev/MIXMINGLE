@@ -155,20 +155,36 @@ class _PresenceRingAvatar extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(2),
-        child: CircleAvatar(
-          backgroundColor: VelvetNoir.surfaceHighest,
-          backgroundImage:
-              avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
-          child: avatarUrl == null
-              ? Text(
-                  username.isNotEmpty ? username[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                    color: VelvetNoir.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
+        child: ClipOval(
+          child: avatarUrl != null
+              ? CachedNetworkImage(
+                  imageUrl: avatarUrl!,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => CircleAvatar(
+                    backgroundColor: VelvetNoir.surfaceHighest,
+                    child: Text(
+                      username.isNotEmpty ? username[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: VelvetNoir.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                 )
-              : null,
+              : CircleAvatar(
+                  backgroundColor: VelvetNoir.surfaceHighest,
+                  child: Text(
+                    username.isNotEmpty ? username[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                      color: VelvetNoir.primary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
         ),
       ),
     );
