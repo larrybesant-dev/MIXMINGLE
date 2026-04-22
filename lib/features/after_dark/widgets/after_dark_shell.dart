@@ -1,38 +1,18 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../providers/after_dark_provider.dart';
 import '../theme/after_dark_theme.dart';
-import '../../../features/messaging/providers/messaging_provider.dart';
 
-const _edSurface    = EmberDark.surface;
-const _edPrimary    = EmberDark.primary;
-const _edPrimaryDim = EmberDark.primaryDim;
-const _edOnVariant  = EmberDark.onSurfaceVariant;
-const _edGhost      = Color(0x1A5A2A3A);
+const _edSurface = EmberDark.surface;
 
 /// Persistent shell wrapping every After Dark screen.
 class AfterDarkShell extends ConsumerWidget {
   final Widget child;
   const AfterDarkShell({required this.child, super.key});
-
-  static int _indexForLocation(String location) {
-    if (location.startsWith('/after-dark/lounges'))  return 1;
-    if (location.startsWith('/after-dark/profile'))  return 2;
-    return 0;
-  }
-
-  static const List<String> _roots = [
-    '/after-dark',
-    '/after-dark/lounges',
-    '/after-dark/profile',
-  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,31 +24,38 @@ class AfterDarkShell extends ConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) context.go('/after-dark/unlock');
       });
-      return const AppPageScaffold(
+      return const Scaffold(
         backgroundColor: EmberDark.surface,
-        safeArea: false,
-        maxContentWidth: double.infinity,
-        body: AppLoadingView(label: 'Locking After Dark...'),
+        body: Center(child: AppLoadingView(label: 'Locking After Dark...')),
       );
     }
 
-    final location      = GoRouterState.of(context).uri.toString();
-    final selectedIndex = _indexForLocation(location);
-    final unreadMsgs    = ref.watch(unreadMessageCountProvider);
+    final path = GoRouterState.of(context).uri.path;
+    final tabIndex = path.startsWith('/after-dark/lounges')
+        ? 1
+        : path.startsWith('/after-dark/profile')
+            ? 2
+            : 0;
 
-    return AppPageScaffold(
+    return Scaffold(
       backgroundColor: _edSurface,
-      safeArea: false,
-      maxContentWidth: double.infinity,
       appBar: _AfterDarkTopBar(onExit: () {
         ref.read(afterDarkControllerProvider).lock();
         context.go('/');
       }),
       body: child,
-      bottomNavigationBar: _AfterDarkBottomNav(
-        selectedIndex: selectedIndex,
-        unreadMsgs: unreadMsgs,
-        onTap: (i) => context.go(_roots[i]),
+      bottomNavigationBar: _AfterDarkTabBar(
+        currentIndex: tabIndex,
+        onTap: (i) {
+          switch (i) {
+            case 0:
+              context.go('/after-dark');
+            case 1:
+              context.go('/after-dark/lounges');
+            case 2:
+              context.go('/after-dark/profile');
+          }
+        },
       ),
     );
   }
@@ -125,140 +112,45 @@ class _AfterDarkTopBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-// ── Bottom navigation bar ─────────────────────────────────────────────────────
-class _AfterDarkBottomNav extends StatelessWidget {
-  const _AfterDarkBottomNav({
-    required this.selectedIndex,
-    required this.unreadMsgs,
-    required this.onTap,
-  });
-
-  final int selectedIndex;
-  final int unreadMsgs;
+// ── Bottom tab bar for After Dark sections ────────────────────────────────────
+class _AfterDarkTabBar extends StatelessWidget {
+  final int currentIndex;
   final void Function(int) onTap;
+  const _AfterDarkTabBar({required this.currentIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Color(0xEE0C0508),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(top: BorderSide(color: _edGhost)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: SizedBox(
-              height: 68,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _navItem(0, Icons.whatshot_outlined, Icons.whatshot_rounded,
-                      'Feed'),
-                  _navItem(1, Icons.nightlife_outlined,
-                      Icons.nightlife_rounded, 'Lounges'),
-                  _createButton(context),
-                  _navItem(2, Icons.person_outline_rounded,
-                      Icons.person_rounded, 'Profile'),
-                ],
-              ),
-            ),
-          ),
-        ),
+    const items = [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.local_fire_department_outlined),
+        activeIcon: Icon(Icons.local_fire_department_rounded),
+        label: 'Feed',
       ),
-    );
-  }
+      BottomNavigationBarItem(
+        icon: Icon(Icons.meeting_room_outlined),
+        activeIcon: Icon(Icons.meeting_room_rounded),
+        label: 'Lounges',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person_outline_rounded),
+        activeIcon: Icon(Icons.person_rounded),
+        label: 'Profile',
+      ),
+    ];
 
-  Widget _navItem(
-      int idx, IconData icon, IconData selectedIcon, String label) {
-    final isSelected = selectedIndex == idx;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(idx),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 40,
-              height: 32,
-              decoration: isSelected
-                  ? BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          _edPrimary.withValues(alpha: 0.22),
-                          _edPrimaryDim.withValues(alpha: 0.14),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    )
-                  : null,
-              child: Icon(
-                isSelected ? selectedIcon : icon,
-                color: isSelected ? _edPrimary : _edOnVariant,
-                size: 22,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: GoogleFonts.raleway(
-                fontSize: 10,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? _edPrimary : _edOnVariant,
-              ),
-            ),
-          ],
-        ),
+    return BottomNavigationBar(
+      currentIndex: currentIndex,
+      onTap: onTap,
+      backgroundColor: EmberDark.surfaceHigh,
+      selectedItemColor: EmberDark.primary,
+      unselectedItemColor: EmberDark.onSurfaceVariant,
+      type: BottomNavigationBarType.fixed,
+      selectedLabelStyle: GoogleFonts.raleway(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
       ),
-    );
-  }
-
-  Widget _createButton(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => GoRouter.of(context).go('/after-dark/create-lounge'),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 44,
-              height: 36,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [_edPrimary, _edPrimaryDim],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: _edPrimary.withValues(alpha: 0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.add_rounded,
-                  color: Colors.white, size: 22),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Host',
-              style: GoogleFonts.raleway(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: _edPrimary),
-            ),
-          ],
-        ),
-      ),
+      unselectedLabelStyle: GoogleFonts.raleway(fontSize: 11),
+      items: items,
     );
   }
 }

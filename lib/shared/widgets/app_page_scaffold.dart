@@ -10,7 +10,6 @@ class AppPageScaffold extends StatelessWidget {
     required this.body,
     this.backgroundColor,
     this.floatingActionButton,
-    this.bottomNavigationBar,
     this.safeArea = true,
     this.padContent = false,
     this.padding,
@@ -22,7 +21,6 @@ class AppPageScaffold extends StatelessWidget {
   final Widget body;
   final Color? backgroundColor;
   final Widget? floatingActionButton;
-  final Widget? bottomNavigationBar;
   final bool safeArea;
   final bool padContent;
   final EdgeInsetsGeometry? padding;
@@ -60,7 +58,6 @@ class AppPageScaffold extends StatelessWidget {
       backgroundColor: scaffoldColor,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       floatingActionButton: floatingActionButton,
-      bottomNavigationBar: bottomNavigationBar,
       body: Stack(
         fit: StackFit.expand,
         children: [

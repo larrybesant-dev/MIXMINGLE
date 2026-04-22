@@ -54,6 +54,7 @@ import '../features/after_dark/widgets/after_dark_shell.dart';
 import '../shared/widgets/app_shell.dart';
 import '../shared/widgets/messenger_shell_route.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
+import 'package:mixvy/features/auth/providers/admin_provider.dart';
 import '../features/auth/register_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../features/profile/profile_screen.dart';
@@ -466,7 +467,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/moderation',
-            builder: (context, state) => const ModerationDashboardScreen(),
+            builder: (context, state) {
+              final isAdmin =
+                  ref.read(isAdminProvider).valueOrNull ?? false;
+              if (!isAdmin) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
+              return const ModerationDashboardScreen();
+            },
           ),
           GoRoute(
             path: '/beta-feedback',
@@ -596,7 +604,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/stories/:userId',
             builder: (context, state) {
-              final userId = state.pathParameters['userId']!;
+              final userId = _pathParamOrNull(state, 'userId');
+              if (userId == null) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
               return StoryViewerScreen(userId: userId);
             },
           ),
