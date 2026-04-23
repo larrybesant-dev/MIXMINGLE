@@ -87,7 +87,7 @@ function Add-Decision {
     [string]$Id,
     [string]$Severity,
     [bool]$Triggered,
-    [string]$Message,
+    [string]$MessageModel,
     [string]$Metric
   )
 
@@ -96,7 +96,7 @@ function Add-Decision {
     severity = $Severity
     triggered = $Triggered
     metric = $Metric
-    message = $Message
+    MessageModel = $MessageModel
   })
 }
 
@@ -139,7 +139,7 @@ $previousBand = if ($previousScores.Count -gt 0) { Get-VolatilityBand -StdDev $p
 $decisions = New-Object System.Collections.ArrayList
 
 $latestVerdictFail = ($latest.releaseVerdict -ne 'PASS')
-Add-Decision -Decisions $decisions -Id 'GV-H1' -Severity 'hard' -Triggered $latestVerdictFail -Metric "latestVerdict=$($latest.releaseVerdict)" -Message 'Block when latest release verdict is FAIL.'
+Add-Decision -Decisions $decisions -Id 'GV-H1' -Severity 'hard' -Triggered $latestVerdictFail -Metric "latestVerdict=$($latest.releaseVerdict)" -MessageModel 'Block when latest release verdict is FAIL.'
 
 $insufficientSamples = ($runs.Count -lt $minSamples)
 
@@ -147,14 +147,14 @@ $slopeBlocked = $false
 if (-not $insufficientSamples -and $recentScores.Count -ge 2) {
   $slopeBlocked = ($recentSlope -lt [double]$policy.slopeBlockThreshold)
 }
-Add-Decision -Decisions $decisions -Id 'GV-H2' -Severity 'hard' -Triggered $slopeBlocked -Metric "recentSlope=$recentSlope threshold=$($policy.slopeBlockThreshold)" -Message 'Block on sustained negative confidence slope in recent window.'
+Add-Decision -Decisions $decisions -Id 'GV-H2' -Severity 'hard' -Triggered $slopeBlocked -Metric "recentSlope=$recentSlope threshold=$($policy.slopeBlockThreshold)" -MessageModel 'Block on sustained negative confidence slope in recent window.'
 
 $volatilityBlocked = $false
 $targetBands = @($policy.volatilityEscalationBlock.to)
 if (-not $insufficientSamples -and $previousScores.Count -gt 0) {
   $volatilityBlocked = (($previousBand -eq $policy.volatilityEscalationBlock.from) -and ($targetBands -contains $recentBand))
 }
-Add-Decision -Decisions $decisions -Id 'GV-H3' -Severity 'hard' -Triggered $volatilityBlocked -Metric "previousBand=$previousBand recentBand=$recentBand" -Message 'Block on volatility escalation from stable to moderate/volatile.'
+Add-Decision -Decisions $decisions -Id 'GV-H3' -Severity 'hard' -Triggered $volatilityBlocked -Metric "previousBand=$previousBand recentBand=$recentBand" -MessageModel 'Block on volatility escalation from stable to moderate/volatile.'
 
 $lowThreshold = [double]$policy.confidenceThreshold
 $consecutiveLowLimit = [int]$policy.consecutiveLowConfidenceToBlock
@@ -167,7 +167,7 @@ for ($i = $runs.Count - 1; $i -ge 0; $i--) {
   }
 }
 $lowConfidenceBlocked = (-not $insufficientSamples) -and ($consecutiveLow -ge $consecutiveLowLimit)
-Add-Decision -Decisions $decisions -Id 'GV-H4' -Severity 'hard' -Triggered $lowConfidenceBlocked -Metric "consecutiveLow=$consecutiveLow threshold=$consecutiveLowLimit limitScore=$lowThreshold" -Message 'Block on consecutive low-confidence runs.'
+Add-Decision -Decisions $decisions -Id 'GV-H4' -Severity 'hard' -Triggered $lowConfidenceBlocked -Metric "consecutiveLow=$consecutiveLow threshold=$consecutiveLowLimit limitScore=$lowThreshold" -MessageModel 'Block on consecutive low-confidence runs.'
 
 $varianceWarning = $false
 $varianceIncreasePct = 0.0
@@ -179,7 +179,7 @@ if ($previousScores.Count -gt 0) {
   }
   $varianceWarning = ($varianceIncreasePct -ge [double]$policy.varianceIncreaseWarningPercent)
 }
-Add-Decision -Decisions $decisions -Id 'GV-W1' -Severity 'warning' -Triggered $varianceWarning -Metric "varianceIncreasePct=$varianceIncreasePct threshold=$($policy.varianceIncreaseWarningPercent)" -Message 'Warn when confidence variance increases significantly vs baseline window.'
+Add-Decision -Decisions $decisions -Id 'GV-W1' -Severity 'warning' -Triggered $varianceWarning -Metric "varianceIncreasePct=$varianceIncreasePct threshold=$($policy.varianceIncreaseWarningPercent)" -MessageModel 'Warn when confidence variance increases significantly vs baseline window.'
 
 $confidenceDropWarn = $false
 $delta = Get-Numeric -Value $dashboard.summary.scoreDeltaFromPrevious
@@ -187,10 +187,10 @@ $latestTierPass = ([bool]$latest.tier0Pass -and [bool]$latest.tier1Pass)
 if ($latestTierPass) {
   $confidenceDropWarn = ($delta -le -1 * [double]$policy.confidenceDropWarningThreshold)
 }
-Add-Decision -Decisions $decisions -Id 'GV-W2' -Severity 'warning' -Triggered $confidenceDropWarn -Metric "delta=$delta threshold=-$($policy.confidenceDropWarningThreshold) latestTierPass=$latestTierPass" -Message 'Warn when confidence drops despite Tier 0 and Tier 1 passing.'
+Add-Decision -Decisions $decisions -Id 'GV-W2' -Severity 'warning' -Triggered $confidenceDropWarn -Metric "delta=$delta threshold=-$($policy.confidenceDropWarningThreshold) latestTierPass=$latestTierPass" -MessageModel 'Warn when confidence drops despite Tier 0 and Tier 1 passing.'
 
 $sampleNotice = $insufficientSamples
-Add-Decision -Decisions $decisions -Id 'GV-I1' -Severity 'info' -Triggered $sampleNotice -Metric "runCount=$($runs.Count) minRequired=$minSamples" -Message 'Trend hard-rules are observation-only until minimum sample size is reached.'
+Add-Decision -Decisions $decisions -Id 'GV-I1' -Severity 'info' -Triggered $sampleNotice -Metric "runCount=$($runs.Count) minRequired=$minSamples" -MessageModel 'Trend hard-rules are observation-only until minimum sample size is reached.'
 
 $hardTriggered = @($decisions | Where-Object { $_.severity -eq 'hard' -and $_.triggered }).Count
 $warningTriggered = @($decisions | Where-Object { $_.severity -eq 'warning' -and $_.triggered }).Count
@@ -250,12 +250,12 @@ $md = @(
   '',
   '## Rule Outcomes',
   '',
-  '| Rule | Severity | Triggered | Metric | Message |',
+  '| Rule | Severity | Triggered | Metric | MessageModel |',
   '|---|---|---:|---|---|'
 )
 
 foreach ($d in $decisions) {
-  $md += "| $($d.id) | $($d.severity) | $($d.triggered) | $($d.metric) | $($d.message) |"
+  $md += "| $($d.id) | $($d.severity) | $($d.triggered) | $($d.metric) | $($d.MessageModel) |"
 }
 
 $outMdDir = Split-Path -Path $OutputMarkdown -Parent

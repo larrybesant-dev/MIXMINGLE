@@ -142,7 +142,7 @@ made adaptive (it would break the deterministic merge contract).
 These states **must never exist** in any emitted `RoomState`. If they are
 detected post-self-heal, it is a programming bug in the resolution layer.
 
-| # | Invariant | Assertion message prefix |
+| # | Invariant | Assertion MessageModel prefix |
 |---|-----------|--------------------------|
 | I-1 | `speakerIds.length <= maxSpeakers` | `"speakerIds.length exceeds maxSpeakers"` |
 | I-2 | Every id in `speakerIds` is in `userIds` or equals `hostId` | `"speakerIds contains an id not in userIds or hostId"` |

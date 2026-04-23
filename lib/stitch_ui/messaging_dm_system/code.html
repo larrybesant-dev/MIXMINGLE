@@ -107,7 +107,7 @@
             backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .message-bubble-user {
+        .MessageModel-bubble-user {
             background: linear-gradient(135deg, #7000ff 0%, #00647c 100%);
         }
         .custom-scrollbar::-webkit-scrollbar {
@@ -133,7 +133,7 @@
 <div class="hidden md:flex gap-6">
 <a class="text-white font-bold font-['Space_Grotesk'] text-sm tracking-tight hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">Feed</a>
 <a class="text-white/60 font-['Space_Grotesk'] text-sm tracking-tight hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">Explore</a>
-<a class="text-white font-bold font-['Space_Grotesk'] text-sm tracking-tight hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">Messages</a>
+<a class="text-white font-bold font-['Space_Grotesk'] text-sm tracking-tight hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">MessageModels</a>
 </div>
 </div>
 <div class="flex items-center gap-4">
@@ -175,7 +175,7 @@
 </a>
 <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600/20 to-blue-500/20 border-r-2 border-purple-500 text-white font-['Space_Grotesk'] font-medium text-sm group" href="#">
 <span class="material-symbols-outlined text-purple-500 group-hover:translate-x-1 transition-transform">forum</span>
-<span>Messages</span>
+<span>MessageModels</span>
 </a>
 <a class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/40 hover:text-white/80 hover:bg-white/5 transition-all duration-300 font-['Space_Grotesk'] font-medium text-sm group" href="#">
 <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">account_circle</span>
@@ -282,7 +282,7 @@
 <div class="flex justify-center">
 <span class="bg-white/5 px-4 py-1 rounded-full text-[10px] text-white/30 font-bold uppercase tracking-widest">Today</span>
 </div>
-<!-- Message Received -->
+<!-- MessageModel Received -->
 <div class="flex gap-4 max-w-[80%]">
 <img alt="Elena" class="w-8 h-8 rounded-lg mt-1" data-alt="Small thumbnail of pink-haired character" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-lyY_vOCnLSo-mE5p-whI6D9LxBcQo6UfN2EGI9c1pLVgM3x2DlojByGrtq5jAHfPekHpPYeXxVBeVSzgPLedZcg31AqG2H3FQOa53Jf5USKwR7L6jTc-ivYq1PWZWM9ppWTYLgs0YW5M0MPlfhj0VF9vaezD_3QGPyeIc_o6Gyut54D0ZkuCjs9CR6prG8n0kBcJk9KKIjFZaKHCZzYEJugMxZ6rp1AGwFVctt4b6OIBJ0ZzKE9fO6nyOjpqBXqv5NwiB4x0i4S6"/>
 <div class="space-y-1">
@@ -310,14 +310,14 @@
 <span class="text-white/30 text-[10px]">Kinetic_Sequence_V1.mp4 (42MB)</span>
 </div>
 </div>
-<!-- Message Sent -->
+<!-- MessageModel Sent -->
 <div class="flex flex-row-reverse gap-4 max-w-[80%] ml-auto">
 <div class="space-y-1 flex flex-col items-end">
 <div class="flex items-baseline gap-2">
 <span class="text-white/20 text-[10px]">12:45 PM</span>
 <span class="text-white text-xs font-bold">You</span>
 </div>
-<div class="message-bubble-user text-white p-4 rounded-2xl rounded-tr-none shadow-lg shadow-purple-900/20">
+<div class="MessageModel-bubble-user text-white p-4 rounded-2xl rounded-tr-none shadow-lg shadow-purple-900/20">
 <p class="text-sm leading-relaxed font-body-md">The render looks absolutely insane! 🚀 The way the neon pulses with the bass line is perfect.</p>
 </div>
 <div class="flex items-center gap-1">
@@ -326,7 +326,7 @@
 </div>
 </div>
 </div>
-<!-- Message Received (Typing state) -->
+<!-- MessageModel Received (Typing state) -->
 <div class="flex gap-4 max-w-[80%]">
 <img alt="Elena" class="w-8 h-8 rounded-lg" data-alt="Small thumbnail of pink-haired character" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAD3Az05GFvzAWDzqcKSs_Ih73tJ1IIVkLN3sC7Q4PocYnt03V-CyMwFBeP6fFQ-Yj49tpK8WE_WiQl-7El31k1ce8NTXjYGgGiGderY57S7_D8LIKvlH2WcUrZqQ8S0TGfblRR1DA9HlyNtmJg4_JOaCfKjC3Ox5rY3qRIjvsriDpDvWcTLdUZJqOySCunngUGjVjrtLsTarWL5I3ZzmhgoHtDJlQOhwhwHVnKlxmwxA0ocj3Vmau-rgcC1CV4bRO62J1XghsOa95"/>
 <div class="bg-surface-container-high/50 p-3 rounded-2xl flex gap-1 items-center px-4">
@@ -348,7 +348,7 @@
 <span class="material-symbols-outlined">gif_box</span>
 </button>
 </div>
-<textarea class="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-white/20 py-3 resize-none custom-scrollbar max-h-32" placeholder="Message Elena Vance..." rows="1"></textarea>
+<textarea class="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-white/20 py-3 resize-none custom-scrollbar max-h-32" placeholder="MessageModel Elena Vance..." rows="1"></textarea>
 <div class="flex gap-1 p-1">
 <button class="w-10 h-10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all">
 <span class="material-symbols-outlined">sentiment_satisfied</span>

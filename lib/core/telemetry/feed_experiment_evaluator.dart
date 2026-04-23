@@ -121,7 +121,7 @@ class FeedExperimentEvaluator {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'feed_experiment_snapshot',
-      message: 'Captured experiment state before rollout action.',
+      MessageModel: 'Captured experiment state before rollout action.',
       result: pendingAction,
       metadata: <String, Object?>{
         ...FeedAttentionExperiment.telemetryMetadata(),
@@ -132,7 +132,7 @@ class FeedExperimentEvaluator {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'feed_experiment_decision',
-      message: evaluation.summary,
+      MessageModel: evaluation.summary,
       result: evaluation.decision.name,
       metadata: <String, Object?>{
         ...FeedAttentionExperiment.telemetryMetadata(),

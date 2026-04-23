@@ -94,7 +94,7 @@ const CHECKOUT_PRODUCTS = {
 const db = admin.firestore();
 const CHAT_RETENTION_BATCH_LIMIT = 400;
 
-function buildMessagePreview(content) {
+function buildMessageModelPreview(content) {
   const normalized = typeof content === "string" ? content.trim() : "";
   if (!normalized) return null;
   return normalized.length <= 140 ? normalized : `${normalized.slice(0, 137)}...`;
@@ -106,46 +106,46 @@ async function rebuildConversationSummary(conversationId) {
   if (!conversationSnap.exists) return;
 
   let query = conversationRef
-    .collection("messages")
+    .collection("MessageModels")
     .orderBy("createdAt", "desc")
     .limit(50);
 
-  let latestMessage = null;
+  let latestMessageModel = null;
   let pageSnap = await query.get();
-  while (!pageSnap.empty && latestMessage == null) {
+  while (!pageSnap.empty && latestMessageModel == null) {
     for (const doc of pageSnap.docs) {
       const data = doc.data() || {};
       if (data.isDeleted === true) continue;
-      latestMessage = {id: doc.id, data};
+      latestMessageModel = {id: doc.id, data};
       break;
     }
 
-    if (latestMessage != null) break;
+    if (latestMessageModel != null) break;
 
     query = conversationRef
-      .collection("messages")
+      .collection("MessageModels")
       .orderBy("createdAt", "desc")
       .startAfter(pageSnap.docs[pageSnap.docs.length - 1])
       .limit(50);
     pageSnap = await query.get();
   }
 
-  if (latestMessage == null) {
+  if (latestMessageModel == null) {
     await conversationRef.update({
-      lastMessageId: null,
-      lastMessagePreview: null,
-      lastMessageSenderId: null,
-      lastMessageAt: null,
+      lastMessageModelId: null,
+      lastMessageModelPreview: null,
+      lastMessageModelSenderId: null,
+      lastMessageModelAt: null,
     });
     return;
   }
 
-  const data = latestMessage.data;
+  const data = latestMessageModel.data;
   await conversationRef.update({
-    lastMessageId: latestMessage.id,
-    lastMessagePreview: buildMessagePreview(data.content),
-    lastMessageSenderId: data.senderId || null,
-    lastMessageAt: data.createdAt || null,
+    lastMessageModelId: latestMessageModel.id,
+    lastMessageModelPreview: buildMessageModelPreview(data.content),
+    lastMessageModelSenderId: data.senderId || null,
+    lastMessageModelAt: data.createdAt || null,
   });
 }
 
@@ -394,7 +394,7 @@ async function createCheckoutSessionHandler(req, res, deps = {}) {
     return res.json({url: session.url});
   } catch (error) {
     console.error(error);
-    return res.status(500).send(error.message);
+    return res.status(500).send(error.MessageModel);
   }
 }
 
@@ -1595,7 +1595,7 @@ async function generateTurnCredentialsHandler(request) {
   } catch (err) {
     logger.warn("generateTurnCredentials upstream unavailable; serving fallback", {
       authUid,
-      error: err instanceof Error ? err.message : String(err),
+      error: err instanceof Error ? err.MessageModel : String(err),
       hasCachedIceServers: cachedTurnIceServers != null,
     });
 
@@ -1752,17 +1752,17 @@ exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}
       process.env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err) {
-    console.error("Webhook signature failed:", err.message);
+    console.error("Webhook signature failed:", err.MessageModel);
     try {
       await db.collection("logs").add({
         type: "stripe_webhook_error",
-        message: err.message,
+        MessageModel: err.MessageModel,
         time: admin.firestore.FieldValue.serverTimestamp(),
       });
     } catch (logErr) {
-      console.error("Failed to log webhook error:", logErr.message);
+      console.error("Failed to log webhook error:", logErr.MessageModel);
     }
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.MessageModel}`);
   }
 
   if (event.type === "checkout.session.completed") {
@@ -2085,17 +2085,17 @@ exports.cleanupExpiredStories = onSchedule("every 24 hours", async () => {
 });
 
 /**
- * cleanupExpiredMessages – scheduled retention job that hard-deletes expired
- * conversation messages and repairs parent conversation preview metadata.
+ * cleanupExpiredMessageModels – scheduled retention job that hard-deletes expired
+ * conversation MessageModels and repairs parent conversation preview metadata.
  */
-exports.cleanupExpiredMessages = onSchedule("every 6 hours", async () => {
+exports.cleanupExpiredMessageModels = onSchedule("every 6 hours", async () => {
   const now = admin.firestore.Timestamp.now();
   const touchedConversationIds = new Set();
   let deletedCount = 0;
 
   while (true) {
     const expired = await db
-      .collectionGroup("messages")
+      .collectionGroup("MessageModels")
       .where("expiresAt", "<=", now)
       .limit(CHAT_RETENTION_BATCH_LIMIT)
       .get();
@@ -2119,7 +2119,7 @@ exports.cleanupExpiredMessages = onSchedule("every 6 hours", async () => {
   }
 
   logger.info(
-    `cleanupExpiredMessages: deleted ${deletedCount} messages across ${touchedConversationIds.size} conversations`,
+    `cleanupExpiredMessageModels: deleted ${deletedCount} MessageModels across ${touchedConversationIds.size} conversations`,
   );
 });
 

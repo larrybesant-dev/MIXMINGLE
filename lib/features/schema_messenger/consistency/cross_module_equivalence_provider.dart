@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/schema_engine/schema_compliance_checker.dart';
 import '../core/schema_engine/schema_governance_contract.dart';
-import '../messages/messages_consistency_contract.dart';
+import '../MessageModel/MessageModel_consistency_contract.dart';
 
 class CrossModuleEquivalenceReport {
   const CrossModuleEquivalenceReport({
@@ -28,19 +28,19 @@ class CrossModuleEquivalenceReport {
 
 final crossModuleEquivalenceProvider =
     Provider<CrossModuleEquivalenceReport>((ref) {
-  final messagesContract = ref.watch(messagesConsistencyContractProvider);
-  final messagesCompliance = ref.watch(schemaComplianceCheckerProvider('messages'));
+  final MessageModelContract = ref.watch(MessageModelConsistencyContractProvider);
+  final MessageModelCompliance = ref.watch(schemaComplianceCheckerProvider('MessageModel'));
 
   final violations = <String>[];
 
   final expectedReference = SchemaGovernanceContract.canonicalModel;
-  final moduleReference = messagesContract.canonicalReference;
+  final moduleReference = MessageModelContract.canonicalReference;
   if (expectedReference != moduleReference) {
     violations.add('reference_mismatch:$moduleReference!=$expectedReference');
   }
 
   final expectedStableThreshold = SchemaGovernanceContract.stableMismatchThreshold;
-  final moduleStableThreshold = messagesContract.stableMismatchThreshold;
+  final moduleStableThreshold = MessageModelContract.stableMismatchThreshold;
   if (expectedStableThreshold != moduleStableThreshold) {
     violations.add(
       'stable_threshold_mismatch:$moduleStableThreshold!=$expectedStableThreshold',
@@ -48,15 +48,15 @@ final crossModuleEquivalenceProvider =
   }
 
   final expectedReconcileMinutes = SchemaGovernanceContract.reconcileEveryMinutes;
-  final moduleReconcileMinutes = messagesContract.reconcileEveryMinutes;
+  final moduleReconcileMinutes = MessageModelContract.reconcileEveryMinutes;
   if (expectedReconcileMinutes != moduleReconcileMinutes) {
     violations.add(
       'reconcile_minutes_mismatch:$moduleReconcileMinutes!=$expectedReconcileMinutes',
     );
   }
 
-  if (!messagesCompliance.isCompliant) {
-    violations.addAll(messagesCompliance.violations.map((v) => 'messages_$v'));
+  if (!MessageModelCompliance.isCompliant) {
+    violations.addAll(MessageModelCompliance.violations.map((v) => 'MessageModel_$v'));
   }
 
   return CrossModuleEquivalenceReport(

@@ -255,8 +255,8 @@ class _UserProfilePopupSheetState
                 ),
               if (!_isBlocked)
                 _ActionButton(
-                  icon: Icons.message_outlined,
-                  label: 'Send message',
+                  icon: Icons.MessageModel_outlined,
+                  label: 'Send MessageModel',
                   onTap: () async {
                     final currentUser = ref.read(userProvider);
                     final profile = _profile;
@@ -275,7 +275,7 @@ class _UserProfilePopupSheetState
                         );
                     if (!context.mounted) return;
                     Navigator.of(context).pop();
-                    context.go('/messages/$conversationId');
+                    context.go('/MessageModel/$conversationId');
                   },
                 ),
               if (!_isBlocked)

@@ -287,7 +287,7 @@ catch {
     schemaVersion = 'unknown'
     status = 'failed'
     validationMode = $ValidationMode
-    error = $_.Exception.Message
+    error = $_.Exception.MessageModel
   }
   $status | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputValidationStatusPath -Encoding utf8
 
@@ -295,5 +295,5 @@ catch {
     throw
   }
 
-  Write-Warning "Policy analysis contract validation failed in observe mode: $($_.Exception.Message)"
+  Write-Warning "Policy analysis contract validation failed in observe mode: $($_.Exception.MessageModel)"
 }

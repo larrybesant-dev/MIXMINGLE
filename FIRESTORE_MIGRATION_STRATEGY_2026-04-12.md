@@ -344,7 +344,7 @@ exports.smokeTestNewSchema = functions.https.onCall(async (data, context) => {
     await db.collection('users').doc(userId).get();
     results.coreIdentityRead = '✅';
   } catch (e) {
-    results.coreIdentityRead = `❌ ${e.message}`;
+    results.coreIdentityRead = `❌ ${e.MessageModel}`;
   }
   
   try {
@@ -354,7 +354,7 @@ exports.smokeTestNewSchema = functions.https.onCall(async (data, context) => {
     });
     results.coreIdentityUpdate = '✅';
   } catch (e) {
-    results.coreIdentityUpdate = `❌ ${e.message}`;
+    results.coreIdentityUpdate = `❌ ${e.MessageModel}`;
   }
   
   try {
@@ -362,7 +362,7 @@ exports.smokeTestNewSchema = functions.https.onCall(async (data, context) => {
     await db.collection('users').doc(userId).collection('profile_public').doc('data').get();
     results.profilePublicRead = '✅';
   } catch (e) {
-    results.profilePublicRead = `❌ ${e.message}`;
+    results.profilePublicRead = `❌ ${e.MessageModel}`;
   }
   
   try {
@@ -372,7 +372,7 @@ exports.smokeTestNewSchema = functions.https.onCall(async (data, context) => {
     });
     results.preferencesUpdate = '✅';
   } catch (e) {
-    results.preferencesUpdate = `❌ ${e.message}`;
+    results.preferencesUpdate = `❌ ${e.MessageModel}`;
   }
   
   try {
@@ -385,7 +385,7 @@ exports.smokeTestNewSchema = functions.https.onCall(async (data, context) => {
     if (e.code === 'permission-denied') {
       results.walletWriteBlock = '✅ (correctly denied)';
     } else {
-      results.walletWriteBlock = `❌ ${e.message}`;
+      results.walletWriteBlock = `❌ ${e.MessageModel}`;
     }
   }
   

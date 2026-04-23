@@ -263,7 +263,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "lastMessageAt",
+          "fieldPath": "lastMessageModelAt",
           "order": "DESCENDING"
         }
       ]

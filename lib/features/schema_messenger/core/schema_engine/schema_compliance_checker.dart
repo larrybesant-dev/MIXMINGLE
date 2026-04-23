@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../consistency/consistency_template.dart';
-import '../../messages/messages_consistency_contract.dart';
+import '../../MessageModel/MessageModel_consistency_contract.dart';
 import 'schema_governance_contract.dart';
 
 final schemaComplianceCheckerProvider =
   Provider.family<ConsistencyComplianceReport, String>((ref, moduleId) {
   switch (moduleId) {
-    case 'messages':
-      final contract = ref.watch(messagesConsistencyContractProvider);
+    case 'MessageModel':
+      final contract = ref.watch(MessageModelConsistencyContractProvider);
       return validateContractCompliance(
         contract,
         expectedReference: SchemaGovernanceContract.canonicalModel,

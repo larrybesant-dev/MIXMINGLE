@@ -455,7 +455,7 @@ void main() {
       final state = container.read(roomControllerProvider('room-a'));
 
       expect(result.isSuccess, isFalse);
-      expect(result.errorMessage, isNotEmpty);
+      expect(result.errorMessageModel, isNotEmpty);
       expect(state.isConnected, isFalse);
       expect(state.currentUserId, isNull);
       expect(state.lifecycleState, RoomLifecycleState.degraded);
@@ -506,13 +506,13 @@ void main() {
       await controller.syncPresenceNow(forceSync: true);
 
       final degradedState = container.read(roomControllerProvider('room-a'));
-      expect(degradedState.errorMessage, isNotNull);
+      expect(degradedState.errorMessageModel, isNotNull);
       expect(degradedState.lifecycleState, RoomLifecycleState.degraded);
 
       await controller.syncPresenceNow(forceSync: true);
 
       final recoveredState = container.read(roomControllerProvider('room-a'));
-      expect(recoveredState.errorMessage, isNull);
+      expect(recoveredState.errorMessageModel, isNull);
       expect(recoveredState.lifecycleState, RoomLifecycleState.active);
     });
 

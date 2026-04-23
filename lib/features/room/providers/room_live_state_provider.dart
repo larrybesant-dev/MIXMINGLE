@@ -4,7 +4,7 @@ import 'package:mixvy/core/contracts/room_contract.dart';
 import 'room_meta_state_provider.dart';
 import 'room_participants_state_provider.dart';
 import 'room_activity_state_provider.dart';
-import 'room_message_preview_state_provider.dart';
+import 'room_MessageModel_preview_state_provider.dart';
 
 export 'package:mixvy/core/contracts/room_contract.dart'
     show RoomStateContract, RoomLiveState, RoomContractGuard, RoomStateDiff,
@@ -19,19 +19,19 @@ final roomLiveStateProvider =
   // ignore: deprecated_member_use
   final activityStream = ref.watch(roomActivityStateProvider(roomId).stream);
   // ignore: deprecated_member_use
-  final messagePreviewStream = ref.watch(roomMessagePreviewStateProvider(roomId).stream);
+  final MessageModelPreviewStream = ref.watch(roomMessageModelPreviewStateProvider(roomId).stream);
 
   return Rx.combineLatest4(
     metaStream,
     participantsStream,
     activityStream,
-    messagePreviewStream,
-    (RoomMetaState meta, RoomParticipantsState participants, RoomActivityState activity, RoomMessagePreviewState messagePreview) {
+    MessageModelPreviewStream,
+    (RoomMetaState meta, RoomParticipantsState participants, RoomActivityState activity, RoomMessageModelPreviewState MessageModelPreview) {
       return RoomLiveStateMapper.fromFirestore(
         roomDoc: meta.roomDoc,
         participants: participants.participants,
         presence: activity.presence,
-        messagePreview: messagePreview.messagePreview,
+        MessageModelPreview: MessageModelPreview.MessageModelPreview,
         typing: activity.typing,
       );
     },

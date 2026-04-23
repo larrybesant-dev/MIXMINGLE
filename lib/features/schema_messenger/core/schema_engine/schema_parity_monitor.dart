@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../friends/parity/friend_parity_validator.dart';
 import '../../friends/providers/schema_friend_links_providers.dart';
-import '../../messages/messages_consistency_contract.dart';
+import '../../MessageModel/MessageModel_consistency_contract.dart';
 import '../../../friends/providers/friends_providers.dart';
 import '../../../messaging/providers/messaging_provider.dart';
 import '../../../../presentation/providers/user_provider.dart';
@@ -33,13 +33,13 @@ class SchemaParityMonitorReport {
 final schemaParityMonitorProvider =
   Provider.autoDispose.family<SchemaParityMonitorReport, String>((ref, moduleId) {
   switch (moduleId) {
-    case 'messages':
-      final contract = ref.watch(messagesConsistencyContractProvider);
+    case 'MessageModel':
+      final contract = ref.watch(MessageModelConsistencyContractProvider);
 
       final userId = ref.watch(userProvider)?.id;
       if (userId == null || userId.isEmpty) {
         return const SchemaParityMonitorReport(
-          moduleId: 'messages',
+          moduleId: 'MessageModel',
           isComparable: false,
           isMatch: true,
           signature: 'unauthenticated',
@@ -54,14 +54,14 @@ final schemaParityMonitorProvider =
       final legacy = legacyAsync.valueOrNull ?? const [];
       final schema = schemaAsync.valueOrNull ?? const [];
 
-      final snapshot = MessagesSnapshot(
+      final snapshot = MessageModelSnapshot(
         legacyConversationIds: legacy.map((c) => c.id).toList(growable: false),
         schemaConversationIds: schema.map((c) => c.id).toList(growable: false),
         legacyUnreadByConversation: {
-          for (final c in legacy) c.id: c.hasUnreadMessages(userId) ? 1 : 0,
+          for (final c in legacy) c.id: c.hasUnreadMessageModel(userId) ? 1 : 0,
         },
         schemaUnreadByConversation: {
-          for (final c in schema) c.id: c.hasUnreadMessages(userId) ? 1 : 0,
+          for (final c in schema) c.id: c.hasUnreadMessageModel(userId) ? 1 : 0,
         },
         legacyReady: legacyAsync.hasValue,
         schemaReady: schemaAsync.hasValue,

@@ -12,7 +12,7 @@ import '../providers/room_firestore_provider.dart';
 class RoomJoinResult {
   const RoomJoinResult._({
     required this.isSuccess,
-    this.errorMessage,
+    this.errorMessageModel,
     this.joinedAt,
     this.excludedUserIds = const <String>{},
   });
@@ -27,16 +27,16 @@ class RoomJoinResult {
        );
 
   const RoomJoinResult.failure(
-    String errorMessage, {
+    String errorMessageModel, {
     Set<String> excludedUserIds = const <String>{},
   }) : this._(
          isSuccess: false,
-         errorMessage: errorMessage,
+         errorMessageModel: errorMessageModel,
          excludedUserIds: excludedUserIds,
        );
 
   final bool isSuccess;
-  final String? errorMessage;
+  final String? errorMessageModel;
   final DateTime? joinedAt;
   final Set<String> excludedUserIds;
 }
@@ -114,7 +114,7 @@ class RoomSessionService {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'join',
-      message: 'Attempting room join.',
+      MessageModel: 'Attempting room join.',
       roomId: normalizedRoomId,
       userId: normalizedUserId,
       result: 'start',
@@ -304,7 +304,7 @@ class RoomSessionService {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'join',
-      message: 'Room join completed.',
+      MessageModel: 'Room join completed.',
       roomId: normalizedRoomId,
       userId: normalizedUserId,
       result: 'success',
@@ -356,7 +356,7 @@ class RoomSessionService {
       AppTelemetry.logAction(
         domain: 'room',
         action: 'leave',
-        message: 'Room leave cleanup completed.',
+        MessageModel: 'Room leave cleanup completed.',
         roomId: normalizedRoomId,
         userId: normalizedUserId,
         result: 'success',
@@ -440,14 +440,14 @@ class RoomSessionService {
     required String content,
   }) {
     return traceFirestoreWrite<DocumentReference<Map<String, dynamic>>>(
-      path: 'rooms/$roomId/messages',
+      path: 'rooms/$roomId/MessageModel',
       operation: 'post_system_event',
       roomId: roomId,
       metadata: <String, Object?>{'content': content},
       action: () => _firestore
           .collection('rooms')
           .doc(roomId)
-          .collection('messages')
+          .collection('MessageModel')
           .add({
             'senderId': 'system',
             'roomId': roomId,

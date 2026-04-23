@@ -31,49 +31,49 @@
       "severity": "hard",
       "triggered": false,
       "metric": "latestVerdict=PASS",
-      "message": "Block when latest release verdict is FAIL."
+      "MessageModel": "Block when latest release verdict is FAIL."
     },
     {
       "id": "GV-H2",
       "severity": "hard",
       "triggered": false,
       "metric": "recentSlope=0 threshold=-2",
-      "message": "Block on sustained negative confidence slope in recent window."
+      "MessageModel": "Block on sustained negative confidence slope in recent window."
     },
     {
       "id": "GV-H3",
       "severity": "hard",
       "triggered": false,
       "metric": "previousBand=unknown recentBand=stable",
-      "message": "Block on volatility escalation from stable to moderate/volatile."
+      "MessageModel": "Block on volatility escalation from stable to moderate/volatile."
     },
     {
       "id": "GV-H4",
       "severity": "hard",
       "triggered": false,
       "metric": "consecutiveLow=0 threshold=2 limitScore=75",
-      "message": "Block on consecutive low-confidence runs."
+      "MessageModel": "Block on consecutive low-confidence runs."
     },
     {
       "id": "GV-W1",
       "severity": "warning",
       "triggered": false,
       "metric": "varianceIncreasePct=0 threshold=30",
-      "message": "Warn when confidence variance increases significantly vs baseline window."
+      "MessageModel": "Warn when confidence variance increases significantly vs baseline window."
     },
     {
       "id": "GV-W2",
       "severity": "warning",
       "triggered": false,
       "metric": "delta=0 threshold=-10 latestTierPass=True",
-      "message": "Warn when confidence drops despite Tier 0 and Tier 1 passing."
+      "MessageModel": "Warn when confidence drops despite Tier 0 and Tier 1 passing."
     },
     {
       "id": "GV-I1",
       "severity": "info",
       "triggered": true,
       "metric": "runCount=1 minRequired=5",
-      "message": "Trend hard-rules are observation-only until minimum sample size is reached."
+      "MessageModel": "Trend hard-rules are observation-only until minimum sample size is reached."
     }
   ]
 }

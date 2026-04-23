@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixvy/features/room/widgets/message_bubble.dart';
-import 'package:mixvy/models/message_model.dart';
+import 'package:mixvy/features/room/widgets/MessageModel_bubble.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 
 MessageModel _msg({String senderId = 'user-1'}) => MessageModel(
       id: 'msg-1',
@@ -23,11 +23,11 @@ Finder richTextContaining(String substring) => find.byWidgetPredicate(
     );
 
 void main() {
-  group('MessageBubble VIP colours', () {
+  group('MessageModelBubble VIP colours', () {
     testWidgets('level 0 renders without gold/silver/bronze tint',
         (tester) async {
-      await tester.pumpWidget(_wrap(MessageBubble(
-        message: _msg(),
+      await tester.pumpWidget(_wrap(MessageModelBubble(
+        MessageModel: _msg(),
         isMe: false,
         senderLabel: 'Alice',
         senderVipLevel: 0,
@@ -37,8 +37,8 @@ void main() {
     });
 
     testWidgets('level 1 renders bronze label chip', (tester) async {
-      await tester.pumpWidget(_wrap(MessageBubble(
-        message: _msg(),
+      await tester.pumpWidget(_wrap(MessageModelBubble(
+        MessageModel: _msg(),
         isMe: false,
         senderLabel: 'BronzeUser',
         senderVipLevel: 1,
@@ -47,8 +47,8 @@ void main() {
     });
 
     testWidgets('level 3 renders silver label', (tester) async {
-      await tester.pumpWidget(_wrap(MessageBubble(
-        message: _msg(),
+      await tester.pumpWidget(_wrap(MessageModelBubble(
+        MessageModel: _msg(),
         isMe: false,
         senderLabel: 'SilverUser',
         senderVipLevel: 3,
@@ -57,8 +57,8 @@ void main() {
     });
 
     testWidgets('level 5 renders gold label', (tester) async {
-      await tester.pumpWidget(_wrap(MessageBubble(
-        message: _msg(),
+      await tester.pumpWidget(_wrap(MessageModelBubble(
+        MessageModel: _msg(),
         isMe: false,
         senderLabel: 'GoldUser',
         senderVipLevel: 5,
@@ -67,8 +67,8 @@ void main() {
     });
 
     testWidgets('isMe bubble defaults sender label to You', (tester) async {
-      await tester.pumpWidget(_wrap(MessageBubble(
-        message: _msg(senderId: 'me'),
+      await tester.pumpWidget(_wrap(MessageModelBubble(
+        MessageModel: _msg(senderId: 'me'),
         isMe: true,
         senderVipLevel: 0,
       )));
@@ -76,8 +76,8 @@ void main() {
     });
 
     testWidgets('other-user bubble shows sender id as label', (tester) async {
-      await tester.pumpWidget(_wrap(MessageBubble(
-        message: _msg(),
+      await tester.pumpWidget(_wrap(MessageModelBubble(
+        MessageModel: _msg(),
         isMe: false,
         senderVipLevel: 0,
       )));

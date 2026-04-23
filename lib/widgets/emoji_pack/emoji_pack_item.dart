@@ -51,17 +51,17 @@ class EmojiPackItem {
   bool get isAsset => !isGif;
   bool get isAdultOnly => category.isAdultOnly;
 
-  // ── Message encoding ──────────────────────────────────────────────────────
+  // ── MessageModel encoding ──────────────────────────────────────────────────────
 
   static const _prefix = '__emoji__:';
 
-  /// Encodes this item so it can be stored as a chat message `content` value.
+  /// Encodes this item so it can be stored as a chat MessageModel `content` value.
   /// GIF items encode the query so the receiver can re-fetch the URL.
-  String get messageContent =>
+  String get MessageModelContent =>
       isGif ? '${_prefix}gif:${gifQuery!}' : '$_prefix${path!}';
 
-  /// Returns `true` when a message `content` string was produced by
-  /// [messageContent].
+  /// Returns `true` when a MessageModel `content` string was produced by
+  /// [MessageModelContent].
   static bool isEmojiContent(String content) => content.startsWith(_prefix);
 
   /// Returns `(isGif, pathOrQuery)` from encoded content.

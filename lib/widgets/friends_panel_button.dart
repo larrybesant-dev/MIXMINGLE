@@ -290,7 +290,7 @@ class _FriendTile extends ConsumerWidget {
                   color: cs.onSurface.withValues(alpha: 0.45),
                   fontSize: 12),
             ),
-      trailing: _MessageButton(friend: friend),
+      trailing: _MessageModelButton(friend: friend),
       onTap: () {
         Navigator.of(context).pop();
         GoRouter.of(context).push('/profile/${friend.id}');
@@ -299,8 +299,8 @@ class _FriendTile extends ConsumerWidget {
   }
 }
 
-class _MessageButton extends ConsumerWidget {
-  const _MessageButton({required this.friend});
+class _MessageModelButton extends ConsumerWidget {
+  const _MessageModelButton({required this.friend});
   final UserModel friend;
 
   @override
@@ -309,7 +309,7 @@ class _MessageButton extends ConsumerWidget {
     if (currentUser == null) return const SizedBox.shrink();
 
     return IconButton(
-      tooltip: 'Message',
+      tooltip: 'MessageModel',
       icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
       onPressed: () async {
         final navigator = Navigator.of(context);
@@ -325,7 +325,7 @@ class _MessageButton extends ConsumerWidget {
                 user2AvatarUrl: friend.avatarUrl,
               );
           navigator.pop();
-          unawaited(router.push('/messages/$conversationId'));
+          unawaited(router.push('/MessageModel/$conversationId'));
         } catch (error) {
           messenger.showSnackBar(
             SnackBar(content: Text('Could not open chat: $error')),

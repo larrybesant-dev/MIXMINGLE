@@ -62,7 +62,7 @@ class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not unlink provider: ${e.message ?? e.code}')),
+        SnackBar(content: Text('Could not unlink provider: ${e.MessageModel ?? e.code}')),
       );
     } finally {
       if (mounted) {
@@ -85,7 +85,7 @@ class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send verification email: ${e.message ?? e.code}')),
+        SnackBar(content: Text('Could not send verification email: ${e.MessageModel ?? e.code}')),
       );
     } finally {
       if (mounted) {
@@ -114,7 +114,7 @@ class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send password reset: ${e.message ?? e.code}')),
+        SnackBar(content: Text('Could not send password reset: ${e.MessageModel ?? e.code}')),
       );
     } finally {
       if (mounted) {
@@ -177,10 +177,10 @@ class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
       context.go('/login');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      final message = e.code == 'requires-recent-login'
+      final MessageModel = e.code == 'requires-recent-login'
           ? 'For security, log in again and retry account deletion.'
-          : 'Could not delete account: ${e.message ?? e.code}';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+          : 'Could not delete account: ${e.MessageModel ?? e.code}';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(MessageModel)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

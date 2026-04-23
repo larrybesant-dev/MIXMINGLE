@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../core/services/app_settings_service.dart';
 import '../router/app_router.dart';
 import '../presentation/providers/app_settings_provider.dart';
@@ -22,11 +23,10 @@ import '../services/presence_controller.dart';
 import '../core/events/event_providers.dart';
 
 final appBootstrapProvider = FutureProvider<void>((ref) async {
-  if (Firebase.apps.isEmpty) {
-    return;
-  }
+  if (Firebase.apps.isEmpty) return;
 
   final auth = FirebaseAuth.instance;
+
   try {
     await auth
         .authStateChanges()
@@ -39,7 +39,7 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
         )
         .first;
   } catch (_) {
-    // Best effort only. main.dart already owns fatal bootstrap failures.
+    // Non-fatal bootstrap safety
   }
 
   if (!kIsWeb) {
@@ -55,34 +55,36 @@ class MixVyApp extends ConsumerStatefulWidget {
 }
 
 class _MixVyAppState extends ConsumerState<MixVyApp> {
-  bool _runtimeServicesStarted = false;
-  bool _runtimeServiceInitQueued = false;
+  bool _runtimeStarted = false;
+  bool _runtimeQueued = false;
 
   Future<void> _startRuntimeServices() async {
-    if (_runtimeServicesStarted || _runtimeServiceInitQueued) {
-      return;
-    }
+    if (_runtimeStarted || _runtimeQueued) return;
 
-    _runtimeServiceInitQueued = true;
+    _runtimeQueued = true;
+
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        await ref.read(profileControllerProvider.notifier).loadCurrentProfile();
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        await ref
+            .read(profileControllerProvider.notifier)
+            .loadCurrentProfile();
       }
 
       ref.read(presenceControllerProvider);
       ref.read(eventPipelineProvider);
     } catch (_) {
-      // Keep startup resilient; feature surfaces can recover lazily.
+      // keep startup resilient
     } finally {
       if (mounted) {
-        setState(() => _runtimeServicesStarted = true);
+        setState(() => _runtimeStarted = true);
       }
     }
   }
 
   Widget _buildBootShell({String message = 'Starting MixVy...'}) {
-    final Widget body = Scaffold(
+    final body = Scaffold(
       backgroundColor: VelvetNoir.surface,
       body: Center(
         child: Column(
@@ -91,7 +93,9 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
             const SizedBox(
               width: 28,
               height: 28,
-              child: CircularProgressIndicator(color: VelvetNoir.primary),
+              child: CircularProgressIndicator(
+                color: VelvetNoir.primary,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -106,50 +110,62 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
         ),
       ),
     );
+
     return MaterialApp(
       title: 'MixVy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: midnightCreativeTheme,
       home: body,
-      // On web, Flutter reads the browser URL and tries to navigate there via
-      // the plain Navigator.  Without a catch-all route the framework logs
-      // "Could not navigate to initial route" and falls back to '/'.
-      // Returning the boot shell for every unknown path suppresses that warning
-      // while keeping the correct loading UX.
-      onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => body),
+      onGenerateRoute: (_) =>
+          MaterialPageRoute(builder: (_) => body),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bootAsync = ref.watch(appBootstrapProvider);
+    final boot = ref.watch(appBootstrapProvider);
 
-    return bootAsync.when(
+    return boot.when(
       loading: () => _buildBootShell(),
-      error: (_, _) => _buildBootShell(message: 'Recovering startup...'),
+      error: (_, __) =>
+          _buildBootShell(message: 'Recovering startup...'),
       data: (_) {
-        if (!_runtimeServicesStarted) {
+        if (!_runtimeStarted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              unawaited(_startRuntimeServices());
-            }
+            if (mounted) unawaited(_startRuntimeServices());
           });
+
           return _buildBootShell(message: 'Preparing your rooms...');
         }
 
         final router = ref.watch(routerProvider);
+
         final settings =
             ref.watch(appSettingsControllerProvider).valueOrNull ??
             const AppSettings.defaults();
-        final appLocale = Locale(settings.localeCode);
-        final afterDarkActive = ref.watch(afterDarkSessionProvider);
+
+        final locale = Locale(settings.localeCode);
+        final afterDark = ref.watch(afterDarkSessionProvider);
 
         return MaterialApp.router(
           title: 'MixVy',
-          theme: afterDarkActive ? afterDarkTheme : AppTheme.light,
-          darkTheme: afterDarkActive ? afterDarkTheme : midnightCreativeTheme,
-          themeMode: afterDarkActive ? ThemeMode.dark : settings.themeMode,
+          theme: afterDark ? afterDarkTheme : AppTheme.light,
+          darkTheme:
+              afterDark ? afterDarkTheme : midnightCreativeTheme,
+          themeMode:
+              afterDark ? ThemeMode.dark : settings.themeMode,
+          locale: locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('es'),
+            Locale('fr'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           builder: (context, child) {
             return DefaultTextStyle.merge(
               style: const TextStyle(
@@ -164,13 +180,6 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
               ),
             );
           },
-          locale: appLocale,
-          supportedLocales: const [Locale('en'), Locale('es'), Locale('fr')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
           routerConfig: router,
           debugShowCheckedModeBanner: false,
         );

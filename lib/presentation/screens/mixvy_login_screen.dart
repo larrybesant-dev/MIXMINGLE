@@ -64,11 +64,11 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   void _togglePassword() =>
       setState(() => _obscurePassword = !_obscurePassword);
 
-  Future<void> _showMessage(String message, {bool isError = false}) async {
+  Future<void> _showMessageModel(String MessageModel, {bool isError = false}) async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
+        content: Text(MessageModel, style: const TextStyle(color: Colors.white)),
         backgroundColor: isError
             ? const Color(0xFFFF6E84)
             : const Color(0xFFC45E7A),
@@ -86,7 +86,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     if (!mounted) return;
     final authState = ref.read(authControllerProvider);
     if (authState.error != null) {
-      await _showMessage(authState.error ?? '', isError: true);
+      await _showMessageModel(authState.error ?? '', isError: true);
     }
     if (authState.uid != null) {
       await AnalyticsService().logLogin(method: 'email_password');
@@ -99,7 +99,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     if (!mounted) return;
     final authState = ref.read(authControllerProvider);
     if (authState.error != null) {
-      await _showMessage(authState.error ?? '', isError: true);
+      await _showMessageModel(authState.error ?? '', isError: true);
       return;
     }
     if (authState.uid != null) {
@@ -113,7 +113,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     if (!mounted) return;
     final authState = ref.read(authControllerProvider);
     if (authState.error != null) {
-      await _showMessage(authState.error ?? '', isError: true);
+      await _showMessageModel(authState.error ?? '', isError: true);
       return;
     }
     if (authState.uid != null) {

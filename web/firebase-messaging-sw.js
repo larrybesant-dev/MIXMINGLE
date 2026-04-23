@@ -14,7 +14,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function (payload) {
+messaging.onBackgroundMessageModel(function (payload) {
   const notification = payload && payload.notification ? payload.notification : {};
   const title = notification.title || 'MixVy';
   const options = {

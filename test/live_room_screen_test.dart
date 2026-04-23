@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/feed/providers/host_controls_providers.dart';
 import 'package:mixvy/features/room/providers/host_provider.dart';
-import 'package:mixvy/features/room/providers/message_providers.dart';
+import 'package:mixvy/features/room/providers/MessageModel_providers.dart';
 import 'package:mixvy/features/room/providers/mic_access_provider.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
 import 'package:mixvy/features/room/providers/room_policy_provider.dart';
@@ -16,7 +16,7 @@ import 'package:mixvy/models/room_participant_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/models/presence_model.dart';
-import 'package:mixvy/models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/features/room/providers/presence_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
@@ -259,7 +259,7 @@ void main() {
           roomPolicyProvider.overrideWith(
             (ref, roomId) => Stream.value(RoomPolicyModel(roomId: roomId)),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -282,7 +282,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Message the room'), findsOneWidget);
+    expect(find.text('MessageModel the room'), findsOneWidget);
     expect(find.text('Chat'), findsWidgets);
   });
 
@@ -334,7 +334,7 @@ void main() {
               ),
             ]),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -367,7 +367,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('No messages yet'), findsOneWidget);
+    expect(find.text('No MessageModel yet'), findsOneWidget);
     expect(find.text('In Room 1'), findsOneWidget);
     expect(find.text('Room warming up'), findsWidgets);
     expect(
@@ -378,7 +378,7 @@ void main() {
       find.text('Tap Grab Mic above or turn on cam to start the vibe.'),
       findsWidgets,
     );
-    expect(find.byTooltip('Send message'), findsOneWidget);
+    expect(find.byTooltip('Send MessageModel'), findsOneWidget);
     expect(find.byTooltip('Leave Room'), findsOneWidget);
     // Drain the _preWarmAgora Future.delayed(2s) timer so the test ends cleanly.
     await tester.pump(const Duration(seconds: 3));
@@ -473,7 +473,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([]),
             ),
             hostProvider.overrideWith(
@@ -552,7 +552,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([]),
             ),
             hostProvider.overrideWith(
@@ -628,7 +628,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value(const <MessageModel>[]),
             ),
             hostProvider.overrideWith(
@@ -705,7 +705,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value(const <MessageModel>[]),
             ),
             hostProvider.overrideWith(
@@ -787,7 +787,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(2),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([
                 MessageModel(
                   id: 'm-1',
@@ -883,7 +883,7 @@ void main() {
           participantCountProvider.overrideWith(
             (ref, roomId) => Stream.value(1),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -975,7 +975,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(2),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value(const <MessageModel>[]),
             ),
             hostProvider.overrideWith(
@@ -1060,7 +1060,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([
                 MessageModel(
                   id: 'msg-ghost',
@@ -1173,7 +1173,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(2),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value(const <MessageModel>[]),
             ),
             hostProvider.overrideWith(
@@ -1266,7 +1266,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(2),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value(const <MessageModel>[]),
             ),
             hostProvider.overrideWith(
@@ -1360,7 +1360,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(2),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([
                 MessageModel(
                   id: 'msg-1',
@@ -1433,7 +1433,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([]),
             ),
             hostProvider.overrideWith(
@@ -1508,7 +1508,7 @@ void main() {
           participantCountProvider.overrideWith(
             (ref, roomId) => Stream.value(1),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -1638,7 +1638,7 @@ void main() {
           participantCountProvider.overrideWith(
             (ref, roomId) => Stream.value(3),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -1744,7 +1744,7 @@ void main() {
           participantCountProvider.overrideWith(
             (ref, roomId) => Stream.value(2),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -1898,7 +1898,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(2),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([]),
             ),
             hostProvider.overrideWith(
@@ -1975,7 +1975,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([]),
             ),
             hostProvider.overrideWith(
@@ -2072,7 +2072,7 @@ void main() {
           participantCountProvider.overrideWith(
             (ref, roomId) => Stream.value(2),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -2153,7 +2153,7 @@ void main() {
           participantCountProvider.overrideWith(
             (ref, roomId) => Stream.value(1),
           ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
+          MessageModeltreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
@@ -2230,7 +2230,7 @@ void main() {
             participantCountProvider.overrideWith(
               (ref, roomId) => Stream.value(1),
             ),
-            messageStreamProvider.overrideWith(
+            MessageModeltreamProvider.overrideWith(
               (ref, roomId) => Stream.value([]),
             ),
             hostProvider.overrideWith(

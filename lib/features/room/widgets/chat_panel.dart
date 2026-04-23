@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../models/message_model.dart';
-import 'message_bubble.dart';
+import '../../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
+import 'MessageModel_bubble.dart';
 
 /// Self-contained chat panel widget for the Paltalk-style room layout.
 /// Accepts streams/data as props and exposes a send callback so the
@@ -10,21 +10,21 @@ import 'message_bubble.dart';
 class ChatPanel extends ConsumerStatefulWidget {
   const ChatPanel({
     super.key,
-    required this.messages,
-    required this.isLoadingMessages,
+    required this.MessageModel,
+    required this.isLoadingMessageModel,
     required this.currentUserId,
     required this.currentUsername,
     required this.isSending,
-    required this.cooldownMessage,
+    required this.cooldownMessageModel,
     required this.isMuted,
     required this.isBanned,
     required this.allowChat,
     required this.hasBlockedRelationship,
     required this.showEmojiTray,
     required this.onToggleEmojiTray,
-    required this.onSendMessage,
+    required this.onSendMessageModel,
     required this.onTyping,
-    required this.messageController,
+    required this.MessageModelController,
     required this.scrollController,
     required this.senderLabelResolver,
     required this.senderVipLevelResolver,
@@ -34,33 +34,33 @@ class ChatPanel extends ConsumerStatefulWidget {
     this.extraHeader,
   });
 
-  final List<MessageModel> messages;
-  final bool isLoadingMessages;
+  final List<MessageModel> MessageModel;
+  final bool isLoadingMessageModel;
   final String currentUserId;
   final String currentUsername;
   final bool isSending;
-  final String cooldownMessage;
+  final String cooldownMessageModel;
   final bool isMuted;
   final bool isBanned;
   final bool allowChat;
   final bool hasBlockedRelationship;
   final bool showEmojiTray;
   final VoidCallback onToggleEmojiTray;
-  final Future<void> Function(String text) onSendMessage;
+  final Future<void> Function(String text) onSendMessageModel;
   final VoidCallback onTyping;
-  final TextEditingController messageController;
+  final TextEditingController MessageModelController;
   final ScrollController scrollController;
   final String Function(String senderId) senderLabelResolver;
   final int Function(String senderId) senderVipLevelResolver;
   final String? Function(String senderId) senderAvatarResolver;
 
-  /// Called when the user taps the avatar or name of a message sender.
+  /// Called when the user taps the avatar or name of a MessageModel sender.
   final void Function(String senderId)? onTapSender;
 
   /// Names of users currently typing.
   final List<String> typingNames;
 
-  /// Optional widget rendered above the message list (e.g. gift row,
+  /// Optional widget rendered above the MessageModel list (e.g. gift row,
   /// blocked warning, slow-mode notice).
   final Widget? extraHeader;
 
@@ -104,8 +104,8 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
     const npSurfaceLow = Color(0xFF10131A);
     const npOnVariant = Color(0xFFB09080);
 
-    if (widget.messages.length != _lastCount) {
-      _lastCount = widget.messages.length;
+    if (widget.MessageModel.length != _lastCount) {
+      _lastCount = widget.MessageModel.length;
       _scrollToBottom();
     }
 
@@ -117,7 +117,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
         ? 'Blocked relationship in room'
         : !widget.allowChat
         ? 'Chat disabled by host'
-        : 'Type a message…';
+        : 'Type a MessageModel…';
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
     final canSend =
@@ -134,25 +134,25 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
           // Extra header (gift row, blocked warning, etc.)
           if (widget.extraHeader != null) widget.extraHeader!,
 
-          // Messages list
+          // MessageModel list
           Expanded(
-            child: widget.isLoadingMessages
+            child: widget.isLoadingMessageModel
                 ? const Center(child: CircularProgressIndicator())
-                : widget.messages.isEmpty
+                : widget.MessageModel.isEmpty
                 ? const Center(
                     child: Text(
-                      'No messages yet.',
+                      'No MessageModel yet.',
                       style: TextStyle(color: npOnVariant),
                     ),
                   )
                 : ListView.builder(
                     controller: widget.scrollController,
                     padding: const EdgeInsets.all(6),
-                    itemCount: widget.messages.length,
+                    itemCount: widget.MessageModel.length,
                     itemBuilder: (context, i) {
-                      final msg = widget.messages[i];
-                      return MessageBubble(
-                        message: msg,
+                      final msg = widget.MessageModel[i];
+                      return MessageModelBubble(
+                        MessageModel: msg,
                         isMe: msg.senderId == widget.currentUserId,
                         senderLabel: widget.senderLabelResolver(msg.senderId),
                         senderVipLevel: widget.senderVipLevelResolver(
@@ -168,11 +168,11 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
           ),
 
           // Cooldown notice
-          if (widget.cooldownMessage.isNotEmpty)
+          if (widget.cooldownMessageModel.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 4, left: 8, right: 8),
               child: Text(
-                widget.cooldownMessage,
+                widget.cooldownMessageModel,
                 style: const TextStyle(
                   color: Color(0xFFFF6E84),
                   fontWeight: FontWeight.bold,
@@ -211,11 +211,11 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                   return InkWell(
                     borderRadius: BorderRadius.circular(6),
                     onTap: () {
-                      widget.messageController.text += e;
-                      widget.messageController.selection =
+                      widget.MessageModelController.text += e;
+                      widget.MessageModelController.selection =
                           TextSelection.fromPosition(
                             TextPosition(
-                              offset: widget.messageController.text.length,
+                              offset: widget.MessageModelController.text.length,
                             ),
                           );
                     },
@@ -259,7 +259,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                     ),
                     Expanded(
                       child: TextField(
-                        controller: widget.messageController,
+                        controller: widget.MessageModelController,
                         onChanged: (_) => widget.onTyping(),
                         enabled: canSend,
                         textInputAction: TextInputAction.send,
@@ -307,7 +307,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                             ? (text) async {
                                 final trimmed = text.trim();
                                 if (trimmed.isNotEmpty) {
-                                  await widget.onSendMessage(trimmed);
+                                  await widget.onSendMessageModel(trimmed);
                                 }
                               }
                             : null,
@@ -324,10 +324,10 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                         ),
                         onPressed: canSend
                             ? () async {
-                                final text = widget.messageController.text
+                                final text = widget.MessageModelController.text
                                     .trim();
                                 if (text.isNotEmpty) {
-                                  await widget.onSendMessage(text);
+                                  await widget.onSendMessageModel(text);
                                 }
                               }
                             : null,

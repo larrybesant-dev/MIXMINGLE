@@ -175,7 +175,7 @@ void main() {
       phase: LiveRoomPhase.joined,
       currentUserId: 'host-1',
       hostId: 'host-1',
-      errorMessage: 'Room state is reconnecting.',
+      errorMessageModel: 'Room state is reconnecting.',
       sessionSnapshotsByUser: <String, RoomSessionSnapshot>{
         'host-1': RoomSessionSnapshot(
           userId: 'host-1',

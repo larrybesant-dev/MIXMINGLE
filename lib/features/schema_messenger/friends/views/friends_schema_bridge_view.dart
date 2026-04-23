@@ -142,7 +142,7 @@ class _FriendsSchemaBridgeViewState
             if (!mounted) {
               return;
             }
-            GoRouter.of(context).go('/messages/$conversationId');
+            GoRouter.of(context).go('/MessageModel/$conversationId');
           },
         );
   }
@@ -173,7 +173,7 @@ class _FriendsSchemaBridgeViewState
         return;
       }
 
-      unawaited(router.push('/messages/$conversationId'));
+      unawaited(router.push('/MessageModel/$conversationId'));
     } catch (error) {
       if (!mounted) {
         return;
@@ -233,7 +233,7 @@ class _FriendsSchemaBridgeViewState
         AppTelemetry.logParityEvent(
           domain: 'friends',
           action: 'friend_parity_restored',
-          message: 'Friend parity restored between legacy and schema panes.',
+          MessageModel: 'Friend parity restored between legacy and schema panes.',
           userId: authUserId,
           result: mode.name,
         );
@@ -270,7 +270,7 @@ class _FriendsSchemaBridgeViewState
       level: 'warning',
       domain: 'friends',
       action: 'friend_parity_diff',
-      message: 'Stable friend parity mismatch detected.',
+      MessageModel: 'Stable friend parity mismatch detected.',
       userId: authUserId,
       result: mode.name,
       metadata: <String, Object?>{
@@ -342,7 +342,7 @@ class _BootTimelineStrip extends ConsumerWidget {
 
     final latestSummary = latest == null
         ? 'No boot timeline events yet.'
-        : '[${latest.source.name}] ${latest.phase.name}: ${latest.message}';
+        : '[${latest.source.name}] ${latest.phase.name}: ${latest.MessageModel}';
 
     final metricsSummary = metrics == null
       ? null

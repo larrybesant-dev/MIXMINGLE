@@ -15,7 +15,7 @@ class SchemaBootTimelineEvent {
     required this.source,
     required this.phase,
     required this.level,
-    required this.message,
+    required this.MessageModel,
   });
 
   final DateTime timestamp;
@@ -23,7 +23,7 @@ class SchemaBootTimelineEvent {
   final SchemaConversationBootSource source;
   final SchemaConversationBootPhase phase;
   final SchemaBootTimelineLevel level;
-  final String message;
+  final String MessageModel;
 }
 
 class SchemaBootTimelineNotifier
@@ -39,7 +39,7 @@ class SchemaBootTimelineNotifier
           previous.source == event.source &&
           previous.phase == event.phase &&
           previous.level == event.level &&
-          previous.message == event.message;
+          previous.MessageModel == event.MessageModel;
       if (isDuplicate) {
         return;
       }

@@ -1,6 +1,6 @@
 # MixVy Beta Tester Guide
 
-## Welcome Message (copy & send to testers)
+## Welcome MessageModel (copy & send to testers)
 
 ---
 
@@ -27,7 +27,7 @@
 > Try out as many features as you can:
 > - 🏠 **Home Feed** — browse posts, react, and comment
 > - 👥 **Friends** — search for users, send friend requests, and accept them
-> - 💬 **Messages** — start a 1:1 or group chat
+> - 💬 **MessageModels** — start a 1:1 or group chat
 > - 🎥 **Live Rooms** — create or join a live video room
 > - 💘 **Speed Dating** — join a session and meet new people
 > - 🔔 **Notifications** — check your notification feed
@@ -111,7 +111,7 @@ Firestore → beta_feedback
 ```
 
 Top-level `beta_feedback` documents contain quick reports with fields:
-`category`, `message`, `route`, `uid`, `email`, `platform`, `isWeb`, `status`, `createdAt`
+`category`, `MessageModel`, `route`, `uid`, `email`, `platform`, `isWeb`, `status`, `createdAt`
 
 Filter by `status == "new"` and sort by `createdAt DESC` using the composite index already deployed to the project.
 
@@ -134,4 +134,4 @@ Filter by `status == "new"` and sort by `createdAt DESC` using the composite ind
 - Give testers a deadline (e.g., "please submit your report by Friday").
 - Ask them to focus on one or two features per session rather than everything at once.
 - For critical bugs they find, ask them to note which screen they were on — the quick feedback sheet captures this automatically via the route field.
-- Follow up with a short thank-you message and let them know which issues were fixed.
+- Follow up with a short thank-you MessageModel and let them know which issues were fixed.

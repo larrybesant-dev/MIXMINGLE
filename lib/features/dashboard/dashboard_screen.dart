@@ -34,10 +34,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     super.initState();
   }
 
-  void _showNavigationError(String message) {
+  void _showNavigationError(String MessageModel) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(SnackBar(content: Text(MessageModel)));
   }
 
   void _openRoom(String? roomId) {
@@ -276,7 +276,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                   loading: () => const _HorizontalSkeleton(height: 110),
                   error: (e, _) =>
-                      const _ErrorCard(message: 'Could not load live rooms'),
+                      const _ErrorCard(MessageModel: 'Could not load live rooms'),
                 ),
               ),
 
@@ -422,7 +422,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                   loading: () => const _HorizontalSkeleton(height: 88),
                   error: (_, _) =>
-                      const _ErrorCard(message: 'Could not load new members'),
+                      const _ErrorCard(MessageModel: 'Could not load new members'),
                 ),
               ),
 
@@ -465,7 +465,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 error: (e, _) => const SliverToBoxAdapter(
-                  child: _ErrorCard(message: 'Could not load posts'),
+                  child: _ErrorCard(MessageModel: 'Could not load posts'),
                 ),
               ),
 
@@ -523,7 +523,7 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: tooltip,
+      MessageModel: tooltip,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -1400,8 +1400,8 @@ class _EmptyPill extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorCard extends StatelessWidget {
-  final String message;
-  const _ErrorCard({required this.message});
+  final String MessageModel;
+  const _ErrorCard({required this.MessageModel});
 
   @override
   Widget build(BuildContext context) {
@@ -1419,7 +1419,7 @@ class _ErrorCard extends StatelessWidget {
             const Icon(Icons.error_outline, size: 16, color: VelvetNoir.error),
             const SizedBox(width: 8),
             Text(
-              message,
+              MessageModel,
               style: const TextStyle(
                 fontSize: 12,
                 color: VelvetNoir.onSurfaceVariant,
@@ -1488,7 +1488,7 @@ class _BrandNavCards extends StatelessWidget {
             sub: 'Start something real',
             icon: Icons.chat_bubble_outline_rounded,
             accent: VelvetNoir.secondaryBright,
-            onTap: () => context.go('/messages'),
+            onTap: () => context.go('/MessageModel'),
           ),
           const SizedBox(width: 10),
           _NavCard(

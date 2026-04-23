@@ -500,7 +500,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         : null,
                   ),
 
-                  // ── Error message ────────────────────────────────────
+                  // ── Error MessageModel ────────────────────────────────────
                   if (errorText != null) ...[
                     const SizedBox(height: 10),
                     Container(

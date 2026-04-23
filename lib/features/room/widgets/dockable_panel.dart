@@ -146,7 +146,7 @@ class _HeaderIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: tooltip,
+      MessageModel: tooltip,
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
         onTap: onTap,

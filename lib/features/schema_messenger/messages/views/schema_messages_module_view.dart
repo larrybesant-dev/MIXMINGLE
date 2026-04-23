@@ -6,17 +6,17 @@ import '../../consistency/architecture_health_interpretation_provider.dart';
 import '../../consistency/cross_module_equivalence_provider.dart';
 import '../../core/schema_engine/schema_compliance_checker.dart';
 import '../../core/schema_engine/schema_parity_monitor.dart';
-import '../messages_consistency_contract.dart';
+import '../MessageModel_consistency_contract.dart';
 
-/// Component Name: SchemaMessagesModuleView
-/// Firestore Read Paths: conversations, conversations/{conversationId}/messages
+/// Component Name: SchemaMessageModelModuleView
+/// Firestore Read Paths: conversations, conversations/{conversationId}/MessageModel
 /// Firestore Write Paths: none (read-only validation view)
-/// Allowed Fields: participantIds/participants, lastMessageAt, lastMessagePreview,
+/// Allowed Fields: participantIds/participants, lastMessageModelAt, lastMessageModelPreview,
 /// unread indicators derived from conversation state
 /// Forbidden Fields: wallet/security/verification writes, role mutation, legacy
 /// friends arrays
-class SchemaMessagesModuleView extends ConsumerWidget {
-  const SchemaMessagesModuleView({
+class SchemaMessageModelModuleView extends ConsumerWidget {
+  const SchemaMessageModelModuleView({
     super.key,
     required this.userId,
   });
@@ -25,11 +25,11 @@ class SchemaMessagesModuleView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final contract = ref.watch(messagesConsistencyContractProvider);
-    final compliance = ref.watch(schemaComplianceCheckerProvider('messages'));
+    final contract = ref.watch(MessageModelConsistencyContractProvider);
+    final compliance = ref.watch(schemaComplianceCheckerProvider('MessageModel'));
     final equivalence = ref.watch(crossModuleEquivalenceProvider);
     final architecture = ref.watch(architectureHealthInterpretationProvider);
-    final parity = ref.watch(schemaParityMonitorProvider('messages'));
+    final parity = ref.watch(schemaParityMonitorProvider('MessageModel'));
     final snapshot = contract.buildSnapshot(ref, readOnly: false);
 
     return ListView(
@@ -51,7 +51,7 @@ class SchemaMessagesModuleView extends ConsumerWidget {
               ? const Color(0xFF34D399)
               : const Color(0xFFF87171),
           details: equivalence.violations.isEmpty
-              ? 'Messages governance matches shared schema contract.'
+              ? 'MessageModel governance matches shared schema contract.'
               : equivalence.violations.join(' | '),
         ),
         const SizedBox(height: 12),
@@ -61,7 +61,7 @@ class SchemaMessagesModuleView extends ConsumerWidget {
           tone: _classificationTone(architecture.classification),
           details:
               '${architecture.summary} | friend=${architecture.friendCompositeScore}% '
-              'messages=${architecture.messagesCompositeScore}% '
+              'MessageModel=${architecture.MessageModelCompositeScore}% '
             'policy=${architecture.policyVersion} '
             'advisory=${architecture.advisoryOnly} '
               '${architecture.reasons.join(' | ')}',

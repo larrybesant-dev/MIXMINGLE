@@ -7,10 +7,10 @@ import '../../features/messaging/providers/messaging_provider.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../core/theme.dart';
 import '../../features/schema_messenger/friends/views/friends_schema_bridge_view.dart';
-import '../../features/schema_messenger/messages/views/messages_schema_bridge_view.dart';
+import '../../features/schema_messenger/MessageModel/views/MessageModel_schema_bridge_view.dart';
 import '../../features/messaging/panes/chat_pane_view.dart';
-import '../../features/messaging/panes/messages_pane_view.dart';
-import '../../features/messaging/screens/new_message_screen.dart';
+import '../../features/messaging/panes/MessageModel_pane_view.dart';
+import '../../features/messaging/screens/new_MessageModel_screen.dart';
 import 'desktop_messenger_shell.dart';
 
 enum MessengerRouteKind { inbox, compose, conversation, friends }
@@ -25,30 +25,30 @@ class MessengerRouteState {
 
   static bool matches(GoRouterState state) {
     final path = _routePath(state);
-    return path == '/messages' ||
-        path == '/messages/new' ||
+    return path == '/MessageModel' ||
+        path == '/MessageModel/new' ||
         path == '/friends' ||
-        (path.startsWith('/messages/') && path.length > '/messages/'.length);
+        (path.startsWith('/MessageModel/') && path.length > '/MessageModel/'.length);
   }
 
   static MessengerRouteState fromGoRouterState(GoRouterState state) {
     final path = _routePath(state);
 
-    if (path == '/messages') {
+    if (path == '/MessageModel') {
       return const MessengerRouteState._(kind: MessengerRouteKind.inbox);
     }
-    if (path == '/messages/new') {
+    if (path == '/MessageModel/new') {
       return const MessengerRouteState._(kind: MessengerRouteKind.compose);
     }
     if (path == '/friends') {
       return const MessengerRouteState._(kind: MessengerRouteKind.friends);
     }
-    if (path.startsWith('/messages/') && path.length > '/messages/'.length) {
+    if (path.startsWith('/MessageModel/') && path.length > '/MessageModel/'.length) {
       // pathParameters may be empty at the ShellRoute level; extract the
       // conversationId directly from the path as the reliable source.
       final fromParams = state.pathParameters['conversationId'];
       final fromPath =
-          path.substring('/messages/'.length).split('/').first;
+          path.substring('/MessageModel/'.length).split('/').first;
       final conversationId =
           (fromParams != null && fromParams.isNotEmpty) ? fromParams : fromPath;
       return MessengerRouteState._(
@@ -97,7 +97,7 @@ class MessengerShellRouteView extends ConsumerWidget {
         child: child,
       ),
       MessengerRouteKind.compose => AppPageScaffold(
-        appBar: AppBar(title: const Text('New Message')),
+        appBar: AppBar(title: const Text('New MessageModel')),
         body: child,
       ),
       MessengerRouteKind.conversation => AppPageScaffold(
@@ -128,12 +128,12 @@ class _MobileInboxRoute extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'New message',
-            onPressed: () => GoRouter.of(context).push('/messages/new'),
+            tooltip: 'New MessageModel',
+            onPressed: () => GoRouter.of(context).push('/MessageModel/new'),
           ),
           IconButton(
             icon: const Icon(Icons.more_horiz_rounded),
-            tooltip: 'Message requests',
+            tooltip: 'MessageModel requests',
             onPressed: () {
               showModalBottomSheet<void>(
                 context: context,
@@ -142,7 +142,7 @@ class _MobileInboxRoute extends ConsumerWidget {
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                builder: (_) => MessageRequestsSheet(
+                builder: (_) => MessageModelRequestsSheet(
                   requestsAsync: requestsAsync,
                   userId: userId,
                 ),
@@ -164,9 +164,9 @@ Widget buildMessengerRouteChild({
 }) {
   switch (routeState.kind) {
     case MessengerRouteKind.inbox:
-      return MessagesSchemaBridgeView(userId: userId, username: username);
+      return MessageModelSchemaBridgeView(userId: userId, username: username);
     case MessengerRouteKind.compose:
-      return NewMessagePaneView(
+      return NewMessageModelPaneView(
         userId: userId,
         username: username,
         avatarUrl: avatarUrl,

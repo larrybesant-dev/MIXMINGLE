@@ -37,14 +37,14 @@ Tier 2 is non-blocking unless there is a critical runtime failure.
 
 #### MC-1 Ordering Determinism
 - Setup: dual client, force one client offline, reconnect.
-- Pass condition: final message ordering is identical across clients.
+- Pass condition: final MessageModel ordering is identical across clients.
 
 #### MC-2 Duplicate Suppression
-- Setup: retry same message under network flaps.
-- Pass condition: exactly one persisted message per `messageId`.
+- Setup: retry same MessageModel under network flaps.
+- Pass condition: exactly one persisted MessageModel per `MessageModelId`.
 
 #### MC-3 Offline Queue Integrity
-- Setup: queue 20 messages offline, reconnect.
+- Setup: queue 20 MessageModels offline, reconnect.
 - Pass condition: all 20 delivered once, in correct order.
 
 #### MC-4 Crash Recovery Consistency
@@ -167,7 +167,7 @@ Otherwise, ship equals FALSE.
 ## Case-to-Command Mapping
 
 ### MC (Messaging Core)
-- `MC-1` -> `flutter test --no-pub test/messages_screen_test.dart`
+- `MC-1` -> `flutter test --no-pub test/MessageModels_screen_test.dart`
 - `MC-2` -> `flutter test --no-pub test/chat_pane_view_test.dart`
 - `MC-3` -> `flutter test --no-pub test/messaging_retention_test.dart`
 - `MC-4` -> `flutter test --no-pub test/app_integration_test.dart`
@@ -181,7 +181,7 @@ Otherwise, ship equals FALSE.
 ### NR (Notifications + Routing)
 - `NR-1` -> `flutter test --no-pub test/notification_service_test.dart`
 - `NR-2` -> `flutter test --no-pub test/app_router_redirect_test.dart`
-- `NR-3` -> `flutter test --no-pub test/messages_screen_test.dart`
+- `NR-3` -> `flutter test --no-pub test/MessageModels_screen_test.dart`
 - `NR-4` -> `flutter test --no-pub test/login_signup_navigation_test.dart`
 
 ### CG (Confidence)

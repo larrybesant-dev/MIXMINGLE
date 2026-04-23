@@ -3,18 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../config/environment.dart';
 import '../../../../core/theme.dart';
-import '../../../messaging/panes/messages_pane_view.dart';
+import '../../../messaging/panes/MessageModel_pane_view.dart';
 import '../../consistency/architecture_health_interpretation_provider.dart';
 import '../../core/schema_engine/schema_module_health_provider.dart';
-import '../providers/messages_render_mode_provider.dart';
-import 'schema_messages_module_view.dart';
+import '../providers/MessageModel_render_mode_provider.dart';
+import 'schema_MessageModel_module_view.dart';
 
-/// MessagesSchemaBridgeView — UI-only governance bridge.
+/// MessageModelSchemaBridgeView — UI-only governance bridge.
 ///
 /// CONSOLIDATED: Does NOT monitor parity or validate compliance.
 /// Uses unified SchemaModuleHealth for display only.
-class MessagesSchemaBridgeView extends ConsumerWidget {
-  const MessagesSchemaBridgeView({
+class MessageModelSchemaBridgeView extends ConsumerWidget {
+  const MessageModelSchemaBridgeView({
     super.key,
     required this.userId,
     required this.username,
@@ -25,8 +25,8 @@ class MessagesSchemaBridgeView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(messagesPaneRenderModeProvider);
-    final health = ref.watch(schemaModuleHealthProvider('messages'));
+    final mode = ref.watch(MessageModelPaneRenderModeProvider);
+    final health = ref.watch(schemaModuleHealthProvider('MessageModel'));
     final interpretation = ref.watch(architectureHealthInterpretationProvider);
     final isDesktop = MediaQuery.sizeOf(context).width >= 1100;
     final showGovernance = currentEnv == Environment.dev;
@@ -40,22 +40,22 @@ class MessagesSchemaBridgeView extends ConsumerWidget {
             isDesktop: isDesktop,
             interpretationLabel: _interpretationLabel(interpretation.classification),
             onModeChanged:
-                ref.read(messagesPaneRenderModeProvider.notifier).setMode,
+                ref.read(MessageModelPaneRenderModeProvider.notifier).setMode,
           ),
           const Divider(height: 1, color: VelvetNoir.outlineVariant),
         ],
         Expanded(
           child: switch (mode) {
-            MessagesPaneRenderMode.legacy => MessagesPaneView(
+            MessageModelPaneRenderMode.legacy => MessageModelPaneView(
                 userId: userId,
                 username: username,
                 showHeader: false,
               ),
-            MessagesPaneRenderMode.schema =>
-              SchemaMessagesModuleView(userId: userId),
-            MessagesPaneRenderMode.dual => isDesktop
-                ? _DualMessagePanes(userId: userId, username: username)
-                : SchemaMessagesModuleView(userId: userId),
+            MessageModelPaneRenderMode.schema =>
+              SchemaMessageModelModuleView(userId: userId),
+            MessageModelPaneRenderMode.dual => isDesktop
+                ? _DualMessageModelPanes(userId: userId, username: username)
+                : SchemaMessageModelModuleView(userId: userId),
           },
         ),
       ],
@@ -82,11 +82,11 @@ class _GovernanceHeader extends StatelessWidget {
     required this.onModeChanged,
   });
 
-  final MessagesPaneRenderMode mode;
+  final MessageModelPaneRenderMode mode;
   final SchemaModuleHealth health;
   final bool isDesktop;
   final String interpretationLabel;
-  final ValueChanged<MessagesPaneRenderMode> onModeChanged;
+  final ValueChanged<MessageModelPaneRenderMode> onModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -112,21 +112,21 @@ class _GovernanceHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SegmentedButton<MessagesPaneRenderMode>(
+              SegmentedButton<MessageModelPaneRenderMode>(
                 segments: [
                   const ButtonSegment(
-                    value: MessagesPaneRenderMode.legacy,
+                    value: MessageModelPaneRenderMode.legacy,
                     label: Text('Legacy'),
                     icon: Icon(Icons.history_toggle_off_rounded),
                   ),
                   const ButtonSegment(
-                    value: MessagesPaneRenderMode.schema,
+                    value: MessageModelPaneRenderMode.schema,
                     label: Text('Schema'),
                     icon: Icon(Icons.shield_rounded),
                   ),
                   if (isDesktop)
                     const ButtonSegment(
-                      value: MessagesPaneRenderMode.dual,
+                      value: MessageModelPaneRenderMode.dual,
                       label: Text('Dual'),
                       icon: Icon(Icons.splitscreen_rounded),
                     ),
@@ -241,8 +241,8 @@ class _HealthChips extends StatelessWidget {
       };
 }
 
-class _DualMessagePanes extends StatelessWidget {
-  const _DualMessagePanes({required this.userId, required this.username});
+class _DualMessageModelPanes extends StatelessWidget {
+  const _DualMessageModelPanes({required this.userId, required this.username});
 
   final String userId;
   final String username;
@@ -254,7 +254,7 @@ class _DualMessagePanes extends StatelessWidget {
         Expanded(
           child: _PaneCard(
             title: 'Legacy',
-            child: MessagesPaneView(
+            child: MessageModelPaneView(
               userId: userId,
               username: username,
               showHeader: false,
@@ -265,7 +265,7 @@ class _DualMessagePanes extends StatelessWidget {
         Expanded(
           child: _PaneCard(
             title: 'Schema',
-            child: SchemaMessagesModuleView(userId: userId),
+            child: SchemaMessageModelModuleView(userId: userId),
           ),
         ),
       ],

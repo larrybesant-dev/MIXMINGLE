@@ -170,7 +170,7 @@ class FeedController extends Notifier<FeedState> {
       );
       state = state.copyWith(
         isLoading: false,
-        error: friendlyFirestoreMessage(
+        error: friendlyFirestoreMessageModel(
           e,
           fallbackContext: 'the discovery feed',
         ),

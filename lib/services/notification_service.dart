@@ -112,25 +112,25 @@ class NotificationService {
     await ref.update({'isRead': true, 'readAt': FieldValue.serverTimestamp()});
   }
 
-  Future<void> pushNotification(String userId, String message) async {
+  Future<void> pushNotification(String userId, String MessageModel) async {
     final actorId = _safeActorId(userId);
     await _firestore.collection('notifications').add({
       'userId': userId,
       'actorId': actorId,
       'type': 'push',
-      'content': message,
+      'content': MessageModel,
       'isRead': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
-  Future<void> inAppNotification(String userId, String message) async {
+  Future<void> inAppNotification(String userId, String MessageModel) async {
     final actorId = _safeActorId(userId);
     await _firestore.collection('notifications').add({
       'userId': userId,
       'actorId': actorId,
       'type': 'in_app',
-      'content': message,
+      'content': MessageModel,
       'isRead': false,
       'createdAt': FieldValue.serverTimestamp(),
     });

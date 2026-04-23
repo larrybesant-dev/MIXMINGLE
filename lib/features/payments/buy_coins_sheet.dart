@@ -69,14 +69,14 @@ class _BuyCoinsSheetContent extends ConsumerStatefulWidget {
 class _BuyCoinsSheetContentState
     extends ConsumerState<_BuyCoinsSheetContent> {
   String? _loadingPackageId;
-  String? _errorMessage;
+  String? _errorMessageModel;
 
   Future<void> _purchase(_CoinPackage package) async {
     if (_loadingPackageId != null) return;
 
     setState(() {
       _loadingPackageId = package.id;
-      _errorMessage = null;
+      _errorMessageModel = null;
     });
 
     try {
@@ -100,11 +100,11 @@ class _BuyCoinsSheetContentState
       if (mounted) Navigator.of(context).pop();
     } on FirebaseFunctionsException catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = e.message ?? 'Purchase failed.');
+        setState(() => _errorMessageModel = e.MessageModel ?? 'Purchase failed.');
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = e.toString());
+        setState(() => _errorMessageModel = e.toString());
       }
     } finally {
       if (mounted) setState(() => _loadingPackageId = null);
@@ -205,10 +205,10 @@ class _BuyCoinsSheetContentState
             ),
           ),
 
-          if (_errorMessage != null) ...[
+          if (_errorMessageModel != null) ...[
             const SizedBox(height: 12),
             Text(
-              _errorMessage!,
+              _errorMessageModel!,
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: theme.colorScheme.error),
               textAlign: TextAlign.center,

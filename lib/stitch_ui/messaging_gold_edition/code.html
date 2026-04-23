@@ -57,10 +57,10 @@
             backdrop-filter: blur(24px);
             border: 1px solid rgba(212, 175, 55, 0.1);
         }
-        .message-bubble-user {
+        .MessageModel-bubble-user {
             background: linear-gradient(135deg, #D4AF37 0%, #8c711a 100%);
         }
-        .message-bubble-received {
+        .MessageModel-bubble-received {
             background: rgba(42, 42, 42, 0.8);
             border: 1px solid rgba(212, 175, 55, 0.1);
         }
@@ -89,7 +89,7 @@
 <div class="hidden md:flex gap-6">
 <a class="text-gray-400 font-serif text-sm tracking-tight hover:text-yellow-200 hover:bg-yellow-900/20 transition-all duration-300 px-3 py-1 rounded-lg" href="#">Feed</a>
 <a class="text-gray-400 font-serif text-sm tracking-tight hover:text-yellow-200 hover:bg-yellow-900/20 transition-all duration-300 px-3 py-1 rounded-lg" href="#">Explore</a>
-<a class="text-yellow-500 border-b-2 border-yellow-500 font-serif text-sm tracking-tight px-3 py-1" href="#">Messages</a>
+<a class="text-yellow-500 border-b-2 border-yellow-500 font-serif text-sm tracking-tight px-3 py-1" href="#">MessageModels</a>
 </div>
 </div>
 <div class="flex items-center gap-4">
@@ -122,7 +122,7 @@
 </a>
 <a class="flex items-center gap-4 bg-gradient-to-r from-yellow-500/10 to-transparent text-yellow-500 border-l-4 border-yellow-500 px-4 py-3 group" href="#">
 <span class="material-symbols-outlined group-hover:translate-x-1 duration-200">chat_bubble</span>
-<span class="text-sm">Messages</span>
+<span class="text-sm">MessageModels</span>
 </a>
 <a class="flex items-center gap-4 text-gray-500 px-4 py-3 hover:bg-yellow-500/5 hover:text-yellow-400 transition-colors group" href="#">
 <span class="material-symbols-outlined group-hover:translate-x-1 duration-200">account_circle</span>
@@ -226,7 +226,7 @@
 <div class="flex justify-center">
 <span class="bg-yellow-500/5 px-6 py-1 rounded-full text-[9px] text-yellow-500/60 font-bold uppercase tracking-widest border border-yellow-900/10">Today</span>
 </div>
-<!-- Message Received -->
+<!-- MessageModel Received -->
 <div class="flex gap-4 max-w-[85%]">
 <img alt="Elena" class="w-8 h-8 rounded mt-1 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-lyY_vOCnLSo-mE5p-whI6D9LxBcQo6UfN2EGI9c1pLVgM3x2DlojByGrtq5jAHfPekHpPYeXxVBeVSzgPLedZcg31AqG2H3FQOa53Jf5USKwR7L6jTc-ivYq1PWZWM9ppWTYLgs0YW5M0MPlfhj0VF9vaezD_3QGPyeIc_o6Gyut54D0ZkuCjs9CR6prG8n0kBcJk9KKIjFZaKHCZzYEJugMxZ6rp1AGwFVctt4b6OIBJ0ZzKE9fO6nyOjpqBXqv5NwiB4x0i4S6"/>
 <div class="space-y-1.5">
@@ -234,7 +234,7 @@
 <span class="text-white/80 text-[11px] font-serif uppercase tracking-widest">Elena Vance</span>
 <span class="text-white/20 text-[10px]">12:40 PM</span>
 </div>
-<div class="message-bubble-received text-white/90 p-5 rounded-2xl rounded-tl-none shadow-sm">
+<div class="MessageModel-bubble-received text-white/90 p-5 rounded-2xl rounded-tl-none shadow-sm">
 <p class="text-sm leading-relaxed font-serif italic">Hey! Just finished the final sequence for the Kinetic Noir clip. Check out the lighting transition here.</p>
 </div>
 </div>
@@ -254,14 +254,14 @@
 <span class="text-white/30 text-[10px] font-serif">Kinetic_Sequence_V1.mp4 (42MB)</span>
 </div>
 </div>
-<!-- Message Sent -->
+<!-- MessageModel Sent -->
 <div class="flex flex-row-reverse gap-4 max-w-[85%] ml-auto">
 <div class="space-y-1.5 flex flex-col items-end">
 <div class="flex items-baseline gap-2">
 <span class="text-white/20 text-[10px]">12:45 PM</span>
 <span class="text-yellow-500/80 text-[11px] font-serif uppercase tracking-widest">Premium User</span>
 </div>
-<div class="message-bubble-user text-black font-medium p-5 rounded-2xl rounded-tr-none shadow-[0_10px_30px_rgba(212,175,55,0.15)]">
+<div class="MessageModel-bubble-user text-black font-medium p-5 rounded-2xl rounded-tr-none shadow-[0_10px_30px_rgba(212,175,55,0.15)]">
 <p class="text-sm leading-relaxed">The render looks absolutely insane! 🚀 The way the neon pulses with the bass line is perfect.</p>
 </div>
 <div class="flex items-center gap-1">
@@ -288,7 +288,7 @@
 <span class="material-symbols-outlined">add_circle</span>
 </button>
 </div>
-<textarea class="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-yellow-500/20 py-3 resize-none custom-scrollbar max-h-32 font-serif text-sm" placeholder="Message Elena Vance..." rows="1"></textarea>
+<textarea class="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-yellow-500/20 py-3 resize-none custom-scrollbar max-h-32 font-serif text-sm" placeholder="MessageModel Elena Vance..." rows="1"></textarea>
 <div class="flex gap-2 p-1">
 <button class="w-10 h-10 flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-lg transition-all">
 <span class="material-symbols-outlined">sentiment_satisfied</span>

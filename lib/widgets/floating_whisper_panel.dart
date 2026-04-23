@@ -4,21 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/messaging/models/message_model.dart';
-import '../features/messaging/providers/messaging_provider.dart';
-import '../presentation/providers/user_provider.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
+import 'package:mixvy/features/messaging/providers/messaging_provider.dart';
+import 'package:mixvy/presentation/providers/user_provider.dart';
 
-/// A compact, draggable floating DM panel intended for use while the user is
-/// in a live room. Rendered via an Overlay so it floats above all other widgets.
-///
-/// Usage (inside a ConsumerState):
-/// ```dart
-/// FloatingWhisperPanel.show(
-///   context, ref,
-///   conversationId: id,
-///   peerName: username,
-/// );
-/// ```
 class FloatingWhisperPanel {
   static OverlayEntry? _entry;
 
@@ -29,17 +18,17 @@ class FloatingWhisperPanel {
     required String peerName,
     String? peerAvatarUrl,
   }) {
-    // Dismiss any existing panel first.
     dismiss();
+
     _entry = OverlayEntry(
       builder: (_) => _FloatingWhisperPanelWidget(
         conversationId: conversationId,
         peerName: peerName,
         peerAvatarUrl: peerAvatarUrl,
         onClose: dismiss,
-        callerRef: ref,
       ),
     );
+
     Overlay.of(context).insert(_entry!);
   }
 
@@ -55,14 +44,12 @@ class _FloatingWhisperPanelWidget extends ConsumerStatefulWidget {
     required this.peerName,
     this.peerAvatarUrl,
     required this.onClose,
-    required this.callerRef,
   });
 
   final String conversationId;
   final String peerName;
   final String? peerAvatarUrl;
   final VoidCallback onClose;
-  final WidgetRef callerRef;
 
   @override
   ConsumerState<_FloatingWhisperPanelWidget> createState() =>
@@ -73,58 +60,64 @@ class _FloatingWhisperPanelWidgetState
     extends ConsumerState<_FloatingWhisperPanelWidget> {
   Offset _position = const Offset(16, 120);
   bool _expanded = true;
-  final TextEditingController _inputController = TextEditingController();
 
-  @override
-  void dispose() {
-    _inputController.dispose();
-    super.dispose();
-  }
+  final TextEditingController _controller = TextEditingController();
 
-  Future<void> _sendMessage() async {
-    final text = _inputController.text.trim();
+  Future<void> _sendMessageModel() async {
+    final text = _controller.text.trim();
     if (text.isEmpty) return;
-    _inputController.clear();
+
+    _controller.clear();
+
+    final user = ref.read(userProvider);
+    if (user == null) return;
+
     try {
-      final currentUser = ref.read(userProvider);
-      if (currentUser == null) return;
-      await ref.read(messagingControllerProvider).sendMessage(
+      await ref.read(messagingControllerProvider).sendMessageModel(
             conversationId: widget.conversationId,
-            senderId: currentUser.id,
-            senderName: currentUser.username,
-            senderAvatarUrl: currentUser.avatarUrl,
+            senderId: user.id,
+            senderName: user.username,
+            senderAvatarUrl: user.avatarUrl,
             content: text,
           );
-    } catch (e, stack) {
+    } catch (e, st) {
       if (kDebugMode) {
-        debugPrint('[FloatingWhisperPanel] sendMessage failed: $e\n$stack');
+        debugPrint('[FloatingWhisperPanel] send failed: $e\n$st');
       }
     }
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    // Panel dimensions
-    const panelWidth = 280.0;
-    const panelExpandedHeight = 340.0;
-    const panelCollapsedHeight = 44.0;
+    final size = MediaQuery.of(context).size;
+
+    const width = 280.0;
+    const expandedHeight = 340.0;
+    const collapsedHeight = 44.0;
 
     return Positioned(
-      left: _position.dx.clamp(0, screenSize.width - panelWidth),
-      top: _position.dy.clamp(0, screenSize.height - (_expanded ? panelExpandedHeight : panelCollapsedHeight)),
-      width: panelWidth,
+      left: _position.dx.clamp(0, size.width - width),
+      top: _position.dy.clamp(
+        0,
+        size.height - (_expanded ? expandedHeight : collapsedHeight),
+      ),
+      width: width,
       child: Material(
-        elevation: 8,
+        elevation: 10,
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header / drag handle
             GestureDetector(
-              onPanUpdate: (details) {
-                setState(() => _position += details.delta);
+              onPanUpdate: (d) {
+                setState(() => _position += d.delta);
               },
               child: Container(
                 height: 44,
@@ -132,16 +125,17 @@ class _FloatingWhisperPanelWidgetState
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.drag_indicator, size: 18, color: Color(0xFFB09080)),
+                    const Icon(Icons.drag_indicator,
+                        size: 18, color: Color(0xFFB09080)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         widget.peerName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFF2EBE0),
-                        ),
                         overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFF2EBE0),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -155,7 +149,6 @@ class _FloatingWhisperPanelWidgetState
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
-                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: widget.onClose,
@@ -166,44 +159,36 @@ class _FloatingWhisperPanelWidgetState
                 ),
               ),
             ),
+
             if (_expanded) ...[
-              // Message list
               SizedBox(
                 height: 240,
-                child: _MessageList(
-                  conversationId: widget.conversationId,
-                ),
+                child: _MessageModelList(conversationId: widget.conversationId),
               ),
-              // Input row
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                color: Theme.of(context).colorScheme.surface,
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 child: Row(
                   children: [
                     Expanded(
                       child: TextField(
-                        controller: _inputController,
+                        controller: _controller,
                         decoration: const InputDecoration(
-                          hintText: 'Message…',
-                          isDense: true,
+                          hintText: 'MessageModel…',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          isDense: true,
                         ),
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _sendMessage(),
+                        onSubmitted: (_) => _sendMessageModel(),
                       ),
                     ),
-                    const SizedBox(width: 6),
                     IconButton(
                       icon: const Icon(Icons.send),
-                      onPressed: _sendMessage,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      onPressed: _sendMessageModel,
                     ),
                   ],
                 ),
               ),
-            ],
+            ]
           ],
         ),
       ),
@@ -211,52 +196,30 @@ class _FloatingWhisperPanelWidgetState
   }
 }
 
-/// Lightweight message list inside the floating panel.
-class _MessageList extends ConsumerWidget {
-  const _MessageList({required this.conversationId});
+class _MessageModelList extends ConsumerWidget {
+  const _MessageModelList({required this.conversationId});
 
   final String conversationId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final messagesAsync = ref.watch(messagesStreamProvider(conversationId));
-    return messagesAsync.when(
+    final stream = ref.watch(MessageModelStreamProvider(conversationId));
+
+    return stream.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, color: Color(0xFFFF6E84), size: 28),
-              const SizedBox(height: 8),
-              const Text(
-                'Could not load messages.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFFB09080), fontSize: 12),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => ref.invalidate(messagesStreamProvider(conversationId)),
-                child: const Text('Retry', style: TextStyle(color: Color(0xFFD4A853))),
-              ),
-            ],
-          ),
-        ),
-      ),
-      data: (messages) {
-        if (messages.isEmpty) {
-          return const Center(
-            child: Text('No messages yet.', style: TextStyle(color: Color(0xFFB09080))),
-          );
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (MessageModel) {
+        if (MessageModel.isEmpty) {
+          return const Center(child: Text('No MessageModel yet'));
         }
+
         return ListView.builder(
-          padding: const EdgeInsets.all(8),
           reverse: true,
-          itemCount: messages.length,
-          itemBuilder: (ctx, i) {
-            final msg = messages[messages.length - 1 - i];
-            return _FloatingMessageBubble(message: msg);
+          padding: const EdgeInsets.all(8),
+          itemCount: MessageModel.length,
+          itemBuilder: (_, i) {
+            final msg = MessageModel[MessageModel.length - 1 - i];
+            return _Bubble(MessageModel: msg);
           },
         );
       },
@@ -264,10 +227,10 @@ class _MessageList extends ConsumerWidget {
   }
 }
 
-class _FloatingMessageBubble extends StatelessWidget {
-  const _FloatingMessageBubble({required this.message});
+class _Bubble extends StatelessWidget {
+  const _Bubble({required this.MessageModel});
 
-  final Message message;
+  final MessageModel MessageModel;
 
   @override
   Widget build(BuildContext context) {
@@ -277,16 +240,19 @@ class _FloatingMessageBubble extends StatelessWidget {
         text: TextSpan(
           children: [
             TextSpan(
-              text: '${message.senderName}: ',
-              style: TextStyle(
+              text: '${MessageModel.senderName}: ',
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
                 fontSize: 12,
+                color: Color(0xFFD4A853),
               ),
             ),
             TextSpan(
-              text: message.content,
-              style: const TextStyle(fontSize: 12, color: Color(0xFFF2EBE0)),
+              text: MessageModel.content,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFFF2EBE0),
+              ),
             ),
           ],
         ),

@@ -1,6 +1,6 @@
-import 'package:mixvy/models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 
-class RoomMessagePreviewContract {
+class RoomMessageModelPreviewContract {
   static bool shouldRebuild(List<MessageModel> oldMsgs, List<MessageModel> newMsgs) {
     if (oldMsgs.isEmpty && newMsgs.isEmpty) return false;
     if (oldMsgs.isEmpty || newMsgs.isEmpty) return true;

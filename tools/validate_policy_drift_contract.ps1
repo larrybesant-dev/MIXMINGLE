@@ -86,13 +86,13 @@ try {
   Write-Host 'Policy drift contract validation passed.'
 }
 catch {
-  $errorMessage = $_.Exception.Message
+  $errorMessageModel = $_.Exception.MessageModel
   $validationStatus = [ordered]@{
     generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
     contract_version = 'unknown'
     status = 'failed'
     validationMode = $ValidationMode
-    error = $errorMessage
+    error = $errorMessageModel
   }
   $validationStatus | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputValidationStatusPath -Encoding utf8
 
@@ -100,5 +100,5 @@ catch {
     throw
   }
 
-  Write-Warning "Policy drift contract validation failed in observe mode: $errorMessage"
+  Write-Warning "Policy drift contract validation failed in observe mode: $errorMessageModel"
 }

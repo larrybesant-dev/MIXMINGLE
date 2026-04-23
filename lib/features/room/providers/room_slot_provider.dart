@@ -116,7 +116,7 @@ class RoomSlotService {
       AppTelemetry.logAction(
         domain: 'room',
         action: 'claim_slot',
-        message: 'Camera slot claim finished.',
+        MessageModel: 'Camera slot claim finished.',
         roomId: roomId,
         userId: userId,
         result: claimedSlotId ?? 'full',
@@ -169,7 +169,7 @@ class RoomSlotService {
       AppTelemetry.logAction(
         domain: 'room',
         action: 'release_slot',
-        message: 'Camera slot release finished.',
+        MessageModel: 'Camera slot release finished.',
         roomId: roomId,
         userId: userId,
         result: slotsSnap.docs.length.toString(),

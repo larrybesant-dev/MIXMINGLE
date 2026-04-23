@@ -106,7 +106,7 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
             child: Center(child: _MicLevelBar(level: localAudioLevel)),
           ),
         Tooltip(
-          message: isVideoEnabled
+          MessageModel: isVideoEnabled
               ? 'Turn camera off (long-press to manage viewers)'
               : 'Turn camera on (long-press to manage viewers)',
           child: GestureDetector(

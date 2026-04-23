@@ -149,9 +149,9 @@ String? _currentAvatarUrl(Ref ref) {
 
 int _appShellIndexForLocation(String matchedLocation) {
   // Dynamic routes must be checked before the switch — GoRouter resolves
-  // path parameters so the matched location will be e.g. '/messages/abc123',
-  // not the template '/messages/:conversationId'.
-  if (matchedLocation.startsWith('/messages/')) return 2;
+  // path parameters so the matched location will be e.g. '/MessageModel/abc123',
+  // not the template '/MessageModel/:conversationId'.
+  if (matchedLocation.startsWith('/MessageModel/')) return 2;
   if (matchedLocation.startsWith('/profile/')) return 4;
   if (matchedLocation.startsWith('/group/')) return 3;
   if (matchedLocation.startsWith('/followers/')) return 3;
@@ -171,8 +171,8 @@ int _appShellIndexForLocation(String matchedLocation) {
     case '/create-room':
     case '/speed-dating':
       return 1;
-    case '/messages':
-    case '/messages/new':
+    case '/MessageModel':
+    case '/MessageModel/new':
       return 2;
     case '/social':
     case '/friends':
@@ -525,7 +525,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
-                path: '/messages',
+                path: '/MessageModel',
                 builder: (context, state) => buildMessengerRouteChild(
                   routeState: MessengerRouteState.fromGoRouterState(state),
                   userId: _currentUid(ref) ?? '',
@@ -534,7 +534,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
-                path: '/messages/new',
+                path: '/MessageModel/new',
                 builder: (context, state) => buildMessengerRouteChild(
                   routeState: MessengerRouteState.fromGoRouterState(state),
                   userId: _currentUid(ref) ?? '',
@@ -543,7 +543,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
-                path: '/messages/:conversationId',
+                path: '/MessageModel/:conversationId',
                 builder: (context, state) {
                   final conversationId = _pathParamOrNull(
                     state,

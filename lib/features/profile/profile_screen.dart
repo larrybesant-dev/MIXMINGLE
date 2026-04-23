@@ -203,20 +203,20 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       'cancelled' => 'Upload was cancelled.',
       'retry-limit-exceeded' => 'Upload timed out. Check your network and retry.',
       'object-not-found' => 'Storage path missing. Please retry.',
-      _ => '$kind upload failed (${e.code}): ${e.message ?? 'unknown error'}',
+      _ => '$kind upload failed (${e.code}): ${e.MessageModel ?? 'unknown error'}',
     };
   }
 
   String _mapPlatformError(PlatformException e, {required String kind}) {
     final code = e.code.toLowerCase();
-    final message = (e.message ?? '').trim();
+    final MessageModel = (e.MessageModel ?? '').trim();
     if (code.contains('permission') || code.contains('denied')) {
       return '$kind upload blocked by browser/device permissions.';
     }
-    if (code.contains('network') || message.toLowerCase().contains('network')) {
+    if (code.contains('network') || MessageModel.toLowerCase().contains('network')) {
       return '$kind upload failed due to network issues. Please retry.';
     }
-    return '$kind upload failed (${e.code}): ${message.isEmpty ? 'unknown error' : message}';
+    return '$kind upload failed (${e.code}): ${MessageModel.isEmpty ? 'unknown error' : MessageModel}';
   }
 
   Future<void> _openIntroVideo(String url) async {
@@ -350,7 +350,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       throw FirebaseException(
         plugin: 'firebase_storage',
         code: 'retry-limit-exceeded',
-        message: 'Upload timed out before completion.',
+        MessageModel: 'Upload timed out before completion.',
       );
     }
 
@@ -393,7 +393,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     throw FirebaseException(
       plugin: 'firebase_storage',
       code: 'unknown',
-      message: 'Unable to get photo URL after upload.',
+      MessageModel: 'Unable to get photo URL after upload.',
     );
   }
 
@@ -401,7 +401,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     required bool isBusy,
     required ValueSetter<bool> setBusy,
     required String folder,
-    required String successMessage,
+    required String successMessageModel,
     required ProfileState Function(ProfileState current, String url) transform,
   }) async {
     if (isBusy) return;
@@ -469,7 +469,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       controller.updateDraft(next);
       await controller.updateProfile(next);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessage)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessageModel)));
     } on FirebaseException catch (e) {
       developer.log(
         'Firebase upload error',
@@ -519,7 +519,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       isBusy: _isUploadingPhoto,
       setBusy: (value) => _isUploadingPhoto = value,
       folder: 'profile_photos',
-      successMessage: 'Profile photo uploaded.',
+      successMessageModel: 'Profile photo uploaded.',
       transform: (_, url) {
         return current.copyWith(avatarUrl: url);
       },
@@ -532,7 +532,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       isBusy: _isUploadingCover,
       setBusy: (value) => _isUploadingCover = value,
       folder: 'cover_photos',
-      successMessage: 'Cover photo uploaded.',
+      successMessageModel: 'Cover photo uploaded.',
       transform: (_, url) {
         return current.copyWith(coverPhotoUrl: url);
       },
@@ -545,7 +545,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       isBusy: _isUploadingGallery,
       setBusy: (value) => _isUploadingGallery = value,
       folder: 'gallery_photos',
-      successMessage: 'Gallery photo uploaded.',
+      successMessageModel: 'Gallery photo uploaded.',
       transform: (_, url) {
         return current.copyWith(
           galleryUrls: {...current.galleryUrls, url}.toList(growable: false),

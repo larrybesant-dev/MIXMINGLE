@@ -277,7 +277,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           empty: const FeedEmptyState(
                             emoji: '🔔',
                             heading: 'All caught up!',
-                            message:
+                            MessageModel:
                                 'You have no notifications yet.\nRoom invites, friend requests and gift alerts will appear here.',
                           ),
                           data: (notifications) {

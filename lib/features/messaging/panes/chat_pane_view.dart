@@ -16,7 +16,7 @@ import '../../../services/web_popout_service.dart';
 import '../../../widgets/safe_network_avatar.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../../../widgets/emoji_pack/emoji_pack_picker.dart';
-import '../models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 import '../../../models/user_model.dart';
 import '../providers/messaging_provider.dart';
 
@@ -41,21 +41,21 @@ class ChatPaneView extends ConsumerStatefulWidget {
 }
 
 class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
-  late TextEditingController _messageController;
+  late TextEditingController _MessageModelController;
   late ScrollController _scrollController;
   Timer? _typingTimer;
   bool _isTyping = false;
   bool _didAutoScrollInitialLoad = false;
   late final double? _savedScrollOffset;
-  final List<_PendingMessage> _pendingMessages = <_PendingMessage>[];
+  final List<_PendingMessageModel> _pendingMessageModel = <_PendingMessageModel>[];
 
   @override
   void initState() {
     super.initState();
-    _messageController = TextEditingController();
+    _MessageModelController = TextEditingController();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    _messageController.addListener(_onTextChanged);
+    _MessageModelController.addListener(_onTextChanged);
     _savedScrollOffset =
       ref.read(conversationScrollMemoryProvider)[widget.conversationId];
 
@@ -68,7 +68,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
   }
 
   void _onTextChanged() {
-    if (_messageController.text.isEmpty) {
+    if (_MessageModelController.text.isEmpty) {
       _clearTyping();
       return;
     }
@@ -101,7 +101,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
         _scrollController.offset <=
             _scrollController.position.minScrollExtent + 120) {
       ref
-          .read(paginatedMessagesProvider(widget.conversationId).notifier)
+          .read(paginatedMessageModelProvider(widget.conversationId).notifier)
           .loadMore(null);
     }
     if (_scrollController.hasClients &&
@@ -149,21 +149,21 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     }
     _clearTyping();
     _typingTimer?.cancel();
-    _messageController.removeListener(_onTextChanged);
-    _messageController.dispose();
+    _MessageModelController.removeListener(_onTextChanged);
+    _MessageModelController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _sendMessage() async {
-    final content = _messageController.text.trim();
+  Future<void> _sendMessageModel() async {
+    final content = _MessageModelController.text.trim();
     if (content.isEmpty) return;
 
     _clearTyping();
-    _messageController.clear();
+    _MessageModelController.clear();
 
-    final pendingMessage = _PendingMessage(
-      clientMessageId: '${DateTime.now().microsecondsSinceEpoch}-${widget.userId}',
+    final pendingMessageModel = _PendingMessageModel(
+      clientMessageModelId: '${DateTime.now().microsecondsSinceEpoch}-${widget.userId}',
       content: content,
       createdAt: DateTime.now(),
       senderId: widget.userId,
@@ -171,7 +171,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
       senderAvatarUrl: widget.avatarUrl,
     );
     setState(() {
-      _pendingMessages.add(pendingMessage);
+      _pendingMessageModel.add(pendingMessageModel);
     });
 
     _scheduleScrollToBottom(
@@ -180,23 +180,23 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     );
 
     try {
-      await ref.read(messagingControllerProvider).sendMessage(
+      await ref.read(messagingControllerProvider).sendMessageModel(
             conversationId: widget.conversationId,
             senderId: widget.userId,
             senderName: widget.username,
             senderAvatarUrl: widget.avatarUrl,
             content: content,
-            clientMessageId: pendingMessage.clientMessageId,
+            clientMessageModelId: pendingMessageModel.clientMessageModelId,
           );
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _pendingMessages.removeWhere(
-          (message) => message.clientMessageId == pendingMessage.clientMessageId,
+        _pendingMessageModel.removeWhere(
+          (MessageModel) => MessageModel.clientMessageModelId == pendingMessageModel.clientMessageModelId,
         );
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send message: $error')),
+        SnackBar(content: Text('Could not send MessageModel: $error')),
       );
       return;
     }
@@ -209,8 +209,8 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(messagesStreamProvider(widget.conversationId));
-    final paginatedState = ref.watch(paginatedMessagesProvider(widget.conversationId));
+    final MessageModelAsync = ref.watch(MessageModelStreamProvider(widget.conversationId));
+    final paginatedState = ref.watch(paginatedMessageModelProvider(widget.conversationId));
     final conversationAsync = ref.watch(conversationDocProvider(widget.conversationId));
     final conversation = conversationAsync.valueOrNull;
     final otherUserId = conversation == null
@@ -291,31 +291,31 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
             ),
           ),
         Expanded(
-          child: messagesAsync.when(
-            data: (liveMessages) {
-              final pendingClientIds = _pendingMessages
-                  .map((message) => message.clientMessageId)
+          child: MessageModelAsync.when(
+            data: (liveMessageModel) {
+              final pendingClientIds = _pendingMessageModel
+                  .map((MessageModel) => MessageModel.clientMessageModelId)
                   .toSet();
-              final liveClientIds = liveMessages
-                  .map((message) => message.clientMessageId)
+              final liveClientIds = liveMessageModel
+                  .map((MessageModel) => MessageModel.clientMessageModelId)
                   .whereType<String>()
                   .toSet();
-              final pendingMessages = _pendingMessages
-                  .where((message) => !liveClientIds.contains(message.clientMessageId))
+              final pendingMessageModel = _pendingMessageModel
+                  .where((MessageModel) => !liveClientIds.contains(MessageModel.clientMessageModelId))
                   .toList(growable: false);
-              final allMessages = [
-                ...paginatedState.olderMessages,
-                ...liveMessages,
-                ...pendingMessages.map((message) => message.toMessage(widget.conversationId)),
+              final allMessageModel = [
+                ...paginatedState.olderMessageModel,
+                ...liveMessageModel,
+                ...pendingMessageModel.map((MessageModel) => MessageModel.toMessageModel(widget.conversationId)),
               ];
 
-              if (_pendingMessages.length != pendingMessages.length) {
+              if (_pendingMessageModel.length != pendingMessageModel.length) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
                   setState(() {
-                    _pendingMessages
+                    _pendingMessageModel
                       ..clear()
-                      ..addAll(pendingMessages);
+                      ..addAll(pendingMessageModel);
                   });
                 });
               }
@@ -338,10 +338,10 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                 );
               }
 
-              if (allMessages.isEmpty) {
+              if (allMessageModel.isEmpty) {
                 return const AppEmptyView(
-                  title: 'No messages yet',
-                  message: 'Start the conversation.',
+                  title: 'No MessageModel yet',
+                  MessageModel: 'Start the conversation.',
                   icon: Icons.chat_bubble_outline_rounded,
                 );
               }
@@ -349,7 +349,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
               return ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
-                itemCount: allMessages.length + (paginatedState.hasMore ? 1 : 0),
+                itemCount: allMessageModel.length + (paginatedState.hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == 0 && paginatedState.hasMore) {
                     return Center(
@@ -363,35 +363,35 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                               )
                             : TextButton(
                                 onPressed: () => ref
-                                    .read(paginatedMessagesProvider(widget.conversationId).notifier)
+                                    .read(paginatedMessageModelProvider(widget.conversationId).notifier)
                                     .loadMore(null),
-                                child: const Text('Load older messages'),
+                                child: const Text('Load older MessageModel'),
                               ),
                       ),
                     );
                   }
 
-                  final message =
-                      allMessages[index - (paginatedState.hasMore ? 1 : 0)];
-                  final isOwn = message.senderId == widget.userId;
-                    final isPending = message.clientMessageId != null &&
-                      pendingClientIds.contains(message.clientMessageId);
+                  final MessageModel =
+                      allMessageModel[index - (paginatedState.hasMore ? 1 : 0)];
+                  final isOwn = MessageModel.senderId == widget.userId;
+                    final isPending = MessageModel.clientMessageModelId != null &&
+                      pendingClientIds.contains(MessageModel.clientMessageModelId);
                   var isReadByOther = false;
                   if (isOwn && conversation != null) {
                     final otherIds =
                         conversation.participantIds.where((id) => id != widget.userId);
                     isReadByOther = otherIds.any((id) {
                       final readAt = conversation.lastReadAt[id];
-                      return readAt != null && !readAt.isBefore(message.createdAt);
+                      return readAt != null && !readAt.isBefore(MessageModel.createdAt);
                     });
                   }
 
-                  if (message.isDeleted) {
+                  if (MessageModel.isDeleted) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Center(
                         child: Text(
-                          'Message deleted',
+                          'MessageModel deleted',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 fontStyle: FontStyle.italic,
                                 color: Colors.grey,
@@ -412,10 +412,10 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                           if (!isOwn) ...[
                             SafeNetworkAvatar(
                               radius: 14,
-                              avatarUrl: message.senderAvatarUrl,
+                              avatarUrl: MessageModel.senderAvatarUrl,
                               backgroundColor: VelvetNoir.primaryDim,
-                              fallbackText: message.senderName.isNotEmpty
-                                  ? message.senderName[0].toUpperCase()
+                              fallbackText: MessageModel.senderName.isNotEmpty
+                                  ? MessageModel.senderName[0].toUpperCase()
                                   : '?',
                               fallbackTextStyle: const TextStyle(
                                 color: Colors.white,
@@ -435,7 +435,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                   onLongPress: () => _showReactionPicker(
                                     context,
                                     ref,
-                                    message.id,
+                                    MessageModel.id,
                                   ),
                                   child: Container(
                                     constraints: BoxConstraints(
@@ -490,7 +490,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                       children: [
                                         if (!isOwn) ...[
                                           Text(
-                                            message.senderName,
+                                            MessageModel.senderName,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 12,
@@ -499,8 +499,8 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                           ),
                                           const SizedBox(height: 3),
                                         ],
-                                        EmojiMessageContent(
-                                          content: message.content,
+                                        EmojiMessageModelContent(
+                                          content: MessageModel.content,
                                           isOwn: isOwn,
                                         ),
                                       ],
@@ -509,7 +509,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                 ),
                                 _ReactionRow(
                                   conversationId: widget.conversationId,
-                                  messageId: message.id,
+                                  MessageModelId: MessageModel.id,
                                   currentUserId: widget.userId,
                                 ),
                                 Padding(
@@ -519,7 +519,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        _formatTime(message.createdAt),
+                                        _formatTime(MessageModel.createdAt),
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: VelvetNoir.onSurfaceVariant,
@@ -528,7 +528,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                                       if (isOwn) ...[
                                         const SizedBox(width: 4),
                                         Tooltip(
-                                          message: _deliveryStateLabel(
+                                          MessageModel: _deliveryStateLabel(
                                             isPending: isPending,
                                             isReadByOther: isReadByOther,
                                           ),
@@ -579,14 +579,14 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                 },
               );
             },
-            loading: () => const AppLoadingView(label: 'Loading messages'),
+            loading: () => const AppLoadingView(label: 'Loading MessageModel'),
             skipLoadingOnRefresh: true,
             error: (error, stackTrace) => AppErrorView(
-              error: friendlyFirestoreMessage(
+              error: friendlyFirestoreMessageModel(
                 error,
-                fallbackContext: 'messages',
+                fallbackContext: 'MessageModel',
               ),
-              fallbackContext: 'Unable to load messages.',
+              fallbackContext: 'Unable to load MessageModel.',
             ),
           ),
         ),
@@ -624,20 +624,20 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                     ref,
                     onSelected: (item) => ref
                         .read(messagingControllerProvider)
-                        .sendMessage(
+                        .sendMessageModel(
                           conversationId: widget.conversationId,
                           senderId: widget.userId,
                           senderName: widget.username,
                           senderAvatarUrl: widget.avatarUrl,
-                          content: item.messageContent,
+                          content: item.MessageModelContent,
                         ),
                   ),
                 ),
                 Expanded(
                   child: TextField(
-                    controller: _messageController,
+                    controller: _MessageModelController,
                     decoration: const InputDecoration(
-                      hintText: 'Message…',
+                      hintText: 'MessageModel…',
                       hintStyle:
                           TextStyle(color: VelvetNoir.onSurfaceVariant),
                       border: InputBorder.none,
@@ -651,12 +651,12 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                         color: VelvetNoir.onSurface, fontSize: 14),
                     maxLines: null,
                     textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
+                    onSubmitted: (_) => _sendMessageModel(),
                   ),
                 ),
                 const SizedBox(width: 4),
                 GestureDetector(
-                  onTap: _sendMessage,
+                  onTap: _sendMessageModel,
                   child: Container(
                     width: 38,
                     height: 38,
@@ -681,15 +681,15 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(
+    final MessageModelDate = DateTime(
       dateTime.year,
       dateTime.month,
       dateTime.day,
     );
 
-    if (messageDate == today) {
+    if (MessageModelDate == today) {
       return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } else if (messageDate == yesterday) {
+    } else if (MessageModelDate == yesterday) {
       return 'Yesterday';
     } else {
       return '${dateTime.month}/${dateTime.day}';
@@ -735,7 +735,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
     return 'Delivered';
   }
 
-  void _showReactionPicker(BuildContext context, WidgetRef ref, String messageId) {
+  void _showReactionPicker(BuildContext context, WidgetRef ref, String MessageModelId) {
     const emojis = ['❤️', '😂', '😮', '😢', '👍', '👎'];
     showModalBottomSheet<void>(
       context: context,
@@ -750,7 +750,7 @@ class _ChatPaneViewState extends ConsumerState<ChatPaneView> {
                   Navigator.of(context).pop();
                   ref.read(messagingControllerProvider).toggleReaction(
                         conversationId: widget.conversationId,
-                        messageId: messageId,
+                        MessageModelId: MessageModelId,
                         currentUserId: widget.userId,
                         emoji: emoji,
                       );
@@ -877,20 +877,20 @@ class _BouncingDotsState extends State<_BouncingDots>
 class _ReactionRow extends ConsumerWidget {
   const _ReactionRow({
     required this.conversationId,
-    required this.messageId,
+    required this.MessageModelId,
     required this.currentUserId,
   });
 
   final String conversationId;
-  final String messageId;
+  final String MessageModelId;
   final String currentUserId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reactionsAsync = ref.watch(
-      messageReactionsProvider((
+      MessageModelReactionsProvider((
         conversationId: conversationId,
-        messageId: messageId,
+        MessageModelId: MessageModelId,
       )),
     );
     return reactionsAsync.when(
@@ -909,7 +909,7 @@ class _ReactionRow extends ConsumerWidget {
               return GestureDetector(
                 onTap: () => ref.read(messagingControllerProvider).toggleReaction(
                       conversationId: conversationId,
-                      messageId: messageId,
+                      MessageModelId: MessageModelId,
                       currentUserId: currentUserId,
                       emoji: e.key,
                     ),
@@ -940,9 +940,9 @@ class _ReactionRow extends ConsumerWidget {
   }
 }
 
-class _PendingMessage {
-  const _PendingMessage({
-    required this.clientMessageId,
+class _PendingMessageModel {
+  const _PendingMessageModel({
+    required this.clientMessageModelId,
     required this.content,
     required this.createdAt,
     required this.senderId,
@@ -950,17 +950,17 @@ class _PendingMessage {
     required this.senderAvatarUrl,
   });
 
-  final String clientMessageId;
+  final String clientMessageModelId;
   final String content;
   final DateTime createdAt;
   final String senderId;
   final String senderName;
   final String? senderAvatarUrl;
 
-  Message toMessage(String conversationId) {
-    return Message(
-      id: clientMessageId,
-      clientMessageId: clientMessageId,
+  MessageModel toMessageModel(String conversationId) {
+    return MessageModel(
+      id: clientMessageModelId,
+      clientMessageModelId: clientMessageModelId,
       conversationId: conversationId,
       senderId: senderId,
       senderName: senderName,

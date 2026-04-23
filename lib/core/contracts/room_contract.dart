@@ -21,7 +21,7 @@
 // Add complexity to Stage 2 (schema evolution). Keep Stage 3 pure assembly.
 
 import 'package:flutter/foundation.dart';
-import 'package:mixvy/models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 import 'package:mixvy/models/room_participant_model.dart';
 import 'package:mixvy/features/room/providers/presence_provider.dart';
 
@@ -41,7 +41,7 @@ const int kRoomSchemaVersion = 1;
 
 abstract class RoomStateContract {
   String get title;
-  List<MessageModel> get messages;
+  List<MessageModel> get MessageModel;
   Map<String, bool> get typingUsers;
   List<RoomParticipantModel> get participants;
   List<RoomPresenceModel> get presence;
@@ -74,7 +74,7 @@ class RoomLiveState implements RoomStateContract {
   @override
   final String title;
   @override
-  final List<MessageModel> messages;
+  final List<MessageModel> MessageModel;
   @override
   final Map<String, bool> typingUsers;
   @override
@@ -88,7 +88,7 @@ class RoomLiveState implements RoomStateContract {
 
   const RoomLiveState({
     required this.title,
-    required this.messages,
+    required this.MessageModel,
     required this.typingUsers,
     required this.participants,
     required this.presence,
@@ -105,20 +105,20 @@ class RoomLiveState implements RoomStateContract {
 
 class RoomSchemaException implements Exception {
   final String roomId;
-  final String message;
+  final String MessageModel;
   final List<String> missingKeys;
   final int docKeyCount;
 
   const RoomSchemaException({
     required this.roomId,
-    required this.message,
+    required this.MessageModel,
     required this.missingKeys,
     required this.docKeyCount,
   });
 
   @override
   String toString() =>
-      '[RoomSchemaException] $message '
+      '[RoomSchemaException] $MessageModel '
       '| roomId=$roomId '
       '| docKeys=$docKeyCount '
       '| missing=$missingKeys';
@@ -132,7 +132,7 @@ class RoomSchemaValidator {
     if (roomDoc == null || roomDoc.isEmpty) {
       throw RoomSchemaException(
         roomId: roomId,
-        message: 'Room document is null or empty',
+        MessageModel: 'Room document is null or empty',
         missingKeys: _requiredRootKeys,
         docKeyCount: 0,
       );
@@ -145,7 +145,7 @@ class RoomSchemaValidator {
     if (missingRoot.isNotEmpty) {
       throw RoomSchemaException(
         roomId: roomId,
-        message: 'Room document missing required root keys',
+        MessageModel: 'Room document missing required root keys',
         missingKeys: missingRoot,
         docKeyCount: roomDoc.length,
       );
@@ -155,7 +155,7 @@ class RoomSchemaValidator {
     if (meta is! Map<String, dynamic>) {
       throw RoomSchemaException(
         roomId: roomId,
-        message: "Room 'meta' is not a valid map",
+        MessageModel: "Room 'meta' is not a valid map",
         missingKeys: _requiredMetaKeys,
         docKeyCount: roomDoc.length,
       );
@@ -168,7 +168,7 @@ class RoomSchemaValidator {
     if (missingMeta.isNotEmpty) {
       throw RoomSchemaException(
         roomId: roomId,
-        message: 'Room meta missing required keys',
+        MessageModel: 'Room meta missing required keys',
         missingKeys: missingMeta,
         docKeyCount: meta.length,
       );
@@ -216,14 +216,14 @@ class RoomDocNormalizer {
 
 class RoomStateDiff {
   final bool titleChanged;
-  final int messageCountDelta;
+  final int MessageModelCountDelta;
   final int participantCountDelta;
   final int typingCountDelta;
   final bool hasChanges;
 
   const RoomStateDiff({
     required this.titleChanged,
-    required this.messageCountDelta,
+    required this.MessageModelCountDelta,
     required this.participantCountDelta,
     required this.typingCountDelta,
     required this.hasChanges,
@@ -232,7 +232,7 @@ class RoomStateDiff {
   /// Sentinel for the first emission — no previous state to compare against.
   const RoomStateDiff.initial()
       : titleChanged = false,
-        messageCountDelta = 0,
+        MessageModelCountDelta = 0,
         participantCountDelta = 0,
         typingCountDelta = 0,
         hasChanges = false;
@@ -243,13 +243,13 @@ class RoomStateDiff {
     RoomStateContract curr,
   ) {
     final titleChanged = prev.title != curr.title;
-    final msgDelta = curr.messages.length - prev.messages.length;
+    final msgDelta = curr.MessageModel.length - prev.MessageModel.length;
     final partDelta = curr.participants.length - prev.participants.length;
     final typDelta = curr.typingUsers.length - prev.typingUsers.length;
 
     return RoomStateDiff(
       titleChanged: titleChanged,
-      messageCountDelta: msgDelta,
+      MessageModelCountDelta: msgDelta,
       participantCountDelta: partDelta,
       typingCountDelta: typDelta,
       hasChanges:
@@ -263,9 +263,9 @@ class RoomStateDiff {
     if (!hasChanges) return 'no_change';
     final parts = <String>[];
     if (titleChanged) parts.add('title_changed');
-    if (messageCountDelta != 0) {
+    if (MessageModelCountDelta != 0) {
       parts.add(
-          'messages${messageCountDelta > 0 ? "+$messageCountDelta" : "$messageCountDelta"}');
+          'MessageModel${MessageModelCountDelta > 0 ? "+$MessageModelCountDelta" : "$MessageModelCountDelta"}');
     }
     if (participantCountDelta != 0) {
       parts.add(
@@ -304,8 +304,8 @@ class RoomContractGuard {
   static void verify(RoomStateContract state) {
     assert(
       // ignore: unnecessary_type_check
-      state.messages is List,
-      'RoomContractGuard: messages was replaced with a non-List',
+      state.MessageModel is List,
+      'RoomContractGuard: MessageModel was replaced with a non-List',
     );
     assert(
       // ignore: unnecessary_type_check
@@ -321,7 +321,7 @@ class RoomContractGuard {
       debugPrint(
         '[RoomContractGuard] initial '
         '| title="${state.title}" '
-        '| messages=${state.messages.length} '
+        '| MessageModel=${state.MessageModel.length} '
         '| participants=${state.participants.length} '
         '| typing=${state.typingUsers.length}',
       );
@@ -356,7 +356,7 @@ class RoomLiveStateMapper {
     required Map<String, dynamic>? roomDoc,
     required List<RoomParticipantModel> participants,
     required List<RoomPresenceModel> presence,
-    required List<MessageModel> messagePreview,
+    required List<MessageModel> MessageModelPreview,
     required Map<String, bool> typing,
     String roomId = '',
   }) {
@@ -371,7 +371,7 @@ class RoomLiveStateMapper {
       normalized: normalized,
       participants: participants,
       presence: presence,
-      messages: messagePreview,
+      MessageModel: MessageModelPreview,
       typingUsers: typing,
     );
   }
@@ -382,12 +382,12 @@ class RoomLiveStateMapper {
     required RoomNormalizedDoc normalized,
     required List<RoomParticipantModel> participants,
     required List<RoomPresenceModel> presence,
-    required List<MessageModel> messages,
+    required List<MessageModel> MessageModel,
     required Map<String, bool> typingUsers,
   }) {
     final state = RoomLiveState(
       title: normalized.title,
-      messages: messages,
+      MessageModel: MessageModel,
       typingUsers: typingUsers,
       participants: participants,
       presence: presence,

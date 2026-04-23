@@ -10,7 +10,7 @@ import '../../widgets/mixvy_drawer.dart';
 
 /// Persistent shell wrapping every main app screen with a frosted Velvet Noir
 /// bottom nav bar built around a simpler feed-first structure:
-/// Home / Rooms / Messages / Groups / Profile.
+/// Home / Rooms / MessageModel / Groups / Profile.
 class AppShell extends ConsumerStatefulWidget {
   final Widget child;
   final int selectedIndex;
@@ -26,7 +26,7 @@ class AppShell extends ConsumerStatefulWidget {
   static const List<String> _roots = [
     '/discover',
     '/live',
-    '/messages',
+    '/MessageModel',
     '/groups',
     '/profile',
   ];
@@ -43,7 +43,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     final theme = Theme.of(context);
     final isDesktopMessengerLayout =
         context.isExpandedLayout && widget.useDesktopMessengerLayout;
-    final unreadMsgs = ref.watch(unreadMessageCountProvider);
+    final unreadMsgs = ref.watch(unreadMessageModelCountProvider);
     final useDockedSidebar =
         context.screenWidth >= AppBreakpoints.expanded &&
         !isDesktopMessengerLayout;
@@ -182,7 +182,7 @@ class _DesktopSidebarToggle extends StatelessWidget {
             ],
           ),
           child: Tooltip(
-            message: isOpen ? 'Hide menu' : 'Show menu',
+            MessageModel: isOpen ? 'Hide menu' : 'Show menu',
             child: Icon(
               isOpen ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
               color: VelvetNoir.primary,
@@ -211,7 +211,7 @@ class _DesktopTopNav extends StatelessWidget {
     final items = <({String label, IconData icon})>[
       (label: 'Home', icon: Icons.home_rounded),
       (label: 'Rooms', icon: Icons.meeting_room_rounded),
-      (label: 'Messages', icon: Icons.mail_rounded),
+      (label: 'MessageModel', icon: Icons.mail_rounded),
       (label: 'Groups', icon: Icons.groups_2_rounded),
       (label: 'Profile', icon: Icons.person_rounded),
     ];

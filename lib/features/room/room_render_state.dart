@@ -55,14 +55,14 @@ enum RoomSystemCondition {
 /// The UI is a pure function of this value:
 /// - [layout] → what the stage/cams column shows
 /// - [condition] → which health overlay (if any) is shown
-/// - [errorMessage] → text for the error banner when [condition] is [failed]
+/// - [errorMessageModel] → text for the error banner when [condition] is [failed]
 ///
 /// Both axes are orthogonal: a [failed] condition does not change [layout].
 class RoomRenderState {
   const RoomRenderState({
     required this.layout,
     required this.condition,
-    this.errorMessage,
+    this.errorMessageModel,
   });
 
   /// Layout axis: what the stage/cams column should display.
@@ -72,7 +72,7 @@ class RoomRenderState {
   final RoomSystemCondition condition;
 
   /// Human-readable error string when [condition] is [RoomSystemCondition.failed].
-  final String? errorMessage;
+  final String? errorMessageModel;
 
   bool get hasError => condition == RoomSystemCondition.failed;
   bool get isReconnecting => condition == RoomSystemCondition.reconnecting;
@@ -84,10 +84,10 @@ class RoomRenderState {
       other is RoomRenderState &&
           layout == other.layout &&
           condition == other.condition &&
-          errorMessage == other.errorMessage;
+          errorMessageModel == other.errorMessageModel;
 
   @override
-  int get hashCode => Object.hash(layout, condition, errorMessage);
+  int get hashCode => Object.hash(layout, condition, errorMessageModel);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ RoomRenderState deriveRoomRenderState({
   return RoomRenderState(
     layout: layout,
     condition: condition,
-    errorMessage: mediaState.callError,
+    errorMessageModel: mediaState.callError,
   );
 }
 

@@ -106,7 +106,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
       'Read receipts',
       'Typing indicator',
       'Search conversation',
-      'Delete message',
+      'Delete MessageModel',
       'Notifications',
     ]),
     _Section('Live Rooms', [
@@ -181,7 +181,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
       if (mounted) setState(() => _submitted = true);
     } on FirebaseFunctionsException catch (e) {
       if (mounted) {
-        setState(() => _submitError = e.message ?? e.code);
+        setState(() => _submitError = e.MessageModel ?? e.code);
       }
     } catch (e) {
       if (mounted) setState(() => _submitError = e.toString());

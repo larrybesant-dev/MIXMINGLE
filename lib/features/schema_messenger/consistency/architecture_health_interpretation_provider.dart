@@ -18,14 +18,14 @@ class ArchitectureHealthInterpretationReport {
     required this.summary,
     required this.reasons,
     required this.friendCompositeScore,
-    required this.messagesCompositeScore,
+    required this.MessageModelCompositeScore,
     required this.crossModuleEquivalent,
     required this.friendComparable,
-    required this.messagesComparable,
+    required this.MessageModelComparable,
     required this.friendParityMatch,
-    required this.messagesParityMatch,
+    required this.MessageModelParityMatch,
     required this.friendTrend,
-    required this.messagesTrend,
+    required this.MessageModelTrend,
   });
 
   final String policyVersion;
@@ -35,14 +35,14 @@ class ArchitectureHealthInterpretationReport {
   final List<String> reasons;
 
   final int friendCompositeScore;
-  final int messagesCompositeScore;
+  final int MessageModelCompositeScore;
   final bool crossModuleEquivalent;
   final bool friendComparable;
-  final bool messagesComparable;
+  final bool MessageModelComparable;
   final bool friendParityMatch;
-  final bool messagesParityMatch;
+  final bool MessageModelParityMatch;
   final String friendTrend;
-  final String messagesTrend;
+  final String MessageModelTrend;
 }
 
 /// Advisory-only interpretation layer.
@@ -52,12 +52,12 @@ class ArchitectureHealthInterpretationReport {
 final architectureHealthInterpretationProvider =
     Provider.autoDispose<ArchitectureHealthInterpretationReport>((ref) {
   final friendHealth = ref.watch(schemaModuleHealthProvider('friends'));
-  final messagesHealth = ref.watch(schemaModuleHealthProvider('messages'));
+  final MessageModelHealth = ref.watch(schemaModuleHealthProvider('MessageModel'));
   final equivalence = ref.watch(crossModuleEquivalenceProvider);
 
   final reasons = <String>[];
 
-  final isLoadingNoise = !friendHealth.comparable || !messagesHealth.comparable;
+  final isLoadingNoise = !friendHealth.comparable || !MessageModelHealth.comparable;
   if (isLoadingNoise) {
     reasons.add(ArchitectureHealthInterpretationContract.reasonLoadingNoise);
     return ArchitectureHealthInterpretationReport(
@@ -67,14 +67,14 @@ final architectureHealthInterpretationProvider =
       summary: ArchitectureHealthInterpretationContract.summaryLoadingNoise,
       reasons: reasons,
       friendCompositeScore: friendHealth.compositeScore,
-      messagesCompositeScore: messagesHealth.compositeScore,
+      MessageModelCompositeScore: MessageModelHealth.compositeScore,
       crossModuleEquivalent: equivalence.isEquivalent,
       friendComparable: friendHealth.comparable,
-      messagesComparable: messagesHealth.comparable,
+      MessageModelComparable: MessageModelHealth.comparable,
       friendParityMatch: friendHealth.parityMatch,
-      messagesParityMatch: messagesHealth.parityMatch,
+      MessageModelParityMatch: MessageModelHealth.parityMatch,
       friendTrend: friendHealth.trend.name,
-      messagesTrend: messagesHealth.trend.name,
+      MessageModelTrend: MessageModelHealth.trend.name,
     );
   }
 
@@ -90,27 +90,27 @@ final architectureHealthInterpretationProvider =
       summary: ArchitectureHealthInterpretationContract.summaryStructuralWarning,
       reasons: reasons,
       friendCompositeScore: friendHealth.compositeScore,
-      messagesCompositeScore: messagesHealth.compositeScore,
+      MessageModelCompositeScore: MessageModelHealth.compositeScore,
       crossModuleEquivalent: equivalence.isEquivalent,
       friendComparable: friendHealth.comparable,
-      messagesComparable: messagesHealth.comparable,
+      MessageModelComparable: MessageModelHealth.comparable,
       friendParityMatch: friendHealth.parityMatch,
-      messagesParityMatch: messagesHealth.parityMatch,
+      MessageModelParityMatch: MessageModelHealth.parityMatch,
       friendTrend: friendHealth.trend.name,
-      messagesTrend: messagesHealth.trend.name,
+      MessageModelTrend: MessageModelHealth.trend.name,
     );
   }
 
-  final hasBehaviorDrift = !friendHealth.parityMatch || !messagesHealth.parityMatch;
+  final hasBehaviorDrift = !friendHealth.parityMatch || !MessageModelHealth.parityMatch;
   if (hasBehaviorDrift) {
     reasons.add(
-      'behavior:friendParity=${friendHealth.parityMatch};messagesParity=${messagesHealth.parityMatch}',
+      'behavior:friendParity=${friendHealth.parityMatch};MessageModelParity=${MessageModelHealth.parityMatch}',
     );
     if (friendHealth.trend.name == 'degrading' ||
-        messagesHealth.trend.name == 'degrading') {
+        MessageModelHealth.trend.name == 'degrading') {
       reasons.add(
         'behavior:degrading_trend '
-        'friend=${friendHealth.trend.name} messages=${messagesHealth.trend.name}',
+        'friend=${friendHealth.trend.name} MessageModel=${MessageModelHealth.trend.name}',
       );
     }
     return ArchitectureHealthInterpretationReport(
@@ -120,14 +120,14 @@ final architectureHealthInterpretationProvider =
       summary: ArchitectureHealthInterpretationContract.summaryBehavioralDrift,
       reasons: reasons,
       friendCompositeScore: friendHealth.compositeScore,
-      messagesCompositeScore: messagesHealth.compositeScore,
+      MessageModelCompositeScore: MessageModelHealth.compositeScore,
       crossModuleEquivalent: equivalence.isEquivalent,
       friendComparable: friendHealth.comparable,
-      messagesComparable: messagesHealth.comparable,
+      MessageModelComparable: MessageModelHealth.comparable,
       friendParityMatch: friendHealth.parityMatch,
-      messagesParityMatch: messagesHealth.parityMatch,
+      MessageModelParityMatch: MessageModelHealth.parityMatch,
       friendTrend: friendHealth.trend.name,
-      messagesTrend: messagesHealth.trend.name,
+      MessageModelTrend: MessageModelHealth.trend.name,
     );
   }
 
@@ -139,13 +139,13 @@ final architectureHealthInterpretationProvider =
     summary: ArchitectureHealthInterpretationContract.summaryAligned,
     reasons: reasons,
     friendCompositeScore: friendHealth.compositeScore,
-    messagesCompositeScore: messagesHealth.compositeScore,
+    MessageModelCompositeScore: MessageModelHealth.compositeScore,
     crossModuleEquivalent: equivalence.isEquivalent,
     friendComparable: friendHealth.comparable,
-    messagesComparable: messagesHealth.comparable,
+    MessageModelComparable: MessageModelHealth.comparable,
     friendParityMatch: friendHealth.parityMatch,
-    messagesParityMatch: messagesHealth.parityMatch,
+    MessageModelParityMatch: MessageModelHealth.parityMatch,
     friendTrend: friendHealth.trend.name,
-    messagesTrend: messagesHealth.trend.name,
+    MessageModelTrend: MessageModelHealth.trend.name,
   );
 });

@@ -1,66 +1,80 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/message_model.dart';
+import 'package:flutter/foundation.dart';
+import '../../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
 
-abstract class MessageRepository {
-  Future<List<MessageModel>> getMessages(String roomId);
-  Future<void> sendMessage(String roomId, MessageModel message);
+abstract class MessageModelRepository {
+  Future<List<MessageModel>> getMessageModel(String conversationId);
+  Future<void> sendMessageModel(String conversationId, MessageModel MessageModel);
+  Future<int> debugMessageModelCount();
 }
 
-class MessageRepositoryImpl implements MessageRepository {
+class MessageModelRepositoryImpl implements MessageModelRepository {
   final FirebaseFirestore firestore;
-  MessageRepositoryImpl(this.firestore);
+  MessageModelRepositoryImpl(this.firestore);
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
       final trimmed = value.trim();
-      if (trimmed.isNotEmpty) {
-        return trimmed;
-      }
+      if (trimmed.isNotEmpty) return trimmed;
     }
     return fallback;
   }
 
-  DateTime _parseSentAt(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-    if (value is DateTime) {
-      return value;
-    }
+  DateTime _parseDateTime(dynamic value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
     if (value is String) {
-      final parsed = DateTime.tryParse(value);
-      if (parsed != null) {
-        return parsed;
-      }
+      return DateTime.tryParse(value) ?? DateTime.now();
     }
     return DateTime.now();
   }
 
   @override
-  Future<List<MessageModel>> getMessages(String roomId) async {
+  Future<List<MessageModel>> getMessageModel(String conversationId) async {
     final snapshot = await firestore
-        .collection('rooms')
-        .doc(roomId)
-        .collection('messages')
-        .orderBy('sentAt')
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('MessageModel')
+        .orderBy('createdAt')
         .get();
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
-      final sentAt = data['sentAt'] ?? data['clientSentAt'];
-      final messageId = _asString(data['id'], fallback: doc.id);
+
       return MessageModel(
-        id: messageId,
+        id: doc.id,
+        conversationId: _asString(data['conversationId'], fallback: conversationId),
         senderId: _asString(data['senderId']),
-        roomId: _asString(data['roomId'], fallback: roomId),
+        senderName: _asString(data['senderName'], fallback: 'Unknown'),
+        senderAvatarUrl: data['senderAvatarUrl'],
         content: _asString(data['content']),
-        sentAt: _parseSentAt(sentAt),
+        createdAt: _parseDateTime(data['createdAt']),
+        expiresAt: data['expiresAt'] != null
+            ? _parseDateTime(data['expiresAt'])
+            : null,
+        editedAt: data['editedAt'] != null
+            ? _parseDateTime(data['editedAt'])
+            : null,
+        isDeleted: data['isDeleted'] ?? false,
+        readBy: (data['readBy'] as List?)?.cast<String>() ?? [],
       );
     }).toList(growable: false);
   }
 
   @override
-  Future<void> sendMessage(String roomId, MessageModel message) async {
-    await firestore.collection('rooms').doc(roomId).collection('messages').add(message.toJson());
+  Future<void> sendMessageModel(String conversationId, MessageModel MessageModel) async {
+    await firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('MessageModel')
+        .add(MessageModel.toJson());
+  }
+
+  @override
+  Future<int> debugMessageModelCount() async {
+    final snap = await firestore.collectionGroup('MessageModel').get();
+    final total = snap.docs.length;
+    debugPrint('MessageModel FOUND: $total');
+    return total;
   }
 }

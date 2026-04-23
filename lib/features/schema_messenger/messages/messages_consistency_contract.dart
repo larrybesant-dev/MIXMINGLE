@@ -7,8 +7,8 @@ import '../../../presentation/providers/user_provider.dart';
 
 /// Module 2 blueprint: strict contract instantiation only.
 /// No custom gating semantics allowed.
-class MessagesSnapshot extends ConsistencySnapshot {
-  MessagesSnapshot({
+class MessageModelSnapshot extends ConsistencySnapshot {
+  MessageModelSnapshot({
     required this.legacyConversationIds,
     required this.schemaConversationIds,
     required this.legacyUnreadByConversation,
@@ -25,8 +25,8 @@ class MessagesSnapshot extends ConsistencySnapshot {
   final bool schemaReady;
 }
 
-class MessagesParityResult implements ConsistencyParityResult {
-  const MessagesParityResult({
+class MessageModelParityResult implements ConsistencyParityResult {
+  const MessageModelParityResult({
     required this.isComparable,
     required this.isMatch,
     required this.signature,
@@ -49,12 +49,12 @@ class MessagesParityResult implements ConsistencyParityResult {
   final List<String> unreadMismatches;
 }
 
-class MessagesConsistencyContract
-    extends ConsistencyModuleContract<MessagesSnapshot, MessagesParityResult> {
-  const MessagesConsistencyContract();
+class MessageModelConsistencyContract
+    extends ConsistencyModuleContract<MessageModelSnapshot, MessageModelParityResult> {
+  const MessageModelConsistencyContract();
 
   @override
-  String get moduleId => 'messages';
+  String get moduleId => 'MessageModel';
 
   @override
     String get canonicalReference => SchemaGovernanceContract.canonicalModel;
@@ -68,10 +68,10 @@ class MessagesConsistencyContract
       SchemaGovernanceContract.reconcileEveryMinutes;
 
   @override
-  MessagesSnapshot buildSnapshot(WidgetRef ref, {required bool readOnly}) {
+  MessageModelSnapshot buildSnapshot(WidgetRef ref, {required bool readOnly}) {
     final userId = ref.watch(userProvider)?.id;
     if (userId == null || userId.isEmpty) {
-      return MessagesSnapshot(
+      return MessageModelSnapshot(
         legacyConversationIds: <String>[],
         schemaConversationIds: <String>[],
         legacyUnreadByConversation: <String, int>{},
@@ -91,14 +91,14 @@ class MessagesConsistencyContract
     final legacy = legacyAsync.valueOrNull ?? const [];
     final schema = schemaAsync.valueOrNull ?? const [];
 
-    return MessagesSnapshot(
+    return MessageModelSnapshot(
       legacyConversationIds: legacy.map((c) => c.id).toList(growable: false),
       schemaConversationIds: schema.map((c) => c.id).toList(growable: false),
       legacyUnreadByConversation: {
-        for (final c in legacy) c.id: c.hasUnreadMessages(userId) ? 1 : 0,
+        for (final c in legacy) c.id: c.hasUnreadMessageModel(userId) ? 1 : 0,
       },
       schemaUnreadByConversation: {
-        for (final c in schema) c.id: c.hasUnreadMessages(userId) ? 1 : 0,
+        for (final c in schema) c.id: c.hasUnreadMessageModel(userId) ? 1 : 0,
       },
       legacyReady: legacyAsync.hasValue,
       schemaReady: schemaAsync.hasValue,
@@ -106,9 +106,9 @@ class MessagesConsistencyContract
   }
 
   @override
-  MessagesParityResult evaluate(MessagesSnapshot snapshot) {
+  MessageModelParityResult evaluate(MessageModelSnapshot snapshot) {
     if (!snapshot.legacyReady || !snapshot.schemaReady) {
-      return const MessagesParityResult(
+      return const MessageModelParityResult(
         isComparable: false,
         isMatch: true,
         signature: 'loading',
@@ -148,7 +148,7 @@ class MessagesConsistencyContract
     final isMatch =
         missingInSchema.isEmpty && missingInLegacy.isEmpty && unreadMismatches.isEmpty;
 
-    return MessagesParityResult(
+    return MessageModelParityResult(
       isComparable: true,
       isMatch: isMatch,
       signature: signature,
@@ -159,7 +159,7 @@ class MessagesConsistencyContract
   }
 }
 
-final messagesConsistencyContractProvider =
-    Provider<MessagesConsistencyContract>((ref) {
-  return const MessagesConsistencyContract();
+final MessageModelConsistencyContractProvider =
+    Provider<MessageModelConsistencyContract>((ref) {
+  return const MessageModelConsistencyContract();
 });

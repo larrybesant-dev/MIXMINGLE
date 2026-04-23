@@ -93,7 +93,7 @@ class _AfterDarkTopBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         Tooltip(
-          message: 'Exit After Dark',
+          MessageModel: 'Exit After Dark',
           child: TextButton.icon(
             onPressed: onExit,
             icon: const Icon(Icons.wb_sunny_outlined,

@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixvy/features/schema_messenger/messages/providers/messages_render_mode_provider.dart';
+import 'package:mixvy/features/schema_messenger/MessageModel/providers/MessageModel_render_mode_provider.dart';
 
 void main() {
-  test('messages view defaults to legacy mode', () {
+  test('MessageModel view defaults to legacy mode', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final mode = container.read(messagesPaneRenderModeProvider);
+    final mode = container.read(MessageModelPaneRenderModeProvider);
 
-    expect(mode, MessagesPaneRenderMode.legacy);
+    expect(mode, MessageModelPaneRenderMode.legacy);
   });
 }

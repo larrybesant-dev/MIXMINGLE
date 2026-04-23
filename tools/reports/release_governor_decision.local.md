@@ -13,7 +13,7 @@
 
 ## Rule Outcomes
 
-| Rule | Severity | Triggered | Metric | Message |
+| Rule | Severity | Triggered | Metric | MessageModel |
 |---|---|---:|---|---|
 | GV-H1 | hard | False | latestVerdict=PASS | Block when latest release verdict is FAIL. |
 | GV-H2 | hard | False | recentSlope=0 threshold=-2 | Block on sustained negative confidence slope in recent window. |

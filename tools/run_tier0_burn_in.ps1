@@ -18,7 +18,7 @@ if ($PressureRepeatsPerCycle -lt 0) {
 }
 
 $tier0Cases = @(
-  @{ Id = 'MC-1'; Name = 'Ordering Determinism'; Command = 'flutter test --no-pub test/messages_screen_test.dart' },
+  @{ Id = 'MC-1'; Name = 'Ordering Determinism'; Command = 'flutter test --no-pub test/MessageModels_screen_test.dart' },
   @{ Id = 'MC-2'; Name = 'Duplicate Suppression'; Command = 'flutter test --no-pub test/chat_pane_view_test.dart' },
   @{ Id = 'MC-3'; Name = 'Offline Queue Integrity'; Command = 'flutter test --no-pub test/messaging_retention_test.dart' },
   @{ Id = 'MC-4'; Name = 'Crash Recovery Consistency'; Command = 'flutter test --no-pub test/app_integration_test.dart' },

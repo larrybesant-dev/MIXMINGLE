@@ -138,8 +138,8 @@ class RoomAudioCues {
     }
   }
 
-  /// Soft ping for incoming chat messages.
-  void playNewMessage() {
+  /// Soft ping for incoming chat MessageModel.
+  void playNewMessageModel() {
     if (kIsWeb) {
       _playTone(frequency: 660.0, durationMs: 100, gain: 0.10);
     } else {
@@ -147,8 +147,8 @@ class RoomAudioCues {
     }
   }
 
-  /// Distinctive two-tone ping for incoming private messages.
-  void playPrivateMessage() {
+  /// Distinctive two-tone ping for incoming private MessageModel.
+  void playPrivateMessageModel() {
     if (kIsWeb) {
       _playTone(frequency: 880.0, durationMs: 80, gain: 0.16);
       Future.delayed(const Duration(milliseconds: 100), () {

@@ -204,7 +204,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             user2AvatarUrl: peerAvatarUrl,
           );
       if (!mounted) return;
-      context.go('/messages/$conversationId');
+      context.go('/MessageModel/$conversationId');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -467,7 +467,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 for (final conversation in conversations) {
                   if (conversation.type == 'direct' &&
                       conversation.participantIds.contains(widget.userId)) {
-                    directPreview = conversation.lastMessagePreview;
+                    directPreview = conversation.lastMessageModelPreview;
                     break;
                   }
                 }
@@ -552,14 +552,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       usernameHandle: usernameHandle,
                       statusText: _presenceStatus(presence),
                       presenceState: _presenceState(presence),
-                      onMessage: () =>
+                      onMessageModel: () =>
                           _startConversation(displayName, avatarUrl),
                       onInvite: _inviteToLiveRoom,
                       onJoin: (roomId ?? '').isNotEmpty
                           ? () => context.go('/room/$roomId')
                           : null,
                       currentRoom: (roomId ?? '').isNotEmpty ? roomId : null,
-                      lastMessagePreview: directPreview,
+                      lastMessageModelPreview: directPreview,
                       mutualFriendsCount: null,
                       onMute: () {
                         ScaffoldMessenger.of(context).showSnackBar(

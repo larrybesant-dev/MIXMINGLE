@@ -4,13 +4,13 @@ enum AlertLevel { info, warning, critical }
 
 class ProductionAlert {
   final String id;
-  final String message;
+  final String MessageModel;
   final AlertLevel level;
   final DateTime timestamp;
 
   ProductionAlert({
     required this.id,
-    required this.message,
+    required this.MessageModel,
     required this.level,
     required this.timestamp,
   });
@@ -25,11 +25,11 @@ class ProductionAlertSystem {
 
   static List<ProductionAlert> get alerts => _alerts;
 
-  static void _emit(String id, String message, AlertLevel level) {
+  static void _emit(String id, String MessageModel, AlertLevel level) {
     _alerts.add(
       ProductionAlert(
         id: id,
-        message: message,
+        MessageModel: MessageModel,
         level: level,
         timestamp: DateTime.now(),
       ),

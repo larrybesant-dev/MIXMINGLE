@@ -33,19 +33,19 @@ class BetaFeedbackSheet extends ConsumerStatefulWidget {
 }
 
 class _BetaFeedbackSheetState extends ConsumerState<BetaFeedbackSheet> {
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _MessageModelController = TextEditingController();
   String _category = 'bug';
   bool _submitting = false;
 
   @override
   void dispose() {
-    _messageController.dispose();
+    _MessageModelController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    final message = _messageController.text.trim();
-    if (message.isEmpty) {
+    final MessageModel = _MessageModelController.text.trim();
+    if (MessageModel.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please describe the issue.')),
       );
@@ -65,7 +65,7 @@ class _BetaFeedbackSheetState extends ConsumerState<BetaFeedbackSheet> {
 
       await ref.read(firestoreProvider).collection('beta_feedback').add({
         'category': _category,
-        'message': message,
+        'MessageModel': MessageModel,
         'route': route,
         'uid': user?.uid,
         'email': user?.email,
@@ -125,7 +125,7 @@ class _BetaFeedbackSheetState extends ConsumerState<BetaFeedbackSheet> {
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: _messageController,
+            controller: _MessageModelController,
             minLines: 4,
             maxLines: 6,
             enabled: !_submitting,

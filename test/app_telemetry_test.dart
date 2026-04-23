@@ -76,7 +76,7 @@ void main() {
       AppTelemetry.logAction(
         domain: 'room',
         action: 'join',
-        message: 'Attempting room join.',
+        MessageModel: 'Attempting room join.',
         roomId: 'room-a',
         userId: 'user-1',
         result: 'start',
@@ -84,7 +84,7 @@ void main() {
       AppTelemetry.logAction(
         domain: 'room',
         action: 'join',
-        message: 'Attempting room join.',
+        MessageModel: 'Attempting room join.',
         roomId: 'room-a',
         userId: 'user-1',
         result: 'start',
@@ -94,7 +94,7 @@ void main() {
         AppTelemetry.logAction(
           domain: 'room',
           action: 'live_trace',
-          message:
+          MessageModel:
               'connection_lost: reconnect attempt=$attempt delay=${attempt}s',
           roomId: 'room-a',
           userId: 'user-1',
@@ -122,7 +122,7 @@ void main() {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'live_trace',
-      message: 'connection_lost: reconnect attempt=1 delay=1s',
+      MessageModel: 'connection_lost: reconnect attempt=1 delay=1s',
       roomId: 'room-a',
       userId: 'user-1',
       result: 'ok',

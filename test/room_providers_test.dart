@@ -3,7 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/room/providers/host_controls_provider.dart';
-import 'package:mixvy/features/room/providers/message_providers.dart';
+import 'package:mixvy/features/room/providers/MessageModel_providers.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/features/room/providers/cam_access_provider.dart';
@@ -104,19 +104,19 @@ void main() {
       expect(participant.isMuted, true);
     });
 
-    test('sendMessageProvider writes a message document', () async {
-      final sendMessage = container.read(sendMessageProvider('room-a'));
+    test('sendMessageModelProvider writes a MessageModel document', () async {
+      final sendMessageModel = container.read(sendMessageModelProvider('room-a'));
 
-      await sendMessage('  hello room  ');
+      await sendMessageModel('  hello room  ');
 
-      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('MessageModel').get();
       expect(snapshot.docs, hasLength(1));
       expect(snapshot.docs.single.data()['content'], 'hello room');
       expect(snapshot.docs.single.data()['senderId'], 'user-1');
       expect(snapshot.docs.single.data()['clientSentAt'], isNotNull);
     });
 
-    test('sendMessageProvider rejects messages when host is blocked', () async {
+    test('sendMessageModelProvider rejects MessageModel when host is blocked', () async {
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'host-1',
       });
@@ -125,18 +125,18 @@ void main() {
         'blockedUserId': 'host-1',
       });
 
-      final sendMessage = container.read(sendMessageProvider('room-a'));
+      final sendMessageModel = container.read(sendMessageModelProvider('room-a'));
 
       await expectLater(
-        () => sendMessage('blocked message'),
+        () => sendMessageModel('blocked MessageModel'),
         throwsA(isA<StateError>()),
       );
 
-      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('MessageModel').get();
       expect(snapshot.docs, isEmpty);
     });
 
-    test('sendMessageProvider rejects when blocked participant is present', () async {
+    test('sendMessageModelProvider rejects when blocked participant is present', () async {
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'host-1',
       });
@@ -151,18 +151,18 @@ void main() {
         'blockedUserId': 'user-2',
       });
 
-      final sendMessage = container.read(sendMessageProvider('room-a'));
+      final sendMessageModel = container.read(sendMessageModelProvider('room-a'));
 
       await expectLater(
-        () => sendMessage('blocked in room'),
+        () => sendMessageModel('blocked in room'),
         throwsA(isA<StateError>()),
       );
 
-      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('MessageModel').get();
       expect(snapshot.docs, isEmpty);
     });
 
-    test('sendMessageProvider rejects when room policy disables chat', () async {
+    test('sendMessageModelProvider rejects when room policy disables chat', () async {
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'host-1',
       });
@@ -170,14 +170,14 @@ void main() {
         'allowChat': false,
       });
 
-      final sendMessage = container.read(sendMessageProvider('room-a'));
+      final sendMessageModel = container.read(sendMessageModelProvider('room-a'));
 
       await expectLater(
-        () => sendMessage('chat disabled'),
+        () => sendMessageModel('chat disabled'),
         throwsA(isA<StateError>()),
       );
 
-      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('MessageModel').get();
       expect(snapshot.docs, isEmpty);
     });
 

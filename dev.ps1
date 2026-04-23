@@ -72,7 +72,7 @@ switch ($cmd) {
         Write-Host "- No duplicate listeners"
         Write-Host "- Presence stable"
         Write-Host "- Typing stable"
-        Write-Host "- Messages stable"
+        Write-Host "- MessageModels stable"
     }
 
     "launch" {

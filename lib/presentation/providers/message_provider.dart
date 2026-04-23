@@ -1,5 +1,5 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/message_model.dart';
+import '../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
 
-final messageListProvider = StateProvider<List<MessageModel>>((ref) => []);
+final MessageModelListProvider = StateProvider<List<MessageModel>>((ref) => []);

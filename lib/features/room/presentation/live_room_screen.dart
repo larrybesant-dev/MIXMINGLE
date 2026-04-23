@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../controllers/webrtc_controller.dart';
-import '../providers/message_providers.dart';
+import '../providers/MessageModel_providers.dart';
 import '../repository/room_repository.dart';
 import '../providers/room_live_state_provider.dart';
-import '../../../models/message_model.dart';
+import '../../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
 import '../providers/rtc_service_provider.dart';
 import '../room_controller.dart';
 import '../../../dev/room_inspector_panel.dart';
@@ -190,7 +190,7 @@ class _LoadingScaffold extends StatelessWidget {
 // ERROR SCAFFOLD
 // Shown only when the stream errors with no previous emission.
 // Distinguishes schema failures (bad data) from connection failures.
-// Debug mode shows the raw error detail; release shows a clean message.
+// Debug mode shows the raw error detail; release shows a clean MessageModel.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorScaffold extends StatelessWidget {
@@ -335,7 +335,7 @@ class _RoomScaffold extends StatelessWidget {
               ),
               if (reconnecting) const _ReconnectingBanner(),
               Expanded(
-                child: _MessageList(messages: roomState.messages),
+                child: _MessageModelList(MessageModel: roomState.MessageModel),
               ),
               _TypingIndicator(
                 typingUsers: roomState.typingUsers.keys.toList(),
@@ -389,22 +389,22 @@ class _ReconnectingBanner extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MESSAGE LIST
-// Shows an empty-state prompt when there are no messages yet — never blank.
+// MessageModel LIST
+// Shows an empty-state prompt when there are no MessageModel yet — never blank.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _MessageList extends StatelessWidget {
-  final List<MessageModel> messages;
-  const _MessageList({required this.messages});
+class _MessageModelList extends StatelessWidget {
+  final List<MessageModel> MessageModel;
+  const _MessageModelList({required this.MessageModel});
 
   @override
   Widget build(BuildContext context) {
-    if (messages.isEmpty) {
+    if (MessageModel.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'No messages yet.\nBe the first to say something!',
+            'No MessageModel yet.\nBe the first to say something!',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
@@ -414,9 +414,9 @@ class _MessageList extends StatelessWidget {
 
     return ListView.builder(
       reverse: true,
-      itemCount: messages.length,
+      itemCount: MessageModel.length,
       itemBuilder: (_, i) {
-        final msg = messages[i];
+        final msg = MessageModel[i];
         return ListTile(
           title: Text(msg.content),
           subtitle: Text(msg.senderId),
@@ -448,20 +448,20 @@ class _TypingIndicator extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MESSAGE INPUT
+// MessageModel INPUT
 // OutlineInputBorder for clear tap target. Responds to keyboard Enter/Done.
 // Controller is disposed in dispose() to prevent memory leaks.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _MessageInput extends ConsumerStatefulWidget {
+class _MessageModelInput extends ConsumerStatefulWidget {
   final String roomId;
-  const _MessageInput({required this.roomId});
+  const _MessageModelInput({required this.roomId});
 
   @override
-  ConsumerState<_MessageInput> createState() => _MessageInputState();
+  ConsumerState<_MessageModelInput> createState() => _MessageModelInputState();
 }
 
-class _MessageInputState extends ConsumerState<_MessageInput> {
+class _MessageModelInputState extends ConsumerState<_MessageModelInput> {
   final _controller = TextEditingController();
 
   @override
@@ -481,7 +481,7 @@ class _MessageInputState extends ConsumerState<_MessageInput> {
               child: TextField(
                 controller: _controller,
                 decoration: const InputDecoration(
-                  hintText: 'Send a message…',
+                  hintText: 'Send a MessageModel…',
                   border: OutlineInputBorder(),
                   isDense: true,
                   contentPadding:
@@ -506,7 +506,7 @@ class _MessageInputState extends ConsumerState<_MessageInput> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
-    ref.read(sendMessageProvider(widget.roomId))(text).catchError((_) {});
+    ref.read(sendMessageModelProvider(widget.roomId))(text).catchError((_) {});
   }
 }
 

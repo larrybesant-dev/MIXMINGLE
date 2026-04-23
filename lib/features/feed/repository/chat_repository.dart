@@ -4,21 +4,21 @@ class ChatRepository {
   final FirebaseFirestore _db;
   ChatRepository(this._db);
 
-  Stream<List<Map<String, dynamic>>> messageStream(String roomId) {
+  Stream<List<Map<String, dynamic>>> MessageModeltream(String roomId) {
     return _db
       .collection('rooms')
       .doc(roomId)
-      .collection('messages')
+      .collection('MessageModel')
       .orderBy('timestamp', descending: false)
       .snapshots()
       .map((snap) => snap.docs.map((d) => d.data()).toList());
   }
 
-  Future<void> sendMessage(String roomId, String userId, String text, {Map<String, dynamic>? metadata}) async {
+  Future<void> sendMessageModel(String roomId, String userId, String text, {Map<String, dynamic>? metadata}) async {
     await _db
       .collection('rooms')
       .doc(roomId)
-      .collection('messages')
+      .collection('MessageModel')
       .add({
         'userId': userId,
         'text': text,

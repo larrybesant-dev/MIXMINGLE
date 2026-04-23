@@ -21,22 +21,22 @@ class _DelayedMessagingController extends messaging.MessagingController {
   final Completer<void> sendCompleter;
 
   @override
-  Future<void> sendMessage({
+  Future<void> sendMessageModel({
     required String conversationId,
     required String senderId,
     required String senderName,
     required String? senderAvatarUrl,
     required String content,
-    String? clientMessageId,
+    String? clientMessageModelId,
   }) async {
     await sendCompleter.future;
-    return super.sendMessage(
+    return super.sendMessageModel(
       conversationId: conversationId,
       senderId: senderId,
       senderName: senderName,
       senderAvatarUrl: senderAvatarUrl,
       content: content,
-      clientMessageId: clientMessageId,
+      clientMessageModelId: clientMessageModelId,
     );
   }
 }
@@ -76,7 +76,7 @@ Widget _buildChatApp({
   );
 }
 
-Future<void> _seedMessages(
+Future<void> _seedMessageModel(
   FakeFirebaseFirestore firestore, {
   required int count,
   required DateTime startAt,
@@ -86,13 +86,13 @@ Future<void> _seedMessages(
     await firestore
         .collection('conversations')
         .doc('conv-1')
-        .collection('messages')
+        .collection('MessageModel')
         .doc('msg-$index')
         .set({
       'conversationId': 'conv-1',
       'senderId': index.isEven ? 'user-1' : 'user-2',
       'senderName': index.isEven ? 'Test User' : 'Alice',
-      'content': 'Message $index',
+      'content': 'MessageModel $index',
       'createdAt': Timestamp.fromDate(createdAt),
       'isDeleted': false,
       'readBy': ['user-1', if (index.isEven) 'user-2'],
@@ -103,7 +103,7 @@ Future<void> _seedMessages(
 Future<void> _seedConversation(
   FakeFirebaseFirestore firestore, {
   required DateTime createdAt,
-  required DateTime lastMessageAt,
+  required DateTime lastMessageModelAt,
   required DateTime lastReadAt,
 }) {
   return firestore.collection('conversations').doc('conv-1').set({
@@ -114,12 +114,12 @@ Future<void> _seedConversation(
     },
     'type': 'direct',
     'createdAt': Timestamp.fromDate(createdAt),
-    'lastMessageAt': Timestamp.fromDate(lastMessageAt),
+    'lastMessageModelAt': Timestamp.fromDate(lastMessageModelAt),
     'lastReadAt': {
       'user-1': Timestamp.fromDate(lastReadAt),
-      'user-2': Timestamp.fromDate(lastMessageAt),
+      'user-2': Timestamp.fromDate(lastMessageModelAt),
     },
-    'lastMessagePreview': 'Earlier message',
+    'lastMessageModelPreview': 'Earlier MessageModel',
     'isArchived': false,
     'status': 'active',
   });
@@ -127,13 +127,13 @@ Future<void> _seedConversation(
 
 void main() {
   group('ChatPaneView', () {
-    testWidgets('renders sent message immediately before backend write finishes', (tester) async {
+    testWidgets('renders sent MessageModel immediately before backend write finishes', (tester) async {
       final firestore = FakeFirebaseFirestore();
       final now = DateTime.now();
       await _seedConversation(
         firestore,
         createdAt: now.subtract(const Duration(minutes: 10)),
-        lastMessageAt: now.subtract(const Duration(minutes: 1)),
+        lastMessageModelAt: now.subtract(const Duration(minutes: 1)),
         lastReadAt: now.subtract(const Duration(minutes: 1)),
       );
 
@@ -161,7 +161,7 @@ void main() {
       final pendingSnapshot = await firestore
           .collection('conversations')
           .doc('conv-1')
-          .collection('messages')
+          .collection('MessageModel')
           .get();
       expect(pendingSnapshot.docs, isEmpty);
 
@@ -172,7 +172,7 @@ void main() {
       final deliveredSnapshot = await firestore
           .collection('conversations')
           .doc('conv-1')
-          .collection('messages')
+          .collection('MessageModel')
           .get();
       expect(deliveredSnapshot.docs, hasLength(1));
       expect(find.text('Instant hello'), findsOneWidget);
@@ -183,12 +183,12 @@ void main() {
       final firestore = FakeFirebaseFirestore();
       final now = DateTime.now();
       final originalReadAt = now.subtract(const Duration(hours: 1));
-      final lastMessageAt = now.subtract(const Duration(minutes: 2));
+      final lastMessageModelAt = now.subtract(const Duration(minutes: 2));
 
       await _seedConversation(
         firestore,
         createdAt: now.subtract(const Duration(days: 1)),
-        lastMessageAt: lastMessageAt,
+        lastMessageModelAt: lastMessageModelAt,
         lastReadAt: originalReadAt,
       );
 
@@ -202,7 +202,7 @@ void main() {
 
       final updatedReadAt = (data!['lastReadAt'] as Map<String, dynamic>)['user-1'] as Timestamp;
       expect(updatedReadAt.toDate().isAfter(originalReadAt), isTrue);
-      expect(updatedReadAt.toDate().isAfter(lastMessageAt), isTrue);
+      expect(updatedReadAt.toDate().isAfter(lastMessageModelAt), isTrue);
     });
 
     testWidgets('shows typing indicator when the other user is actively typing', (tester) async {
@@ -211,7 +211,7 @@ void main() {
       await _seedConversation(
         firestore,
         createdAt: now.subtract(const Duration(hours: 1)),
-        lastMessageAt: now.subtract(const Duration(minutes: 5)),
+        lastMessageModelAt: now.subtract(const Duration(minutes: 5)),
         lastReadAt: now.subtract(const Duration(minutes: 5)),
       );
       await firestore.collection('users').doc('user-2').set({
@@ -237,10 +237,10 @@ void main() {
       await _seedConversation(
         firestore,
         createdAt: now.subtract(const Duration(days: 1)),
-        lastMessageAt: now,
+        lastMessageModelAt: now,
         lastReadAt: now,
       );
-      await _seedMessages(
+      await _seedMessageModel(
         firestore,
         count: 30,
         startAt: now.subtract(const Duration(hours: 2)),

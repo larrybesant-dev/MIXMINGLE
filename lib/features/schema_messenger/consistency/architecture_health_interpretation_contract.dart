@@ -22,7 +22,7 @@ class ArchitectureHealthInterpretationContract {
       'Contract structure is aligned, but observed runtime behavior is drifting between governed modules.';
 
   static const String summaryAligned =
-      'Contracts and behavior are aligned across Friends and Messages.';
+      'Contracts and behavior are aligned across Friends and MessageModel.';
 
   static const String reasonLoadingNoise =
       'loading_noise:comparability_pending';

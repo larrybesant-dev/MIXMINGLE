@@ -605,7 +605,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                             ),
                           for (final alert in roomHealth.alerts)
                             _AlertLine(
-                              text: 'Health ${alert.code}: ${alert.message}',
+                              text: 'Health ${alert.code}: ${alert.MessageModel}',
                             ),
                           const SizedBox(height: 8),
                           const Text(
@@ -844,7 +844,7 @@ class _AppDebugOverlayState extends State<AppDebugOverlay> {
                                           '[${event.level.toUpperCase()}] '
                                           '${event.domain}/${event.action} '
                                           '${event.result ?? ''} '
-                                          '${event.message}',
+                                          '${event.MessageModel}',
                                           style: const TextStyle(
                                             color: Color(0xFFF7EDE2),
                                             fontSize: 11,

@@ -83,7 +83,7 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen> {
           if (reports.isEmpty) {
             return const AppEmptyView(
               title: 'No reports found',
-              message: 'No reports match the selected filter.',
+              MessageModel: 'No reports match the selected filter.',
               icon: Icons.shield_outlined,
             );
           }

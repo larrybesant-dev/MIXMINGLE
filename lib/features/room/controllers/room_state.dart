@@ -73,11 +73,11 @@ class RoomStateMachine {
     required LiveRoomPhase phase,
     required bool isHydrated,
     String? currentUserId,
-    String? errorMessage,
+    String? errorMessageModel,
   }) {
     final normalizedRoomId = roomId.trim();
     final hasCurrentUser = currentUserId?.trim().isNotEmpty == true;
-    final hasError = errorMessage?.trim().isNotEmpty == true;
+    final hasError = errorMessageModel?.trim().isNotEmpty == true;
 
     switch (phase) {
       case LiveRoomPhase.joining:
@@ -229,14 +229,14 @@ RoomLifecycleState resolveRoomLifecycleState({
   required LiveRoomPhase phase,
   required bool isHydrated,
   String? currentUserId,
-  String? errorMessage,
+  String? errorMessageModel,
 }) {
   return RoomStateMachine.resolveLifecycleState(
     roomId: roomId,
     phase: phase,
     isHydrated: isHydrated,
     currentUserId: currentUserId,
-    errorMessage: errorMessage,
+    errorMessageModel: errorMessageModel,
   );
 }
 
@@ -358,7 +358,7 @@ class RoomState {
     this.audioState = RoomAudioState.muted,
     this.roomId = '',
     this.currentUserId,
-    this.errorMessage,
+    this.errorMessageModel,
     this.joinedAt,
     this.excludedUserIds = const <String>{},
     this.hostId = '',
@@ -381,7 +381,7 @@ class RoomState {
   final RoomAudioState audioState;
   final String roomId;
   final String? currentUserId;
-  final String? errorMessage;
+  final String? errorMessageModel;
   final DateTime? joinedAt;
   final Set<String> excludedUserIds;
   final String hostId;
@@ -408,7 +408,7 @@ class RoomState {
       phase: phase,
       isHydrated: isRoomFullyHydrated,
       currentUserId: currentUserId,
-      errorMessage: errorMessage,
+      errorMessageModel: errorMessageModel,
     );
     if (_lifecycleState == RoomLifecycleState.ended &&
         resolvedLifecycleState == RoomLifecycleState.initializing) {
@@ -753,7 +753,7 @@ class RoomState {
     RoomLifecycleState? lifecycleState,
     RoomAudioState? audioState,
     Object? currentUserId = _unset,
-    Object? errorMessage = _unset,
+    Object? errorMessageModel = _unset,
     Object? joinedAt = _unset,
     Set<String>? excludedUserIds,
     String? hostId,
@@ -776,9 +776,9 @@ class RoomState {
       currentUserId: identical(currentUserId, _unset)
           ? this.currentUserId
           : currentUserId as String?,
-      errorMessage: identical(errorMessage, _unset)
-          ? this.errorMessage
-          : errorMessage as String?,
+      errorMessageModel: identical(errorMessageModel, _unset)
+          ? this.errorMessageModel
+          : errorMessageModel as String?,
       joinedAt: identical(joinedAt, _unset)
           ? this.joinedAt
           : joinedAt as DateTime?,

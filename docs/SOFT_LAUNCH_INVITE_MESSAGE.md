@@ -1,4 +1,4 @@
-# Soft-Launch Tester Invite Message
+# Soft-Launch Tester Invite MessageModel
 
 Hey — I am doing a private MixVy soft-launch session and want a small trusted group to test it with me.
 

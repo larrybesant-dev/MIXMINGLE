@@ -11,7 +11,7 @@ import '../../../services/web_device_enum_stub.dart'
 /// and persist the choice via [DevicePrefsService].
 ///
 /// On non-web platforms the device list will always be empty and a
-/// "Not available on this platform" message is shown.
+/// "Not available on this platform" MessageModel is shown.
 class DeviceSettingsPanel extends StatefulWidget {
   const DeviceSettingsPanel({super.key});
 
@@ -125,7 +125,7 @@ class _DeviceSettingsPanelState extends State<DeviceSettingsPanel> {
         if (!isWeb)
           _InfoTile(
             icon: Icons.info_outline,
-            message: 'Device selection is only available in the web browser.',
+            MessageModel: 'Device selection is only available in the web browser.',
             color: scheme.secondary,
           )
         else if (_loading)
@@ -138,12 +138,12 @@ class _DeviceSettingsPanelState extends State<DeviceSettingsPanel> {
         else if (_error != null)
           _InfoTile(
               icon: Icons.warning_amber_outlined,
-              message: _error!,
+              MessageModel: _error!,
               color: scheme.error)
         else if (_cameras.isEmpty && _mics.isEmpty)
           _InfoTile(
             icon: Icons.perm_device_info_outlined,
-            message:
+            MessageModel:
                 'No devices found. Allow camera/mic access in your browser settings, then refresh.',
             color: scheme.secondary,
           )
@@ -224,10 +224,10 @@ class _DeviceDropdown extends StatelessWidget {
 
 class _InfoTile extends StatelessWidget {
   const _InfoTile(
-      {required this.icon, required this.message, required this.color});
+      {required this.icon, required this.MessageModel, required this.color});
 
   final IconData icon;
-  final String message;
+  final String MessageModel;
   final Color color;
 
   @override
@@ -246,7 +246,7 @@ class _InfoTile extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              message,
+              MessageModel,
               style: TextStyle(color: color, fontSize: 13),
             ),
           ),

@@ -107,7 +107,7 @@ class _HomeLobbyScreenState extends ConsumerState<HomeLobbyScreen> {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'feed_featured_impression',
-      message: 'Featured room surfaced in the home feed.',
+      MessageModel: 'Featured room surfaced in the home feed.',
       roomId: room.id,
       result: 'visible',
       metadata: <String, Object?>{
@@ -129,7 +129,7 @@ class _HomeLobbyScreenState extends ConsumerState<HomeLobbyScreen> {
       AppTelemetry.logAction(
         domain: 'room',
         action: 'feed_featured_dwell',
-        message: 'Featured room held attention in the home feed.',
+        MessageModel: 'Featured room held attention in the home feed.',
         roomId: room.id,
         result: 'engaged',
         metadata: <String, Object?>{
@@ -157,7 +157,7 @@ class _HomeLobbyScreenState extends ConsumerState<HomeLobbyScreen> {
         AppTelemetry.logAction(
           domain: 'room',
           action: 'feed_scroll_depth',
-          message: 'User reached a home feed depth milestone.',
+          MessageModel: 'User reached a home feed depth milestone.',
           result: 'scroll',
           metadata: <String, Object?>{
             ...FeedAttentionExperiment.telemetryMetadata(),
@@ -183,7 +183,7 @@ class _HomeLobbyScreenState extends ConsumerState<HomeLobbyScreen> {
     AppTelemetry.logAction(
       domain: 'room',
       action: 'feed_room_open',
-      message: 'User opened a room from the home feed.',
+      MessageModel: 'User opened a room from the home feed.',
       roomId: room.id,
       result: featured ? 'featured' : 'standard',
       metadata: <String, Object?>{

@@ -36,22 +36,24 @@
     freezed_annotation: ^3.1.0
     http: ^1.1.0
     flutter_dotenv: ^6.0.0
-    share_plus: ^12.0.1
+    share_plus: ^13.1.0
     firebase_crashlytics: ^5.0.8
     url_launcher: ^6.3.2
     shared_preferences: ^2.5.3
     google_sign_in: ^7.2.0
     logging: ^1.2.0
-    package_info_plus: ^9.0.0
+    package_info_plus: ^10.1.0
     patrol: ^4.3.0
     path: ^1.9.1
     flutter_webrtc: ^1.4.1
     web: any
-    window_manager: ^0.4.3
+    window_manager: ^0.5.1
     cached_network_image: ^3.4.1
-    google_fonts: ^6.2.1
+    google_fonts: ^8.0.2
     rxdart: ^0.28.0
     webview_flutter: ^4.13.1
+    json_annotation: ^4.11.0
+    riverpod: 2.4.0
     # state_notifier has been removed
 
   dev_dependencies:
@@ -60,7 +62,7 @@
     integration_test:
       sdk: flutter
     flutter_lints: ^6.0.0
-    build_runner: ^2.13.1
+    build_runner: ^2.14.0
     freezed: ^3.2.5
     json_serializable: ^6.13.1
 

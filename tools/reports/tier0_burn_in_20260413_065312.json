@@ -16,8 +16,8 @@
     "runs":  [
                  [
                      "00:00 +0: loading C:/MixVy/test/messaging_retention_test.dart",
-                     "00:00 +0: Messaging retention sendMessage writes expiresAt and updates conversation summary",
-                     "00:00 +1: Messaging retention Message.fromJson parses expiresAt",
+                     "00:00 +0: Messaging retention sendMessageModel writes expiresAt and updates conversation summary",
+                     "00:00 +1: Messaging retention MessageModel.fromJson parses expiresAt",
                      "00:00 +2: All tests passed!",
                      {
                          "cycle":  1,
@@ -259,7 +259,7 @@
                  ],
                  [
                      "00:00 +0: loading C:/MixVy/test/chat_pane_view_test.dart",
-                     "00:00 +0: ChatPaneView renders sent message immediately before backend write finishes",
+                     "00:00 +0: ChatPaneView renders sent MessageModel immediately before backend write finishes",
                      "00:01 +1: ChatPaneView marks unread conversation as read when opened",
                      "00:01 +2: ChatPaneView shows typing indicator when the other user is actively typing",
                      "00:01 +3: ChatPaneView restores scroll position when reopening a conversation",
@@ -278,20 +278,20 @@
                      }
                  ],
                  [
-                     "00:00 +0: loading C:/MixVy/test/messages_screen_test.dart",
-                     "00:00 +0: MessagesScreen renders Inbox AppBar and request action",
-                     "00:01 +1: MessagesScreen shows empty Chats state when no conversations exist",
-                     "00:01 +2: MessagesScreen shows conversations when they exist",
-                     "00:01 +3: MessagesScreen shows pinned conversations before newer unpinned conversations",
-                     "00:01 +4: MessagesScreen add message button is shown in AppBar actions",
-                     "00:01 +5: MessagesScreen requests sheet shows empty state when no pending requests",
+                     "00:00 +0: loading C:/MixVy/test/MessageModels_screen_test.dart",
+                     "00:00 +0: MessageModelsScreen renders Inbox AppBar and request action",
+                     "00:01 +1: MessageModelsScreen shows empty Chats state when no conversations exist",
+                     "00:01 +2: MessageModelsScreen shows conversations when they exist",
+                     "00:01 +3: MessageModelsScreen shows pinned conversations before newer unpinned conversations",
+                     "00:01 +4: MessageModelsScreen add MessageModel button is shown in AppBar actions",
+                     "00:01 +5: MessageModelsScreen requests sheet shows empty state when no pending requests",
                      "00:01 +6: All tests passed!",
                      {
                          "cycle":  1,
                          "caseId":  "MC-1",
                          "caseName":  "Ordering Determinism",
                          "isPressure":  false,
-                         "command":  "flutter test --no-pub test/messages_screen_test.dart",
+                         "command":  "flutter test --no-pub test/MessageModels_screen_test.dart",
                          "exitCode":  0,
                          "startedAtUtc":  "2026-04-13T11:52:55.3505235Z",
                          "endedAtUtc":  "2026-04-13T11:53:01.6239305Z",
@@ -301,7 +301,7 @@
                  ],
                  [
                      "00:00 +0: loading C:/MixVy/test/chat_pane_view_test.dart",
-                     "00:00 +0: ChatPaneView renders sent message immediately before backend write finishes",
+                     "00:00 +0: ChatPaneView renders sent MessageModel immediately before backend write finishes",
                      "00:01 +1: ChatPaneView marks unread conversation as read when opened",
                      "00:01 +2: ChatPaneView shows typing indicator when the other user is actively typing",
                      "00:01 +3: ChatPaneView restores scroll position when reopening a conversation",
