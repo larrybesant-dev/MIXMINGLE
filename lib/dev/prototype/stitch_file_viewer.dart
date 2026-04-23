@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class StitchViewer extends StatefulWidget {
+class StitchFileViewer extends StatefulWidget {
+  const StitchFileViewer({super.key, required this.path});
+
   final String path;
 
-  const StitchViewer({super.key, required this.path});
-
   @override
-  State<StitchViewer> createState() => _StitchViewerState();
+  State<StitchFileViewer> createState() => _StitchFileViewerState();
 }
 
-class _StitchViewerState extends State<StitchViewer> {
+class _StitchFileViewerState extends State<StitchFileViewer> {
   late final WebViewController controller;
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'app/mixvy_app.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app/app.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -21,5 +22,5 @@ Future<void> main() async {
     debugPrintStack(stackTrace: stackTrace);
   }
 
-  runApp(const MixVyApp());
+  runApp(const ProviderScope(child: MixVyApp()));
 }

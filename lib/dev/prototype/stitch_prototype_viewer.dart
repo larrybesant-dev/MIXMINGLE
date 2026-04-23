@@ -243,14 +243,14 @@ const List<_StitchEntry> _stitches = <_StitchEntry>[
   ),
 ];
 
-class StitchViewer extends StatefulWidget {
-  const StitchViewer({super.key});
+class StitchPrototypeViewer extends StatefulWidget {
+  const StitchPrototypeViewer({super.key});
 
   @override
-  State<StitchViewer> createState() => _StitchViewerState();
+  State<StitchPrototypeViewer> createState() => _StitchPrototypeViewerState();
 }
 
-class _StitchViewerState extends State<StitchViewer> {
+class _StitchPrototypeViewerState extends State<StitchPrototypeViewer> {
   final TextEditingController _searchController = TextEditingController();
   _StitchFamily _selectedFamily = _StitchFamily.all;
 
