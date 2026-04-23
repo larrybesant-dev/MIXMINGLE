@@ -442,7 +442,7 @@ class _StitchViewerState extends State<StitchViewer> {
                           crossAxisCount: crossAxisCount,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
-                          childAspectRatio: crossAxisCount == 1 ? 1.55 : 1.14,
+                          childAspectRatio: crossAxisCount == 1 ? 1.68 : 1.28,
                         ),
                       );
                     },

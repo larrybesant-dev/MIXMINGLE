@@ -80,11 +80,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       final iceServers = await ref
           .read(roomRepositoryProvider)
           .fetchIceServers();
-      // TODO(debug): remove before production release
-      developer.log(
-        'ICE servers at join: $iceServers',
-        name: 'LiveRoomScreen',
-      );
       final service = await webrtcCtrl.createTransport(
         userId: user.id,
         iceServers: iceServers,

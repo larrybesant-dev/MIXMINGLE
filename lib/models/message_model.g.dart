@@ -6,8 +6,8 @@ part of 'message_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MessageModelImpl _$$MessageModelImplFromJson(Map<String, dynamic> json) =>
-    _$MessageModelImpl(
+_MessageModel _$MessageModelFromJson(Map<String, dynamic> json) =>
+    _MessageModel(
       id: json['id'] as String,
       senderId: json['senderId'] as String,
       roomId: json['roomId'] as String,
@@ -17,7 +17,7 @@ _$MessageModelImpl _$$MessageModelImplFromJson(Map<String, dynamic> json) =>
       richText: json['richText'] as String? ?? '',
     );
 
-Map<String, dynamic> _$$MessageModelImplToJson(_$MessageModelImpl instance) =>
+Map<String, dynamic> _$MessageModelToJson(_MessageModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'senderId': instance.senderId,
