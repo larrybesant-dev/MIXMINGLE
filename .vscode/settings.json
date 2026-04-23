@@ -1,6 +1,4 @@
 {
-    "chat.tools.terminal.autoApprove": {
-        "flutter": true
-    },
-    "cmake.sourceDirectory": "C:/MixVy/linux"
+  "cmake.sourceDirectory": "C:/MixVy/linux",
+  "chat.tools.terminal.autoApprove": {}
 }
