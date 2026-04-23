@@ -19,7 +19,7 @@ messaging.onBackgroundMessage(function (payload) {
   const title = notification.title || 'MixVy';
   const options = {
     body: notification.body || '',
-    icon: '/icons/Icon-192.png',
+    icon: './icons/Icon-192.png',
     data: payload && payload.data ? payload.data : {},
   };
 

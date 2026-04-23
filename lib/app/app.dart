@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/app_settings_service.dart';
+import 'boot_state.dart';
 import '../router/app_router.dart';
 import '../presentation/providers/app_settings_provider.dart';
 import '../theme/font_fallbacks.dart';
@@ -48,7 +49,12 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
 });
 
 class MixVyApp extends ConsumerStatefulWidget {
-  const MixVyApp({super.key});
+  const MixVyApp({
+    super.key,
+    this.bootState = BootState.ready,
+  });
+
+  final BootState bootState;
 
   @override
   ConsumerState<MixVyApp> createState() => _MixVyAppState();
@@ -122,8 +128,42 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
     );
   }
 
+  Widget _buildDegradedBanner(Widget child) {
+    return Stack(
+      children: [
+        child,
+        SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade900,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'Limited mode: some cloud features are temporarily unavailable.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.bootState == BootState.failed) {
+      return _buildBootShell(message: 'Startup failed. Please restart MixVy.');
+    }
+
     final boot = ref.watch(appBootstrapProvider);
 
     return boot.when(
@@ -167,7 +207,7 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           builder: (context, child) {
-            return DefaultTextStyle.merge(
+            final appChild = DefaultTextStyle.merge(
               style: const TextStyle(
                 fontFamilyFallback: mixvyFontFamilyFallback,
               ),
@@ -179,6 +219,12 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
                 ),
               ),
             );
+
+            if (widget.bootState == BootState.degraded) {
+              return _buildDegradedBanner(appChild);
+            }
+
+            return appChild;
           },
           routerConfig: router,
           debugShowCheckedModeBanner: false,

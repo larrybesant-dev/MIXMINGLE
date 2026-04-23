@@ -1,18 +1,17 @@
-// Flutter web service worker for PWA support
-self.addEventListener('install', (event) => {
+// Legacy safety worker.
+// If this file is ever registered by older clients, it should clean up and
+// unregister itself instead of intercepting network requests.
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
+  event.waitUntil((async () => {
+    const cacheKeys = await caches.keys();
+    await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+    await self.registration.unregister();
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+    const windows = await self.clients.matchAll({ type: 'window' });
+    await Promise.all(windows.map((client) => client.navigate(client.url)));
+  })());
 });
-
-// Add more advanced caching strategies as needed

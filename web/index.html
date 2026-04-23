@@ -28,19 +28,23 @@
   <script>
     (function () {
       if ('serviceWorker' in navigator) {
-        // Register Firebase messaging worker at an absolute root path.
-        navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(function () {
+        var baseTag = document.querySelector('base');
+        var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
+        if (!baseHref || baseHref.indexOf('$FLUTTER_BASE_HREF') !== -1) {
+          baseHref = '/';
+        }
+        if (!baseHref.endsWith('/')) {
+          baseHref += '/';
+        }
+
+        var swUrl = baseHref + 'firebase-messaging-sw.js';
+
+        // Keep messaging worker scope aligned with the deployed app base path.
+        navigator.serviceWorker.register(swUrl, {
+          scope: baseHref,
+        }).catch(function () {
           // Ignore optional push setup failures.
         });
-      }
-
-      var baseTag = document.querySelector('base');
-      var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
-      if (!baseHref || baseHref.indexOf('$FLUTTER_BASE_HREF') !== -1) {
-        baseHref = '/';
-      }
-      if (!baseHref.endsWith('/')) {
-        baseHref += '/';
       }
 
       var script = document.createElement('script');
