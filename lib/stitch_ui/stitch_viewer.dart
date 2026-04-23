@@ -230,6 +230,7 @@ const List<_StitchEntry> _stitches = <_StitchEntry>[
     summary: 'Image-only logo exploration artifact.',
     platforms: <String>['Brand'],
     hasHtml: false,
+    hasImage: true,
   ),
   _StitchEntry(
     slug: 'new_logo.png_2',
@@ -238,6 +239,7 @@ const List<_StitchEntry> _stitches = <_StitchEntry>[
     summary: 'Second image-only logo exploration artifact.',
     platforms: <String>['Brand'],
     hasHtml: false,
+    hasImage: true,
   ),
 ];
 
@@ -290,7 +292,7 @@ class _StitchViewerState extends State<StitchViewer> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Container(
+      body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -417,7 +419,7 @@ class _StitchViewerState extends State<StitchViewer> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
                   sliver: SliverLayoutBuilder(
-                    builder: (BuildContext context, SliverConstraints constraints) {
+                    builder: (BuildContext context, constraints) {
                       final width = constraints.crossAxisExtent;
                       final crossAxisCount = width >= 1200
                           ? 3
@@ -475,8 +477,7 @@ class _HeroPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
+    return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
@@ -497,50 +498,53 @@ class _HeroPanel extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: VelvetNoir.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'Velvet Noir Stitch Workspace',
-              style: theme.textTheme.labelLarge?.copyWith(color: VelvetNoir.primary),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Design artifacts, organized for fast triage.',
-            style: theme.textTheme.displayMedium?.copyWith(height: 1.08),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'This screen indexes the stitch concepts already sitting in the repo so you can scan what exists before deciding which artifact to wire into real Flutter surfaces.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: VelvetNoir.onSurfaceVariant,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: _MetricTile(label: 'Visible', value: '$filteredCount'),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: VelvetNoir.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MetricTile(label: 'Total', value: '$totalCount'),
+              child: Text(
+                'Velvet Noir Stitch Workspace',
+                style: theme.textTheme.labelLarge?.copyWith(color: VelvetNoir.primary),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: _MetricTile(label: 'Sources', value: 'HTML + PNG'),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Design artifacts, organized for fast triage.',
+              style: theme.textTheme.displayMedium?.copyWith(height: 1.08),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'This screen indexes the stitch concepts already sitting in the repo so you can scan what exists before deciding which artifact to wire into real Flutter surfaces.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: VelvetNoir.onSurfaceVariant,
+                height: 1.5,
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: _MetricTile(label: 'Visible', value: '$filteredCount'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MetricTile(label: 'Total', value: '$totalCount'),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: _MetricTile(label: 'Sources', value: 'HTML + PNG'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
