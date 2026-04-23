@@ -74,9 +74,18 @@ class PushMessagingService {
       }
     });
 
-    await _requestPermission();
-
-    await _handleInitialMessage();
+    try {
+      await _requestPermission();
+      await _handleInitialMessage();
+    } catch (error, stackTrace) {
+      developer.log(
+        'Push messaging initialization failed',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'PushMessagingService',
+      );
+      // Continue without messaging; not fatal.
+    }
 
     await _registerCurrentToken();
   }

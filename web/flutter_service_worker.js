@@ -9,7 +9,13 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const cacheKeys = await caches.keys();
     await Promise.all(cacheKeys.map((key) => caches.delete(key)));
-    await self.registration.unregister();
+
+    try {
+      await self.registration.unregister();
+    } catch (e) {
+      // Unregister not supported by this browser; use claim as fallback.
+      await self.clients.claim();
+    }
 
     const windows = await self.clients.matchAll({ type: 'window' });
     await Promise.all(windows.map((client) => client.navigate(client.url)));

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/app_settings_service.dart';
 import 'boot_state.dart';
+import 'boot_state_notifier.dart';
 import '../router/app_router.dart';
 import '../presentation/providers/app_settings_provider.dart';
 import '../theme/font_fallbacks.dart';
@@ -26,6 +28,7 @@ import '../core/events/event_providers.dart';
 final appBootstrapProvider = FutureProvider<void>((ref) async {
   if (Firebase.apps.isEmpty) return;
 
+  final bootStateNotifier = ref.read(bootStateProvider.notifier);
   final auth = FirebaseAuth.instance;
 
   try {
@@ -39,8 +42,16 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
           },
         )
         .first;
-  } catch (_) {
-    // Non-fatal bootstrap safety
+    // Auth check succeeded; boot is ready
+    bootStateNotifier.setReady();
+  } catch (error, stackTrace) {
+    developer.log(
+      'Auth state check failed during bootstrap',
+      error: error,
+      stackTrace: stackTrace,
+      name: 'appBootstrapProvider',
+    );
+    bootStateNotifier.setDegraded();
   }
 
   if (!kIsWeb) {
@@ -49,12 +60,7 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
 });
 
 class MixVyApp extends ConsumerStatefulWidget {
-  const MixVyApp({
-    super.key,
-    this.bootState = BootState.ready,
-  });
-
-  final BootState bootState;
+  const MixVyApp({super.key});
 
   @override
   ConsumerState<MixVyApp> createState() => _MixVyAppState();
@@ -160,7 +166,9 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.bootState == BootState.failed) {
+    final bootState = ref.watch(bootStateProvider);
+
+    if (bootState == BootState.failed) {
       return _buildBootShell(message: 'Startup failed. Please restart MixVy.');
     }
 
@@ -220,7 +228,7 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
               ),
             );
 
-            if (widget.bootState == BootState.degraded) {
+            if (bootState == BootState.degraded) {
               return _buildDegradedBanner(appChild);
             }
 

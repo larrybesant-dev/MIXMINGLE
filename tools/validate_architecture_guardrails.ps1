@@ -35,14 +35,19 @@ function To-RepoRelativePath([string]$fullPath) {
         return $fullPath
     }
 
-    $normalizedRoot = ([System.IO.Path]::GetFullPath(($repoRoot -replace '/', '\\'))).TrimEnd('\\') + '\\'
-    $normalizedPath = [System.IO.Path]::GetFullPath(($fullPath -replace '/', '\\'))
+    $normalizedRoot = ([System.IO.Path]::GetFullPath(($repoRoot -replace '/', '\'))).TrimEnd('\') + '\'
+    $normalizedPath = [System.IO.Path]::GetFullPath(($fullPath -replace '/', '\'))
 
     if ($normalizedPath.StartsWith($normalizedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-        return $normalizedPath.Substring($normalizedRoot.Length).Replace('\\', '/')
+        return $normalizedPath.Substring($normalizedRoot.Length).Replace('\', '/')
     }
 
-    return $normalizedPath.Replace('\\', '/')
+    $libAnchorIndex = $normalizedPath.ToLowerInvariant().IndexOf('\lib\')
+    if ($libAnchorIndex -ge 0) {
+        return $normalizedPath.Substring($libAnchorIndex + 1).Replace('\', '/')
+    }
+
+    return $normalizedPath.Replace('\', '/')
 }
 
 function Count-Matches([System.IO.FileInfo[]]$files, [string]$pattern) {
@@ -80,13 +85,13 @@ function Resolve-ImportTarget([string]$currentRelPath, [string]$importSpec) {
     $candidateFullPath = $null
 
     if ($importSpec.StartsWith('package:mixvy/')) {
-        $packagePath = $importSpec.Substring('package:mixvy/'.Length).Replace('/', '\\')
+        $packagePath = $importSpec.Substring('package:mixvy/'.Length).Replace('/', '\')
         $candidateFullPath = Join-Path $repoRoot (Join-Path 'lib' $packagePath)
     }
     elseif ($importSpec.StartsWith('./') -or $importSpec.StartsWith('../')) {
-        $currentFullPath = Join-Path $repoRoot ($currentRelPath.Replace('/', '\\'))
+        $currentFullPath = Join-Path $repoRoot ($currentRelPath.Replace('/', '\'))
         $currentDir = Split-Path -Path $currentFullPath -Parent
-        $candidateFullPath = Join-Path $currentDir ($importSpec.Replace('/', '\\'))
+        $candidateFullPath = Join-Path $currentDir ($importSpec.Replace('/', '\'))
     }
     else {
         return $null
@@ -207,7 +212,7 @@ if ($uniqueGoRouterFiles.Count -ne 1) {
 }
 
 $singleOwner = To-RepoRelativePath $uniqueGoRouterFiles[0]
-if ($singleOwner -ne 'lib/router/app_router.dart') {
+if ($singleOwner -notmatch '(^|[\\/])lib[\\/]router[\\/]app_router\.dart$') {
     Fail "GoRouter owner must be lib/router/app_router.dart. Found: $singleOwner"
 }
 
