@@ -6,7 +6,7 @@ import 'package:mixvy/features/messaging/providers/messaging_provider.dart';
 
 void main() {
   group('Messaging retention', () {
-    test('sendMessageModel writes expiresAt and updates conversation summary', () async {
+    test('sendmessage writes expiresAt and updates conversation summary', () async {
       final firestore = FakeFirebaseFirestore();
       final controller = MessagingController(firestore: firestore);
       final now = DateTime.now();
@@ -27,7 +27,7 @@ void main() {
         'status': 'active',
       });
 
-      await controller.sendMessageModel(
+      await controller.sendmessage(
         conversationId: 'conv-1',
         senderId: 'user-1',
         senderName: 'User One',
@@ -35,32 +35,32 @@ void main() {
         content: 'Hello there',
       );
 
-      final MessageModel = await firestore
+      final message = await firestore
           .collection('conversations')
           .doc('conv-1')
-          .collection('MessageModel')
+          .collection('messages')
           .get();
-      expect(MessageModel.docs, hasLength(1));
+      expect(message.docs, hasLength(1));
 
-      final MessageModelData = MessageModel.docs.single.data();
-      final expiresAt = (MessageModelData['expiresAt'] as Timestamp).toDate();
+      final messageData = message.docs.single.data();
+      final expiresAt = (messageData['expiresAt'] as Timestamp).toDate();
       final lowerBound = now.add(const Duration(days: 89));
       final upperBound = now.add(const Duration(days: 91));
       expect(expiresAt.isAfter(lowerBound), isTrue);
       expect(expiresAt.isBefore(upperBound), isTrue);
 
       final conversation = await firestore.collection('conversations').doc('conv-1').get();
-      expect(conversation.data()?['lastMessageModelId'], MessageModel.docs.single.id);
-      expect(conversation.data()?['lastMessageModelPreview'], 'Hello there');
-      expect(conversation.data()?['lastMessageModelenderId'], 'user-1');
-      expect(conversation.data()?['lastMessageModelAt'], isA<Timestamp>());
+      expect(conversation.data()?['lastmessageId'], message.docs.single.id);
+      expect(conversation.data()?['lastmessagePreview'], 'Hello there');
+      expect(conversation.data()?['lastmessageenderId'], 'user-1');
+      expect(conversation.data()?['lastmessageAt'], isA<Timestamp>());
     });
 
-    test('MessageModel.fromJson parses expiresAt', () {
+    test('message.fromJson parses expiresAt', () {
       final createdAt = Timestamp.fromDate(DateTime(2026, 4, 8, 12));
       final expiresAt = Timestamp.fromDate(DateTime(2026, 7, 7, 12));
 
-      final MessageModel = MessageModel.fromJson({
+      final message = message.fromJson({
         'conversationId': 'conv-1',
         'senderId': 'user-1',
         'senderName': 'User One',
@@ -69,10 +69,10 @@ void main() {
         'expiresAt': expiresAt,
         'isDeleted': false,
         'readBy': ['user-1'],
-      }, 'MessageModel-1');
+      }, 'message-1');
 
-      expect(MessageModel.expiresAt, DateTime(2026, 7, 7, 12));
-      expect(MessageModel.isExpired, isFalse);
+      expect(message.expiresAt, DateTime(2026, 7, 7, 12));
+      expect(message.isExpired, isFalse);
     });
   });
 }

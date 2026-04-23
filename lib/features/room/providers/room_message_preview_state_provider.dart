@@ -1,21 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'MessageModel_providers.dart';
+import 'message_providers.dart';
 import 'package:mixvy/features/messaging/models/message_model.dart';
-import '../contracts/room_MessageModel_preview_contract.dart';
+import '../contracts/room_message_preview_contract.dart';
 
-class RoomMessageModelPreviewState {
-  final List<MessageModel> MessageModelPreview;
-  RoomMessageModelPreviewState({required this.MessageModelPreview});
+class RoommessagePreviewState {
+  final List<MessageModel> messagePreview;
+  RoommessagePreviewState({required this.messagePreview});
 }
 
-final roomMessageModelPreviewStateProvider = StreamProvider.autoDispose.family<RoomMessageModelPreviewState, String>((ref, roomId) async* {
+final roommessagePreviewStateProvider = StreamProvider.autoDispose.family<RoommessagePreviewState, String>((ref, roomId) async* {
   List<MessageModel>? previous;
   // ignore: deprecated_member_use
-  await for (final MessageModel in ref.watch(MessageModeltreamProvider(roomId).stream)) {
-    if (previous != null && !RoomMessageModelPreviewContract.shouldRebuild(previous, MessageModel)) {
+  await for (final message in ref.watch(messagetreamProvider(roomId).stream)) {
+    if (previous != null && !RoommessagePreviewContract.shouldRebuild(previous, message)) {
       continue;
     }
-    previous = MessageModel;
-    yield RoomMessageModelPreviewState(MessageModelPreview: MessageModel);
+    previous = message;
+    yield RoommessagePreviewState(messagePreview: message);
   }
 });

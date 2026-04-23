@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme.dart';
-import '../panes/MessageModel_pane_view.dart';
+import '../panes/messages_pane_view.dart';
 import '../providers/messaging_provider.dart';
 
-class MessageModelScreen extends ConsumerWidget {
-  const MessageModelScreen({
+class messagescreen extends ConsumerWidget {
+  const messagescreen({
     super.key,
     required this.userId,
     required this.username,
@@ -26,12 +26,12 @@ class MessageModelScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'New MessageModel',
-            onPressed: () => GoRouter.of(context).push('/MessageModel/new'),
+            tooltip: 'New message',
+            onPressed: () => GoRouter.of(context).push('/message/new'),
           ),
           IconButton(
             icon: const Icon(Icons.more_horiz_rounded),
-            tooltip: 'MessageModel requests',
+            tooltip: 'message requests',
             onPressed: () {
               showModalBottomSheet<void>(
                 context: context,
@@ -40,7 +40,7 @@ class MessageModelScreen extends ConsumerWidget {
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                builder: (_) => MessageModelRequestsSheet(
+                builder: (_) => messageRequestsSheet(
                   requestsAsync: requestsAsync,
                   userId: userId,
                 ),
@@ -49,7 +49,7 @@ class MessageModelScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: MessageModelPaneView(
+      body: messagePaneView(
         userId: userId,
         username: username,
         showHeader: false,

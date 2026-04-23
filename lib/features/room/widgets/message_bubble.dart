@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-import '../../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 import 'rich_text_toolbar.dart';
 
 /// Live-room chat row styled like Paltalk – avatar on the left, then a column
-/// containing a header row (username + timestamp) and the MessageModel body below.
-/// All MessageModel are left-aligned and full-width regardless of sender.
+/// containing a header row (username + timestamp) and the message body below.
+/// All message are left-aligned and full-width regardless of sender.
 ///
-/// System MessageModel (type == 'system') render as a centered italic separator row.
-/// Announcement MessageModel (type == 'announcement') render as a highlighted banner.
-class MessageModelBubble extends StatelessWidget {
-  final MessageModel MessageModel;
+/// System message (type == 'system') render as a centered italic separator row.
+/// Announcement message (type == 'announcement') render as a highlighted banner.
+class messageBubble extends StatelessWidget {
+  final MessageModel message;
   final bool isMe;
   final String? senderLabel;
   /// VIP level for the sender. Level ≥1 shows a bronze/silver/gold name colour.
@@ -24,9 +24,9 @@ class MessageModelBubble extends StatelessWidget {
   /// Called when the user taps the sender cam indicator.
   final void Function(String senderId)? onTapCam;
 
-  const MessageModelBubble({
+  const messageBubble({
     super.key,
-    required this.MessageModel,
+    required this.message,
     required this.isMe,
     this.senderLabel,
     this.senderVipLevel = 0,
@@ -52,7 +52,7 @@ class MessageModelBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // --- System event row (join/leave/cam-on/off) ---
-    if (MessageModel.type == 'system') {
+    if (message.type == 'system') {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         child: Row(
@@ -60,7 +60,7 @@ class MessageModelBubble extends StatelessWidget {
             Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10), height: 1)),
             const SizedBox(width: 8),
             Text(
-              MessageModel.content,
+              message.content,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.45),
                 fontSize: 11,
@@ -75,7 +75,7 @@ class MessageModelBubble extends StatelessWidget {
     }
 
     // --- Announcement banner ---
-    if (MessageModel.type == 'announcement') {
+    if (message.type == 'announcement') {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -90,7 +90,7 @@ class MessageModelBubble extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                MessageModel.content,
+                message.content,
                 style: const TextStyle(
                   color: Color(0xFFF2EBE0),
                   fontSize: 13,
@@ -103,7 +103,7 @@ class MessageModelBubble extends StatelessWidget {
       );
     }
 
-    if (MessageModel.type == 'private') {
+    if (message.type == 'private') {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -122,7 +122,7 @@ class MessageModelBubble extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    senderLabel?.trim().isNotEmpty == true ? senderLabel!.trim() : MessageModel.senderId,
+                    senderLabel?.trim().isNotEmpty == true ? senderLabel!.trim() : message.senderId,
                     style: const TextStyle(
                       color: Color(0xFFD4A853),
                       fontWeight: FontWeight.w700,
@@ -130,13 +130,13 @@ class MessageModelBubble extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  _buildMessageModelBody(MessageModel.content),
+                  _buildmessageBody(message.content),
                 ],
               ),
             ),
             const SizedBox(width: 6),
             Text(
-              _formatClock(MessageModel.sentAt),
+              _formatClock(message.sentAt),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.45),
                 fontSize: 10,
@@ -149,16 +149,16 @@ class MessageModelBubble extends StatelessWidget {
 
     final resolvedSenderLabel = senderLabel?.trim().isNotEmpty == true
         ? senderLabel!.trim()
-        : (isMe ? 'You' : MessageModel.senderId);
+        : (isMe ? 'You' : message.senderId);
 
     final vipC = _vipColor(senderVipLevel);
     final Color nameColor = (senderVipLevel > 0 && vipC != Colors.transparent)
         ? vipC
         : (isMe
-            ? const Color(0xFF9B8FFF) // soft purple for own MessageModel
+            ? const Color(0xFF9B8FFF) // soft purple for own message
             : Colors.white.withValues(alpha: 0.90));
 
-    // Subtle left-border tint for own MessageModel, none for others.
+    // Subtle left-border tint for own message, none for others.
     final Color? rowTint = isMe
         ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
         : null;
@@ -171,7 +171,7 @@ class MessageModelBubble extends StatelessWidget {
         children: [
           // Avatar — tappable to view profile
           GestureDetector(
-            onTap: onTapSender != null ? () => onTapSender!(MessageModel.senderId) : null,
+            onTap: onTapSender != null ? () => onTapSender!(message.senderId) : null,
             child: CircleAvatar(
               radius: 16,
               backgroundColor: Colors.grey.shade800,
@@ -205,7 +205,7 @@ class MessageModelBubble extends StatelessWidget {
                   children: [
                     Flexible(
                       child: GestureDetector(
-                        onTap: onTapSender != null ? () => onTapSender!(MessageModel.senderId) : null,
+                        onTap: onTapSender != null ? () => onTapSender!(message.senderId) : null,
                         child: Text(
                           resolvedSenderLabel,
                           overflow: TextOverflow.ellipsis,
@@ -223,9 +223,9 @@ class MessageModelBubble extends StatelessWidget {
                       InkWell(
                         borderRadius: BorderRadius.circular(999),
                         onTap: onTapCam != null
-                            ? () => onTapCam!(MessageModel.senderId)
+                            ? () => onTapCam!(message.senderId)
                             : (onTapSender != null
-                                ? () => onTapSender!(MessageModel.senderId)
+                                ? () => onTapSender!(message.senderId)
                                 : null),
                         child: const Padding(
                           padding: EdgeInsets.all(2),
@@ -239,7 +239,7 @@ class MessageModelBubble extends StatelessWidget {
                     ],
                     const SizedBox(width: 6),
                     Text(
-                      _formatClock(MessageModel.sentAt),
+                      _formatClock(message.sentAt),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.45),
                         fontSize: 10,
@@ -248,8 +248,8 @@ class MessageModelBubble extends StatelessWidget {
                     ),
                   ],
                 ),
-                // MessageModel body — parse markup when tags present
-                _buildMessageModelBody(MessageModel.content),
+                // message body — parse markup when tags present
+                _buildmessageBody(message.content),
               ],
             ),
           ),
@@ -258,7 +258,7 @@ class MessageModelBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageModelBody(String content) {
+  Widget _buildmessageBody(String content) {
     const baseStyle = TextStyle(
       color: Color(0xEBFFFFFF),
       fontSize: 13,

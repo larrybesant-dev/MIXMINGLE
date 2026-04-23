@@ -1,7 +1,7 @@
 enum ReportTargetType {
   user,
   room,
-  MessageModel,
+  message,
   cam,
 }
 

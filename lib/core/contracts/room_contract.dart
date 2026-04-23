@@ -41,7 +41,7 @@ const int kRoomSchemaVersion = 1;
 
 abstract class RoomStateContract {
   String get title;
-  List<MessageModel> get MessageModel;
+  List<MessageModel> get message;
   Map<String, bool> get typingUsers;
   List<RoomParticipantModel> get participants;
   List<RoomPresenceModel> get presence;
@@ -74,7 +74,7 @@ class RoomLiveState implements RoomStateContract {
   @override
   final String title;
   @override
-  final List<MessageModel> MessageModel;
+  final List<MessageModel> message;
   @override
   final Map<String, bool> typingUsers;
   @override
@@ -88,7 +88,7 @@ class RoomLiveState implements RoomStateContract {
 
   const RoomLiveState({
     required this.title,
-    required this.MessageModel,
+    required this.message,
     required this.typingUsers,
     required this.participants,
     required this.presence,
@@ -105,20 +105,20 @@ class RoomLiveState implements RoomStateContract {
 
 class RoomSchemaException implements Exception {
   final String roomId;
-  final String MessageModel;
+  final String message;
   final List<String> missingKeys;
   final int docKeyCount;
 
   const RoomSchemaException({
     required this.roomId,
-    required this.MessageModel,
+    required this.message,
     required this.missingKeys,
     required this.docKeyCount,
   });
 
   @override
   String toString() =>
-      '[RoomSchemaException] $MessageModel '
+      '[RoomSchemaException] $message '
       '| roomId=$roomId '
       '| docKeys=$docKeyCount '
       '| missing=$missingKeys';
@@ -132,7 +132,7 @@ class RoomSchemaValidator {
     if (roomDoc == null || roomDoc.isEmpty) {
       throw RoomSchemaException(
         roomId: roomId,
-        MessageModel: 'Room document is null or empty',
+        message: 'Room document is null or empty',
         missingKeys: _requiredRootKeys,
         docKeyCount: 0,
       );
@@ -145,7 +145,7 @@ class RoomSchemaValidator {
     if (missingRoot.isNotEmpty) {
       throw RoomSchemaException(
         roomId: roomId,
-        MessageModel: 'Room document missing required root keys',
+        message: 'Room document missing required root keys',
         missingKeys: missingRoot,
         docKeyCount: roomDoc.length,
       );
@@ -155,7 +155,7 @@ class RoomSchemaValidator {
     if (meta is! Map<String, dynamic>) {
       throw RoomSchemaException(
         roomId: roomId,
-        MessageModel: "Room 'meta' is not a valid map",
+        message: "Room 'meta' is not a valid map",
         missingKeys: _requiredMetaKeys,
         docKeyCount: roomDoc.length,
       );
@@ -168,7 +168,7 @@ class RoomSchemaValidator {
     if (missingMeta.isNotEmpty) {
       throw RoomSchemaException(
         roomId: roomId,
-        MessageModel: 'Room meta missing required keys',
+        message: 'Room meta missing required keys',
         missingKeys: missingMeta,
         docKeyCount: meta.length,
       );
@@ -216,14 +216,14 @@ class RoomDocNormalizer {
 
 class RoomStateDiff {
   final bool titleChanged;
-  final int MessageModelCountDelta;
+  final int messageCountDelta;
   final int participantCountDelta;
   final int typingCountDelta;
   final bool hasChanges;
 
   const RoomStateDiff({
     required this.titleChanged,
-    required this.MessageModelCountDelta,
+    required this.messageCountDelta,
     required this.participantCountDelta,
     required this.typingCountDelta,
     required this.hasChanges,
@@ -232,7 +232,7 @@ class RoomStateDiff {
   /// Sentinel for the first emission — no previous state to compare against.
   const RoomStateDiff.initial()
       : titleChanged = false,
-        MessageModelCountDelta = 0,
+        messageCountDelta = 0,
         participantCountDelta = 0,
         typingCountDelta = 0,
         hasChanges = false;
@@ -243,13 +243,13 @@ class RoomStateDiff {
     RoomStateContract curr,
   ) {
     final titleChanged = prev.title != curr.title;
-    final msgDelta = curr.MessageModel.length - prev.MessageModel.length;
+    final msgDelta = curr.message.length - prev.message.length;
     final partDelta = curr.participants.length - prev.participants.length;
     final typDelta = curr.typingUsers.length - prev.typingUsers.length;
 
     return RoomStateDiff(
       titleChanged: titleChanged,
-      MessageModelCountDelta: msgDelta,
+      messageCountDelta: msgDelta,
       participantCountDelta: partDelta,
       typingCountDelta: typDelta,
       hasChanges:
@@ -263,9 +263,9 @@ class RoomStateDiff {
     if (!hasChanges) return 'no_change';
     final parts = <String>[];
     if (titleChanged) parts.add('title_changed');
-    if (MessageModelCountDelta != 0) {
+    if (messageCountDelta != 0) {
       parts.add(
-          'MessageModel${MessageModelCountDelta > 0 ? "+$MessageModelCountDelta" : "$MessageModelCountDelta"}');
+          'message${messageCountDelta > 0 ? "+$messageCountDelta" : "$messageCountDelta"}');
     }
     if (participantCountDelta != 0) {
       parts.add(
@@ -304,8 +304,8 @@ class RoomContractGuard {
   static void verify(RoomStateContract state) {
     assert(
       // ignore: unnecessary_type_check
-      state.MessageModel is List,
-      'RoomContractGuard: MessageModel was replaced with a non-List',
+      state.message is List,
+      'RoomContractGuard: message was replaced with a non-List',
     );
     assert(
       // ignore: unnecessary_type_check
@@ -321,7 +321,7 @@ class RoomContractGuard {
       debugPrint(
         '[RoomContractGuard] initial '
         '| title="${state.title}" '
-        '| MessageModel=${state.MessageModel.length} '
+        '| message=${state.message.length} '
         '| participants=${state.participants.length} '
         '| typing=${state.typingUsers.length}',
       );
@@ -356,7 +356,7 @@ class RoomLiveStateMapper {
     required Map<String, dynamic>? roomDoc,
     required List<RoomParticipantModel> participants,
     required List<RoomPresenceModel> presence,
-    required List<MessageModel> MessageModelPreview,
+    required List<MessageModel> messagePreview,
     required Map<String, bool> typing,
     String roomId = '',
   }) {
@@ -371,7 +371,7 @@ class RoomLiveStateMapper {
       normalized: normalized,
       participants: participants,
       presence: presence,
-      MessageModel: MessageModelPreview,
+      message: messagePreview,
       typingUsers: typing,
     );
   }
@@ -382,12 +382,12 @@ class RoomLiveStateMapper {
     required RoomNormalizedDoc normalized,
     required List<RoomParticipantModel> participants,
     required List<RoomPresenceModel> presence,
-    required List<MessageModel> MessageModel,
+    required List<MessageModel> message,
     required Map<String, bool> typingUsers,
   }) {
     final state = RoomLiveState(
       title: normalized.title,
-      MessageModel: MessageModel,
+      message: message,
       typingUsers: typingUsers,
       participants: participants,
       presence: presence,

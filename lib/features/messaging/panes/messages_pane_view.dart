@@ -15,8 +15,8 @@ import '../../friends/providers/friends_providers.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
 
-class MessageModelPaneView extends ConsumerStatefulWidget {
-  const MessageModelPaneView({
+class messagePaneView extends ConsumerStatefulWidget {
+  const messagePaneView({
     super.key,
     required this.userId,
     required this.username,
@@ -28,10 +28,10 @@ class MessageModelPaneView extends ConsumerStatefulWidget {
   final bool showHeader;
 
   @override
-  ConsumerState<MessageModelPaneView> createState() => _MessageModelPaneViewState();
+  ConsumerState<messagePaneView> createState() => _messagePaneViewState();
 }
 
-class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
+class _messagePaneViewState extends ConsumerState<messagePaneView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _searchController = TextEditingController();
@@ -57,7 +57,7 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
       convs.where((c) => c.status == 'active').toList();
 
   List<Conversation> _filterUnread(List<Conversation> convs) => convs
-      .where((c) => c.status == 'active' && c.hasUnreadMessageModel(widget.userId))
+      .where((c) => c.status == 'active' && c.hasUnreadmessage(widget.userId))
       .toList();
 
   List<Conversation> _filterGroups(List<Conversation> convs) =>
@@ -67,7 +67,7 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
     if (_query.isEmpty) return convs;
     return convs.where((c) {
       final name = c.getDisplayName(widget.userId).toLowerCase();
-      final preview = (c.lastMessageModelPreview ?? '').toLowerCase();
+      final preview = (c.lastmessagePreview ?? '').toLowerCase();
       return name.contains(_query) || preview.contains(_query);
     }).toList();
   }
@@ -80,7 +80,7 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => MessageModelRequestsSheet(
+      builder: (_) => messageRequestsSheet(
         requestsAsync: requestsAsync,
         userId: widget.userId,
       ),
@@ -120,7 +120,7 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Desktop keeps MessageModel inside the center pane.',
+                        'Desktop keeps message inside the center pane.',
                         style: GoogleFonts.raleway(
                           color: VelvetNoir.onSurfaceVariant,
                           fontSize: 14,
@@ -131,9 +131,9 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
                   ),
                 ),
                 FilledButton.icon(
-                  onPressed: () => GoRouter.of(context).push('/MessageModel/new'),
+                  onPressed: () => GoRouter.of(context).push('/message/new'),
                   icon: const Icon(Icons.add_comment_outlined),
-                  label: const Text('New MessageModel'),
+                  label: const Text('New message'),
                 ),
               ],
             ),
@@ -303,19 +303,19 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
                 _ConversationsList(
                   conversations: _applySearch(_filterAll(conversations)),
                   userId: widget.userId,
-                  emptyMessageModel: _query.isNotEmpty
+                  emptymessage: _query.isNotEmpty
                       ? 'No results for "$_query"'
                       : 'No conversations yet',
                 ),
                 _ConversationsList(
                   conversations: _applySearch(_filterUnread(conversations)),
                   userId: widget.userId,
-                  emptyMessageModel: 'No unread MessageModel',
+                  emptymessage: 'No unread message',
                 ),
                 _ConversationsList(
                   conversations: _applySearch(_filterGroups(conversations)),
                   userId: widget.userId,
-                  emptyMessageModel: 'No group chats yet',
+                  emptymessage: 'No group chats yet',
                 ),
               ],
             ),
@@ -326,8 +326,8 @@ class _MessageModelPaneViewState extends ConsumerState<MessageModelPaneView>
   }
 }
 
-class MessageModelRequestsSheet extends ConsumerWidget {
-  const MessageModelRequestsSheet({
+class messageRequestsSheet extends ConsumerWidget {
+  const messageRequestsSheet({
     super.key,
     required this.requestsAsync,
     required this.userId,
@@ -349,7 +349,7 @@ class MessageModelRequestsSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    'MessageModel Requests',
+                    'message Requests',
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -372,11 +372,11 @@ class MessageModelRequestsSheet extends ConsumerWidget {
             Expanded(
               child: AppAsyncValueView<List<Conversation>>(
                 value: requestsAsync,
-                fallbackContext: 'MessageModel requests',
+                fallbackContext: 'message requests',
                 isEmpty: (requests) => requests.isEmpty,
                 empty: const AppEmptyView(
                   icon: Icons.mark_email_read_outlined,
-                  title: 'No pending MessageModel requests.',
+                  title: 'No pending message requests.',
                 ),
                 data: (requests) {
                   return ListView.separated(
@@ -392,7 +392,7 @@ class MessageModelRequestsSheet extends ConsumerWidget {
                       return ListTile(
                         onTap: () {
                           Navigator.of(context).pop();
-                          GoRouter.of(context).push('/MessageModel/${conversation.id}');
+                          GoRouter.of(context).push('/messages/${conversation.id}');
                         },
                         leading: CircleAvatar(
                           backgroundColor: VelvetNoir.surfaceHigh,
@@ -408,7 +408,7 @@ class MessageModelRequestsSheet extends ConsumerWidget {
                           style: const TextStyle(color: VelvetNoir.onSurface),
                         ),
                         subtitle: Text(
-                          conversation.lastMessageModelPreview ?? 'New MessageModel request',
+                          conversation.lastmessagePreview ?? 'New message request',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -417,13 +417,13 @@ class MessageModelRequestsSheet extends ConsumerWidget {
                         ),
                         trailing: TextButton(
                           onPressed: () async {
-                            await ref.read(messagingControllerProvider).acceptMessageModelRequest(
+                            await ref.read(messagingControllerProvider).acceptmessageRequest(
                                   conversationId: conversation.id,
                                 );
                             if (context.mounted) {
                               Navigator.of(context).pop();
                               unawaited(
-                                GoRouter.of(context).push('/MessageModel/${conversation.id}'),
+                                GoRouter.of(context).push('/messages/${conversation.id}'),
                               );
                             }
                           },
@@ -449,12 +449,12 @@ class _ConversationsList extends StatelessWidget {
   const _ConversationsList({
     required this.conversations,
     required this.userId,
-    required this.emptyMessageModel,
+    required this.emptymessage,
   });
 
   final List<Conversation> conversations;
   final String userId;
-  final String emptyMessageModel;
+  final String emptymessage;
 
   @override
   Widget build(BuildContext context) {
@@ -478,7 +478,7 @@ class _ConversationsList extends StatelessWidget {
                   color: VelvetNoir.primary.withValues(alpha: 0.35)),
               const SizedBox(height: 14),
               Text(
-                emptyMessageModel,
+                emptymessage,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.raleway(
                   color: VelvetNoir.onSurfaceVariant,
@@ -488,7 +488,7 @@ class _ConversationsList extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () => GoRouter.of(context).push('/MessageModel/new'),
+                onPressed: () => GoRouter.of(context).push('/message/new'),
                 child: Text(
                   'Start a conversation',
                   style: GoogleFonts.raleway(
@@ -544,11 +544,11 @@ class _ConversationTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = conversation.hasUnreadMessageModel(userId);
+    final unread = conversation.hasUnreadmessage(userId);
     final pinned = conversation.isPinnedFor(userId);
     final displayName = conversation.getDisplayName(userId);
     final avatarUrl = conversation.groupAvatarUrl;
-    final previewText = conversation.lastMessageModelPreview ?? 'No MessageModel yet';
+    final previewText = conversation.lastmessagePreview ?? 'No message yet';
     final isGroup = conversation.type == 'group';
     final peerUserId = _otherParticipantId();
     final typingUsers = ref.watch(typingUsersProvider(conversation.id)).valueOrNull ??
@@ -563,7 +563,7 @@ class _ConversationTile extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => GoRouter.of(context).push('/MessageModel/${conversation.id}'),
+        onTap: () => GoRouter.of(context).push('/messages/${conversation.id}'),
         onLongPress: () => _showActionSheet(context, ref),
         child: Container(
           color: unread ? VelvetNoir.secondary.withValues(alpha: 0.08) : Colors.transparent,
@@ -695,7 +695,7 @@ class _ConversationTile extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _formatTime(conversation.lastMessageModelAt),
+                          _formatTime(conversation.lastmessageAt),
                           style: GoogleFonts.raleway(
                             fontSize: 11,
                             fontWeight:

@@ -31,13 +31,13 @@ class AppEmptyView extends StatelessWidget {
   const AppEmptyView({
     super.key,
     required this.title,
-    this.MessageModel,
+    this.message,
     this.icon = Icons.inbox_outlined,
     this.action,
   });
 
   final String title;
-  final String? MessageModel;
+  final String? message;
   final IconData icon;
   final Widget? action;
 
@@ -55,10 +55,10 @@ class AppEmptyView extends StatelessWidget {
               Icon(icon, size: 52, color: theme.colorScheme.primary),
               SizedBox(height: context.sectionSpacing),
               Text(title, style: theme.textTheme.titleLarge, textAlign: TextAlign.center),
-              if (MessageModel != null) ...[
+              if (message != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  MessageModel!,
+                  message!,
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -101,7 +101,7 @@ class AppErrorView extends StatelessWidget {
               Icon(Icons.error_outline, size: 52, color: theme.colorScheme.error),
               SizedBox(height: context.sectionSpacing),
               Text(
-                friendlyFirestoreMessageModel(error, fallbackContext: fallbackContext),
+                friendlyFirestoremessage(error, fallbackContext: fallbackContext),
                 style: theme.textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),

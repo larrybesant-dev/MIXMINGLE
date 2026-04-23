@@ -356,7 +356,7 @@ class _UserListTile extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(
-                  Icons.MessageModel_outlined,
+                  Icons.message_outlined,
                   color: Color(0xFFC45E7A),
                   size: 16,
                 ),
@@ -612,7 +612,7 @@ class _UserListTile extends StatelessWidget {
                     child: const Padding(
                       padding: EdgeInsets.all(3),
                       child: Icon(
-                        Icons.MessageModel_outlined,
+                        Icons.message_outlined,
                         color: npOnVariant,
                         size: 14,
                         semanticLabel: 'Whisper',

@@ -81,10 +81,10 @@ class Conversation {
   final List<String> pinnedBy;
   final String? groupName;
   final String? groupAvatarUrl;
-  final String? lastMessageModelId;
-  final String? lastMessageModelPreview;
-  final String? lastMessageModelenderId;
-  final DateTime? lastMessageModelAt;
+  final String? lastmessageId;
+  final String? lastmessagePreview;
+  final String? lastmessageenderId;
+  final DateTime? lastmessageAt;
   final DateTime createdAt;
   final Map<String, DateTime> lastReadAt; // {userId: lastReadTime}
   final bool isArchived;
@@ -98,10 +98,10 @@ class Conversation {
     this.pinnedBy = const [],
     this.groupName,
     this.groupAvatarUrl,
-    this.lastMessageModelId,
-    this.lastMessageModelPreview,
-    this.lastMessageModelenderId,
-    this.lastMessageModelAt,
+    this.lastmessageId,
+    this.lastmessagePreview,
+    this.lastmessageenderId,
+    this.lastmessageAt,
     required this.createdAt,
     this.lastReadAt = const {},
     this.isArchived = false,
@@ -117,12 +117,12 @@ class Conversation {
       pinnedBy: _asStringList(json['pinnedBy']),
       groupName: _asNullableString(json['groupName']),
       groupAvatarUrl: _asNullableString(json['groupAvatarUrl']),
-      lastMessageModelId: _asNullableString(json['lastMessageModelId']),
-      lastMessageModelPreview: _asNullableString(json['lastMessageModelPreview']),
-      lastMessageModelenderId: _asNullableString(json['lastMessageModelenderId']),
-      lastMessageModelAt: json['lastMessageModelAt'] == null
+      lastmessageId: _asNullableString(json['lastmessageId']),
+      lastmessagePreview: _asNullableString(json['lastmessagePreview']),
+      lastmessageenderId: _asNullableString(json['lastmessageenderId']),
+      lastmessageAt: json['lastmessageAt'] == null
           ? null
-          : _parseDateTime(json['lastMessageModelAt']),
+          : _parseDateTime(json['lastmessageAt']),
       createdAt: _parseDateTime(json['createdAt']),
       lastReadAt: _parseLastReadAt(json['lastReadAt']),
       isArchived: _asBool(json['isArchived']),
@@ -152,10 +152,10 @@ class Conversation {
       'pinnedBy': pinnedBy,
       'groupName': groupName,
       'groupAvatarUrl': groupAvatarUrl,
-      'lastMessageModelId': lastMessageModelId,
-      'lastMessageModelPreview': lastMessageModelPreview,
-      'lastMessageModelenderId': lastMessageModelenderId,
-      'lastMessageModelAt': lastMessageModelAt != null ? Timestamp.fromDate(lastMessageModelAt!) : null,
+      'lastmessageId': lastmessageId,
+      'lastmessagePreview': lastmessagePreview,
+      'lastmessageenderId': lastmessageenderId,
+      'lastmessageAt': lastmessageAt != null ? Timestamp.fromDate(lastmessageAt!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastReadAt': lastReadAt.map(
         (key, value) => MapEntry(key, Timestamp.fromDate(value)),
@@ -174,9 +174,9 @@ class Conversation {
     return participantNames[otherUserId] ?? 'Unknown User';
   }
 
-  bool hasUnreadMessageModel(String userId) {
-    return lastMessageModelAt != null &&
-        (lastReadAt[userId] == null || lastReadAt[userId]!.isBefore(lastMessageModelAt!));
+  bool hasUnreadmessage(String userId) {
+    return lastmessageAt != null &&
+        (lastReadAt[userId] == null || lastReadAt[userId]!.isBefore(lastmessageAt!));
   }
 
   bool isPinnedFor(String userId) => pinnedBy.contains(userId);

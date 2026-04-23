@@ -39,7 +39,7 @@ class ProductionDashboard extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
           ...ProductionAlertSystem.alerts.map((a) => ListTile(
-                title: Text(a.MessageModel),
+                title: Text(a.message),
                 subtitle: Text(a.level.name),
                 leading: Icon(
                   a.level == AlertLevel.critical

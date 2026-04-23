@@ -30,7 +30,7 @@ class PaymentState {
   final bool isLoading;
   final String? error;
   final double? amount;
-  final String? successMessageModel;
+  final String? successmessage;
   final bool isConfirmed;
 
   static const Object _unset = Object();
@@ -39,7 +39,7 @@ class PaymentState {
     this.isLoading = false,
     this.error,
     this.amount,
-    this.successMessageModel,
+    this.successmessage,
     this.isConfirmed = false,
   });
 
@@ -47,16 +47,16 @@ class PaymentState {
     bool? isLoading,
     Object? error = _unset,
     double? amount,
-    Object? successMessageModel = _unset,
+    Object? successmessage = _unset,
     bool? isConfirmed,
   }) {
     return PaymentState(
       isLoading: isLoading ?? this.isLoading,
       error: identical(error, _unset) ? this.error : error as String?,
       amount: amount ?? this.amount,
-      successMessageModel: identical(successMessageModel, _unset)
-          ? this.successMessageModel
-          : successMessageModel as String?,
+      successmessage: identical(successmessage, _unset)
+          ? this.successmessage
+          : successmessage as String?,
       isConfirmed: isConfirmed ?? this.isConfirmed,
     );
   }
@@ -78,7 +78,7 @@ class PaymentController extends Notifier<PaymentState> {
     state = state.copyWith(
       isLoading: true,
       error: null,
-      successMessageModel: null,
+      successmessage: null,
       amount: amount,
       isConfirmed: false,
     );
@@ -88,14 +88,14 @@ class PaymentController extends Notifier<PaymentState> {
       state = state.copyWith(
         isLoading: false,
         error: null,
-        successMessageModel: 'Payment sent successfully.',
+        successmessage: 'Payment sent successfully.',
         isConfirmed: true,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
-        successMessageModel: null,
+        successmessage: null,
         isConfirmed: false,
       );
     }
@@ -108,7 +108,7 @@ class PaymentController extends Notifier<PaymentState> {
     state = state.copyWith(
       isLoading: true,
       error: null,
-      successMessageModel: null,
+      successmessage: null,
       amount: amount,
       isConfirmed: false,
     );
@@ -124,14 +124,14 @@ class PaymentController extends Notifier<PaymentState> {
       state = state.copyWith(
         isLoading: false,
         error: null,
-        successMessageModel: 'Payment request sent successfully.',
+        successmessage: 'Payment request sent successfully.',
         isConfirmed: true,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
-        successMessageModel: null,
+        successmessage: null,
         isConfirmed: false,
       );
     }

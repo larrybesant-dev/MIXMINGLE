@@ -15,7 +15,7 @@ import 'tenor_gif_provider.dart';
 /// Usage:
 /// ```dart
 /// await EmojiPackPicker.show(context, ref,
-///   onSelected: (item) => sendMessageModel(item.MessageModelContent));
+///   onSelected: (item) => sendmessage(item.messageContent));
 /// ```
 class EmojiPackPicker {
   EmojiPackPicker._();
@@ -343,7 +343,7 @@ class _EmojiGridCell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Tooltip(
-      MessageModel: item.name,
+      message: item.name,
       preferBelow: false,
       child: InkWell(
         onTap: () => onTap(item),
@@ -455,16 +455,16 @@ class _LoadingCell extends StatelessWidget {
   }
 }
 
-// ── Emoji MessageModel renderer ─────────────────────────────────────────────────
+// ── Emoji message renderer ─────────────────────────────────────────────────
 
-/// Renders a chat MessageModel body that may be an emoji pack item or plain text.
+/// Renders a chat message body that may be an emoji pack item or plain text.
 ///
-/// Drop this widget wherever `Text(MessageModel.content)` is used:
+/// Drop this widget wherever `Text(message.content)` is used:
 /// ```dart
-/// EmojiMessageModelContent(content: MessageModel.content, isOwn: isOwn)
+/// EmojimessageContent(content: message.content, isOwn: isOwn)
 /// ```
-class EmojiMessageModelContent extends ConsumerWidget {
-  const EmojiMessageModelContent({
+class EmojimessageContent extends ConsumerWidget {
+  const EmojimessageContent({
     super.key,
     required this.content,
     required this.isOwn,

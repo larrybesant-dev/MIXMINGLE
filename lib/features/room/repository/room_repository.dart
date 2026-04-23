@@ -137,7 +137,7 @@ class RoomRepository {
     if (functions == null) {
       throw const AgoraServiceException(
         code: 'firebase-unavailable',
-        MessageModel:
+        message:
             'Live media backend is unavailable in this environment. Please try again in the app.',
       );
     }
@@ -154,7 +154,7 @@ class RoomRepository {
       if (token.isEmpty) {
         throw const AgoraServiceException(
           code: 'agora-token-missing',
-          MessageModel: 'Live media token is missing from backend response.',
+          message: 'Live media token is missing from backend response.',
         );
       }
 
@@ -164,7 +164,7 @@ class RoomRepository {
       if (resolvedAppId.length != 32) {
         throw const AgoraServiceException(
           code: 'agora-appid-invalid',
-          MessageModel: 'AGORA_APP_ID is missing or invalid (expected 32 chars).',
+          message: 'AGORA_APP_ID is missing or invalid (expected 32 chars).',
         );
       }
 
@@ -173,7 +173,7 @@ class RoomRepository {
       if (e.code == 'failed-precondition') {
         throw AgoraServiceException(
           code: 'agora-backend-misconfigured',
-          MessageModel:
+          message:
               'Live media backend is not configured. Please set AGORA_APP_ID and AGORA_APP_CERTIFICATE in Cloud Functions.',
           cause: e,
         );
@@ -181,7 +181,7 @@ class RoomRepository {
       if (e.code == 'resource-exhausted') {
         throw AgoraServiceException(
           code: 'agora-rate-limited',
-          MessageModel:
+          message:
               'Too many live-media attempts. Please wait a moment and retry.',
           cause: e,
         );
@@ -189,7 +189,7 @@ class RoomRepository {
       if (e.code == 'unauthenticated' || e.code == 'permission-denied') {
         throw AgoraServiceException(
           code: 'permission-denied',
-          MessageModel:
+          message:
               'Your session is not authorized for live media. Please sign in again.',
           cause: e,
         );

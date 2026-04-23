@@ -376,7 +376,7 @@ class DiscoveryVisibilityDebugPanel extends StatelessWidget {
       totalCount: liveRoomCount,
       visibleCount: visibleRoomCount,
       filterLabel: selectedCategoryLabel,
-      errorMessageModel: hint,
+      errormessage: hint,
       isBackendConfirmed:
           streamStateLabel != 'loading' && streamStateLabel != 'error',
     );
@@ -526,7 +526,7 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 hasRooms: false,
                 child: const AppEmptyView(
                   title: 'No featured rooms right now',
-                  MessageModel: 'When rooms go live, they will appear here first.',
+                  message: 'When rooms go live, they will appear here first.',
                   icon: Icons.sensors_off_rounded,
                 ),
               ),
@@ -1626,7 +1626,7 @@ class _FollowingFeedTab extends ConsumerWidget {
     if (uid == null) {
       return const AppEmptyView(
         title: 'Sign in to see your following feed',
-        MessageModel: 'Your followed creators and posts will appear here.',
+        message: 'Your followed creators and posts will appear here.',
         icon: Icons.login_rounded,
       );
     }
@@ -1641,7 +1641,7 @@ class _FollowingFeedTab extends ConsumerWidget {
         if (maps.isEmpty) {
           return AppEmptyView(
             title: 'No posts from people you follow yet',
-            MessageModel:
+            message:
                 'Find more creators and your following feed will update live.',
             icon: Icons.people_outline_rounded,
             action: _FollowFeedActionButton(onTap: () => context.go('/search')),

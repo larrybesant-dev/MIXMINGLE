@@ -643,7 +643,7 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                     // Pop-out button: visible on hover (desktop) or always on mobile
                     if (widget.onDetach != null && (_hovered || widget.compact))
                       Tooltip(
-                        MessageModel: 'Detach window',
+                        message: 'Detach window',
                         child: InkWell(
                           borderRadius: BorderRadius.circular(4),
                           onTap: widget.onDetach,

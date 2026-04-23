@@ -18,12 +18,12 @@ class LoadSimulator {
     }
   }
 
-  void runMessageModelBurst(String roomId, SimulationContext ctx) {
-    debugPrint("[${ctx.phase}] Running MessageModel burst for room: $roomId");
+  void runmessageBurst(String roomId, SimulationContext ctx) {
+    debugPrint("[${ctx.phase}] Running message burst for room: $roomId");
     for (int i = 0; i < 30; i++) {
       Future.delayed(Duration(milliseconds: i * 150), () {
-        timeline.record("SIM_EVENT", "MessageModel:$roomId", ctx);
-        RuntimeTelemetry.recordRebuild("SIM:MessageModel:$roomId", ctx);
+        timeline.record("SIM_EVENT", "message:$roomId", ctx);
+        RuntimeTelemetry.recordRebuild("SIM:message:$roomId", ctx);
       });
     }
   }

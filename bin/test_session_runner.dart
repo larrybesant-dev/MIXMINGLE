@@ -14,10 +14,10 @@ void main() {
   sim.runTypingStorm("room_1", ctx);
   typingStormPhase.end();
 
-  final MessageModelBurstPhase = SimulationPhase("MessageModel_burst");
-  MessageModelBurstPhase.start();
-  sim.runMessageModelBurst("room_1", ctx);
-  MessageModelBurstPhase.end();
+  final messageBurstPhase = SimulationPhase("message_burst");
+  messageBurstPhase.start();
+  sim.runmessageBurst("room_1", ctx);
+  messageBurstPhase.end();
 
   final presenceFlapPhase = SimulationPhase("presence_flap");
   presenceFlapPhase.start();

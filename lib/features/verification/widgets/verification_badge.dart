@@ -17,7 +17,7 @@ class VerificationBadge extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Tooltip(
-        MessageModel: 'Verified account',
+        message: 'Verified account',
         child: Icon(
           Icons.verified,
           size: size,

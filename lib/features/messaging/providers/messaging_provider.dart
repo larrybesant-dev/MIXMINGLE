@@ -5,7 +5,7 @@ import '../models/conversation_model.dart';
 import '../../../services/moderation_service.dart';
 import '../../../presentation/providers/user_provider.dart';
 
-String _newClientMessageModelId() =>
+String _newClientmessageId() =>
   '${DateTime.now().microsecondsSinceEpoch}-${DateTime.now().millisecondsSinceEpoch}';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -20,12 +20,12 @@ final conversationsStreamProvider =
       .collection('conversations')
       .where('participantIds', arrayContains: userId)
       .where('isArchived', isEqualTo: false)
-      .orderBy('lastMessageModelAt', descending: true)
+      .orderBy('lastmessageAt', descending: true)
       .snapshots()
       .asyncMap((snapshot) async {
     final allConversations = snapshot.docs
         .map((doc) => Conversation.fromJson(doc.data(), doc.id))
-        // Exclude pending (MessageModel requests) from the main list.
+        // Exclude pending (message requests) from the main list.
         .where((c) => c.status != 'pending')
         .toList();
     // Remove conversations where the other participant is blocked (either direction).
@@ -65,12 +65,12 @@ int _compareConversationsForUser(
     return leftPinned ? -1 : 1;
   }
 
-  final leftTimestamp = left.lastMessageModelAt ?? left.createdAt;
-  final rightTimestamp = right.lastMessageModelAt ?? right.createdAt;
+  final leftTimestamp = left.lastmessageAt ?? left.createdAt;
+  final rightTimestamp = right.lastmessageAt ?? right.createdAt;
   return rightTimestamp.compareTo(leftTimestamp);
 }
 
-// Stream of pending MessageModel requests for the current user.
+// Stream of pending message requests for the current user.
 final requestsStreamProvider =
     StreamProvider.family<List<Conversation>, String>((ref, userId) {
   final firestore = ref.watch(firestoreProvider);
@@ -96,14 +96,14 @@ final conversationDocProvider =
       .map((snap) => snap.exists ? Conversation.fromJson(snap.data()!, snap.id) : null);
 });
 
-// Stream of MessageModel in a conversation
-final MessageModelStreamProvider =
+// Stream of message in a conversation
+final messagestreamProvider =
     StreamProvider.family<List<MessageModel>, String>((ref, conversationId) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('conversations')
       .doc(conversationId)
-      .collection('MessageModel')
+      .collection('messages')
       .orderBy('createdAt', descending: true)
       .limit(50)
       .snapshots()
@@ -116,34 +116,34 @@ final MessageModelStreamProvider =
   });
 });
 
-// ── Paginated MessageModel history ──────────────────────────────────────────────
-// Loads older MessageModel on demand (load-more). The live stream above covers the
+// ── Paginated message history ──────────────────────────────────────────────
+// Loads older message on demand (load-more). The live stream above covers the
 // most recent 50; this provider fetches pages of 30 preceding those.
 
-const _kMessageModelPageSize = 30;
+const _kmessagePageSize = 30;
 
-class _PaginatedMessageModelState {
-  const _PaginatedMessageModelState({
-    this.olderMessageModel = const [],
+class _Paginatedmessagestate {
+  const _Paginatedmessagestate({
+    this.oldermessage = const [],
     this.isLoading = false,
     this.hasMore = true,
     this.oldestDoc,
   });
 
-  final List<MessageModel> olderMessageModel;
+  final List<MessageModel> oldermessage;
   final bool isLoading;
   final bool hasMore;
   final DocumentSnapshot? oldestDoc;
 
-  _PaginatedMessageModelState copyWith({
-    List<MessageModel>? olderMessageModel,
+  _Paginatedmessagestate copyWith({
+    List<MessageModel>? oldermessage,
     bool? isLoading,
     bool? hasMore,
     DocumentSnapshot? oldestDoc,
     bool clearOldest = false,
   }) {
-    return _PaginatedMessageModelState(
-      olderMessageModel: olderMessageModel ?? this.olderMessageModel,
+    return _Paginatedmessagestate(
+      oldermessage: oldermessage ?? this.oldermessage,
       isLoading: isLoading ?? this.isLoading,
       hasMore: hasMore ?? this.hasMore,
       oldestDoc: clearOldest ? null : (oldestDoc ?? this.oldestDoc),
@@ -151,10 +151,10 @@ class _PaginatedMessageModelState {
   }
 }
 
-class _PaginatedMessageModelNotifier
-    extends StateNotifier<_PaginatedMessageModelState> {
-  _PaginatedMessageModelNotifier(this._firestore, this._conversationId)
-      : super(const _PaginatedMessageModelState());
+class _PaginatedmessageNotifier
+    extends StateNotifier<_Paginatedmessagestate> {
+  _PaginatedmessageNotifier(this._firestore, this._conversationId)
+      : super(const _Paginatedmessagestate());
 
   final FirebaseFirestore _firestore;
   final String _conversationId;
@@ -169,9 +169,9 @@ class _PaginatedMessageModelNotifier
       var query = _firestore
           .collection('conversations')
           .doc(_conversationId)
-          .collection('MessageModel')
+          .collection('messages')
           .orderBy('createdAt', descending: true)
-          .limit(_kMessageModelPageSize);
+          .limit(_kmessagePageSize);
 
       if (cursor != null) query = query.startAfterDocument(cursor);
 
@@ -183,9 +183,9 @@ class _PaginatedMessageModelNotifier
           .toList();
 
       state = state.copyWith(
-        olderMessageModel: [...fetched, ...state.olderMessageModel],
+        oldermessage: [...fetched, ...state.oldermessage],
         isLoading: false,
-        hasMore: snapshot.docs.length == _kMessageModelPageSize,
+        hasMore: snapshot.docs.length == _kmessagePageSize,
         oldestDoc: snapshot.docs.isNotEmpty ? snapshot.docs.last : state.oldestDoc,
       );
     } catch (_) {
@@ -194,15 +194,15 @@ class _PaginatedMessageModelNotifier
   }
 }
 
-final paginatedMessageModelProvider = StateNotifierProvider.autoDispose
-    .family<_PaginatedMessageModelNotifier, _PaginatedMessageModelState, String>(
-  (ref, conversationId) => _PaginatedMessageModelNotifier(
+final paginatedmessageProvider = StateNotifierProvider.autoDispose
+    .family<_PaginatedmessageNotifier, _Paginatedmessagestate, String>(
+  (ref, conversationId) => _PaginatedmessageNotifier(
     ref.watch(firestoreProvider),
     conversationId,
   ),
 );
 
-// Controller for sending MessageModel
+// Controller for sending message
 final messagingControllerProvider =
     Provider<MessagingController>((ref) {
   final firestore = ref.watch(firestoreProvider);
@@ -227,50 +227,50 @@ final conversationScrollMemoryProvider = StateNotifierProvider<
 );
 
 class MessagingController {
-  static const int MessageModelRetentionDays = 90;
+  static const int messageRetentionDays = 90;
   final FirebaseFirestore _firestore;
 
   MessagingController({required FirebaseFirestore firestore}) : _firestore = firestore;
 
-  Future<void> sendMessageModel({
+  Future<void> sendmessage({
     required String conversationId,
     required String senderId,
     required String senderName,
     required String? senderAvatarUrl,
     required String content,
-    String? clientMessageModelId,
+    String? clientmessageId,
   }) async {
     final now = DateTime.now();
-    final expiresAt = now.add(const Duration(days: MessageModelRetentionDays));
-    final resolvedClientMessageModelId = clientMessageModelId ?? _newClientMessageModelId();
-    final MessageModelRef = _firestore
+    final expiresAt = now.add(const Duration(days: messageRetentionDays));
+    final resolvedClientmessageId = clientmessageId ?? _newClientmessageId();
+    final messageRef = _firestore
         .collection('conversations')
         .doc(conversationId)
-        .collection('MessageModel')
+        .collection('messages')
         .doc();
     
-    // Add MessageModel to MessageModel subcollection
-    await MessageModelRef.set({
+    // Add message to message subcollection
+    await messageRef.set({
       'conversationId': conversationId,
       'senderId': senderId,
       'senderName': senderName,
       'senderAvatarUrl': senderAvatarUrl,
       'content': content,
-      'clientMessageModelId': resolvedClientMessageModelId,
+      'clientmessageId': resolvedClientmessageId,
       'createdAt': Timestamp.fromDate(now),
       'expiresAt': Timestamp.fromDate(expiresAt),
       'isDeleted': false,
       'readBy': [senderId],
     });
 
-    // Update conversation with last MessageModel info
+    // Update conversation with last message info
     final convRef = _firestore.collection('conversations').doc(conversationId);
     await convRef.update({
-      'lastMessageModelId': MessageModelRef.id,
-      'lastMessageModelPreview': content,
-      'lastMessageModelenderId': senderId,
-      'lastMessageModelAt': Timestamp.fromDate(now),
-      'lastMessageModelClientMessageModelId': resolvedClientMessageModelId,
+      'lastmessageId': messageRef.id,
+      'lastmessagePreview': content,
+      'lastmessageenderId': senderId,
+      'lastmessageAt': Timestamp.fromDate(now),
+      'lastmessageClientmessageId': resolvedClientmessageId,
     });
   }
 
@@ -360,15 +360,15 @@ class MessagingController {
     });
   }
 
-  Future<void> deleteMessageModel({
+  Future<void> deletemessage({
     required String conversationId,
-    required String MessageModelId,
+    required String messageId,
   }) async {
     await _firestore
         .collection('conversations')
         .doc(conversationId)
-        .collection('MessageModel')
-        .doc(MessageModelId)
+        .collection('messages')
+        .doc(messageId)
         .update({'isDeleted': true});
   }
 
@@ -393,7 +393,7 @@ class MessagingController {
     });
   }
 
-  Future<void> acceptMessageModelRequest({
+  Future<void> acceptmessageRequest({
     required String conversationId,
   }) async {
     await _firestore
@@ -404,15 +404,15 @@ class MessagingController {
 
   Future<void> toggleReaction({
     required String conversationId,
-    required String MessageModelId,
+    required String messageId,
     required String currentUserId,
     required String emoji,
   }) async {
     final docRef = _firestore
         .collection('conversations')
         .doc(conversationId)
-        .collection('MessageModel')
-        .doc(MessageModelId)
+        .collection('messages')
+        .doc(messageId)
         .collection('reactions')
         .doc(currentUserId);
     final existing = await docRef.get();
@@ -425,7 +425,7 @@ class MessagingController {
 
   /// Updates the typing heartbeat for [userId] in [conversationId].
   /// Writes to a lightweight ephemeral subcollection instead of the
-  /// conversation document so MessageModel sends do not trigger the typing stream.
+  /// conversation document so message sends do not trigger the typing stream.
   Future<void> updateTypingStatus({
     required String conversationId,
     required String userId,
@@ -449,15 +449,15 @@ class MessagingController {
 
 // ── Typing status ─────────────────────────────────────────────────────────
 
-/// Reactions on a MessageModel keyed by userId → emoji string.
-final MessageModelReactionsProvider = StreamProvider.family<Map<String, String>,
-    ({String conversationId, String MessageModelId})>((ref, params) {
+/// Reactions on a message keyed by userId → emoji string.
+final messageReactionsProvider = StreamProvider.family<Map<String, String>,
+    ({String conversationId, String messageId})>((ref, params) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('conversations')
       .doc(params.conversationId)
-      .collection('MessageModel')
-      .doc(params.MessageModelId)
+      .collection('messages')
+      .doc(params.messageId)
       .collection('reactions')
       .snapshots()
       .map((snap) {
@@ -472,7 +472,7 @@ final MessageModelReactionsProvider = StreamProvider.family<Map<String, String>,
 
 /// Emits the set of user IDs that are currently typing in [conversationId].
 /// Subscribes to the lightweight `ephemeral/typing` subcollection doc so
-/// MessageModel sends (which mutate the parent conversation doc) do not trigger
+/// message sends (which mutate the parent conversation doc) do not trigger
 /// unnecessary re-emits here.
 final typingUsersProvider =
     StreamProvider.autoDispose.family<Set<String>, String>((ref, conversationId) {
@@ -502,15 +502,15 @@ final typingUsersProvider =
   });
 });
 
-/// Count of conversations that have at least one unread MessageModel for the current
+/// Count of conversations that have at least one unread message for the current
 /// user. Derived from the live conversations stream — stays real-time.
-final unreadMessageModelCountProvider = Provider<int>((ref) {
+final unreadmessageCountProvider = Provider<int>((ref) {
   final user = ref.watch(userProvider);
   if (user == null) return 0;
   return ref
       .watch(conversationsStreamProvider(user.id))
       .whenData(
-        (convs) => convs.where((c) => c.hasUnreadMessageModel(user.id)).length,
+        (convs) => convs.where((c) => c.hasUnreadmessage(user.id)).length,
       )
       .valueOrNull ??
       0;

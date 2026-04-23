@@ -4,7 +4,7 @@ import '../../friends/providers/schema_boot_timeline_provider.dart';
 import '../../friends/providers/schema_friend_links_providers.dart';
 import '../../friends/providers/schema_friend_presence_stability_provider.dart';
 import '../../friends/providers/schema_friend_render_mode_provider.dart';
-import '../../MessageModel/providers/MessageModel_render_mode_provider.dart';
+import '../../messages/providers/messages_render_mode_provider.dart';
 import 'schema_parity_monitor.dart';
 
 enum MigrationHealthTrend {
@@ -42,12 +42,12 @@ class SchemaModuleHealth {
 }
 
 /// Single source of truth for schema module health across all modules.
-/// Input: module identifier (friends, MessageModel, etc.)
+/// Input: module identifier (friends, message, etc.)
 /// Output: unified health snapshot
 ///
 /// Replaces:
 /// - friendModuleHealthProvider
-/// - MessageModelModuleHealthProvider
+/// - messageModuleHealthProvider
 final schemaModuleHealthProvider =
     Provider.autoDispose.family<SchemaModuleHealth, String>((ref, moduleId) {
       final normalizedModuleId = moduleId.trim().toLowerCase();
@@ -69,12 +69,12 @@ final schemaModuleHealthProvider =
             presenceReady: stablePresenceAsync.hasValue,
             bootMetrics: bootMetrics,
           );
-        case 'MessageModel':
-          final parity = ref.watch(schemaParityMonitorProvider('MessageModel'));
-          final renderMode = ref.watch(MessageModelPaneRenderModeProvider);
+        case 'message':
+          final parity = ref.watch(schemaParityMonitorProvider('message'));
+          final renderMode = ref.watch(messagePaneRenderModeProvider);
           final bootMetrics = ref.watch(schemaLatestBootMetricsProvider);
 
-          return _buildMessageModelHealth(
+          return _buildmessageHealth(
             parity: parity,
             renderModeName: renderMode.name,
             bootMetrics: bootMetrics,
@@ -126,7 +126,7 @@ SchemaModuleHealth _buildFriendsHealth({
   );
 }
 
-SchemaModuleHealth _buildMessageModelHealth({
+SchemaModuleHealth _buildmessageHealth({
   required SchemaParityMonitorReport parity,
   required String renderModeName,
   required SchemaBootMetrics? bootMetrics,
@@ -138,7 +138,7 @@ SchemaModuleHealth _buildMessageModelHealth({
   ];
 
   return _healthFromScores(
-    moduleId: 'MessageModel',
+    moduleId: 'message',
     structuralScore: _computeStructuralScore(
       readinessSignals: <bool>[parity.isComparable],
       bootMetrics: bootMetrics,

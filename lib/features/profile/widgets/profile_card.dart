@@ -15,11 +15,11 @@ class ProfileCard extends StatelessWidget {
     this.usernameHandle,
     required this.statusText,
     required this.presenceState,
-    required this.onMessageModel,
+    required this.onmessage,
     required this.onInvite,
     this.onJoin,
     this.currentRoom,
-    this.lastMessageModelPreview,
+    this.lastmessagePreview,
     this.mutualFriendsCount,
     this.activities = const <ProfileActivityItem>[],
     this.onMute,
@@ -33,11 +33,11 @@ class ProfileCard extends StatelessWidget {
   final String? usernameHandle;
   final String statusText;
   final ProfilePresenceState presenceState;
-  final VoidCallback onMessageModel;
+  final VoidCallback onmessage;
   final VoidCallback onInvite;
   final VoidCallback? onJoin;
   final String? currentRoom;
-  final String? lastMessageModelPreview;
+  final String? lastmessagePreview;
   final int? mutualFriendsCount;
   final List<ProfileActivityItem> activities;
   final VoidCallback? onMute;
@@ -58,7 +58,7 @@ class ProfileCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         ProfileActionsRow(
-          onMessageModel: onMessageModel,
+          onmessage: onmessage,
           onInvite: onInvite,
           onJoin: onJoin,
         ),
@@ -199,12 +199,12 @@ class ProfileHeader extends StatelessWidget {
 class ProfileActionsRow extends StatelessWidget {
   const ProfileActionsRow({
     super.key,
-    required this.onMessageModel,
+    required this.onmessage,
     required this.onInvite,
     this.onJoin,
   });
 
-  final VoidCallback onMessageModel;
+  final VoidCallback onmessage;
   final VoidCallback onInvite;
   final VoidCallback? onJoin;
 
@@ -214,9 +214,9 @@ class ProfileActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: FilledButton.icon(
-            onPressed: onMessageModel,
+            onPressed: onmessage,
             icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-            label: const Text('MessageModel'),
+            label: const Text('message'),
           ),
         ),
         const SizedBox(width: 8),
@@ -260,13 +260,13 @@ class ProfileActivitySection extends StatelessWidget {
   const ProfileActivitySection({
     super.key,
     this.currentRoom,
-    this.lastMessageModelPreview,
+    this.lastmessagePreview,
     this.mutualFriendsCount,
     this.activities = const <ProfileActivityItem>[],
   });
 
   final String? currentRoom;
-  final String? lastMessageModelPreview;
+  final String? lastmessagePreview;
   final int? mutualFriendsCount;
   final List<ProfileActivityItem> activities;
 
@@ -296,12 +296,12 @@ class ProfileActivitySection extends StatelessWidget {
       );
     }
 
-    if ((lastMessageModelPreview ?? '').isNotEmpty) {
+    if ((lastmessagePreview ?? '').isNotEmpty) {
       rows.add(
         _ActivityRow(
           icon: Icons.chat_bubble_outline_rounded,
-          label: 'Last MessageModel',
-          value: lastMessageModelPreview!,
+          label: 'Last message',
+          value: lastmessagePreview!,
         ),
       );
     }

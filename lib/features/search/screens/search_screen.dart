@@ -158,7 +158,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         isEmpty: (users) => users.isEmpty,
         empty: const AppEmptyView(
           title: 'No people found',
-          MessageModel: 'Try a name, username, or explore the latest members.',
+          message: 'Try a name, username, or explore the latest members.',
         ),
         data: (users) => ListView.separated(
             itemCount: users.length,
@@ -204,7 +204,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         isEmpty: (posts) => posts.isEmpty,
         empty: const AppEmptyView(
           title: 'No posts found',
-          MessageModel: 'Try a broader keyword or switch tabs.',
+          message: 'Try a broader keyword or switch tabs.',
         ),
         data: (posts) => ListView.separated(
             itemCount: posts.length,
@@ -235,7 +235,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         isEmpty: (hashtags) => hashtags.isEmpty,
         empty: const AppEmptyView(
           title: 'No hashtags found',
-          MessageModel: 'Try a different hashtag or phrase.',
+          message: 'Try a different hashtag or phrase.',
         ),
         data: (hashtags) => ListView.separated(
             itemCount: hashtags.length,

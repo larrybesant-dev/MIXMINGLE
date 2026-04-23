@@ -579,7 +579,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
             return Center(
               child: AppEmptyView(
                 title: 'Session complete',
-                MessageModel: 'Check back later for more matches.',
+                message: 'Check back later for more matches.',
                 icon: Icons.favorite_outline_rounded,
                 action: Column(
                   mainAxisSize: MainAxisSize.min,

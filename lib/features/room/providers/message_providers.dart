@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firestore/firestore_debug_tracing.dart';
 import '../../../presentation/providers/user_provider.dart';
-import '../../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 import '../../../services/moderation_service.dart';
 import 'room_firestore_provider.dart';
 
@@ -36,19 +36,19 @@ String _asString(dynamic value, {String fallback = ''}) {
   return fallback;
 }
 
-final MessageModeltreamProvider = StreamProvider.autoDispose
+final messagetreamProvider = StreamProvider.autoDispose
     .family<List<MessageModel>, String>((ref, roomId) {
       final firestore = ref.watch(roomFirestoreProvider);
       final currentUserId = ref.watch(userProvider)?.id;
       return traceFirestoreStream<List<MessageModel>>(
-        key: 'MessageModel/$roomId',
-        query: 'rooms/$roomId/MessageModel orderBy sentAt',
+        key: 'message/$roomId',
+        query: 'rooms/$roomId/message orderBy sentAt',
         roomId: roomId,
         itemCount: (value) => value.length,
         stream: firestore
             .collection('rooms')
             .doc(roomId)
-            .collection('MessageModel')
+            .collection('messages')
             .orderBy('sentAt')
             .snapshots()
             .map((snapshot) {
@@ -160,16 +160,16 @@ final roomTypingUserIdsProvider = StreamProvider.autoDispose
       );
     });
 
-final sendMessageModelProvider = Provider.autoDispose
+final sendmessageProvider = Provider.autoDispose
     .family<Future<void> Function(String), String>((ref, roomId) {
-      return (String MessageModel) async {
+      return (String message) async {
         final user = ref.read(userProvider);
         if (user == null) {
-          throw StateError('User must be logged in to send MessageModel');
+          throw StateError('User must be logged in to send message');
         }
 
-        final normalizedMessageModel = MessageModel.trim();
-        if (normalizedMessageModel.isEmpty) {
+        final normalizedmessage = message.trim();
+        if (normalizedmessage.isEmpty) {
           return;
         }
 
@@ -210,7 +210,7 @@ final sendMessageModelProvider = Provider.autoDispose
           });
           if (hasBlockedParticipant) {
             throw StateError(
-              'You cannot MessageModel while a blocked user is in this room.',
+              'You cannot message while a blocked user is in this room.',
             );
           }
         }
@@ -224,27 +224,27 @@ final sendMessageModelProvider = Provider.autoDispose
           final hasBlockingRelationship = await moderationService
               .hasBlockingRelationship(user.id, hostId);
           if (hasBlockingRelationship) {
-            throw StateError('You cannot MessageModel in this room.');
+            throw StateError('You cannot message in this room.');
           }
         }
 
-        final MessageModelRef = firestore
+        final messageRef = firestore
             .collection('rooms')
             .doc(roomId)
-            .collection('MessageModel')
+            .collection('messages')
             .doc();
-        await MessageModelRef.set({
-          'id': MessageModelRef.id,
+        await messageRef.set({
+          'id': messageRef.id,
           'senderId': user.id,
           'roomId': roomId,
-          'content': normalizedMessageModel,
+          'content': normalizedmessage,
           'sentAt': FieldValue.serverTimestamp(),
           'clientSentAt': Timestamp.now(),
         });
       };
     });
 
-final sendPrivateMessageModelProvider = Provider.autoDispose
+final sendPrivatemessageProvider = Provider.autoDispose
     .family<
       Future<void> Function({
         required String content,
@@ -260,30 +260,30 @@ final sendPrivateMessageModelProvider = Provider.autoDispose
       }) async {
         final user = ref.read(userProvider);
         if (user == null) {
-          throw StateError('User must be logged in to send MessageModel');
+          throw StateError('User must be logged in to send message');
         }
 
-        final normalizedMessageModel = content.trim();
+        final normalizedmessage = content.trim();
         final normalizedRecipientId = recipientUserId.trim();
-        if (normalizedMessageModel.isEmpty || normalizedRecipientId.isEmpty) {
+        if (normalizedmessage.isEmpty || normalizedRecipientId.isEmpty) {
           return;
         }
         if (normalizedRecipientId == user.id) {
-          throw StateError('Cannot send a private room MessageModel to yourself.');
+          throw StateError('Cannot send a private room message to yourself.');
         }
 
         final firestore = ref.read(roomFirestoreProvider);
-        final MessageModelRef = firestore
+        final messageRef = firestore
             .collection('rooms')
             .doc(roomId)
-            .collection('MessageModel')
+            .collection('messages')
             .doc();
 
-        await MessageModelRef.set({
-          'id': MessageModelRef.id,
+        await messageRef.set({
+          'id': messageRef.id,
           'senderId': user.id,
           'roomId': roomId,
-          'content': normalizedMessageModel,
+          'content': normalizedmessage,
           'type': 'private',
           'recipientUserId': normalizedRecipientId,
           'recipientDisplayName': recipientDisplayName.trim(),

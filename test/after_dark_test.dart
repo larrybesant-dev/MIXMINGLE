@@ -113,7 +113,7 @@ Widget _shellApp({required bool sessionActive}) {
     overrides: [
       afterDarkSessionProvider.overrideWith((ref) => sessionActive),
       // Prevent Firebase access in the shell test environment.
-      unreadMessageModelCountProvider.overrideWith((ref) => 0),
+      unreadmessageCountProvider.overrideWith((ref) => 0),
     ],
     child: MaterialApp.router(routerConfig: router),
   );
@@ -340,7 +340,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The exit control is a TextButton.icon; verify via the icon or
-      // the tooltip MessageModel attached to the wrapping Tooltip widget.
+      // the tooltip message attached to the wrapping Tooltip widget.
       expect(find.byIcon(Icons.wb_sunny_outlined), findsOneWidget);
     });
   });

@@ -57,7 +57,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
       empty: const AppEmptyView(
         icon: Icons.local_fire_department_outlined,
         title: 'No trending posts yet',
-        MessageModel: 'Trending content will appear here once posts gain momentum.',
+        message: 'Trending content will appear here once posts gain momentum.',
       ),
       data: (posts) => ListView.builder(
           padding: const EdgeInsets.only(top: 4, bottom: 80),
@@ -100,7 +100,7 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
       empty: const AppEmptyView(
         icon: Icons.tag_outlined,
         title: 'No trending hashtags yet',
-        MessageModel: 'Popular hashtags will appear here when conversations build up.',
+        message: 'Popular hashtags will appear here when conversations build up.',
       ),
       data: (hashtags) {
         return ListView.builder(

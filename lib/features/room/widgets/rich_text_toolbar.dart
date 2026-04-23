@@ -289,7 +289,7 @@ class _ToolBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      MessageModel: tooltip,
+      message: tooltip,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -320,7 +320,7 @@ class _ColorSwatch extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Color(0xFF000000 | int.parse(hex, radix: 16));
     return Tooltip(
-      MessageModel: '#$hex',
+      message: '#$hex',
       child: InkWell(
         onTap: onTap,
         child: Container(

@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 /// A beautiful, reusable empty-state component.
 /// Shows a large emoji/icon, heading, subtitle, and optional CTA button.
 class FeedEmptyState extends StatelessWidget {
-  final String MessageModel;
+  final String message;
   final String? emoji;
   final String? heading;
   final String? actionLabel;
   final VoidCallback? onAction;
 
   const FeedEmptyState({
-    required this.MessageModel,
+    required this.message,
     this.emoji,
     this.heading,
     this.actionLabel,
@@ -38,7 +38,7 @@ class FeedEmptyState extends StatelessWidget {
               ),
             const SizedBox(height: 8),
             Text(
-              MessageModel,
+              message,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
               ),

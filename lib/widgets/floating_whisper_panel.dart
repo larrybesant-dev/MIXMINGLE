@@ -63,7 +63,7 @@ class _FloatingWhisperPanelWidgetState
 
   final TextEditingController _controller = TextEditingController();
 
-  Future<void> _sendMessageModel() async {
+  Future<void> _sendmessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -73,7 +73,7 @@ class _FloatingWhisperPanelWidgetState
     if (user == null) return;
 
     try {
-      await ref.read(messagingControllerProvider).sendMessageModel(
+      await ref.read(messagingControllerProvider).sendmessage(
             conversationId: widget.conversationId,
             senderId: user.id,
             senderName: user.username,
@@ -163,7 +163,7 @@ class _FloatingWhisperPanelWidgetState
             if (_expanded) ...[
               SizedBox(
                 height: 240,
-                child: _MessageModelList(conversationId: widget.conversationId),
+                child: _messageList(conversationId: widget.conversationId),
               ),
               Padding(
                 padding:
@@ -174,16 +174,16 @@ class _FloatingWhisperPanelWidgetState
                       child: TextField(
                         controller: _controller,
                         decoration: const InputDecoration(
-                          hintText: 'MessageModel…',
+                          hintText: 'message…',
                           border: OutlineInputBorder(),
                           isDense: true,
                         ),
-                        onSubmitted: (_) => _sendMessageModel(),
+                        onSubmitted: (_) => _sendmessage(),
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.send),
-                      onPressed: _sendMessageModel,
+                      onPressed: _sendmessage,
                     ),
                   ],
                 ),
@@ -196,30 +196,30 @@ class _FloatingWhisperPanelWidgetState
   }
 }
 
-class _MessageModelList extends ConsumerWidget {
-  const _MessageModelList({required this.conversationId});
+class _messageList extends ConsumerWidget {
+  const _messageList({required this.conversationId});
 
   final String conversationId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stream = ref.watch(MessageModelStreamProvider(conversationId));
+    final stream = ref.watch(messagestreamProvider(conversationId));
 
     return stream.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
-      data: (MessageModel) {
-        if (MessageModel.isEmpty) {
-          return const Center(child: Text('No MessageModel yet'));
+      data: (message) {
+        if (message.isEmpty) {
+          return const Center(child: Text('No message yet'));
         }
 
         return ListView.builder(
           reverse: true,
           padding: const EdgeInsets.all(8),
-          itemCount: MessageModel.length,
+          itemCount: message.length,
           itemBuilder: (_, i) {
-            final msg = MessageModel[MessageModel.length - 1 - i];
-            return _Bubble(MessageModel: msg);
+            final msg = message[message.length - 1 - i];
+            return _Bubble(message: msg);
           },
         );
       },
@@ -228,9 +228,9 @@ class _MessageModelList extends ConsumerWidget {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.MessageModel});
+  const _Bubble({required this.message});
 
-  final MessageModel MessageModel;
+  final MessageModel message;
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +240,7 @@ class _Bubble extends StatelessWidget {
         text: TextSpan(
           children: [
             TextSpan(
-              text: '${MessageModel.senderName}: ',
+              text: '${message.senderName}: ',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -248,7 +248,7 @@ class _Bubble extends StatelessWidget {
               ),
             ),
             TextSpan(
-              text: MessageModel.content,
+              text: message.content,
               style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFFF2EBE0),

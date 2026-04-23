@@ -230,7 +230,7 @@ class _AfterDarkLoungesScreenState
                   24,
                 ),
                 child: AppErrorView(
-                  error: friendlyFirestoreMessageModel(e, fallbackContext: 'lounges'),
+                  error: friendlyFirestoremessage(e, fallbackContext: 'lounges'),
                   fallbackContext: 'Unable to load lounges.',
                 ),
               ),
@@ -249,7 +249,7 @@ class _AfterDarkLoungesScreenState
                     ),
                     child: AppEmptyView(
                       title: 'No live lounges right now',
-                      MessageModel: 'Be the first to open the floor tonight.',
+                      message: 'Be the first to open the floor tonight.',
                       icon: Icons.nightlife_outlined,
                       action: FilledButton.icon(
                         onPressed: () => context.go('/after-dark/create-lounge'),

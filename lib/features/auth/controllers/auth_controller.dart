@@ -64,7 +64,7 @@ class AuthController extends Notifier<AuthState> {
     AppTelemetry.logAction(
       domain: 'auth',
       action: 'google_sign_in',
-      MessageModel: 'Google sign-in started.',
+      message: 'Google sign-in started.',
       userId: state.uid,
       result: 'start',
     );
@@ -82,16 +82,16 @@ class AuthController extends Notifier<AuthState> {
       );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'google-sign-in');
-      final MessageModel = _getReadableError(e.code);
+      final message = _getReadableError(e.code);
       state = state.copyWith(
         isLoading: false,
         hasResolvedSession: true,
-        error: MessageModel,
+        error: message,
       );
       AppTelemetry.updateAuthState(
         userId: state.uid,
         isLoading: false,
-        error: MessageModel,
+        error: message,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -144,7 +144,7 @@ class AuthController extends Notifier<AuthState> {
       AppTelemetry.logAction(
         domain: 'auth',
         action: 'auth_state_change',
-        MessageModel: 'Firebase auth state updated.',
+        message: 'Firebase auth state updated.',
         userId: user?.uid,
         result: user == null ? 'signed_out' : 'signed_in',
       );
@@ -179,7 +179,7 @@ class AuthController extends Notifier<AuthState> {
   bool _isAnonymousUser(User? user) => user?.isAnonymous ?? false;
 
   Future<void> _rejectAnonymousSession() async {
-    const MessageModel = 'Guest access is disabled. Please sign in with an account.';
+    const message = 'Guest access is disabled. Please sign in with an account.';
     try {
       await _auth.signOut();
     } catch (_) {
@@ -190,12 +190,12 @@ class AuthController extends Notifier<AuthState> {
       isLoading: false,
       hasResolvedSession: true,
       uid: null,
-      error: MessageModel,
+      error: message,
     );
     AppTelemetry.updateAuthState(
       userId: null,
       isLoading: false,
-      error: MessageModel,
+      error: message,
     );
   }
 
@@ -325,7 +325,7 @@ class AuthController extends Notifier<AuthState> {
     AppTelemetry.logAction(
       domain: 'auth',
       action: 'signup',
-      MessageModel: 'Email signup started.',
+      message: 'Email signup started.',
       result: 'start',
     );
     try {
@@ -347,12 +347,12 @@ class AuthController extends Notifier<AuthState> {
       );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'signup');
-      final errorMessageModel = _getReadableError(e.code);
-      state = state.copyWith(isLoading: false, error: errorMessageModel);
+      final errormessage = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: errormessage);
       AppTelemetry.updateAuthState(
         userId: state.uid,
         isLoading: false,
-        error: errorMessageModel,
+        error: errormessage,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
@@ -374,7 +374,7 @@ class AuthController extends Notifier<AuthState> {
     AppTelemetry.logAction(
       domain: 'auth',
       action: 'login',
-      MessageModel: 'Email login started.',
+      message: 'Email login started.',
       result: 'start',
     );
     try {
@@ -395,12 +395,12 @@ class AuthController extends Notifier<AuthState> {
       );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'login');
-      final MessageModel = _getReadableError(e.code);
-      state = state.copyWith(isLoading: false, error: MessageModel);
+      final message = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: message);
       AppTelemetry.updateAuthState(
         userId: state.uid,
         isLoading: false,
-        error: MessageModel,
+        error: message,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
@@ -469,12 +469,12 @@ class AuthController extends Notifier<AuthState> {
       );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'apple-sign-in');
-      final MessageModel = _getReadableError(e.code);
-      state = state.copyWith(isLoading: false, error: MessageModel);
+      final message = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: message);
       AppTelemetry.updateAuthState(
         userId: state.uid,
         isLoading: false,
-        error: MessageModel,
+        error: message,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -490,7 +490,7 @@ class AuthController extends Notifier<AuthState> {
     AppTelemetry.logAction(
       domain: 'auth',
       action: 'logout',
-      MessageModel: 'Logout cleanup started.',
+      message: 'Logout cleanup started.',
       userId: _auth.currentUser?.uid ?? state.uid,
       result: 'start',
     );
@@ -576,12 +576,12 @@ class AuthController extends Notifier<AuthState> {
       );
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'reset-password');
-      final errorMessageModel = _getReadableError(e.code);
-      state = state.copyWith(isLoading: false, error: errorMessageModel);
+      final errormessage = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: errormessage);
       AppTelemetry.updateAuthState(
         userId: state.uid,
         isLoading: false,
-        error: errorMessageModel,
+        error: errormessage,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
@@ -602,7 +602,7 @@ class AuthController extends Notifier<AuthState> {
       level: 'error',
       domain: 'auth',
       action: context,
-      MessageModel: 'FirebaseAuthException occurred.',
+      message: 'FirebaseAuthException occurred.',
       userId: _auth.currentUser?.uid ?? state.uid,
       result: e.code,
       error: e,

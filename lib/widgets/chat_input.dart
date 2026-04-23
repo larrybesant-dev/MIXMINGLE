@@ -13,7 +13,7 @@ class ChatInput extends StatelessWidget {
             controller: controller,
             textInputAction: TextInputAction.send,
             onSubmitted: (_) => onSend(),
-            decoration: const InputDecoration(hintText: 'Type a MessageModel...'),
+            decoration: const InputDecoration(hintText: 'Type a message...'),
           ),
         ),
         IconButton(

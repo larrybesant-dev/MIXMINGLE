@@ -282,7 +282,7 @@ class _IconBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      MessageModel: tooltip,
+      message: tooltip,
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
         onTap: onTap,

@@ -161,7 +161,7 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                       statusColor: const Color(0xFF22C55E),
                       actions: [
                         FriendTileAction(
-                          label: 'MessageModel',
+                          label: 'message',
                           icon: Icons.chat_bubble_outline_rounded,
                           onPressed: () => _openConversation(
                             context,
@@ -228,7 +228,7 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                               context.go('/room/${inRoomEntries[i].roomId}'),
                         ),
                         FriendTileAction(
-                          label: 'MessageModel',
+                          label: 'message',
                           icon: Icons.chat_bubble_outline_rounded,
                           onPressed: () => _openConversation(
                             context,
@@ -271,7 +271,7 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
                       statusColor: const Color(0xFFF59E0B),
                       actions: [
                         FriendTileAction(
-                          label: 'MessageModel',
+                          label: 'message',
                           icon: Icons.chat_bubble_outline_rounded,
                           onPressed: () => _openConversation(
                             context,
@@ -356,7 +356,7 @@ class _FriendsPaneViewState extends ConsumerState<FriendsPaneView> {
             user2AvatarUrl: friend.avatarUrl,
           );
       if (!context.mounted) return;
-      context.go('/MessageModel/$conversationId');
+      context.go('/message/$conversationId');
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(

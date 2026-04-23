@@ -5,23 +5,23 @@ class ReactionRepository {
   final FirebaseFirestore _db;
   ReactionRepository(this._db);
 
-  Stream<List<ReactionModel>> reactionsStream(String roomId, String MessageModelId) {
+  Stream<List<ReactionModel>> reactionsStream(String roomId, String messageId) {
     return _db
       .collection('rooms')
       .doc(roomId)
-      .collection('MessageModel')
-      .doc(MessageModelId)
+      .collection('messages')
+      .doc(messageId)
       .collection('reactions')
       .snapshots()
       .map((snap) => snap.docs.map((d) => ReactionModel.fromJson(d.data())).toList());
   }
 
-  Future<void> setReaction(String roomId, String MessageModelId, String userId, String emoji) async {
+  Future<void> setReaction(String roomId, String messageId, String userId, String emoji) async {
     await _db
       .collection('rooms')
       .doc(roomId)
-      .collection('MessageModel')
-      .doc(MessageModelId)
+      .collection('messages')
+      .doc(messageId)
       .collection('reactions')
       .doc(userId)
       .set({
@@ -31,12 +31,12 @@ class ReactionRepository {
       });
   }
 
-  Future<void> removeReaction(String roomId, String MessageModelId, String userId) async {
+  Future<void> removeReaction(String roomId, String messageId, String userId) async {
     await _db
       .collection('rooms')
       .doc(roomId)
-      .collection('MessageModel')
-      .doc(MessageModelId)
+      .collection('messages')
+      .doc(messageId)
       .collection('reactions')
       .doc(userId)
       .delete();

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mixvy/features/schema_messenger/consistency/consistency_template.dart';
 import 'package:mixvy/features/schema_messenger/friends/parity/friend_parity_validator.dart';
-import 'package:mixvy/features/schema_messenger/MessageModel/MessageModel_consistency_contract.dart';
+import 'package:mixvy/features/schema_messenger/message/message_consistency_contract.dart';
 
 class _ExpectedFriendParity {
   const _ExpectedFriendParity({
@@ -20,8 +20,8 @@ class _ExpectedFriendParity {
   final List<String> statusMismatches;
 }
 
-class _ExpectedMessageModelParity {
-  const _ExpectedMessageModelParity({
+class _ExpectedmessageParity {
+  const _ExpectedmessageParity({
     required this.isComparable,
     required this.isMatch,
     required this.missingInSchema,
@@ -40,16 +40,16 @@ class _GoldenSnapshotFrame {
   const _GoldenSnapshotFrame({
     required this.id,
     required this.friendSnapshot,
-    required this.MessageModelSnapshot,
+    required this.messagesnapshot,
     required this.expectedFriend,
-    required this.expectedMessageModel,
+    required this.expectedmessage,
   });
 
   final String id;
   final FriendParitySnapshot friendSnapshot;
-  final MessageModelSnapshot MessageModelSnapshot;
+  final messagesnapshot messagesnapshot;
   final _ExpectedFriendParity expectedFriend;
-  final _ExpectedMessageModelParity expectedMessageModel;
+  final _ExpectedmessageParity expectedmessage;
 }
 
 class _GateInput {
@@ -83,7 +83,7 @@ class _ParityResultAdapter implements ConsistencyParityResult {
     );
   }
 
-  factory _ParityResultAdapter.fromMessageModel(MessageModelParityResult result) {
+  factory _ParityResultAdapter.frommessage(messageParityResult result) {
     return _ParityResultAdapter(
       isComparable: result.isComparable,
       isMatch: result.isMatch,
@@ -95,7 +95,7 @@ class _ParityResultAdapter implements ConsistencyParityResult {
 void main() {
   group('golden snapshot replay harness', () {
     test('deterministic parity outputs for canonical golden dataset', () {
-      const contract = MessageModelConsistencyContract();
+      const contract = messageConsistencyContract();
 
       final frames = <_GoldenSnapshotFrame>[
         _GoldenSnapshotFrame(
@@ -109,7 +109,7 @@ void main() {
             schemaReady: false,
             schemaPresenceReady: false,
           ),
-          MessageModelSnapshot: MessageModelSnapshot(
+          messagesnapshot: messagesnapshot(
             legacyConversationIds: <String>[],
             schemaConversationIds: <String>[],
             legacyUnreadByConversation: <String, int>{},
@@ -124,7 +124,7 @@ void main() {
             missingInLegacy: <String>[],
             statusMismatches: <String>[],
           ),
-          expectedMessageModel: _ExpectedMessageModelParity(
+          expectedmessage: _ExpectedmessageParity(
             isComparable: false,
             isMatch: true,
             missingInSchema: <String>[],
@@ -143,7 +143,7 @@ void main() {
             schemaReady: true,
             schemaPresenceReady: true,
           ),
-          MessageModelSnapshot: MessageModelSnapshot(
+          messagesnapshot: messagesnapshot(
             legacyConversationIds: <String>['c_1', 'c_2', 'c_3'],
             schemaConversationIds: <String>['c_1', 'c_3', 'c_4'],
             legacyUnreadByConversation: <String, int>{
@@ -166,7 +166,7 @@ void main() {
             missingInLegacy: <String>['u_d'],
             statusMismatches: <String>['u_c'],
           ),
-          expectedMessageModel: _ExpectedMessageModelParity(
+          expectedmessage: _ExpectedmessageParity(
             isComparable: true,
             isMatch: false,
             missingInSchema: <String>['c_2'],
@@ -185,7 +185,7 @@ void main() {
             schemaReady: true,
             schemaPresenceReady: true,
           ),
-          MessageModelSnapshot: MessageModelSnapshot(
+          messagesnapshot: messagesnapshot(
             legacyConversationIds: <String>['c_1', 'c_2'],
             schemaConversationIds: <String>['c_1', 'c_2'],
             legacyUnreadByConversation: <String, int>{
@@ -206,7 +206,7 @@ void main() {
             missingInLegacy: <String>[],
             statusMismatches: <String>[],
           ),
-          expectedMessageModel: _ExpectedMessageModelParity(
+          expectedmessage: _ExpectedmessageParity(
             isComparable: true,
             isMatch: true,
             missingInSchema: <String>[],
@@ -218,7 +218,7 @@ void main() {
 
       for (final frame in frames) {
         final friendResult = evaluateFriendParity(frame.friendSnapshot);
-        final MessageModelResult = contract.evaluate(frame.MessageModelSnapshot);
+        final messageResult = contract.evaluate(frame.messagesnapshot);
 
         expect(friendResult.isComparable, frame.expectedFriend.isComparable,
             reason: '${frame.id} friend comparability mismatch');
@@ -231,28 +231,28 @@ void main() {
         expect(friendResult.statusMismatches, frame.expectedFriend.statusMismatches,
             reason: '${frame.id} friend status mismatch');
 
-        expect(MessageModelResult.isComparable, frame.expectedMessageModel.isComparable,
-            reason: '${frame.id} MessageModel comparability mismatch');
-        expect(MessageModelResult.isMatch, frame.expectedMessageModel.isMatch,
-            reason: '${frame.id} MessageModel parity mismatch');
-        expect(MessageModelResult.missingInSchema, frame.expectedMessageModel.missingInSchema,
-            reason: '${frame.id} MessageModel missingInSchema mismatch');
-        expect(MessageModelResult.missingInLegacy, frame.expectedMessageModel.missingInLegacy,
-            reason: '${frame.id} MessageModel missingInLegacy mismatch');
-        expect(MessageModelResult.unreadMismatches, frame.expectedMessageModel.unreadMismatches,
-            reason: '${frame.id} MessageModel unread mismatch');
+        expect(messageResult.isComparable, frame.expectedmessage.isComparable,
+            reason: '${frame.id} message comparability mismatch');
+        expect(messageResult.isMatch, frame.expectedmessage.isMatch,
+            reason: '${frame.id} message parity mismatch');
+        expect(messageResult.missingInSchema, frame.expectedmessage.missingInSchema,
+            reason: '${frame.id} message missingInSchema mismatch');
+        expect(messageResult.missingInLegacy, frame.expectedmessage.missingInLegacy,
+            reason: '${frame.id} message missingInLegacy mismatch');
+        expect(messageResult.unreadMismatches, frame.expectedmessage.unreadMismatches,
+            reason: '${frame.id} message unread mismatch');
       }
     });
 
     test('drift replay gate suppresses cold-load noise and emits only stable signals', () {
-      const contract = MessageModelConsistencyContract();
+      const contract = messageConsistencyContract();
 
       final replay = <_GateInput>[
         _GateInput(
           id: 'loading-1',
-          result: _ParityResultAdapter.fromMessageModel(
+          result: _ParityResultAdapter.frommessage(
             contract.evaluate(
-              MessageModelSnapshot(
+              messagesnapshot(
                 legacyConversationIds: <String>[],
                 schemaConversationIds: <String>[],
                 legacyUnreadByConversation: <String, int>{},
@@ -265,9 +265,9 @@ void main() {
         ),
         _GateInput(
           id: 'loading-2',
-          result: _ParityResultAdapter.fromMessageModel(
+          result: _ParityResultAdapter.frommessage(
             contract.evaluate(
-              MessageModelSnapshot(
+              messagesnapshot(
                 legacyConversationIds: <String>[],
                 schemaConversationIds: <String>[],
                 legacyUnreadByConversation: <String, int>{},
@@ -280,9 +280,9 @@ void main() {
         ),
         _GateInput(
           id: 'mismatch-1',
-          result: _ParityResultAdapter.fromMessageModel(
+          result: _ParityResultAdapter.frommessage(
             contract.evaluate(
-              MessageModelSnapshot(
+              messagesnapshot(
                 legacyConversationIds: <String>['c_1', 'c_2'],
                 schemaConversationIds: <String>['c_1'],
                 legacyUnreadByConversation: <String, int>{'c_1': 1, 'c_2': 0},
@@ -295,9 +295,9 @@ void main() {
         ),
         _GateInput(
           id: 'mismatch-2-stable',
-          result: _ParityResultAdapter.fromMessageModel(
+          result: _ParityResultAdapter.frommessage(
             contract.evaluate(
-              MessageModelSnapshot(
+              messagesnapshot(
                 legacyConversationIds: <String>['c_1', 'c_2'],
                 schemaConversationIds: <String>['c_1'],
                 legacyUnreadByConversation: <String, int>{'c_1': 1, 'c_2': 0},
@@ -310,9 +310,9 @@ void main() {
         ),
         _GateInput(
           id: 'restored',
-          result: _ParityResultAdapter.fromMessageModel(
+          result: _ParityResultAdapter.frommessage(
             contract.evaluate(
-              MessageModelSnapshot(
+              messagesnapshot(
                 legacyConversationIds: <String>['c_1', 'c_2'],
                 schemaConversationIds: <String>['c_1', 'c_2'],
                 legacyUnreadByConversation: <String, int>{'c_1': 1, 'c_2': 0},

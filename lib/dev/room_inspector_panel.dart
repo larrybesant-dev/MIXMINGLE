@@ -34,7 +34,7 @@ class RoomInspectorPanel extends ConsumerWidget {
       lifecycleLabel: roomState.lifecycleState.name,
       userCount: roomState.userIds.length,
       pendingCount: roomState.pendingUserIds.length,
-      errorMessageModel: roomState.errorMessageModel,
+      errormessage: roomState.errormessage,
     );
 
     return Material(
@@ -75,10 +75,10 @@ class RoomInspectorPanel extends ConsumerWidget {
             _KV('users', '${roomState.userIds.length}'),
             _KV('speakers', '${roomState.speakerIds.length}'),
             _KV('pending', '${roomState.pendingUserIds.length}'),
-            if (roomState.errorMessageModel?.isNotEmpty == true)
+            if (roomState.errormessage?.isNotEmpty == true)
               _KV(
                 'ERROR',
-                roomState.errorMessageModel!,
+                roomState.errormessage!,
                 valueColor: Colors.redAccent,
               ),
             const SizedBox(height: 8),
@@ -114,7 +114,7 @@ class RoomInspectorPanel extends ConsumerWidget {
                           'title',
                           s.title.isEmpty ? '(empty)' : s.title,
                         ),
-                        _KV('MessageModel', '${s.MessageModel.length}'),
+                        _KV('message', '${s.message.length}'),
                         _KV('participants', '${s.participants.length}'),
                         _KV('typing', '${s.typingUsers.length}'),
                         _KV('schema', 'v$kRoomSchemaVersion'),
@@ -148,8 +148,8 @@ class RoomInspectorPanel extends ConsumerWidget {
                   ),
                   _KV(
                     'msg\u0394',
-                    _deltaStr(diff.MessageModelCountDelta),
-                    valueColor: _deltaColor(diff.MessageModelCountDelta),
+                    _deltaStr(diff.messageCountDelta),
+                    valueColor: _deltaColor(diff.messageCountDelta),
                   ),
                   _KV(
                     'part\u0394',

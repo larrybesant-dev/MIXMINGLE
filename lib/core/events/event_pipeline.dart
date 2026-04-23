@@ -75,7 +75,7 @@ class EventPipeline {
       AppEventInspector.instance.markConsumerFailure(
         event.id,
         consumer: consumer,
-        MessageModel: error.toString(),
+        message: error.toString(),
       );
       rethrow;
     }

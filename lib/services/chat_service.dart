@@ -4,7 +4,7 @@ import 'package:mixvy/features/messaging/models/message_model.dart';
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> sendMessageModel({
+  Future<void> sendmessage({
     required String roomId,
     required String senderId,
     required String content,
@@ -12,7 +12,7 @@ class ChatService {
     await _firestore
         .collection('rooms')
         .doc(roomId)
-        .collection('MessageModel')
+        .collection('messages')
         .add({
       'senderId': senderId,
       'roomId': roomId,
@@ -21,11 +21,11 @@ class ChatService {
     });
   }
 
-  Future<List<MessageModel>> fetchMessageModel(String roomId) async {
+  Future<List<MessageModel>> fetchmessage(String roomId) async {
     final query = await _firestore
         .collection('rooms')
         .doc(roomId)
-        .collection('MessageModel')
+        .collection('messages')
         .orderBy('sentAt', descending: false)
         .get();
 
@@ -42,7 +42,7 @@ class ChatService {
     }).toList();
   }
 
-  Stream<List<MessageModel>> listenToMessageModel(String roomId) {
+  Stream<List<MessageModel>> listenTomessage(String roomId) {
     return _firestore
         .collection('rooms')
         .doc(roomId)

@@ -31,7 +31,7 @@ void main() {
           phase: LiveRoomPhase.error,
           isHydrated: false,
           currentUserId: 'user-1',
-          errorMessageModel: 'sync failed',
+          errormessage: 'sync failed',
         ),
         RoomLifecycleState.degraded,
       );

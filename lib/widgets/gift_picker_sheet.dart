@@ -55,7 +55,7 @@ class _GiftPickerSheetContentState
     extends ConsumerState<_GiftPickerSheetContent> {
   RoomGiftItem? _selected;
   bool _sending = false;
-  String? _errorMessageModel;
+  String? _errormessage;
 
   Future<void> _send() async {
     final gift = _selected;
@@ -66,7 +66,7 @@ class _GiftPickerSheetContentState
 
     setState(() {
       _sending = true;
-      _errorMessageModel = null;
+      _errormessage = null;
     });
 
     try {
@@ -80,9 +80,9 @@ class _GiftPickerSheetContentState
       });
       if (mounted) Navigator.of(context).pop();
     } on FirebaseFunctionsException catch (e) {
-      if (mounted) setState(() => _errorMessageModel = e.MessageModel ?? e.code);
+      if (mounted) setState(() => _errormessage = e.message ?? e.code);
     } catch (e) {
-      if (mounted) setState(() => _errorMessageModel = 'Failed to send gift.');
+      if (mounted) setState(() => _errormessage = 'Failed to send gift.');
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -167,10 +167,10 @@ class _GiftPickerSheetContentState
               },
             ),
           ),
-          if (_errorMessageModel != null) ...[
+          if (_errormessage != null) ...[
             const SizedBox(height: 8),
             Text(
-              _errorMessageModel!,
+              _errormessage!,
               style: TextStyle(color: theme.colorScheme.error),
               textAlign: TextAlign.center,
             ),

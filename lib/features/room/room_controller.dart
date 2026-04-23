@@ -66,7 +66,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
   LiveRoomPhase _phase = LiveRoomPhase.idle;
   RoomLifecycleState _lifecycleState = RoomLifecycleState.initializing;
   String? _currentUserId;
-  String? _errorMessageModel;
+  String? _errormessage;
   DateTime? _joinedAt;
   Set<String> _excludedUserIds = const <String>{};
   bool _micRequested = false;
@@ -167,7 +167,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       lifecycleState: _lifecycleState,
       roomId: roomId,
       currentUserId: _currentUserId,
-      errorMessageModel: _errorMessageModel,
+      errormessage: _errormessage,
       joinedAt: _joinedAt,
       excludedUserIds: _excludedUserIds,
       hostId: hostId,
@@ -192,7 +192,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       phase: nextState.phase,
       isHydrated: nextState.isRoomFullyHydrated,
       currentUserId: nextState.currentUserId,
-      errorMessageModel: nextState.errorMessageModel,
+      errormessage: nextState.errormessage,
     );
 
     final currentUserId = nextState.currentUserId?.trim() ?? '';
@@ -224,7 +224,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       roomId: arg,
       joinedUserId: _currentUserId,
       roomPhase: nextState.phase.name,
-      roomError: nextState.errorMessageModel,
+      roomError: nextState.errormessage,
       participantCount: mergedUserIds.length,
       hostConflict: hostConflict,
       hostMissing: hostMissing,
@@ -456,7 +456,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
             level: 'warning',
             domain: 'room',
             action: 'pending_role_expired',
-            MessageModel:
+            message:
                 'Pending role "$pendingRole" for user $userId expired '
                 'without Firestore confirmation.',
             roomId: arg,
@@ -645,7 +645,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         level: 'warning',
         domain: 'room',
         action: 'self_heal_ghost_speakers',
-        MessageModel:
+        message:
             'Pruned ${ghostSpeakers.length} ghost speaker(s) from speakerIds '
             'pending participant-doc arrival.',
         roomId: arg,
@@ -669,7 +669,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
           level: 'warning',
           domain: 'room',
           action: 'self_heal_host_role',
-          MessageModel:
+          message:
               'Corrected participantRolesByUser["$hostId"] from '
               '"$existingRole" to "host".',
           roomId: arg,
@@ -707,7 +707,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       phase: healed.phase,
       isHydrated: healed.isRoomFullyHydrated,
       currentUserId: healed.currentUserId,
-      errorMessageModel: healed.errorMessageModel,
+      errormessage: healed.errormessage,
     );
     _lifecycleState = resolvedLifecycle;
     final candidate = healed.copyWith(lifecycleState: resolvedLifecycle);
@@ -715,7 +715,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     if (candidate.phase == state.phase &&
         candidate.lifecycleState == state.lifecycleState &&
         candidate.currentUserId == state.currentUserId &&
-        candidate.errorMessageModel == state.errorMessageModel &&
+        candidate.errormessage == state.errormessage &&
         candidate.hostId == state.hostId &&
         candidate.speakerIds == state.speakerIds &&
         candidate.audioState == state.audioState &&
@@ -799,13 +799,13 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         lastParticipantSyncAt: _lastParticipantSyncAt,
         forceParticipantSync: forceSync,
       );
-      if ((_errorMessageModel?.trim().isNotEmpty ?? false)) {
-        _errorMessageModel = null;
-        _emitState(state.copyWith(errorMessageModel: null));
+      if ((_errormessage?.trim().isNotEmpty ?? false)) {
+        _errormessage = null;
+        _emitState(state.copyWith(errormessage: null));
       }
     } catch (_) {
-      _errorMessageModel = 'Room state is reconnecting. Try again in a moment.';
-      _emitState(state.copyWith(errorMessageModel: _errorMessageModel));
+      _errormessage = 'Room state is reconnecting. Try again in a moment.';
+      _emitState(state.copyWith(errormessage: _errormessage));
     }
   }
 
@@ -916,7 +916,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     AppTelemetry.logAction(
       domain: 'moderation',
       action: action,
-      MessageModel: 'Room moderation action applied.',
+      message: 'Room moderation action applied.',
       roomId: arg,
       userId: _actorUserId,
       result: result,
@@ -1041,7 +1041,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         level: 'warning',
         domain: 'room',
         action: 'join_guard_triggered',
-        MessageModel: 'Duplicate room join was ignored for the active session.',
+        message: 'Duplicate room join was ignored for the active session.',
         roomId: arg,
         userId: normalizedUserId,
         result: 'guarded',
@@ -1054,7 +1054,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
     _phase = LiveRoomPhase.joining;
     _currentUserId = normalizedUserId;
-    _errorMessageModel = null;
+    _errormessage = null;
     _micRequested = false;
     _hasMicPermission = true;
     _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
@@ -1074,7 +1074,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       state.copyWith(
         phase: _phase,
         currentUserId: _currentUserId,
-        errorMessageModel: null,
+        errormessage: null,
         pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
         stableUserIds: _resolveStableUserIds(state.userIds),
         sessionSnapshotsByUser: Map<String, RoomSessionSnapshot>.unmodifiable(
@@ -1093,16 +1093,16 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       );
     } catch (error) {
       final info = parseFirestoreError(error);
-      final MessageModel = info.isPermissionOrAuth
+      final message = info.isPermissionOrAuth
           ? 'Room access is blocked by Firestore permissions right now.'
           : 'Could not join room. Please try again.';
-      result = RoomJoinResult.failure(MessageModel);
+      result = RoomJoinResult.failure(message);
     }
     if (!result.isSuccess) {
       _stopRoomHeartbeat();
       _phase = LiveRoomPhase.error;
       _currentUserId = null;
-      _errorMessageModel = result.errorMessageModel;
+      _errormessage = result.errormessage;
       _joinedAt = null;
       _excludedUserIds = result.excludedUserIds;
       _micRequested = false;
@@ -1114,7 +1114,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
         state.copyWith(
           phase: _phase,
           currentUserId: null,
-          errorMessageModel: _errorMessageModel,
+          errormessage: _errormessage,
           joinedAt: null,
           excludedUserIds: _excludedUserIds,
           pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
@@ -1131,7 +1131,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _joinedAt = result.joinedAt;
     _excludedUserIds = result.excludedUserIds;
     _startRoomHeartbeat();
-    _errorMessageModel = null;
+    _errormessage = null;
     final existingSnapshot = _sessionSnapshotsByUser[normalizedUserId];
     _sessionSnapshotsByUser[normalizedUserId] = RoomSessionSnapshot(
       userId: normalizedUserId,
@@ -1149,7 +1149,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       state.copyWith(
         phase: _phase,
         currentUserId: normalizedUserId,
-        errorMessageModel: null,
+        errormessage: null,
         joinedAt: _joinedAt,
         excludedUserIds: _excludedUserIds,
         pendingUserIds: Set<String>.unmodifiable(_pendingUserIds),
@@ -1186,7 +1186,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       _phase = LiveRoomPhase.idle;
       _currentUserId = null;
       _joinedAt = null;
-      _errorMessageModel = null;
+      _errormessage = null;
       _excludedUserIds = const <String>{};
       _micRequested = false;
       _hasMicPermission = true;
@@ -1203,7 +1203,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
 
     _stopRoomHeartbeat();
     _phase = LiveRoomPhase.leaving;
-    _emitState(state.copyWith(phase: _phase, errorMessageModel: null));
+    _emitState(state.copyWith(phase: _phase, errormessage: null));
     await _sessionService.leaveRoom(roomId: arg, userId: userId);
     AppEventBus.instance.emit(
       RoomLeftEvent(
@@ -1218,7 +1218,7 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
     _phase = LiveRoomPhase.idle;
     _currentUserId = null;
     _joinedAt = null;
-    _errorMessageModel = null;
+    _errormessage = null;
     _excludedUserIds = const <String>{};
     _micRequested = false;
     _hasMicPermission = true;
@@ -1249,9 +1249,9 @@ class RoomController extends AutoDisposeFamilyNotifier<RoomState, String> {
       return;
     }
     _phase = LiveRoomPhase.joined;
-    _errorMessageModel = null;
+    _errormessage = null;
     _startRoomHeartbeat();
-    _emitState(state.copyWith(phase: _phase, errorMessageModel: null));
+    _emitState(state.copyWith(phase: _phase, errormessage: null));
     await syncPresenceNow(forceSync: true);
   }
 

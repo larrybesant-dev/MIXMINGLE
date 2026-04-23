@@ -10,7 +10,7 @@ import 'dockable_panel.dart';
 ///
 /// Each panel can be minimized via its title-bar chevron.
 /// The cams panel and users panel are resizable by drag on desktop.
-/// Private MessageModel (whisper) windows float as draggable overlays.
+/// Private message (whisper) windows float as draggable overlays.
 class RoomPanelLayout extends ConsumerStatefulWidget {
   const RoomPanelLayout({
     super.key,
@@ -28,7 +28,7 @@ class RoomPanelLayout extends ConsumerStatefulWidget {
   /// The camera grid widget (CameraWall or equivalent).
   final Widget camPanel;
 
-  /// The chat MessageModel + input widget.
+  /// The chat message + input widget.
   final Widget chatPanel;
 
   /// The user roster widget.
@@ -294,7 +294,7 @@ class _MinimizedTabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      MessageModel: 'Restore $label panel',
+      message: 'Restore $label panel',
       child: InkWell(
         onTap: onRestore,
         child: Container(

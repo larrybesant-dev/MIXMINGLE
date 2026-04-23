@@ -13,37 +13,37 @@ class Logger {
   }
 
   // Backward-compatible entrypoint used across the codebase.
-  static void log(String MessageModel, {Object? error, StackTrace? stackTrace}) {
-    info(MessageModel, error: error, stackTrace: stackTrace);
+  static void log(String message, {Object? error, StackTrace? stackTrace}) {
+    info(message, error: error, stackTrace: stackTrace);
   }
 
-  static void info(String MessageModel, {Object? error, StackTrace? stackTrace}) {
-    _write('INFO', MessageModel, error: error, stackTrace: stackTrace);
-    _recordToCrashlytics(MessageModel);
+  static void info(String message, {Object? error, StackTrace? stackTrace}) {
+    _write('INFO', message, error: error, stackTrace: stackTrace);
+    _recordToCrashlytics(message);
   }
 
-  static void warning(String MessageModel, {Object? error, StackTrace? stackTrace}) {
-    _write('WARN', MessageModel, error: error, stackTrace: stackTrace);
-    _recordToCrashlytics(MessageModel, error: error, stackTrace: stackTrace);
+  static void warning(String message, {Object? error, StackTrace? stackTrace}) {
+    _write('WARN', message, error: error, stackTrace: stackTrace);
+    _recordToCrashlytics(message, error: error, stackTrace: stackTrace);
   }
 
-  static void error(String MessageModel, {Object? error, StackTrace? stackTrace, bool fatal = false}) {
-    _write('ERROR', MessageModel, error: error, stackTrace: stackTrace);
+  static void error(String message, {Object? error, StackTrace? stackTrace, bool fatal = false}) {
+    _write('ERROR', message, error: error, stackTrace: stackTrace);
     _recordToCrashlytics(
-      MessageModel,
+      message,
       error: error,
       stackTrace: stackTrace,
       fatal: fatal,
     );
   }
 
-  static void _write(String level, String MessageModel, {Object? error, StackTrace? stackTrace}) {
+  static void _write(String level, String message, {Object? error, StackTrace? stackTrace}) {
     if (!_enabled) {
       return;
     }
 
     developer.log(
-      '[$level] $MessageModel',
+      '[$level] $message',
       name: 'MixVy',
       error: error,
       stackTrace: stackTrace,
@@ -51,7 +51,7 @@ class Logger {
 
     // Keep human-readable output during development only.
     if (!kReleaseMode) {
-      debugPrint('[MixVy][$level] $MessageModel${error != null ? ' | $error' : ''}');
+      debugPrint('[MixVy][$level] $message${error != null ? ' | $error' : ''}');
     }
   }
 
@@ -62,7 +62,7 @@ class Logger {
           defaultTargetPlatform == TargetPlatform.macOS);
 
   static void _recordToCrashlytics(
-    String MessageModel, {
+    String message, {
     Object? error,
     StackTrace? stackTrace,
     bool fatal = false,
@@ -70,13 +70,13 @@ class Logger {
     if (!_crashlyticsSupported) return;
     try {
       final crashlytics = FirebaseCrashlytics.instance;
-      crashlytics.log(MessageModel);
+      crashlytics.log(message);
 
       if (error != null) {
         crashlytics.recordError(
           error,
           stackTrace,
-          reason: MessageModel,
+          reason: message,
           fatal: fatal,
         );
       }

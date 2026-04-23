@@ -13,7 +13,7 @@ class TelemetryEvent {
     required this.level,
     required this.domain,
     required this.action,
-    required this.MessageModel,
+    required this.message,
     this.userId,
     this.roomId,
     this.result,
@@ -24,7 +24,7 @@ class TelemetryEvent {
   final String level;
   final String domain;
   final String action;
-  final String MessageModel;
+  final String message;
   final String? userId;
   final String? roomId;
   final String? result;
@@ -36,12 +36,12 @@ enum RoomHealthSeverity { healthy, warning, critical }
 class RoomHealthAlert {
   const RoomHealthAlert({
     required this.code,
-    required this.MessageModel,
+    required this.message,
     required this.severity,
   });
 
   final String code;
-  final String MessageModel;
+  final String message;
   final RoomHealthSeverity severity;
 
   @override
@@ -49,12 +49,12 @@ class RoomHealthAlert {
     return identical(this, other) ||
         (other is RoomHealthAlert &&
             other.code == code &&
-            other.MessageModel == MessageModel &&
+            other.message == message &&
             other.severity == severity);
   }
 
   @override
-  int get hashCode => Object.hash(code, MessageModel, severity);
+  int get hashCode => Object.hash(code, message, severity);
 }
 
 class RoomHealthSnapshot {
@@ -398,7 +398,7 @@ class AppTelemetry {
         level: isSuppressed ? 'info' : 'warning',
         domain: 'room',
         action: isSuppressed ? 'camera_mismatch_suppressed' : 'camera_mismatch',
-        MessageModel: isSuppressed
+        message: isSuppressed
             ? 'Transient camera drift observed during reconnect recovery window.'
             : 'UI reports camera on while Firestore participant state is off.',
         userId: next.joinedUserId,
@@ -415,7 +415,7 @@ class AppTelemetry {
         action: isSuppressed
             ? 'mic_state_mismatch_suppressed'
             : 'mic_state_mismatch',
-        MessageModel: isSuppressed
+        message: isSuppressed
             ? 'Transient mic drift observed during reconnect recovery window.'
             : 'UI mic state drifted from the room authority state.',
         userId: next.joinedUserId,
@@ -432,7 +432,7 @@ class AppTelemetry {
         action: isSuppressed
             ? 'presence_mismatch_suppressed'
             : 'presence_mismatch',
-        MessageModel: isSuppressed
+        message: isSuppressed
             ? 'Transient presence drift observed during reconnect recovery window.'
             : 'Joined room state conflicts with presence document.',
         userId: next.joinedUserId,
@@ -450,7 +450,7 @@ class AppTelemetry {
         level: 'error',
         domain: 'room',
         action: 'multiple_hosts_detected',
-        MessageModel: 'Multiple host claims were detected for the active room.',
+        message: 'Multiple host claims were detected for the active room.',
         userId: next.joinedUserId,
         roomId: next.roomId,
         result: 'critical',
@@ -462,7 +462,7 @@ class AppTelemetry {
         level: 'warning',
         domain: 'room',
         action: 'no_active_host',
-        MessageModel: 'The room is active but no authoritative host is present.',
+        message: 'The room is active but no authoritative host is present.',
         userId: next.joinedUserId,
         roomId: next.roomId,
         result: 'warning',
@@ -478,7 +478,7 @@ class AppTelemetry {
         action: isSuppressed
             ? 'stale_participants_suppressed'
             : 'stale_participants_detected',
-        MessageModel: isSuppressed
+        message: isSuppressed
             ? 'Stale participant drift observed during reconnect recovery window.'
             : 'One or more room participants missed heartbeat threshold.',
         userId: next.joinedUserId,
@@ -537,7 +537,7 @@ class AppTelemetry {
     logAction(
       domain: 'firestore',
       action: 'listener_start',
-      MessageModel: 'Firestore listener attached.',
+      message: 'Firestore listener attached.',
       roomId: roomId,
       userId: userId,
       result: listeners[key].toString(),
@@ -565,7 +565,7 @@ class AppTelemetry {
     logAction(
       domain: 'firestore',
       action: 'listener_stop',
-      MessageModel: 'Firestore listener detached.',
+      message: 'Firestore listener detached.',
       roomId: roomId,
       userId: userId,
       result: nextCount > 0 ? nextCount.toString() : '0',
@@ -587,7 +587,7 @@ class AppTelemetry {
     logAction(
       domain: 'firestore',
       action: operation,
-      MessageModel: 'Firestore read issued.',
+      message: 'Firestore read issued.',
       roomId: roomId,
       userId: userId,
       result: 'read',
@@ -610,7 +610,7 @@ class AppTelemetry {
     logAction(
       domain: 'firestore',
       action: operation,
-      MessageModel: 'Firestore write issued.',
+      message: 'Firestore write issued.',
       roomId: roomId,
       userId: userId,
       result: 'write',
@@ -633,7 +633,7 @@ class AppTelemetry {
     logAction(
       domain: 'firestore',
       action: 'snapshot',
-      MessageModel: 'Firestore snapshot triggered.',
+      message: 'Firestore snapshot triggered.',
       roomId: roomId,
       userId: userId,
       result: count.toString(),
@@ -653,7 +653,7 @@ class AppTelemetry {
       level: 'error',
       domain: 'firestore',
       action: 'listener_error',
-      MessageModel: 'Firestore listener failed.',
+      message: 'Firestore listener failed.',
       roomId: roomId,
       userId: userId,
       result: 'error',
@@ -667,7 +667,7 @@ class AppTelemetry {
     String level = 'info',
     required String domain,
     required String action,
-    required String MessageModel,
+    required String message,
     String? userId,
     String? roomId,
     String? result,
@@ -680,7 +680,7 @@ class AppTelemetry {
       level: level,
       domain: domain,
       action: action,
-      MessageModel: MessageModel,
+      message: message,
       userId: userId,
       roomId: roomId,
       result: result,
@@ -705,7 +705,7 @@ class AppTelemetry {
       ..write(' ')
       ..write(event.action.toUpperCase())
       ..write('] ')
-      ..write(MessageModel);
+      ..write(message);
     if (userId != null && userId.isNotEmpty) {
       buffer.write(' userId=');
       buffer.write(userId);
@@ -820,7 +820,7 @@ class AppTelemetry {
   static void logEnforcementEvent({
     String level = 'info',
     required String action,
-    required String MessageModel,
+    required String message,
     String? userId,
     String? roomId,
     String? result,
@@ -832,7 +832,7 @@ class AppTelemetry {
       level: level,
       domain: 'schema',
       action: action,
-      MessageModel: MessageModel,
+      message: message,
       userId: userId,
       roomId: roomId,
       result: result,
@@ -846,7 +846,7 @@ class AppTelemetry {
     String level = 'info',
     required String domain,
     required String action,
-    required String MessageModel,
+    required String message,
     String? userId,
     String? roomId,
     String? result,
@@ -858,7 +858,7 @@ class AppTelemetry {
       level: level,
       domain: domain,
       action: action,
-      MessageModel: MessageModel,
+      message: message,
       userId: userId,
       roomId: roomId,
       result: result,
@@ -872,7 +872,7 @@ class AppTelemetry {
     String level = 'info',
     required String domain,
     required String action,
-    required String MessageModel,
+    required String message,
     String? userId,
     String? roomId,
     String? result,
@@ -884,7 +884,7 @@ class AppTelemetry {
       level: level,
       domain: domain,
       action: action,
-      MessageModel: MessageModel,
+      message: message,
       userId: userId,
       roomId: roomId,
       result: result,
@@ -919,7 +919,7 @@ class AppTelemetry {
       predicate: (event) =>
           event.domain == 'room' &&
           event.action == 'live_trace' &&
-          event.MessageModel.contains('reconnect attempt='),
+          event.message.contains('reconnect attempt='),
     );
     final firestoreErrorBurstCount = _countRecentEvents(
       state.recentEvents,
@@ -948,7 +948,7 @@ class AppTelemetry {
 
     void addAlert({
       required String code,
-      required String MessageModel,
+      required String message,
       required RoomHealthSeverity severity,
       required int penalty,
       bool suppressDuringRecovery = false,
@@ -964,7 +964,7 @@ class AppTelemetry {
         return;
       }
       alerts.add(
-        RoomHealthAlert(code: code, MessageModel: MessageModel, severity: severity),
+        RoomHealthAlert(code: code, message: message, severity: severity),
       );
       score -= penalty;
     }
@@ -980,7 +980,7 @@ class AppTelemetry {
     if (state.presenceMismatch || roomMismatch) {
       addAlert(
         code: 'ghost_leave_risk',
-        MessageModel: 'Presence and room authority are drifting out of sync.',
+        message: 'Presence and room authority are drifting out of sync.',
         severity: RoomHealthSeverity.critical,
         penalty: 25,
         suppressDuringRecovery: true,
@@ -990,7 +990,7 @@ class AppTelemetry {
     if (duplicateJoinCount >= 2) {
       addAlert(
         code: 'duplicate_join_storm',
-        MessageModel: 'Repeated join calls were detected for the same session.',
+        message: 'Repeated join calls were detected for the same session.',
         severity: duplicateJoinCount >= 3
             ? RoomHealthSeverity.critical
             : RoomHealthSeverity.warning,
@@ -1001,7 +1001,7 @@ class AppTelemetry {
     if (state.duplicateListenerKeys.isNotEmpty) {
       addAlert(
         code: 'zombie_listeners',
-        MessageModel: 'Duplicate Firestore listeners are still attached.',
+        message: 'Duplicate Firestore listeners are still attached.',
         severity: RoomHealthSeverity.warning,
         penalty: 15,
       );
@@ -1010,7 +1010,7 @@ class AppTelemetry {
     if (firestoreErrorBurstCount >= 3) {
       addAlert(
         code: 'stream_reset_loop',
-        MessageModel: 'Firestore listener failures are looping too quickly.',
+        message: 'Firestore listener failures are looping too quickly.',
         severity: RoomHealthSeverity.critical,
         penalty: 25,
       );
@@ -1019,7 +1019,7 @@ class AppTelemetry {
     if (state.cameraMismatch || state.micMismatch) {
       addAlert(
         code: 'mic_desync',
-        MessageModel: 'Local media UI is out of sync with room authority.',
+        message: 'Local media UI is out of sync with room authority.',
         severity: state.micMismatch
             ? RoomHealthSeverity.critical
             : RoomHealthSeverity.warning,
@@ -1031,7 +1031,7 @@ class AppTelemetry {
     if (state.hostConflict) {
       addAlert(
         code: 'host_split_brain',
-        MessageModel: 'More than one user is claiming host authority.',
+        message: 'More than one user is claiming host authority.',
         severity: RoomHealthSeverity.critical,
         penalty: 30,
       );
@@ -1040,7 +1040,7 @@ class AppTelemetry {
     if (state.hostMissing) {
       addAlert(
         code: 'host_missing',
-        MessageModel: 'The room is active but has no authoritative host.',
+        message: 'The room is active but has no authoritative host.',
         severity: RoomHealthSeverity.warning,
         penalty: 20,
       );
@@ -1049,7 +1049,7 @@ class AppTelemetry {
     if (reconnectBurstCount >= 3) {
       addAlert(
         code: 'reconnect_loop_thrash',
-        MessageModel: 'Reconnect attempts are thrashing the active session.',
+        message: 'Reconnect attempts are thrashing the active session.',
         severity: RoomHealthSeverity.critical,
         penalty: 25,
       );
@@ -1058,7 +1058,7 @@ class AppTelemetry {
     if (healBurstCount >= kRoomHealBurstWarning) {
       addAlert(
         code: 'self_heal_spike',
-        MessageModel:
+        message:
             'The room engine is repeatedly correcting state inconsistencies '
             '(${healBurstCount}x in 60s). '
             'Investigate upstream Firestore write or ordering issues.',
@@ -1074,7 +1074,7 @@ class AppTelemetry {
     if (state.staleParticipantIds.isNotEmpty) {
       addAlert(
         code: 'stale_presence',
-        MessageModel: 'One or more participants missed the heartbeat window.',
+        message: 'One or more participants missed the heartbeat window.',
         severity: RoomHealthSeverity.warning,
         penalty: 10,
         suppressDuringRecovery: true,
@@ -1140,7 +1140,7 @@ class AppTelemetry {
             : 'info',
         domain: 'room',
         action: 'health_status_changed',
-        MessageModel: 'Room health changed to ${next.label}.',
+        message: 'Room health changed to ${next.label}.',
         roomId: roomId,
         userId: userId,
         result: next.label,
@@ -1165,7 +1165,7 @@ class AppTelemetry {
             : 'warning',
         domain: 'room',
         action: 'health_alert',
-        MessageModel: alert.MessageModel,
+        message: alert.message,
         roomId: roomId,
         userId: userId,
         result: alert.severity.name,

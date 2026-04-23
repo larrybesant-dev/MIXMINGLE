@@ -207,7 +207,7 @@ class _MessengerSidebar extends ConsumerWidget {
       if (conversation.type != 'direct') return false;
       if (query.isEmpty) return true;
       final displayName = conversation.getDisplayName(currentUser.id).toLowerCase();
-      final preview = (conversation.lastMessageModelPreview ?? '').toLowerCase();
+      final preview = (conversation.lastmessagePreview ?? '').toLowerCase();
       return displayName.contains(query) || preview.contains(query);
     }).toList(growable: false)
       ..sort((left, right) {
@@ -216,14 +216,14 @@ class _MessengerSidebar extends ConsumerWidget {
         if (leftPinned != rightPinned) {
           return leftPinned ? -1 : 1;
         }
-        return (right.lastMessageModelAt ?? right.createdAt)
-            .compareTo(left.lastMessageModelAt ?? left.createdAt);
+        return (right.lastmessageAt ?? right.createdAt)
+            .compareTo(left.lastmessageAt ?? left.createdAt);
       });
 
     final filteredRoster = roster.where((entry) {
       if (query.isEmpty) return true;
       final conversation = _directConversationForFriend(conversations, currentUser.id, entry.friendId);
-      final preview = (conversation?.lastMessageModelPreview ?? '').toLowerCase();
+      final preview = (conversation?.lastmessagePreview ?? '').toLowerCase();
       return entry.user.username.toLowerCase().contains(query) || preview.contains(query);
     }).toList(growable: false)
       ..sort(_compareRosterEntries);
@@ -240,7 +240,7 @@ class _MessengerSidebar extends ConsumerWidget {
               child: _FriendRosterRow(
                 entry: entry,
                 conversation: conversation,
-                unread: conversation?.hasUnreadMessageModel(currentUser.id) ?? false,
+                unread: conversation?.hasUnreadmessage(currentUser.id) ?? false,
                 canInviteToRoom: currentRoomId != null && currentRoomId.isNotEmpty && currentRoomId != entry.roomId,
                 onOpenChat: () => _openConversation(context, currentUser, entry.user, conversation),
                 onViewProfile: () => context.go('/profile/${entry.friendId}'),
@@ -298,15 +298,15 @@ class _MessengerSidebar extends ConsumerWidget {
                                   isOnline: rosterEntry?.isOnline ?? false,
                                   displayName: conversation.getDisplayName(currentUser.id),
                                   avatarUrl: rosterEntry == null ? null : sanitizeNetworkImageUrl(rosterEntry.user.avatarUrl),
-                                  preview: conversation.lastMessageModelPreview ?? 'No MessageModel yet',
-                                  timestamp: conversation.lastMessageModelAt ?? conversation.createdAt,
-                                  unread: conversation.hasUnreadMessageModel(currentUser.id),
+                                  preview: conversation.lastmessagePreview ?? 'No message yet',
+                                  timestamp: conversation.lastmessageAt ?? conversation.createdAt,
+                                  unread: conversation.hasUnreadmessage(currentUser.id),
                                   onTogglePin: () => controller.togglePinned(
                                     conversationId: conversation.id,
                                     userId: currentUser.id,
                                     pinned: !conversation.isPinnedFor(currentUser.id),
                                   ),
-                                  onTap: () => context.go('/MessageModel/${conversation.id}'),
+                                  onTap: () => context.go('/messages/${conversation.id}'),
                                 ),
                               );
                             }).toList(growable: false),
@@ -344,7 +344,7 @@ class _MessengerSidebar extends ConsumerWidget {
   Future<void> _openConversation(BuildContext context, UserModel currentUser, UserModel friend, Conversation? conversation) async {
     try {
       final conversationId = await controller.openConversation(currentUser: currentUser, friend: friend, existingConversation: conversation);
-      if (context.mounted) context.go('/MessageModel/$conversationId');
+      if (context.mounted) context.go('/messages/$conversationId');
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open chat: $error')));
@@ -440,7 +440,7 @@ class _DesktopSocialRail extends ConsumerWidget {
     final requestCount = ref.watch(requestsStreamProvider(currentUser.id)).valueOrNull?.length ?? 0;
     final onlineCount = roster.where((entry) => entry.isOnline).length;
     final inRoomCount = roster.where((entry) => (entry.roomId ?? '').isNotEmpty).length;
-    final unreadCount = conversations.where((c) => c.hasUnreadMessageModel(currentUser.id)).length;
+    final unreadCount = conversations.where((c) => c.hasUnreadmessage(currentUser.id)).length;
     final pinnedCount = conversations.where((c) => c.isPinnedFor(currentUser.id)).length;
 
     return DecoratedBox(
@@ -511,8 +511,8 @@ class _FriendRosterRowState extends State<_FriendRosterRow> {
 
   @override
   Widget build(BuildContext context) {
-    final preview = widget.conversation?.lastMessageModelPreview ?? _presenceLabel(widget.entry.presence);
-    final timestamp = widget.conversation?.lastMessageModelAt ?? widget.entry.lastSeen;
+    final preview = widget.conversation?.lastmessagePreview ?? _presenceLabel(widget.entry.presence);
+    final timestamp = widget.conversation?.lastmessageAt ?? widget.entry.lastSeen;
     final avatarUrl = sanitizeNetworkImageUrl(widget.entry.user.avatarUrl);
     final borderColor = widget.unread
         ? VelvetNoir.primary.withValues(alpha: 0.42)

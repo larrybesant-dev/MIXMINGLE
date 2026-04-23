@@ -9,19 +9,19 @@ class EventConsumerTrace {
     required this.consumer,
     required this.status,
     required this.recordedAt,
-    this.MessageModel,
+    this.message,
   });
 
   final String consumer;
   final String status;
   final DateTime recordedAt;
-  final String? MessageModel;
+  final String? message;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'consumer': consumer,
     'status': status,
     'recordedAt': recordedAt.toIso8601String(),
-    'MessageModel': MessageModel,
+    'message': message,
   };
 }
 
@@ -226,7 +226,7 @@ class AppEventInspector extends ChangeNotifier {
             consumer: 'pipeline',
             status: 'dropped',
             recordedAt: DateTime.now(),
-            MessageModel: reason,
+            message: reason,
           ),
         ],
       ),
@@ -258,7 +258,7 @@ class AppEventInspector extends ChangeNotifier {
   void markConsumerFailure(
     String eventId, {
     required String consumer,
-    String? MessageModel,
+    String? message,
   }) {
     _appendTrace(
       eventId,
@@ -266,7 +266,7 @@ class AppEventInspector extends ChangeNotifier {
         consumer: consumer,
         status: 'failure',
         recordedAt: DateTime.now(),
-        MessageModel: MessageModel,
+        message: message,
       ),
     );
   }

@@ -1,16 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
 
-abstract class MessageModelRepository {
-  Future<List<MessageModel>> getMessageModel(String conversationId);
-  Future<void> sendMessageModel(String conversationId, MessageModel MessageModel);
-  Future<int> debugMessageModelCount();
+abstract class messageRepository {
+  Future<List<MessageModel>> getmessage(String conversationId);
+  Future<void> sendmessage(String conversationId, MessageModel message);
+  Future<int> debugmessageCount();
 }
 
-class MessageModelRepositoryImpl implements MessageModelRepository {
+class messageRepositoryImpl implements messageRepository {
   final FirebaseFirestore firestore;
-  MessageModelRepositoryImpl(this.firestore);
+  messageRepositoryImpl(this.firestore);
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
@@ -30,11 +30,11 @@ class MessageModelRepositoryImpl implements MessageModelRepository {
   }
 
   @override
-  Future<List<MessageModel>> getMessageModel(String conversationId) async {
+  Future<List<MessageModel>> getmessage(String conversationId) async {
     final snapshot = await firestore
         .collection('conversations')
         .doc(conversationId)
-        .collection('MessageModel')
+        .collection('messages')
         .orderBy('createdAt')
         .get();
 
@@ -62,19 +62,19 @@ class MessageModelRepositoryImpl implements MessageModelRepository {
   }
 
   @override
-  Future<void> sendMessageModel(String conversationId, MessageModel MessageModel) async {
+  Future<void> sendmessage(String conversationId, MessageModel message) async {
     await firestore
         .collection('conversations')
         .doc(conversationId)
-        .collection('MessageModel')
-        .add(MessageModel.toJson());
+        .collection('messages')
+        .add(message.toJson());
   }
 
   @override
-  Future<int> debugMessageModelCount() async {
-    final snap = await firestore.collectionGroup('MessageModel').get();
+  Future<int> debugmessageCount() async {
+    final snap = await firestore.collectionGroup('message').get();
     final total = snap.docs.length;
-    debugPrint('MessageModel FOUND: $total');
+    debugPrint('message FOUND: $total');
     return total;
   }
 }

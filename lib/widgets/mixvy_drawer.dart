@@ -228,8 +228,8 @@ class MixVyDrawer extends ConsumerWidget {
           _navItem(
             context,
             icon: Icons.mail_rounded,
-            title: 'MessageModel',
-            route: '/MessageModel',
+            title: 'message',
+            route: '/messages',
           ),
           _navItem(
             context,

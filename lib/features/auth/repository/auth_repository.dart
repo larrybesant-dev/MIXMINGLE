@@ -13,7 +13,7 @@ class AuthRepository {
       );
       return result.user?.uid;
     } on FirebaseAuthException catch (e) {
-      return e.MessageModel;
+      return e.message;
     } catch (_) {
       return "Something went wrong. Try again.";
     }
@@ -27,7 +27,7 @@ class AuthRepository {
       );
       return result.user?.uid;
     } on FirebaseAuthException catch (e) {
-      return e.MessageModel;
+      return e.message;
     } catch (_) {
       return "Something went wrong. Try again.";
     }
@@ -38,7 +38,7 @@ class AuthRepository {
       await _auth.sendPasswordResetEmail(email: email);
       return null;
     } on FirebaseAuthException catch (e) {
-      return e.MessageModel;
+      return e.message;
     }
   }
 

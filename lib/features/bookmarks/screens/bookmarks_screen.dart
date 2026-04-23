@@ -32,7 +32,7 @@ class BookmarksScreen extends ConsumerWidget {
         empty: const AppEmptyView(
           icon: Icons.bookmark_outline,
           title: 'No bookmarks yet',
-          MessageModel: 'Save posts to view them later.',
+          message: 'Save posts to view them later.',
         ),
         data: (posts) => ListView.separated(
           padding: EdgeInsets.fromLTRB(0, 8, 0, context.sectionSpacing * 3),

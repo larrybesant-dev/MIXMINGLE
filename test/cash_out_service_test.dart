@@ -86,7 +86,7 @@ void main() {
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
-            'MessageModel',
+            'message',
             contains('Minimum cash-out'),
           ),
         ),
@@ -104,7 +104,7 @@ void main() {
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
-            'MessageModel',
+            'message',
             contains('exceeds available'),
           ),
         ),
@@ -144,7 +144,7 @@ void main() {
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
-            'MessageModel',
+            'message',
             contains('exceeds available'),
           ),
         ),

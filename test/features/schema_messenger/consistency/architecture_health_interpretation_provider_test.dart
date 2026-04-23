@@ -25,9 +25,9 @@ void main() {
               reasons: <String>['parity_loading'],
             ),
           ),
-          schemaModuleHealthProvider('MessageModel').overrideWithValue(
+          schemaModuleHealthProvider('message').overrideWithValue(
             const SchemaModuleHealth(
-              moduleId: 'MessageModel',
+              moduleId: 'message',
               compositeScore: 85,
               structuralScore: 90,
               parityScore: 80,
@@ -79,9 +79,9 @@ void main() {
               reasons: <String>['status_mismatch:1'],
             ),
           ),
-          schemaModuleHealthProvider('MessageModel').overrideWithValue(
+          schemaModuleHealthProvider('message').overrideWithValue(
             const SchemaModuleHealth(
-              moduleId: 'MessageModel',
+              moduleId: 'message',
               compositeScore: 75,
               structuralScore: 80,
               parityScore: 65,
@@ -133,9 +133,9 @@ void main() {
               reasons: <String>['status_mismatch:2'],
             ),
           ),
-          schemaModuleHealthProvider('MessageModel').overrideWithValue(
+          schemaModuleHealthProvider('message').overrideWithValue(
             const SchemaModuleHealth(
-              moduleId: 'MessageModel',
+              moduleId: 'message',
               compositeScore: 84,
               structuralScore: 94,
               parityScore: 72,

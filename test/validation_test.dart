@@ -11,7 +11,7 @@ void main() {
     final ctx = TestSessionController.context!;
     final sim = LoadSimulator(EventTimeline());
     sim.runTypingStorm("room_1", ctx);
-    sim.runMessageModelBurst("room_1", ctx);
+    sim.runmessageBurst("room_1", ctx);
     sim.runPresenceFlap("user_1", ctx);
 
     await Future.delayed(const Duration(seconds: 5));

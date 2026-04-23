@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixvy/features/room/providers/MessageModel_providers.dart';
+import 'package:mixvy/features/room/providers/message_providers.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
@@ -77,36 +77,36 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final roomMessageModel = firestore
+      final roommessage = firestore
           .collection('rooms')
           .doc('room-a')
-          .collection('MessageModel');
+          .collection('messages');
 
-      await roomMessageModel.doc('m2').set({
+      await roommessage.doc('m2').set({
         'senderId': 'user-2',
         'roomId': 'room-a',
         'content': 'second',
         'sentAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12, 0, 2)),
       });
-      await roomMessageModel.doc('m1').set({
+      await roommessage.doc('m1').set({
         'senderId': 'user-3',
         'roomId': 'room-a',
         'content': 'first',
         'sentAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12, 0, 1)),
       });
-      await roomMessageModel.doc('m3').set({
+      await roommessage.doc('m3').set({
         'senderId': 'user-4',
         'roomId': 'room-a',
         'content': 'third',
         'sentAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12, 0, 3)),
       });
 
-      final MessageModel = await container.read(
-        MessageModeltreamProvider('room-a').future,
+      final message = await container.read(
+        messagetreamProvider('room-a').future,
       );
 
       expect(
-        MessageModel.map((MessageModel) => MessageModel.content).toList(growable: false),
+        message.map((message) => message.content).toList(growable: false),
         <String>['first', 'second', 'third'],
       );
     });

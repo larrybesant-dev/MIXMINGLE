@@ -7,8 +7,8 @@ import '../../../presentation/providers/user_provider.dart';
 
 /// Module 2 blueprint: strict contract instantiation only.
 /// No custom gating semantics allowed.
-class MessageModelSnapshot extends ConsistencySnapshot {
-  MessageModelSnapshot({
+class messagesnapshot extends ConsistencySnapshot {
+  messagesnapshot({
     required this.legacyConversationIds,
     required this.schemaConversationIds,
     required this.legacyUnreadByConversation,
@@ -25,8 +25,8 @@ class MessageModelSnapshot extends ConsistencySnapshot {
   final bool schemaReady;
 }
 
-class MessageModelParityResult implements ConsistencyParityResult {
-  const MessageModelParityResult({
+class messageParityResult implements ConsistencyParityResult {
+  const messageParityResult({
     required this.isComparable,
     required this.isMatch,
     required this.signature,
@@ -49,12 +49,12 @@ class MessageModelParityResult implements ConsistencyParityResult {
   final List<String> unreadMismatches;
 }
 
-class MessageModelConsistencyContract
-    extends ConsistencyModuleContract<MessageModelSnapshot, MessageModelParityResult> {
-  const MessageModelConsistencyContract();
+class messageConsistencyContract
+    extends ConsistencyModuleContract<messagesnapshot, messageParityResult> {
+  const messageConsistencyContract();
 
   @override
-  String get moduleId => 'MessageModel';
+  String get moduleId => 'message';
 
   @override
     String get canonicalReference => SchemaGovernanceContract.canonicalModel;
@@ -68,10 +68,10 @@ class MessageModelConsistencyContract
       SchemaGovernanceContract.reconcileEveryMinutes;
 
   @override
-  MessageModelSnapshot buildSnapshot(WidgetRef ref, {required bool readOnly}) {
+  messagesnapshot buildSnapshot(WidgetRef ref, {required bool readOnly}) {
     final userId = ref.watch(userProvider)?.id;
     if (userId == null || userId.isEmpty) {
-      return MessageModelSnapshot(
+      return messagesnapshot(
         legacyConversationIds: <String>[],
         schemaConversationIds: <String>[],
         legacyUnreadByConversation: <String, int>{},
@@ -91,14 +91,14 @@ class MessageModelConsistencyContract
     final legacy = legacyAsync.valueOrNull ?? const [];
     final schema = schemaAsync.valueOrNull ?? const [];
 
-    return MessageModelSnapshot(
+    return messagesnapshot(
       legacyConversationIds: legacy.map((c) => c.id).toList(growable: false),
       schemaConversationIds: schema.map((c) => c.id).toList(growable: false),
       legacyUnreadByConversation: {
-        for (final c in legacy) c.id: c.hasUnreadMessageModel(userId) ? 1 : 0,
+        for (final c in legacy) c.id: c.hasUnreadmessage(userId) ? 1 : 0,
       },
       schemaUnreadByConversation: {
-        for (final c in schema) c.id: c.hasUnreadMessageModel(userId) ? 1 : 0,
+        for (final c in schema) c.id: c.hasUnreadmessage(userId) ? 1 : 0,
       },
       legacyReady: legacyAsync.hasValue,
       schemaReady: schemaAsync.hasValue,
@@ -106,9 +106,9 @@ class MessageModelConsistencyContract
   }
 
   @override
-  MessageModelParityResult evaluate(MessageModelSnapshot snapshot) {
+  messageParityResult evaluate(messagesnapshot snapshot) {
     if (!snapshot.legacyReady || !snapshot.schemaReady) {
-      return const MessageModelParityResult(
+      return const messageParityResult(
         isComparable: false,
         isMatch: true,
         signature: 'loading',
@@ -148,7 +148,7 @@ class MessageModelConsistencyContract
     final isMatch =
         missingInSchema.isEmpty && missingInLegacy.isEmpty && unreadMismatches.isEmpty;
 
-    return MessageModelParityResult(
+    return messageParityResult(
       isComparable: true,
       isMatch: isMatch,
       signature: signature,
@@ -159,7 +159,7 @@ class MessageModelConsistencyContract
   }
 }
 
-final MessageModelConsistencyContractProvider =
-    Provider<MessageModelConsistencyContract>((ref) {
-  return const MessageModelConsistencyContract();
+final messageConsistencyContractProvider =
+    Provider<messageConsistencyContract>((ref) {
+  return const messageConsistencyContract();
 });

@@ -179,7 +179,7 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
                 if (comments.isEmpty) {
                   return const AppEmptyView(
                     title: 'No comments yet',
-                    MessageModel: 'Be the first to comment.',
+                    message: 'Be the first to comment.',
                     icon: Icons.comment_bank_outlined,
                   );
                 }
@@ -193,7 +193,7 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
               },
               loading: () => const AppLoadingView(label: 'Loading comments'),
               error: (e, _) => AppErrorView(
-                error: friendlyFirestoreMessageModel(
+                error: friendlyFirestoremessage(
                   e,
                   fallbackContext: 'comments',
                 ),

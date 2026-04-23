@@ -38,7 +38,7 @@ StateReasonSummary explainCollectionVisibility({
   required int totalCount,
   required int visibleCount,
   required String filterLabel,
-  String? errorMessageModel,
+  String? errormessage,
   bool isBackendConfirmed = false,
 }) {
   final source = sourceName.trim().isEmpty ? 'items' : sourceName.trim();
@@ -59,8 +59,8 @@ StateReasonSummary explainCollectionVisibility({
   if (hasError) {
     return StateReasonSummary(
       stateLabel: 'error',
-      primaryReason: errorMessageModel?.trim().isNotEmpty == true
-          ? errorMessageModel!.trim()
+      primaryReason: errormessage?.trim().isNotEmpty == true
+          ? errormessage!.trim()
           : 'The $source stream returned an error.',
       details: ['source=$source', 'filter=$filter'],
       severity: StateReasonSeverity.error,
@@ -118,16 +118,16 @@ StateReasonSummary explainLiveRoomHydration({
   required String lifecycleLabel,
   required int userCount,
   required int pendingCount,
-  String? errorMessageModel,
+  String? errormessage,
 }) {
   final normalizedLifecycle = lifecycleLabel.trim().isEmpty
       ? 'unknown'
       : lifecycleLabel.trim().toLowerCase();
 
-  if (errorMessageModel?.trim().isNotEmpty == true) {
+  if (errormessage?.trim().isNotEmpty == true) {
     return StateReasonSummary(
       stateLabel: 'error',
-      primaryReason: errorMessageModel!.trim(),
+      primaryReason: errormessage!.trim(),
       details: ['lifecycle=$normalizedLifecycle', 'users=$userCount'],
       severity: StateReasonSeverity.error,
       confidence: StateReasonConfidence.high,

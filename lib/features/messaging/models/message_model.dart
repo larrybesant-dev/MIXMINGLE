@@ -50,7 +50,7 @@ List<String> _asStringList(dynamic value) {
 
 class MessageModel {
   final String id;
-  final String? clientMessageModelId;
+  final String? clientmessageId;
 
   final String conversationId;
 
@@ -67,9 +67,13 @@ class MessageModel {
   final bool isDeleted;
   final List<String> readBy;
 
+  /// Message type: 'normal' | 'system' | 'announcement' | 'private'.
+  /// Defaults to 'normal' for DM messages.
+  final String type;
+
   const MessageModel({
     required this.id,
-    this.clientMessageModelId,
+    this.clientmessageId,
     required this.conversationId,
     required this.senderId,
     required this.senderName,
@@ -80,12 +84,13 @@ class MessageModel {
     this.editedAt,
     this.isDeleted = false,
     this.readBy = const [],
+    this.type = 'normal',
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json, String docId) {
     return MessageModel(
       id: docId,
-      clientMessageModelId: _asNullableString(json['clientMessageModelId']),
+      clientmessageId: _asNullableString(json['clientmessageId']),
       conversationId: _asString(json['conversationId']),
       senderId: _asString(json['senderId']),
       senderName: _asString(json['senderName'], fallback: 'Unknown'),
@@ -100,17 +105,19 @@ class MessageModel {
           : _parseDateTime(json['editedAt']),
       isDeleted: _asBool(json['isDeleted']),
       readBy: _asStringList(json['readBy']),
+      type: _asString(json['type'], fallback: 'normal'),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'conversationId': conversationId,
-      'clientMessageModelId': clientMessageModelId,
+      'clientmessageId': clientmessageId,
       'senderId': senderId,
       'senderName': senderName,
       'senderAvatarUrl': senderAvatarUrl,
       'content': content,
+      'type': type,
       'createdAt': Timestamp.fromDate(createdAt),
       'expiresAt': expiresAt != null ? Timestamp.fromDate(expiresAt!) : null,
       'editedAt': editedAt != null ? Timestamp.fromDate(editedAt!) : null,
@@ -120,6 +127,8 @@ class MessageModel {
   }
 
   bool isRead(String userId) => readBy.contains(userId);
+
+  DateTime get sentAt => createdAt;
 
   bool get isExpired =>
       expiresAt != null && DateTime.now().isAfter(expiresAt!);

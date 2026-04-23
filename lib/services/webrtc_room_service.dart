@@ -686,7 +686,7 @@ class WebRtcRoomService extends RtcRoomService {
           }
           throw AgoraServiceException(
             code: 'no-system-audio',
-            MessageModel:
+            message:
                 'No system audio was shared. Check "Share system audio" in the picker.',
           );
         }
@@ -1537,9 +1537,9 @@ class WebRtcRoomService extends RtcRoomService {
     onConnectionLost?.call();
   }
 
-  void _log(String MessageModel) {
-    developer.log(MessageModel, name: 'WebRTC');
-    if (kDebugMode) debugPrint('[WebRTC] $MessageModel');
+  void _log(String message) {
+    developer.log(message, name: 'WebRTC');
+    if (kDebugMode) debugPrint('[WebRTC] $message');
   }
 
   /// Explicitly unmutes and plays the underlying HTML <video> element for
@@ -1640,7 +1640,7 @@ class WebRtcRoomService extends RtcRoomService {
         code: operation.contains('system audio')
             ? 'system-audio-cancelled'
             : 'permission-denied',
-        MessageModel: operation.contains('system audio')
+        message: operation.contains('system audio')
             ? 'Screen share was cancelled or permission was denied.'
             : 'Camera/microphone permission was denied. Allow access and retry.',
         cause: error,
@@ -1653,7 +1653,7 @@ class WebRtcRoomService extends RtcRoomService {
         raw.contains('devicesnotfound')) {
       throw AgoraServiceException(
         code: 'no-media-devices',
-        MessageModel: 'No working camera or microphone was found on this device.',
+        message: 'No working camera or microphone was found on this device.',
         cause: error,
       );
     }
@@ -1662,13 +1662,13 @@ class WebRtcRoomService extends RtcRoomService {
         raw.contains('device in use')) {
       throw AgoraServiceException(
         code: 'device-in-use',
-        MessageModel: 'Camera or microphone is in use by another app or tab.',
+        message: 'Camera or microphone is in use by another app or tab.',
         cause: error,
       );
     }
     throw AgoraServiceException(
       code: 'webrtc-$operation-failed',
-      MessageModel: 'Failed to $operation.',
+      message: 'Failed to $operation.',
       cause: error,
     );
   }

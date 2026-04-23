@@ -21,7 +21,7 @@ class RoomPresenceModel {
   final DateTime? lastHeartbeatAt;
   final DateTime? lastSeenAt;
 
-  /// Optional free-text status/away MessageModel set by the user.
+  /// Optional free-text status/away message set by the user.
   final String? customStatus;
 
   /// Enum status: 'online' | 'away' | 'dnd' | 'offline'

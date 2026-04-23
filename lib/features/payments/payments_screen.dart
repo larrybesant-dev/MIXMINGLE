@@ -74,9 +74,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     }
 
     final state = ref.read(paymentControllerProvider);
-    final MessageModel = state.error ?? state.successMessageModel;
-    if (MessageModel != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(MessageModel)));
+    final message = state.error ?? state.successmessage;
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 

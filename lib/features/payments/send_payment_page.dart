@@ -101,7 +101,7 @@ class _SendPaymentPageState extends ConsumerState<SendPaymentPage> {
             const SizedBox(height: 20),
             if (_error != null)
               Semantics(
-                label: 'Error MessageModel',
+                label: 'Error message',
                 child: Text(
                   _error!,
                   style: const TextStyle(

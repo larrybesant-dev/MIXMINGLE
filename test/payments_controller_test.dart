@@ -35,7 +35,7 @@ void main() {
       await controller.sendCoins(receiverId: 'receiver-1', amount: 100);
       final state = container.read(paymentControllerProvider);
       expect(state.amount, 100);
-      expect(state.successMessageModel, 'Payment sent successfully.');
+      expect(state.successmessage, 'Payment sent successfully.');
       expect(state.isConfirmed, true);
       expect(state.error, isNull);
     });
@@ -45,7 +45,7 @@ void main() {
       await controller.requestCoins(targetId: 'target-7', amount: 25);
       final state = container.read(paymentControllerProvider);
       expect(state.amount, 25);
-      expect(state.successMessageModel, 'Payment request sent successfully.');
+      expect(state.successmessage, 'Payment request sent successfully.');
       expect(state.isConfirmed, true);
       expect(state.error, isNull);
     });

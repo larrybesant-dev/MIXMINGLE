@@ -16,7 +16,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [unreadMessageModelCountProvider.overrideWith((ref) => 0)],
+        overrides: [unreadmessageCountProvider.overrideWith((ref) => 0)],
         child: const MaterialApp(
           home: AppShell(selectedIndex: 0, child: SizedBox.expand()),
         ),
@@ -40,7 +40,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [unreadMessageModelCountProvider.overrideWith((ref) => 0)],
+        overrides: [unreadmessageCountProvider.overrideWith((ref) => 0)],
         child: const MaterialApp(
           home: AppShell(selectedIndex: 0, child: SizedBox.expand()),
         ),
@@ -51,7 +51,7 @@ void main() {
 
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Rooms'), findsOneWidget);
-    expect(find.text('MessageModel'), findsOneWidget);
+    expect(find.text('message'), findsOneWidget);
     expect(find.text('Groups'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
   });
@@ -60,10 +60,10 @@ void main() {
     WidgetTester tester,
   ) async {
     final router = GoRouter(
-      initialLocation: '/MessageModel/conversation-123',
+      initialLocation: '/message/conversation-123',
       routes: [
         GoRoute(
-          path: '/MessageModel/:conversationId',
+          path: '/message/:conversationId',
           builder: (context, state) {
             final routeState = MessengerRouteState.fromGoRouterState(state);
             return Material(

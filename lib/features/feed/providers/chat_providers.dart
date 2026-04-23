@@ -6,6 +6,6 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository(ref.watch(firestoreProvider));
 });
 
-final MessageModeltreamProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, roomId) {
-  return ref.read(chatRepositoryProvider).MessageModeltream(roomId);
+final messagetreamProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, roomId) {
+  return ref.read(chatRepositoryProvider).messagetream(roomId);
 });

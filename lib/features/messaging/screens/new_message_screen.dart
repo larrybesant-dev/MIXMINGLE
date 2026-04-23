@@ -8,12 +8,12 @@ import '../../../shared/widgets/app_page_scaffold.dart';
 import '../../../shared/widgets/async_state_view.dart';
 import '../providers/messaging_provider.dart';
 
-class NewMessageModelcreen extends StatelessWidget {
+class Newmessagecreen extends StatelessWidget {
   final String userId;
   final String username;
   final String? avatarUrl;
 
-  const NewMessageModelcreen({
+  const Newmessagecreen({
     super.key,
     required this.userId,
     required this.username,
@@ -24,9 +24,9 @@ class NewMessageModelcreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Text('New MessageModel'),
+        title: const Text('New message'),
       ),
-      body: NewMessageModelPaneView(
+      body: NewmessagePaneView(
         userId: userId,
         username: username,
         avatarUrl: avatarUrl,
@@ -36,13 +36,13 @@ class NewMessageModelcreen extends StatelessWidget {
   }
 }
 
-class NewMessageModelPaneView extends ConsumerStatefulWidget {
+class NewmessagePaneView extends ConsumerStatefulWidget {
   final String userId;
   final String username;
   final String? avatarUrl;
   final bool showHeader;
 
-  const NewMessageModelPaneView({
+  const NewmessagePaneView({
     super.key,
     required this.userId,
     required this.username,
@@ -51,10 +51,10 @@ class NewMessageModelPaneView extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<NewMessageModelPaneView> createState() => _NewMessageModelPaneViewState();
+  ConsumerState<NewmessagePaneView> createState() => _NewmessagePaneViewState();
 }
 
-class _NewMessageModelPaneViewState extends ConsumerState<NewMessageModelPaneView> {
+class _NewmessagePaneViewState extends ConsumerState<NewmessagePaneView> {
   late TextEditingController _searchController;
   List<Map<String, String>> _searchResults = [];
   bool _isSearching = false;
@@ -97,7 +97,7 @@ class _NewMessageModelPaneViewState extends ConsumerState<NewMessageModelPaneVie
           );
 
       if (!mounted) return;
-      context.go('/MessageModel/$conversationId');
+      context.go('/messages/$conversationId');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +171,7 @@ class _NewMessageModelPaneViewState extends ConsumerState<NewMessageModelPaneVie
             child: const Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'New MessageModel',
+                'New message',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,

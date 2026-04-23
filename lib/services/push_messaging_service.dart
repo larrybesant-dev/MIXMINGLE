@@ -13,7 +13,7 @@ import 'package:go_router/go_router.dart';
 import '../firebase_options.dart';
 
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessageModel MessageModel) async {
+Future<void> firebaseMessagingBackgroundHandler(Remotemessage message) async {
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
@@ -21,7 +21,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessageModel MessageModel)
       );
     }
     developer.log(
-      'Background push received: ${MessageModel.MessageModelId}',
+      'Background push received: ${message.messageId}',
       name: 'PushMessagingService',
     );
   } catch (error, stackTrace) {
@@ -63,8 +63,8 @@ class PushMessagingService {
 
     _isInitialized = true;
 
-    FirebaseMessaging.onMessageModel.listen(_onForegroundMessageModel);
-    FirebaseMessaging.onMessageModelOpenedApp.listen(_onOpenedMessageModel);
+    FirebaseMessaging.onmessage.listen(_onForegroundmessage);
+    FirebaseMessaging.onmessageOpenedApp.listen(_onOpenedmessage);
     _tokenRefreshSubscription = _messaging.onTokenRefresh.listen((token) {
       unawaited(_registerTokenIfPossible(token));
     });
@@ -76,28 +76,28 @@ class PushMessagingService {
 
     await _requestPermission();
 
-    await _handleInitialMessageModel();
+    await _handleInitialmessage();
 
     await _registerCurrentToken();
   }
 
-  Future<void> _handleInitialMessageModel() async {
+  Future<void> _handleInitialmessage() async {
     try {
-      final initialMessageModel = await _messaging.getInitialMessageModel();
-      if (initialMessageModel != null) {
-        _onOpenedMessageModel(initialMessageModel);
+      final initialmessage = await _messaging.getInitialmessage();
+      if (initialmessage != null) {
+        _onOpenedmessage(initialmessage);
       }
     } on MissingPluginException catch (error, stackTrace) {
-      // Some web runtime/plugin combinations do not implement getInitialMessageModel.
+      // Some web runtime/plugin combinations do not implement getInitialmessage.
       developer.log(
-        'Push initial MessageModel not available on this platform runtime.',
+        'Push initial message not available on this platform runtime.',
         name: 'PushMessagingService',
         error: error,
         stackTrace: stackTrace,
       );
     } catch (error, stackTrace) {
       developer.log(
-        'Failed to process initial push MessageModel',
+        'Failed to process initial push message',
         name: 'PushMessagingService',
         error: error,
         stackTrace: stackTrace,
@@ -233,31 +233,31 @@ class PushMessagingService {
     }
   }
 
-  void _onForegroundMessageModel(RemoteMessageModel MessageModel) {
+  void _onForegroundmessage(Remotemessage message) {
     developer.log(
-      'Foreground push received: ${MessageModel.MessageModelId}',
+      'Foreground push received: ${message.messageId}',
       name: 'PushMessagingService',
     );
-    // Foreground MessageModel are shown as in-app notifications via the
+    // Foreground message are shown as in-app notifications via the
     // notifications stream; no OS notification banner on foreground.
   }
 
-  void _onOpenedMessageModel(RemoteMessageModel MessageModel) {
+  void _onOpenedmessage(Remotemessage message) {
     developer.log(
-      'Push opened by user: ${MessageModel.MessageModelId}',
+      'Push opened by user: ${message.messageId}',
       name: 'PushMessagingService',
     );
-    _navigateFromMessageModel(MessageModel);
+    _navigateFrommessage(message);
   }
 
-  /// Derives a Go Router path from an FCM [MessageModel] data payload and navigates
+  /// Derives a Go Router path from an FCM [message] data payload and navigates
   /// to it. Payload fields:
   ///   type        — notification category
   ///   roomId      — for room_invite / room_started
   ///   senderId    — for friend_request / friend_accepted
   ///   matchId     — for speed_dating_match
-  void _navigateFromMessageModel(RemoteMessageModel MessageModel) {
-    final data = MessageModel.data;
+  void _navigateFrommessage(Remotemessage message) {
+    final data = message.data;
     final type = data['type'] as String? ?? '';
     final String? route;
 

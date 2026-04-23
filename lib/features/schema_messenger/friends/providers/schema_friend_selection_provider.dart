@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../MessageModel/providers/schema_conversations_providers.dart';
 import 'schema_boot_timeline_provider.dart';
 import 'schema_friend_focus_anchor_provider.dart';
 import 'schema_friend_links_providers.dart';
+import '../../messages/providers/schema_conversations_providers.dart';
 
 final selectedSchemaFriendIdProvider = StateProvider<String?>((ref) => null);
 
@@ -267,7 +267,7 @@ class SchemaConversationBootEngine {
         source: source,
         phase: bootState.phase,
         level: SchemaBootTimelineLevel.warning,
-        MessageModel: 'Boot start ignored: phase=${bootState.phase.name}',
+        message: 'Boot start ignored: phase=${bootState.phase.name}',
       );
       return;
     }
@@ -286,7 +286,7 @@ class SchemaConversationBootEngine {
       bootId: bootContext.bootId,
       source: bootContext.source,
       phase: SchemaConversationBootPhase.resolving,
-      MessageModel:
+      message:
           'Resolved target conversation=${target.conversationId} friend=${target.friendId}',
     );
 
@@ -298,7 +298,7 @@ class SchemaConversationBootEngine {
           source: bootContext.source,
           phase: afterResolve.phase,
           level: SchemaBootTimelineLevel.warning,
-          MessageModel: 'Resolve frame skipped due to inactive boot context',
+          message: 'Resolve frame skipped due to inactive boot context',
         );
         return;
       }
@@ -311,7 +311,7 @@ class SchemaConversationBootEngine {
           bootId: bootContext.bootId,
           source: bootContext.source,
           phase: SchemaConversationBootPhase.selecting,
-          MessageModel: 'Selection phase entered',
+          message: 'Selection phase entered',
         );
 
         notifier.markAnchoring(target);
@@ -319,7 +319,7 @@ class SchemaConversationBootEngine {
           bootId: bootContext.bootId,
           source: bootContext.source,
           phase: SchemaConversationBootPhase.anchoring,
-          MessageModel: 'Anchor phase entered',
+          message: 'Anchor phase entered',
         );
 
         developer.log(
@@ -330,7 +330,7 @@ class SchemaConversationBootEngine {
           bootId: bootContext.bootId,
           source: bootContext.source,
           phase: SchemaConversationBootPhase.anchoring,
-          MessageModel: 'Shadow state prepared friend=$stagedFriendId',
+          message: 'Shadow state prepared friend=$stagedFriendId',
         );
       } catch (error) {
         notifier.markFailed(target);
@@ -344,7 +344,7 @@ class SchemaConversationBootEngine {
           source: bootContext.source,
           phase: SchemaConversationBootPhase.failed,
           level: SchemaBootTimelineLevel.error,
-          MessageModel: 'Selection/anchor failed: $error',
+          message: 'Selection/anchor failed: $error',
         );
         return;
       }
@@ -357,7 +357,7 @@ class SchemaConversationBootEngine {
             source: bootContext.source,
             phase: beforeRoute.phase,
             level: SchemaBootTimelineLevel.warning,
-            MessageModel: 'Route frame skipped due to inactive boot context',
+            message: 'Route frame skipped due to inactive boot context',
           );
           return;
         }
@@ -374,7 +374,7 @@ class SchemaConversationBootEngine {
               source: bootContext.source,
               phase: SchemaConversationBootPhase.failed,
               level: SchemaBootTimelineLevel.error,
-              MessageModel: 'Commit rejected: missing staged friend',
+              message: 'Commit rejected: missing staged friend',
             );
             return;
           }
@@ -384,7 +384,7 @@ class SchemaConversationBootEngine {
             bootId: bootContext.bootId,
             source: bootContext.source,
             phase: SchemaConversationBootPhase.routing,
-            MessageModel: 'Routing phase entered',
+            message: 'Routing phase entered',
           );
 
           final committed = writeGuard.tryCommitBootFocusState(
@@ -402,7 +402,7 @@ class SchemaConversationBootEngine {
               source: bootContext.source,
               phase: SchemaConversationBootPhase.failed,
               level: SchemaBootTimelineLevel.error,
-              MessageModel: 'Commit rejected: stale boot ownership',
+              message: 'Commit rejected: stale boot ownership',
             );
             return;
           }
@@ -410,7 +410,7 @@ class SchemaConversationBootEngine {
             bootId: bootContext.bootId,
             source: bootContext.source,
             phase: SchemaConversationBootPhase.routing,
-            MessageModel: 'Focus state committed atomically',
+            message: 'Focus state committed atomically',
           );
 
           await navigate(target.conversationId);
@@ -424,7 +424,7 @@ class SchemaConversationBootEngine {
             bootId: bootContext.bootId,
             source: bootContext.source,
             phase: SchemaConversationBootPhase.complete,
-            MessageModel: 'Navigation triggered and boot completed',
+            message: 'Navigation triggered and boot completed',
           );
         } catch (error) {
           notifier.markFailed(target);
@@ -438,7 +438,7 @@ class SchemaConversationBootEngine {
             source: bootContext.source,
             phase: SchemaConversationBootPhase.failed,
             level: SchemaBootTimelineLevel.error,
-            MessageModel: 'Navigation failed: $error',
+            message: 'Navigation failed: $error',
           );
         }
       });
@@ -449,7 +449,7 @@ class SchemaConversationBootEngine {
     required String bootId,
     required SchemaConversationBootSource source,
     required SchemaConversationBootPhase phase,
-    required String MessageModel,
+    required String message,
     SchemaBootTimelineLevel level = SchemaBootTimelineLevel.info,
   }) {
     if (!kDebugMode) {
@@ -463,7 +463,7 @@ class SchemaConversationBootEngine {
             source: source,
             phase: phase,
             level: level,
-            MessageModel: MessageModel,
+            message: message,
           ),
         );
   }

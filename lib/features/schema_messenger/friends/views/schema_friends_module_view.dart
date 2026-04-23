@@ -461,7 +461,7 @@ class _ResolvedFriendRow extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
             IconButton(
-              tooltip: 'MessageModel',
+              tooltip: 'message',
               onPressed: onStartChat == null
                   ? null
                   : () {

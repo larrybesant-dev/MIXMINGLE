@@ -107,9 +107,9 @@ void main() {
             reasons: [],
           ),
         ),
-        schemaModuleHealthProvider('MessageModel').overrideWith(
+        schemaModuleHealthProvider('message').overrideWith(
           (ref) => const SchemaModuleHealth(
-            moduleId: 'MessageModel',
+            moduleId: 'message',
             compositeScore: 100,
             structuralScore: 100,
             parityScore: 100,

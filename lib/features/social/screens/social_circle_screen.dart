@@ -93,7 +93,7 @@ class SocialCircleScreen extends ConsumerWidget {
                     child: _EmptyCard(
                       emoji: '🫶',
                       title: 'Your circle is quiet right now',
-                      MessageModel: 'Follow more hosts or explore new rooms.',
+                      message: 'Follow more hosts or explore new rooms.',
                       actionLabel: 'Explore Rooms',
                       onTap: () => context.go('/explore'),
                     ),
@@ -142,7 +142,7 @@ class SocialCircleScreen extends ConsumerWidget {
                     child: _EmptyCard(
                       emoji: '👥',
                       title: 'No follows yet',
-                      MessageModel:
+                      message:
                           'Discover people, follow them, and build your circle.',
                       actionLabel: 'Find People',
                       onTap: () => context.go('/search'),
@@ -559,14 +559,14 @@ class _EmptyCard extends StatelessWidget {
   const _EmptyCard({
     required this.emoji,
     required this.title,
-    required this.MessageModel,
+    required this.message,
     required this.actionLabel,
     required this.onTap,
   });
 
   final String emoji;
   final String title;
-  final String MessageModel;
+  final String message;
   final String actionLabel;
   final VoidCallback onTap;
 
@@ -595,7 +595,7 @@ class _EmptyCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            MessageModel,
+            message,
             textAlign: TextAlign.center,
             style: GoogleFonts.raleway(
               fontSize: 12,

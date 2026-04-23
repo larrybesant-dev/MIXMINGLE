@@ -425,7 +425,7 @@ class SchemaMutationService {
       return;
     }
 
-    final MessageModel =
+    final message =
         'SchemaMutationService blocked unknown profile keys user=$userId keys=$unknownKeys';
 
     _logEnforcementEvent(
@@ -439,15 +439,15 @@ class SchemaMutationService {
     );
 
     if (SchemaMigrationFlags.strictWriteAuthority) {
-      throw StateError(MessageModel);
+      throw StateError(message);
     }
 
     if (kDebugMode) {
-      debugPrint(MessageModel);
+      debugPrint(message);
     }
   }
 
-  // ── MessageModel / Conversations domain ───────────────────────────────────────
+  // ── message / Conversations domain ───────────────────────────────────────
 
   /// Creates or opens a direct conversation between [initiatorId] and [recipientId].
   /// Returns the canonical conversation document ID.
@@ -477,7 +477,7 @@ class SchemaMutationService {
     }, SetOptions(merge: true));
 
     _logEnforcementEvent(
-      action: 'MessageModel_conversation_created',
+      action: 'message_conversation_created',
       userId: initiatorId,
       metadata: <String, Object?>{
         'conversationId': conversationId,
@@ -488,42 +488,42 @@ class SchemaMutationService {
     return conversationId;
   }
 
-  /// Sends a MessageModel to an existing conversation.
+  /// Sends a message to an existing conversation.
   ///
   /// Write paths:
-  ///   conversations/{conversationId}/MessageModel/{MessageModelId}
-  ///   conversations/{conversationId} — updates lastMessageModel* fields only.
+  ///   conversations/{conversationId}/message/{messageId}
+  ///   conversations/{conversationId} — updates lastmessage* fields only.
   ///
-  /// Forbidden: any field outside [_MessageModelEntryFields] or [_conversationsFields].
-  Future<void> sendMessageModel({
+  /// Forbidden: any field outside [_messageEntryFields] or [_conversationsFields].
+  Future<void> sendmessage({
     required String conversationId,
     required String senderId,
     required String text,
-    String MessageModelType = 'text',
+    String messageType = 'text',
     String? mediaUrl,
   }) async {
-    _validateMessageModelText(text: text, userId: senderId);
+    _validatemessageText(text: text, userId: senderId);
 
     final convRef = _firestore.collection('conversations').doc(conversationId);
-    final msgRef = convRef.collection('MessageModel').doc();
+    final msgRef = convRef.collection('messages').doc();
     final now = FieldValue.serverTimestamp();
 
     final msgPayload = <String, dynamic>{
       'senderId': senderId,
       'text': text.trim(),
       'sentAt': now,
-      'type': MessageModelType,
+      'type': messageType,
       'readBy': <String>[senderId],
       if (mediaUrl != null && mediaUrl.isNotEmpty) 'mediaUrl': mediaUrl,
     };
 
     final convUpdate = <String, dynamic>{
-      'lastMessageModelAt': now,
-      'lastMessageModelPreview': text.trim().length > 120
+      'lastmessageAt': now,
+      'lastmessagePreview': text.trim().length > 120
           ? '${text.trim().substring(0, 120)}…'
           : text.trim(),
-      'lastMessageModelenderId': senderId,
-      'lastMessageModelId': msgRef.id,
+      'lastmessageenderId': senderId,
+      'lastmessageId': msgRef.id,
       'updatedAt': now,
     };
 
@@ -533,17 +533,17 @@ class SchemaMutationService {
     await batch.commit();
 
     _logEnforcementEvent(
-      action: 'MessageModel_MessageModel_sent',
+      action: 'message_message_sent',
       userId: senderId,
       metadata: <String, Object?>{
         'conversationId': conversationId,
-        'MessageModelId': msgRef.id,
-        'MessageModelType': MessageModelType,
+        'messageId': msgRef.id,
+        'messageType': messageType,
       },
     );
   }
 
-  /// Marks all MessageModel up to [upToTime] as read for [userId] in [conversationId].
+  /// Marks all message up to [upToTime] as read for [userId] in [conversationId].
   Future<void> markConversationRead({
     required String conversationId,
     required String userId,
@@ -555,16 +555,16 @@ class SchemaMutationService {
     }, SetOptions(merge: true));
   }
 
-  void _validateMessageModelText({required String text, required String userId}) {
+  void _validatemessageText({required String text, required String userId}) {
     if (text.trim().isEmpty) {
       _logEnforcementEvent(
         level: 'warning',
-        action: 'MessageModel_empty_text_blocked',
+        action: 'message_empty_text_blocked',
         userId: userId,
         result: 'blocked',
       );
       throw StateError(
-        'SchemaMutationService: MessageModel text must not be empty.',
+        'SchemaMutationService: message text must not be empty.',
       );
     }
   }
@@ -581,7 +581,7 @@ class SchemaMutationService {
     AppTelemetry.logEnforcementEvent(
       level: level,
       action: action,
-      MessageModel: 'Schema mutation enforcement event.',
+      message: 'Schema mutation enforcement event.',
       userId: userId,
       result: result,
       metadata: metadata,

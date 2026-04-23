@@ -16,7 +16,7 @@ final _schemaConversationsFirestoreProvider = Provider<FirebaseFirestore>((
 });
 
 /// Stream of all non-archived [SchemaConversation] documents for [userId],
-/// ordered by most-recent MessageModel activity.
+/// ordered by most-recent message activity.
 final schemaConversationsProvider = StreamProvider.autoDispose
     .family<List<SchemaConversation>, String>((ref, userId) {
       if (userId.isEmpty) {
@@ -28,7 +28,7 @@ final schemaConversationsProvider = StreamProvider.autoDispose
           .collection('conversations')
           .where('participantIds', arrayContains: userId)
           .where('isArchived', isEqualTo: false)
-          .orderBy('lastMessageModelAt', descending: true)
+          .orderBy('lastmessageAt', descending: true)
           .snapshots()
           .map(
             (snap) => snap.docs

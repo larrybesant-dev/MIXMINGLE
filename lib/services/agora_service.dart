@@ -13,16 +13,16 @@ import 'rtc_room_service.dart';
 class AgoraServiceException implements Exception {
   const AgoraServiceException({
     required this.code,
-    required this.MessageModel,
+    required this.message,
     this.cause,
   });
 
   final String code;
-  final String MessageModel;
+  final String message;
   final Object? cause;
 
   @override
-  String toString() => 'AgoraServiceException($code): $MessageModel';
+  String toString() => 'AgoraServiceException($code): $message';
 }
 
 class AgoraService extends RtcRoomService {
@@ -316,7 +316,7 @@ class AgoraService extends RtcRoomService {
         lower.contains('permission denied by system')) {
       throw AgoraServiceException(
         code: 'permission-denied',
-        MessageModel:
+        message:
             'Camera/microphone permission was denied. Please allow access and retry.',
         cause: error,
       );
@@ -330,7 +330,7 @@ class AgoraService extends RtcRoomService {
         lower.contains('devicesnotfound')) {
       throw AgoraServiceException(
         code: 'no-media-devices',
-        MessageModel: 'No working camera or microphone was found on this device.',
+        message: 'No working camera or microphone was found on this device.',
         cause: error,
       );
     }
@@ -340,7 +340,7 @@ class AgoraService extends RtcRoomService {
         lower.contains('device in use')) {
       throw AgoraServiceException(
         code: 'device-in-use',
-        MessageModel:
+        message:
             'Camera or microphone is currently in use by another app or tab.',
         cause: error,
       );
@@ -352,7 +352,7 @@ class AgoraService extends RtcRoomService {
         lower.contains('not supported on this browser')) {
       throw AgoraServiceException(
         code: 'unsupported-browser',
-        MessageModel:
+        message:
             'This browser does not fully support required WebRTC features. Use latest Chrome or Edge.',
         cause: error,
       );
@@ -363,7 +363,7 @@ class AgoraService extends RtcRoomService {
         lower.contains('insecure context')) {
       throw AgoraServiceException(
         code: 'insecure-context',
-        MessageModel:
+        message:
             'Camera/microphone requires HTTPS (or localhost). Open the app over a secure origin.',
         cause: error,
       );
@@ -375,7 +375,7 @@ class AgoraService extends RtcRoomService {
         lower.contains('wasm')) {
       throw AgoraServiceException(
         code: 'unsupported-browser',
-        MessageModel:
+        message:
             'Browser runtime compatibility issue detected. Update browser and reload the page.',
         cause: error,
       );
@@ -383,7 +383,7 @@ class AgoraService extends RtcRoomService {
 
     throw AgoraServiceException(
       code: 'agora-$operationCode-failed',
-      MessageModel: 'Failed to $operation. Please retry.',
+      message: 'Failed to $operation. Please retry.',
       cause: error,
     );
   }
@@ -393,30 +393,30 @@ class AgoraService extends RtcRoomService {
       case LocalVideoStreamReason.localVideoStreamReasonDeviceNoPermission:
         return const AgoraServiceException(
           code: 'permission-denied',
-          MessageModel: 'Camera permission was denied by browser or OS settings.',
+          message: 'Camera permission was denied by browser or OS settings.',
         );
       case LocalVideoStreamReason.localVideoStreamReasonDeviceBusy:
         return const AgoraServiceException(
           code: 'device-in-use',
-          MessageModel: 'Camera is busy in another app or browser tab.',
+          message: 'Camera is busy in another app or browser tab.',
         );
       case LocalVideoStreamReason.localVideoStreamReasonDeviceNotFound:
         return const AgoraServiceException(
           code: 'no-media-devices',
-          MessageModel: 'No camera device was found on this computer.',
+          message: 'No camera device was found on this computer.',
         );
       case LocalVideoStreamReason.localVideoStreamReasonCaptureFailure:
       case LocalVideoStreamReason.localVideoStreamReasonDeviceInterrupt:
       case LocalVideoStreamReason.localVideoStreamReasonDeviceFatalError:
         return const AgoraServiceException(
           code: 'camera-start-failed',
-          MessageModel:
+          message:
               'Camera failed to start. Close other camera apps/tabs and retry.',
         );
       default:
         return const AgoraServiceException(
           code: 'camera-not-started',
-          MessageModel: 'Camera did not start successfully.',
+          message: 'Camera did not start successfully.',
         );
     }
   }

@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Schema model for a [conversations/{id}] Firestore document.
 ///
-/// Allowed Fields: participantIds, type, status, lastMessageModelAt,
-///   lastMessageModelPreview, lastMessageModelenderId, lastMessageModelId, pinnedBy,
+/// Allowed Fields: participantIds, type, status, lastmessageAt,
+///   lastmessagePreview, lastmessageenderId, lastmessageId, pinnedBy,
 ///   groupName, groupAvatarUrl, participantNames, lastReadAt, isArchived, createdAt.
 /// Forbidden Fields: users/{uid} subdocuments, wallet fields,
 ///   verification fields, adult_content fields.
@@ -17,10 +17,10 @@ class SchemaConversation {
     required this.isArchived,
     required this.pinnedBy,
     required this.lastReadAt,
-    this.lastMessageModelAt,
-    this.lastMessageModelPreview,
-    this.lastMessageModelenderId,
-    this.lastMessageModelId,
+    this.lastmessageAt,
+    this.lastmessagePreview,
+    this.lastmessageenderId,
+    this.lastmessageId,
     this.groupName,
     this.groupAvatarUrl,
   });
@@ -33,10 +33,10 @@ class SchemaConversation {
   final bool isArchived;
   final List<String> pinnedBy;
   final Map<String, DateTime> lastReadAt; // {userId: lastReadTime}
-  final DateTime? lastMessageModelAt;
-  final String? lastMessageModelPreview;
-  final String? lastMessageModelenderId;
-  final String? lastMessageModelId;
+  final DateTime? lastmessageAt;
+  final String? lastmessagePreview;
+  final String? lastmessageenderId;
+  final String? lastmessageId;
   final String? groupName;
   final String? groupAvatarUrl;
 
@@ -46,9 +46,9 @@ class SchemaConversation {
   bool get isPending => status == 'pending';
 
   bool hasUnreadFor(String userId) {
-    return lastMessageModelAt != null &&
+    return lastmessageAt != null &&
         (lastReadAt[userId] == null ||
-            lastReadAt[userId]!.isBefore(lastMessageModelAt!));
+            lastReadAt[userId]!.isBefore(lastmessageAt!));
   }
 
   bool isPinnedFor(String userId) => pinnedBy.contains(userId);
@@ -66,10 +66,10 @@ class SchemaConversation {
       isArchived: _asBool(data['isArchived']),
       pinnedBy: _asStringList(data['pinnedBy']),
       lastReadAt: _asLastReadAt(data['lastReadAt']),
-      lastMessageModelAt: _asNullableDateTime(data['lastMessageModelAt']),
-      lastMessageModelPreview: _asNullableString(data['lastMessageModelPreview']),
-      lastMessageModelenderId: _asNullableString(data['lastMessageModelenderId']),
-      lastMessageModelId: _asNullableString(data['lastMessageModelId']),
+      lastmessageAt: _asNullableDateTime(data['lastmessageAt']),
+      lastmessagePreview: _asNullableString(data['lastmessagePreview']),
+      lastmessageenderId: _asNullableString(data['lastmessageenderId']),
+      lastmessageId: _asNullableString(data['lastmessageId']),
       groupName: _asNullableString(data['groupName']),
       groupAvatarUrl: _asNullableString(data['groupAvatarUrl']),
     );

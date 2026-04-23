@@ -1,8 +1,9 @@
-import '../features/messagipackage:mixvy/features/messaging/models/message_model.dart';
-import '../../data/repositories/MessageModel_repository.dart';
+import 'package:mixvy/features/messaging/models/message_model.dart';
+import '../../data/repositories/message_repository.dart';
 
-class SendMessageModelUseCase {
-  final MessageModelRepository repository;
-  SendMessageModelUseCase(this.repository);
-  Future<void> call(String roomId, MessageModel MessageModel) => repository.sendMessageModel(roomId, MessageModel);
+class SendmessageUseCase {
+  final messageRepository repository;
+  SendmessageUseCase(this.repository);
+  Future<void> call(String roomId, MessageModel message) =>
+      repository.sendmessage(roomId, message);
 }
