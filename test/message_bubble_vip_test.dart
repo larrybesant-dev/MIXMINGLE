@@ -26,7 +26,7 @@ void main() {
   group('messageBubble VIP colours', () {
     testWidgets('level 0 renders without gold/silver/bronze tint',
         (tester) async {
-      await tester.pumpWidget(_wrap(messageBubble(
+      await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(),
         isMe: false,
         senderLabel: 'Alice',
@@ -37,7 +37,7 @@ void main() {
     });
 
     testWidgets('level 1 renders bronze label chip', (tester) async {
-      await tester.pumpWidget(_wrap(messageBubble(
+      await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(),
         isMe: false,
         senderLabel: 'BronzeUser',
@@ -47,7 +47,7 @@ void main() {
     });
 
     testWidgets('level 3 renders silver label', (tester) async {
-      await tester.pumpWidget(_wrap(messageBubble(
+      await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(),
         isMe: false,
         senderLabel: 'SilverUser',
@@ -57,7 +57,7 @@ void main() {
     });
 
     testWidgets('level 5 renders gold label', (tester) async {
-      await tester.pumpWidget(_wrap(messageBubble(
+      await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(),
         isMe: false,
         senderLabel: 'GoldUser',
@@ -67,7 +67,7 @@ void main() {
     });
 
     testWidgets('isMe bubble defaults sender label to You', (tester) async {
-      await tester.pumpWidget(_wrap(messageBubble(
+      await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(senderId: 'me'),
         isMe: true,
         senderVipLevel: 0,
@@ -76,7 +76,7 @@ void main() {
     });
 
     testWidgets('other-user bubble shows sender id as label', (tester) async {
-      await tester.pumpWidget(_wrap(messageBubble(
+      await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(),
         isMe: false,
         senderVipLevel: 0,

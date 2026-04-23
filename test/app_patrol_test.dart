@@ -15,7 +15,7 @@ void main() {
     'App launches and navigates main dashboard tabs',
     ($) async {
       // Start the app
-      app.main();
+      await app.main();
 
       // Wait for UI to fully load
       await $.pumpAndSettle();

@@ -15,8 +15,8 @@ import '../../friends/providers/friends_providers.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
 
-class messagePaneView extends ConsumerStatefulWidget {
-  const messagePaneView({
+class MessagesPaneView extends ConsumerStatefulWidget {
+  const MessagesPaneView({
     super.key,
     required this.userId,
     required this.username,
@@ -28,10 +28,10 @@ class messagePaneView extends ConsumerStatefulWidget {
   final bool showHeader;
 
   @override
-  ConsumerState<messagePaneView> createState() => _messagePaneViewState();
+  ConsumerState<MessagesPaneView> createState() => _MessagesPaneViewState();
 }
 
-class _messagePaneViewState extends ConsumerState<messagePaneView>
+class _MessagesPaneViewState extends ConsumerState<MessagesPaneView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _searchController = TextEditingController();
@@ -80,7 +80,7 @@ class _messagePaneViewState extends ConsumerState<messagePaneView>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => messageRequestsSheet(
+      builder: (_) => MessageRequestsSheet(
         requestsAsync: requestsAsync,
         userId: widget.userId,
       ),
@@ -131,7 +131,7 @@ class _messagePaneViewState extends ConsumerState<messagePaneView>
                   ),
                 ),
                 FilledButton.icon(
-                  onPressed: () => GoRouter.of(context).push('/message/new'),
+                  onPressed: () => GoRouter.of(context).push('/messages/new'),
                   icon: const Icon(Icons.add_comment_outlined),
                   label: const Text('New message'),
                 ),
@@ -326,8 +326,8 @@ class _messagePaneViewState extends ConsumerState<messagePaneView>
   }
 }
 
-class messageRequestsSheet extends ConsumerWidget {
-  const messageRequestsSheet({
+class MessageRequestsSheet extends ConsumerWidget {
+  const MessageRequestsSheet({
     super.key,
     required this.requestsAsync,
     required this.userId,
@@ -488,7 +488,7 @@ class _ConversationsList extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () => GoRouter.of(context).push('/message/new'),
+                onPressed: () => GoRouter.of(context).push('/messages/new'),
                 child: Text(
                   'Start a conversation',
                   style: GoogleFonts.raleway(

@@ -71,32 +71,39 @@ class MessageModel {
   /// Defaults to 'normal' for DM messages.
   final String type;
 
-  const MessageModel({
+  MessageModel({
     required this.id,
     this.clientmessageId,
-    required this.conversationId,
     required this.senderId,
-    required this.senderName,
+    String? conversationId,
+    String? roomId,
+    String? senderName,
     this.senderAvatarUrl,
     required this.content,
-    required this.createdAt,
+    DateTime? createdAt,
+    DateTime? sentAt,
     this.expiresAt,
     this.editedAt,
     this.isDeleted = false,
     this.readBy = const [],
     this.type = 'normal',
-  });
+  }) : conversationId = conversationId ?? roomId ?? '',
+       senderName = senderName ?? 'Unknown',
+       createdAt = createdAt ?? sentAt ?? DateTime.now();
 
   factory MessageModel.fromJson(Map<String, dynamic> json, String docId) {
     return MessageModel(
       id: docId,
       clientmessageId: _asNullableString(json['clientmessageId']),
       conversationId: _asString(json['conversationId']),
+      roomId: _asString(json['roomId']),
       senderId: _asString(json['senderId']),
       senderName: _asString(json['senderName'], fallback: 'Unknown'),
       senderAvatarUrl: _asNullableString(json['senderAvatarUrl']),
       content: _asString(json['content']),
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: json['createdAt'] != null
+          ? _parseDateTime(json['createdAt'])
+          : _parseDateTime(json['sentAt']),
       expiresAt: json['expiresAt'] == null
           ? null
           : _parseDateTime(json['expiresAt']),
@@ -127,6 +134,8 @@ class MessageModel {
   }
 
   bool isRead(String userId) => readBy.contains(userId);
+
+  String get roomId => conversationId;
 
   DateTime get sentAt => createdAt;
 

@@ -119,12 +119,15 @@ final messagetreamProvider = StreamProvider.autoDispose
                     }
                     return MessageModel(
                       id: doc.id,
+                      conversationId: roomId,
                       senderId: senderId,
-                      roomId: _asString(data['roomId'], fallback: roomId),
+                      senderName: _asString(
+                        data['senderName'],
+                        fallback: senderId,
+                      ),
                       content: content,
                       type: _asString(data['type'], fallback: 'normal'),
-                      richText: _asString(data['richText']),
-                      sentAt: sentAt is Timestamp
+                      createdAt: sentAt is Timestamp
                           ? sentAt.toDate()
                           : DateTime.tryParse(sentAt?.toString() ?? '') ??
                                 DateTime.now(),

@@ -13,8 +13,8 @@ import 'schema_messages_module_view.dart';
 ///
 /// CONSOLIDATED: Does NOT monitor parity or validate compliance.
 /// Uses unified SchemaModuleHealth for display only.
-class messageschemaBridgeView extends ConsumerWidget {
-  const messageschemaBridgeView({
+class MessageSchemaBridgeView extends ConsumerWidget {
+  const MessageSchemaBridgeView({
     super.key,
     required this.userId,
     required this.username,
@@ -46,14 +46,14 @@ class messageschemaBridgeView extends ConsumerWidget {
         ],
         Expanded(
           child: switch (mode) {
-            messagePaneRenderMode.legacy => messagePaneView(
+            MessagePaneRenderMode.legacy => MessagesPaneView(
                 userId: userId,
                 username: username,
                 showHeader: false,
               ),
-            messagePaneRenderMode.schema =>
+            MessagePaneRenderMode.schema =>
               SchemamessageModuleView(userId: userId),
-            messagePaneRenderMode.dual => isDesktop
+            MessagePaneRenderMode.dual => isDesktop
                 ? _DualmessagePanes(userId: userId, username: username)
                 : SchemamessageModuleView(userId: userId),
           },
@@ -82,11 +82,11 @@ class _GovernanceHeader extends StatelessWidget {
     required this.onModeChanged,
   });
 
-  final messagePaneRenderMode mode;
+  final MessagePaneRenderMode mode;
   final SchemaModuleHealth health;
   final bool isDesktop;
   final String interpretationLabel;
-  final ValueChanged<messagePaneRenderMode> onModeChanged;
+  final ValueChanged<MessagePaneRenderMode> onModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -112,21 +112,21 @@ class _GovernanceHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SegmentedButton<messagePaneRenderMode>(
+              SegmentedButton<MessagePaneRenderMode>(
                 segments: [
                   const ButtonSegment(
-                    value: messagePaneRenderMode.legacy,
+                    value: MessagePaneRenderMode.legacy,
                     label: Text('Legacy'),
                     icon: Icon(Icons.history_toggle_off_rounded),
                   ),
                   const ButtonSegment(
-                    value: messagePaneRenderMode.schema,
+                    value: MessagePaneRenderMode.schema,
                     label: Text('Schema'),
                     icon: Icon(Icons.shield_rounded),
                   ),
                   if (isDesktop)
                     const ButtonSegment(
-                      value: messagePaneRenderMode.dual,
+                      value: MessagePaneRenderMode.dual,
                       label: Text('Dual'),
                       icon: Icon(Icons.splitscreen_rounded),
                     ),
@@ -254,7 +254,7 @@ class _DualmessagePanes extends StatelessWidget {
         Expanded(
           child: _PaneCard(
             title: 'Legacy',
-            child: messagePaneView(
+            child: MessagesPaneView(
               userId: userId,
               username: username,
               showHeader: false,

@@ -290,7 +290,7 @@ class _FriendTile extends ConsumerWidget {
                   color: cs.onSurface.withValues(alpha: 0.45),
                   fontSize: 12),
             ),
-      trailing: _messageButton(friend: friend),
+      trailing: _MessageButton(friend: friend),
       onTap: () {
         Navigator.of(context).pop();
         GoRouter.of(context).push('/profile/${friend.id}');
@@ -299,8 +299,8 @@ class _FriendTile extends ConsumerWidget {
   }
 }
 
-class _messageButton extends ConsumerWidget {
-  const _messageButton({required this.friend});
+class _MessageButton extends ConsumerWidget {
+  const _MessageButton({required this.friend});
   final UserModel friend;
 
   @override

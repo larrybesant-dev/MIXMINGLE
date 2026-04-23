@@ -128,7 +128,7 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
 
     return boot.when(
       loading: () => _buildBootShell(),
-      error: (_, __) =>
+      error: (_, stackTrace) =>
           _buildBootShell(message: 'Recovering startup...'),
       data: (_) {
         if (!_runtimeStarted) {

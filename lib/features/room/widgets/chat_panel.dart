@@ -151,7 +151,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                     itemCount: widget.message.length,
                     itemBuilder: (context, i) {
                       final msg = widget.message[i];
-                      return messageBubble(
+                      return MessageBubble(
                         message: msg,
                         isMe: msg.senderId == widget.currentUserId,
                         senderLabel: widget.senderLabelResolver(msg.senderId),

@@ -56,11 +56,11 @@ void main() {
       expect(conversation.data()?['lastmessageAt'], isA<Timestamp>());
     });
 
-    test('message.fromJson parses expiresAt', () {
+    test('MessageModel.fromJson parses expiresAt', () {
       final createdAt = Timestamp.fromDate(DateTime(2026, 4, 8, 12));
       final expiresAt = Timestamp.fromDate(DateTime(2026, 7, 7, 12));
 
-      final message = message.fromJson({
+      final parsedMessage = MessageModel.fromJson({
         'conversationId': 'conv-1',
         'senderId': 'user-1',
         'senderName': 'User One',
@@ -71,8 +71,8 @@ void main() {
         'readBy': ['user-1'],
       }, 'message-1');
 
-      expect(message.expiresAt, DateTime(2026, 7, 7, 12));
-      expect(message.isExpired, isFalse);
+      expect(parsedMessage.expiresAt, DateTime(2026, 7, 7, 12));
+      expect(parsedMessage.isExpired, isFalse);
     });
   });
 }

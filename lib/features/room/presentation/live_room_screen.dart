@@ -335,7 +335,7 @@ class _RoomScaffold extends StatelessWidget {
               ),
               if (reconnecting) const _ReconnectingBanner(),
               Expanded(
-                child: _messageList(message: roomState.message),
+                child: _MessageList(message: roomState.message),
               ),
               _TypingIndicator(
                 typingUsers: roomState.typingUsers.keys.toList(),
@@ -393,9 +393,9 @@ class _ReconnectingBanner extends StatelessWidget {
 // Shows an empty-state prompt when there are no message yet — never blank.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _messageList extends StatelessWidget {
+class _MessageList extends StatelessWidget {
   final List<MessageModel> message;
-  const _messageList({required this.message});
+  const _MessageList({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -453,15 +453,15 @@ class _TypingIndicator extends StatelessWidget {
 // Controller is disposed in dispose() to prevent memory leaks.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _messageInput extends ConsumerStatefulWidget {
+class _MessageInput extends ConsumerStatefulWidget {
   final String roomId;
-  const _messageInput({required this.roomId});
+  const _MessageInput({required this.roomId});
 
   @override
-  ConsumerState<_messageInput> createState() => _messageInputState();
+  ConsumerState<_MessageInput> createState() => _MessageInputState();
 }
 
-class _messageInputState extends ConsumerState<_messageInput> {
+class _MessageInputState extends ConsumerState<_MessageInput> {
   final _controller = TextEditingController();
 
   @override

@@ -163,7 +163,7 @@ class _FloatingWhisperPanelWidgetState
             if (_expanded) ...[
               SizedBox(
                 height: 240,
-                child: _messageList(conversationId: widget.conversationId),
+                child: _MessageList(conversationId: widget.conversationId),
               ),
               Padding(
                 padding:
@@ -196,8 +196,8 @@ class _FloatingWhisperPanelWidgetState
   }
 }
 
-class _messageList extends ConsumerWidget {
-  const _messageList({required this.conversationId});
+class _MessageList extends ConsumerWidget {
+  const _MessageList({required this.conversationId});
 
   final String conversationId;
 

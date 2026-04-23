@@ -7,8 +7,8 @@ import '../../../presentation/providers/user_provider.dart';
 
 /// Module 2 blueprint: strict contract instantiation only.
 /// No custom gating semantics allowed.
-class messagesnapshot extends ConsistencySnapshot {
-  messagesnapshot({
+class MessageSnapshot extends ConsistencySnapshot {
+  MessageSnapshot({
     required this.legacyConversationIds,
     required this.schemaConversationIds,
     required this.legacyUnreadByConversation,
@@ -25,8 +25,8 @@ class messagesnapshot extends ConsistencySnapshot {
   final bool schemaReady;
 }
 
-class messageParityResult implements ConsistencyParityResult {
-  const messageParityResult({
+class MessageParityResult implements ConsistencyParityResult {
+  const MessageParityResult({
     required this.isComparable,
     required this.isMatch,
     required this.signature,
@@ -49,9 +49,9 @@ class messageParityResult implements ConsistencyParityResult {
   final List<String> unreadMismatches;
 }
 
-class messageConsistencyContract
-    extends ConsistencyModuleContract<messagesnapshot, messageParityResult> {
-  const messageConsistencyContract();
+class MessageConsistencyContract
+    extends ConsistencyModuleContract<MessageSnapshot, MessageParityResult> {
+  const MessageConsistencyContract();
 
   @override
   String get moduleId => 'message';
@@ -68,10 +68,10 @@ class messageConsistencyContract
       SchemaGovernanceContract.reconcileEveryMinutes;
 
   @override
-  messagesnapshot buildSnapshot(WidgetRef ref, {required bool readOnly}) {
+  MessageSnapshot buildSnapshot(WidgetRef ref, {required bool readOnly}) {
     final userId = ref.watch(userProvider)?.id;
     if (userId == null || userId.isEmpty) {
-      return messagesnapshot(
+      return MessageSnapshot(
         legacyConversationIds: <String>[],
         schemaConversationIds: <String>[],
         legacyUnreadByConversation: <String, int>{},
@@ -91,7 +91,7 @@ class messageConsistencyContract
     final legacy = legacyAsync.valueOrNull ?? const [];
     final schema = schemaAsync.valueOrNull ?? const [];
 
-    return messagesnapshot(
+    return MessageSnapshot(
       legacyConversationIds: legacy.map((c) => c.id).toList(growable: false),
       schemaConversationIds: schema.map((c) => c.id).toList(growable: false),
       legacyUnreadByConversation: {
@@ -106,9 +106,9 @@ class messageConsistencyContract
   }
 
   @override
-  messageParityResult evaluate(messagesnapshot snapshot) {
+  MessageParityResult evaluate(MessageSnapshot snapshot) {
     if (!snapshot.legacyReady || !snapshot.schemaReady) {
-      return const messageParityResult(
+      return const MessageParityResult(
         isComparable: false,
         isMatch: true,
         signature: 'loading',
@@ -148,7 +148,7 @@ class messageConsistencyContract
     final isMatch =
         missingInSchema.isEmpty && missingInLegacy.isEmpty && unreadMismatches.isEmpty;
 
-    return messageParityResult(
+    return MessageParityResult(
       isComparable: true,
       isMatch: isMatch,
       signature: signature,
@@ -160,6 +160,6 @@ class messageConsistencyContract
 }
 
 final messageConsistencyContractProvider =
-    Provider<messageConsistencyContract>((ref) {
-  return const messageConsistencyContract();
+    Provider<MessageConsistencyContract>((ref) {
+  return const MessageConsistencyContract();
 });

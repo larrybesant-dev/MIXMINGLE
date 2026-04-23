@@ -1,21 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum messagePaneRenderMode {
+enum MessagePaneRenderMode {
   legacy,
   schema,
   dual,
 }
 
-class messagePaneRenderModeController extends Notifier<messagePaneRenderMode> {
+class MessagePaneRenderModeController extends Notifier<MessagePaneRenderMode> {
   @override
-  messagePaneRenderMode build() => messagePaneRenderMode.legacy;
+  MessagePaneRenderMode build() => MessagePaneRenderMode.legacy;
 
-  void setMode(messagePaneRenderMode mode) {
+  void setMode(MessagePaneRenderMode mode) {
     state = mode;
   }
 }
 
 final messagePaneRenderModeProvider =
-    NotifierProvider<messagePaneRenderModeController, messagePaneRenderMode>(
-  messagePaneRenderModeController.new,
+    NotifierProvider<MessagePaneRenderModeController, MessagePaneRenderMode>(
+  MessagePaneRenderModeController.new,
 );

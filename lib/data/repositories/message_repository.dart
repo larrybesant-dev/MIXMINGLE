@@ -2,15 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mixvy/features/messaging/models/message_model.dart';
 
-abstract class messageRepository {
+abstract class MessageRepository {
   Future<List<MessageModel>> getmessage(String conversationId);
   Future<void> sendmessage(String conversationId, MessageModel message);
   Future<int> debugmessageCount();
 }
 
-class messageRepositoryImpl implements messageRepository {
+class MessageRepositoryImpl implements MessageRepository {
   final FirebaseFirestore firestore;
-  messageRepositoryImpl(this.firestore);
+  MessageRepositoryImpl(this.firestore);
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {

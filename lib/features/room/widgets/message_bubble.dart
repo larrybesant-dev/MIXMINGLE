@@ -9,7 +9,7 @@ import 'rich_text_toolbar.dart';
 ///
 /// System message (type == 'system') render as a centered italic separator row.
 /// Announcement message (type == 'announcement') render as a highlighted banner.
-class messageBubble extends StatelessWidget {
+class MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
   final String? senderLabel;
@@ -24,7 +24,7 @@ class messageBubble extends StatelessWidget {
   /// Called when the user taps the sender cam indicator.
   final void Function(String senderId)? onTapCam;
 
-  const messageBubble({
+  const MessageBubble({
     super.key,
     required this.message,
     required this.isMe,

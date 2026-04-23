@@ -7,10 +7,10 @@ import '../../features/messaging/providers/messaging_provider.dart';
 import '../../shared/widgets/app_page_scaffold.dart';
 import '../../core/theme.dart';
 import '../../features/schema_messenger/friends/views/friends_schema_bridge_view.dart';
-import '../../features/schema_messenger/message/views/message_schema_bridge_view.dart';
+import '../../features/schema_messenger/messages/views/messages_schema_bridge_view.dart';
 import '../../features/messaging/panes/chat_pane_view.dart';
-import '../../features/messaging/panes/message_pane_view.dart';
-import '../../features/messaging/screens/new_messages_screen.dart';
+import '../../features/messaging/panes/messages_pane_view.dart';
+import '../../features/messaging/screens/new_message_screen.dart';
 import 'desktop_messenger_shell.dart';
 
 enum MessengerRouteKind { inbox, compose, conversation, friends }
@@ -142,7 +142,7 @@ class _MobileInboxRoute extends ConsumerWidget {
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                builder: (_) => messageRequestsSheet(
+                builder: (_) => MessageRequestsSheet(
                   requestsAsync: requestsAsync,
                   userId: userId,
                 ),
@@ -164,7 +164,7 @@ Widget buildMessengerRouteChild({
 }) {
   switch (routeState.kind) {
     case MessengerRouteKind.inbox:
-      return messageschemaBridgeView(userId: userId, username: username);
+      return MessageSchemaBridgeView(userId: userId, username: username);
     case MessengerRouteKind.compose:
       return NewmessagePaneView(
         userId: userId,

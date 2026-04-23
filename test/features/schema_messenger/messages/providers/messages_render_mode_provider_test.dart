@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixvy/features/schema_messenger/message/providers/message_render_mode_provider.dart';
+import 'package:mixvy/features/schema_messenger/messages/providers/messages_render_mode_provider.dart';
 
 void main() {
   test('message view defaults to legacy mode', () {
@@ -9,6 +9,6 @@ void main() {
 
     final mode = container.read(messagePaneRenderModeProvider);
 
-    expect(mode, messagePaneRenderMode.legacy);
+    expect(mode, MessagePaneRenderMode.legacy);
   });
 }

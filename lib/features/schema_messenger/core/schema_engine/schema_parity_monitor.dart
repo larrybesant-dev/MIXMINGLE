@@ -54,7 +54,7 @@ final schemaParityMonitorProvider =
       final legacy = legacyAsync.valueOrNull ?? const [];
       final schema = schemaAsync.valueOrNull ?? const [];
 
-      final snapshot = messagesnapshot(
+      final snapshot = MessageSnapshot(
         legacyConversationIds: legacy.map((c) => c.id).toList(growable: false),
         schemaConversationIds: schema.map((c) => c.id).toList(growable: false),
         legacyUnreadByConversation: {

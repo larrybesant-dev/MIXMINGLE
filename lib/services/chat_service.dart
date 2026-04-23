@@ -34,11 +34,11 @@ class ChatService {
 
       return MessageModel.fromJson({
         ...data,
-        'id': doc.id,
-        'sentAt': data['sentAt'] is Timestamp
+        'conversationId': roomId,
+        'createdAt': data['sentAt'] is Timestamp
             ? (data['sentAt'] as Timestamp).toDate()
             : DateTime.now(),
-      });
+      }, doc.id);
     }).toList();
   }
 
@@ -46,6 +46,7 @@ class ChatService {
     return _firestore
         .collection('rooms')
         .doc(roomId)
+        .collection('messages')
         .orderBy('sentAt', descending: false)
         .snapshots()
         .map((snapshot) {
@@ -54,11 +55,11 @@ class ChatService {
 
         return MessageModel.fromJson({
           ...data,
-          'id': doc.id,
-          'sentAt': data['sentAt'] is Timestamp
+          'conversationId': roomId,
+          'createdAt': data['sentAt'] is Timestamp
               ? (data['sentAt'] as Timestamp).toDate()
               : DateTime.now(),
-        });
+        }, doc.id);
       }).toList();
     });
   }

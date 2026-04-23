@@ -142,7 +142,7 @@ class _FriendsSchemaBridgeViewState
             if (!mounted) {
               return;
             }
-            GoRouter.of(context).go('/message/$conversationId');
+            GoRouter.of(context).go('/messages/$conversationId');
           },
         );
   }
@@ -173,7 +173,7 @@ class _FriendsSchemaBridgeViewState
         return;
       }
 
-      unawaited(router.push('/message/$conversationId'));
+      unawaited(router.push('/messages/$conversationId'));
     } catch (error) {
       if (!mounted) {
         return;

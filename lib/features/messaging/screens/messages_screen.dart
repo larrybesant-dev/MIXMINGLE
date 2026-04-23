@@ -6,8 +6,8 @@ import '../../../core/theme.dart';
 import '../panes/messages_pane_view.dart';
 import '../providers/messaging_provider.dart';
 
-class messagescreen extends ConsumerWidget {
-  const messagescreen({
+class MessagesScreen extends ConsumerWidget {
+  const MessagesScreen({
     super.key,
     required this.userId,
     required this.username,
@@ -27,7 +27,7 @@ class messagescreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             tooltip: 'New message',
-            onPressed: () => GoRouter.of(context).push('/message/new'),
+            onPressed: () => GoRouter.of(context).push('/messages/new'),
           ),
           IconButton(
             icon: const Icon(Icons.more_horiz_rounded),
@@ -40,7 +40,7 @@ class messagescreen extends ConsumerWidget {
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                builder: (_) => messageRequestsSheet(
+                builder: (_) => MessageRequestsSheet(
                   requestsAsync: requestsAsync,
                   userId: userId,
                 ),
@@ -49,7 +49,7 @@ class messagescreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: messagePaneView(
+      body: MessagesPaneView(
         userId: userId,
         username: username,
         showHeader: false,

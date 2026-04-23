@@ -13,7 +13,7 @@ import 'package:go_router/go_router.dart';
 import '../firebase_options.dart';
 
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(Remotemessage message) async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
@@ -63,8 +63,8 @@ class PushMessagingService {
 
     _isInitialized = true;
 
-    FirebaseMessaging.onmessage.listen(_onForegroundmessage);
-    FirebaseMessaging.onmessageOpenedApp.listen(_onOpenedmessage);
+    FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen(_onOpenedMessage);
     _tokenRefreshSubscription = _messaging.onTokenRefresh.listen((token) {
       unawaited(_registerTokenIfPossible(token));
     });
@@ -76,19 +76,19 @@ class PushMessagingService {
 
     await _requestPermission();
 
-    await _handleInitialmessage();
+    await _handleInitialMessage();
 
     await _registerCurrentToken();
   }
 
-  Future<void> _handleInitialmessage() async {
+  Future<void> _handleInitialMessage() async {
     try {
-      final initialmessage = await _messaging.getInitialmessage();
-      if (initialmessage != null) {
-        _onOpenedmessage(initialmessage);
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _onOpenedMessage(initialMessage);
       }
     } on MissingPluginException catch (error, stackTrace) {
-      // Some web runtime/plugin combinations do not implement getInitialmessage.
+      // Some web runtime/plugin combinations do not implement getInitialMessage.
       developer.log(
         'Push initial message not available on this platform runtime.',
         name: 'PushMessagingService',
@@ -233,21 +233,21 @@ class PushMessagingService {
     }
   }
 
-  void _onForegroundmessage(Remotemessage message) {
+  void _onForegroundMessage(RemoteMessage message) {
     developer.log(
       'Foreground push received: ${message.messageId}',
       name: 'PushMessagingService',
     );
-    // Foreground message are shown as in-app notifications via the
+    // Foreground messages are shown as in-app notifications via the
     // notifications stream; no OS notification banner on foreground.
   }
 
-  void _onOpenedmessage(Remotemessage message) {
+  void _onOpenedMessage(RemoteMessage message) {
     developer.log(
       'Push opened by user: ${message.messageId}',
       name: 'PushMessagingService',
     );
-    _navigateFrommessage(message);
+    _navigateFromMessage(message);
   }
 
   /// Derives a Go Router path from an FCM [message] data payload and navigates
@@ -256,7 +256,7 @@ class PushMessagingService {
   ///   roomId      — for room_invite / room_started
   ///   senderId    — for friend_request / friend_accepted
   ///   matchId     — for speed_dating_match
-  void _navigateFrommessage(Remotemessage message) {
+  void _navigateFromMessage(RemoteMessage message) {
     final data = message.data;
     final type = data['type'] as String? ?? '';
     final String? route;

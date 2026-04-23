@@ -17,7 +17,7 @@ Widget _buildApp({
     routes: [
       GoRoute(
         path: '/messages',
-        builder: (_, _) => messagescreen(userId: userId, username: username),
+        builder: (_, _) => MessagesScreen(userId: userId, username: username),
       ),
       GoRoute(
         path: '/messages/new',
