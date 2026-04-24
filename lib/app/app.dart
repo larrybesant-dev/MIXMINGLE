@@ -26,9 +26,16 @@ import '../services/presence_controller.dart';
 import '../core/events/event_providers.dart';
 
 final appBootstrapProvider = FutureProvider<void>((ref) async {
-  if (Firebase.apps.isEmpty) return;
-
   final bootStateNotifier = ref.read(bootStateProvider.notifier);
+  if (Firebase.apps.isEmpty) {
+    bootStateNotifier.setFailed();
+    developer.log(
+      'Firebase app is not initialized during bootstrap',
+      name: 'appBootstrapProvider',
+    );
+    return;
+  }
+
   final auth = FirebaseAuth.instance;
 
   try {
@@ -86,8 +93,14 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
 
       ref.read(presenceControllerProvider);
       ref.read(eventPipelineProvider);
-    } catch (_) {
-      // keep startup resilient
+    } catch (error, stackTrace) {
+      developer.log(
+        'Runtime services failed during startup',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'MixVyApp',
+      );
+      ref.read(bootStateProvider.notifier).setDegraded();
     } finally {
       if (mounted) {
         setState(() => _runtimeStarted = true);
@@ -166,6 +179,8 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Check fatal failure first — before touching appBootstrapProvider — so
+    // we never show a spurious loading frame when Firebase init already failed.
     final bootState = ref.watch(bootStateProvider);
 
     if (bootState == BootState.failed) {
@@ -173,6 +188,10 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
     }
 
     final boot = ref.watch(appBootstrapProvider);
+
+    if (bootState == BootState.loading || boot.isLoading) {
+      return _buildBootShell();
+    }
 
     return boot.when(
       loading: () => _buildBootShell(),

@@ -4,7 +4,8 @@ import 'boot_state.dart';
 /// Manages app boot state as a reactive notifier.
 /// Transitions through: loading → ready/degraded/failed
 class BootStateNotifier extends StateNotifier<BootState> {
-  BootStateNotifier() : super(BootState.loading);
+  BootStateNotifier({BootState initialState = BootState.loading})
+      : super(initialState);
 
   /// Mark boot as successful and ready.
   void setReady() {

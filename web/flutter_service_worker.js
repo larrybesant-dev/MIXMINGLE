@@ -18,6 +18,12 @@ self.addEventListener('activate', (event) => {
     }
 
     const windows = await self.clients.matchAll({ type: 'window' });
-    await Promise.all(windows.map((client) => client.navigate(client.url)));
+    await Promise.all(windows.map(async (client) => {
+      try {
+        await client.navigate(client.url);
+      } catch (_e) {
+        // Client may be cross-origin or no longer navigable; skip.
+      }
+    }));
   })());
 });
