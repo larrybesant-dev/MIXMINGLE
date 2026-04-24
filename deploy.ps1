@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 
 $startupLogPath = 'tools/reports/startup_timeline.log'
 $startupReportPath = 'tools/reports/startup_probe_report.json'
@@ -30,10 +31,7 @@ function Invoke-PowerShellScript {
     [switch]$AllowFailure
   )
 
-  $cmdOutput = & powershell -ExecutionPolicy Bypass -File $ScriptPath @Arguments 2>&1
-  foreach ($line in $cmdOutput) {
-    Write-Host $line
-  }
+  & powershell -ExecutionPolicy Bypass -File $ScriptPath @Arguments | Out-Null
   if (-not $AllowFailure -and $LASTEXITCODE -ne 0) {
     throw "Script failed: $ScriptPath (exit=$LASTEXITCODE)"
   }
@@ -48,10 +46,7 @@ function Invoke-CommandWithExitCode {
   )
 
   try {
-    $cmdOutput = & $Command 2>&1
-    foreach ($line in $cmdOutput) {
-      Write-Host $line
-    }
+    & $Command | Out-Null
     return $LASTEXITCODE
   }
   catch {
