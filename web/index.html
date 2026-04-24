@@ -22,17 +22,112 @@
       background: #0D0D1A;
       overflow: hidden;
     }
+
+    #boot-shell {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 18% 78%, rgba(120, 30, 43, 0.35), transparent 45%),
+                  radial-gradient(circle at 82% 20%, rgba(212, 175, 55, 0.22), transparent 35%),
+                  #0B0B0B;
+      color: #F7EDE2;
+      z-index: 2147483646;
+      font-family: Raleway, Roboto, sans-serif;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    #boot-shell[hidden] {
+      display: none;
+    }
+
+    .boot-title {
+      font-size: 20px;
+      letter-spacing: 0.6px;
+      margin: 0 0 8px 0;
+    }
+
+    .boot-msg {
+      opacity: 0.86;
+      margin: 0;
+      max-width: 420px;
+      line-height: 1.4;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <div id="boot-shell" role="status" aria-live="polite">
+    <div>
+      <h1 class="boot-title">Launching MixVy</h1>
+      <p id="boot-msg" class="boot-msg">Preparing your connection and live state...</p>
+    </div>
+  </div>
+
   <script>
     (function () {
-      if ('serviceWorker' in navigator) {
-        var baseTag = document.querySelector('base');
-        var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
-        if (!baseHref || baseHref.includes('$FLUTTER_BASE_HREF') || !baseHref.endsWith('/')) {
-          baseHref = '/';
+      var bootShell = document.getElementById('boot-shell');
+      var bootMsg = document.getElementById('boot-msg');
+      var baseTag = document.querySelector('base');
+      var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
+      if (!baseHref || baseHref.trim().length === 0) {
+        baseHref = '/';
+      } else {
+        if (!baseHref.startsWith('/')) {
+          baseHref = '/' + baseHref;
         }
+        if (!baseHref.endsWith('/')) {
+          baseHref = baseHref + '/';
+        }
+      }
+
+      function setBootMessage(message) {
+        if (bootMsg) bootMsg.textContent = message;
+      }
+
+      function hideBootShell() {
+        if (bootShell) bootShell.setAttribute('hidden', 'hidden');
+      }
+
+      function watchForFlutterSurface() {
+        var matcher = 'flt-glass-pane, flutter-view, flt-scene-host';
+        if (document.querySelector(matcher)) {
+          hideBootShell();
+          return;
+        }
+
+        var observer = new MutationObserver(function () {
+          if (document.querySelector(matcher)) {
+            observer.disconnect();
+            hideBootShell();
+          }
+        });
+
+        observer.observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
+      if ('serviceWorker' in navigator) {
+        // If older deployments registered Flutter's app SW, remove it so stale
+        // cached bundles can never pin clients to an outdated runtime.
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (reg) {
+            var scriptUrl = '';
+            if (reg.active && reg.active.scriptURL) scriptUrl = reg.active.scriptURL;
+            else if (reg.waiting && reg.waiting.scriptURL) scriptUrl = reg.waiting.scriptURL;
+            else if (reg.installing && reg.installing.scriptURL) scriptUrl = reg.installing.scriptURL;
+            if (scriptUrl.indexOf('flutter_service_worker.js') >= 0) {
+              reg.unregister();
+            }
+          });
+        }).catch(function () {
+          // Ignore cleanup failures; app still proceeds.
+        });
 
         var swUrl = baseHref + 'firebase-messaging-sw.js';
 
@@ -48,6 +143,19 @@
       // Use an absolute path to avoid route-relative script requests on deep links.
       script.src = baseHref + 'flutter_bootstrap.js';
       script.async = true;
+      script.onerror = function () {
+        setBootMessage('Unable to load app runtime. Check your connection and hard refresh.');
+      };
+      script.onload = function () {
+        watchForFlutterSurface();
+      };
+
+      setTimeout(function () {
+        if (bootShell && !bootShell.hasAttribute('hidden')) {
+          setBootMessage('Still loading... network looks slow. MixVy will continue automatically.');
+        }
+      }, 12000);
+
       document.body.appendChild(script);
     })();
   </script>

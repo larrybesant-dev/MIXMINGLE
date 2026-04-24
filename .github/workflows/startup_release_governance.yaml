@@ -16,11 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       STARTUP_LOG_PATH: tools/reports/startup_timeline.log
+      STARTUP_APP_URL: http://127.0.0.1:8080/
       STARTUP_HISTORY_PATH: tools/run_history.jsonl
       STARTUP_HISTORY_WINDOW: "10"
       STARTUP_SLA_PATH: STARTUP_SLA.json
       STARTUP_WEIGHTS_PATH: STARTUP_WEIGHTS.json
       STARTUP_POLICY_PATH: STARTUP_GATE_POLICY.json
+      WEB_SMOKE_REPORT_PATH: tools/reports/web_failure_smoke_report.json
 
     steps:
       - name: Checkout
@@ -30,6 +32,33 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Setup Node (for web runtime probes)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright runtime probes
+        run: |
+          npm install --no-save playwright@1.53.0
+          npx playwright install --with-deps chromium
+
+      - name: Build release web bundle
+        run: flutter build web --release --base-href "/"
+
+      - name: Produce startup timeline from real web runtime
+        run: |
+          python3 -m http.server 8080 --directory build/web >/tmp/mixvy_web_server.log 2>&1 &
+          SERVER_PID=$!
+          trap "kill ${SERVER_PID}" EXIT
+          node tools/ci_capture_startup_log.js
+
+      - name: Run deterministic web failure-mode smoke suite
+        run: |
+          python3 -m http.server 8080 --directory build/web >/tmp/mixvy_web_server_smoke.log 2>&1 &
+          SERVER_PID=$!
+          trap "kill ${SERVER_PID}" EXIT
+          node tools/ci_web_failure_smoke.js
 
       - name: Ensure reports directory
         run: mkdir -p tools/reports
@@ -107,6 +136,7 @@ jobs:
         run: |
           mkdir -p tools/reports/startup_cert_bundle
           cp tools/reports/startup_gate_report.json tools/reports/startup_cert_bundle/gate_report.json || true
+          cp "${WEB_SMOKE_REPORT_PATH}" tools/reports/startup_cert_bundle/web_failure_smoke_report.json || true
           cp "${STARTUP_LOG_PATH}" tools/reports/startup_cert_bundle/startup_timeline.log || true
           cp "${STARTUP_SLA_PATH}" tools/reports/startup_cert_bundle/STARTUP_SLA.json || true
           cp "${STARTUP_WEIGHTS_PATH}" tools/reports/startup_cert_bundle/STARTUP_WEIGHTS.json || true
