@@ -51,6 +51,16 @@ jobs:
           python3 -m http.server 8080 --directory build/web >/tmp/mixvy_web_server.log 2>&1 &
           SERVER_PID=$!
           trap "kill ${SERVER_PID}" EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS "${STARTUP_APP_URL}" >/dev/null; then
+              break
+            fi
+            if [ "$i" -eq 40 ]; then
+              echo "Static web server did not become ready in time." >&2
+              exit 1
+            fi
+            sleep 1
+          done
           node tools/ci_capture_startup_log.js
 
       - name: Run deterministic web failure-mode smoke suite
@@ -58,6 +68,16 @@ jobs:
           python3 -m http.server 8080 --directory build/web >/tmp/mixvy_web_server_smoke.log 2>&1 &
           SERVER_PID=$!
           trap "kill ${SERVER_PID}" EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS "${STARTUP_APP_URL}" >/dev/null; then
+              break
+            fi
+            if [ "$i" -eq 40 ]; then
+              echo "Static web server did not become ready in time." >&2
+              exit 1
+            fi
+            sleep 1
+          done
           node tools/ci_web_failure_smoke.js
 
       - name: Ensure reports directory

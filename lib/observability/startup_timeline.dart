@@ -2,6 +2,8 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 
+import 'startup_timeline_runtime_sink.dart';
+
 const bool kStartupDebug = true;
 
 enum StartupCheckpoint {
@@ -83,8 +85,7 @@ class StartupProfiler {
         '+${_elapsed.elapsedMilliseconds}ms startup.${checkpoint.name}$suffix';
 
     if (kIsWeb) {
-      // CI runtime probes capture startup truth from the browser console.
-      print(message);
+      emitStartupMessageToRuntime(message);
     }
 
     developer.log(
