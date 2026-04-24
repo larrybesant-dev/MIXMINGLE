@@ -2,7 +2,7 @@ import 'dart:js_interop';
 
 import 'package:web/web.dart' as web;
 
-const String _timelineKey = '__mixvyStartupTimeline';
+const String _timelineKey = 'startupLogs';
 
 void emitStartupMessageToRuntime(String message) {
   web.console.log(message.toJS);

@@ -5,6 +5,8 @@ const { chromium } = require('playwright');
 const APP_URL = process.env.STARTUP_APP_URL || 'http://127.0.0.1:8080/';
 const OUTPUT_PATH = process.env.STARTUP_LOG_PATH || 'tools/reports/startup_timeline.log';
 const CAPTURE_TIMEOUT_MS = Number(process.env.STARTUP_CAPTURE_TIMEOUT_MS || '45000');
+const APP_READY_TIMEOUT_MS = Number(process.env.STARTUP_APP_READY_TIMEOUT_MS || '30000');
+const LOG_POLL_TIMEOUT_MS = Number(process.env.STARTUP_LOG_POLL_TIMEOUT_MS || '15000');
 
 const REQUIRED = [
   'mainStart',
@@ -14,7 +16,7 @@ const REQUIRED = [
   'firstFrameRendered',
 ];
 
-const WINDOW_TIMELINE_KEY = '__mixvyStartupTimeline';
+const WINDOW_TIMELINE_KEY = 'startupLogs';
 
 function extractStartupLine(text) {
   const match = text.match(/(\+\d+ms startup\.[A-Za-z0-9_]+(?:\s+[^\r\n]*)?)/);
@@ -33,6 +35,8 @@ async function main() {
   const byCheckpoint = new Map();
   const consoleSamples = [];
   const pageErrors = [];
+  const requestFailures = [];
+  const responseSamples = [];
 
   page.on('console', (msg) => {
     if (consoleSamples.length < 20) {
@@ -54,10 +58,44 @@ async function main() {
     }
   });
 
+  page.on('requestfailed', (request) => {
+    if (requestFailures.length < 30) {
+      requestFailures.push({
+        url: request.url(),
+        method: request.method(),
+        errorText: request.failure() ? request.failure().errorText : 'unknown',
+      });
+    }
+  });
+
+  page.on('response', (response) => {
+    if (responseSamples.length < 30) {
+      responseSamples.push({
+        url: response.url(),
+        status: response.status(),
+      });
+    }
+  });
+
   await page.goto(APP_URL, { waitUntil: 'domcontentloaded', timeout: CAPTURE_TIMEOUT_MS });
 
+  await page.waitForFunction(
+    () => {
+      const hasFlutterSurface = Boolean(
+        document.querySelector('flt-glass-pane, flutter-view, flt-scene-host'),
+      );
+      const hasBootShell = Boolean(document.querySelector('#boot-shell'));
+      const hasBootstrapScript = Array.from(document.scripts).some((script) =>
+        (script.src || '').includes('flutter_bootstrap.js'),
+      );
+      const hasFlutterRuntime = Boolean(window._flutter || window.flutter);
+      return hasFlutterSurface || hasBootShell || hasBootstrapScript || hasFlutterRuntime;
+    },
+    { timeout: APP_READY_TIMEOUT_MS },
+  );
+
   const startedAt = Date.now();
-  while (Date.now() - startedAt < CAPTURE_TIMEOUT_MS) {
+  while (Date.now() - startedAt < LOG_POLL_TIMEOUT_MS) {
     const runtimeLines = await page.evaluate((key) => {
       const value = window.sessionStorage.getItem(key);
       if (!value) return [];
@@ -89,7 +127,8 @@ async function main() {
         hasFlutterSurface: Boolean(
           document.querySelector('flt-glass-pane, flutter-view, flt-scene-host'),
         ),
-        sessionTimeline: window.sessionStorage.getItem('__mixvyStartupTimeline') || '',
+        hasFlutterRuntime: Boolean(window._flutter || window.flutter),
+        startupLogs: window.sessionStorage.getItem('startupLogs') || '',
       }))
       .catch(() => null);
 
@@ -97,6 +136,8 @@ async function main() {
       `Missing startup checkpoints from real runtime console: ${missing.join(', ')}\n` +
           `bootState=${JSON.stringify(bootState)}\n` +
           `pageErrors=${JSON.stringify(pageErrors)}\n` +
+          `requestFailures=${JSON.stringify(requestFailures)}\n` +
+          `responseSamples=${JSON.stringify(responseSamples)}\n` +
           `consoleSamples=${JSON.stringify(consoleSamples)}`,
     );
   }
