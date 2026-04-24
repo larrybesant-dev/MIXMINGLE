@@ -2,10 +2,31 @@ const fs = require('fs/promises');
 const path = require('path');
 const { chromium } = require('playwright');
 
-const APP_URL = process.env.STARTUP_APP_URL || 'http://127.0.0.1:8080/';
+const APP_URL = process.env.STARTUP_APP_URL || 'http://127.0.0.1:9090/';
 const REPORT_PATH = process.env.WEB_SMOKE_REPORT_PATH || 'tools/reports/web_failure_smoke_report.json';
+const APP_READY_CONTRACT_KEY = process.env.STARTUP_APP_READY_CONTRACT_KEY || 'startupAppReadyContract';
+const APP_READY_CONTRACT_VERSION = 'mixvy.startup.app_ready.v1';
 
 const FLUTTER_SURFACE_SELECTOR = 'flt-glass-pane, flutter-view, flt-scene-host';
+
+function toErrorText(error) {
+  if (!error) return 'unknown_error';
+  if (typeof error === 'string') return error;
+  if (error.message) return error.message;
+  return String(error);
+}
+
+async function readAppReadyContract(page) {
+  return page.evaluate((key) => {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return { malformed: true, rawSnippet: raw.slice(0, 1000) };
+    }
+  }, APP_READY_CONTRACT_KEY);
+}
 
 async function waitForUiFallbackOrSurface(page, timeoutMs) {
   const started = Date.now();
@@ -14,11 +35,17 @@ async function waitForUiFallbackOrSurface(page, timeoutMs) {
     .catch(() => '');
 
   while (Date.now() - started < timeoutMs) {
-    const hasSurface = await page.$(FLUTTER_SURFACE_SELECTOR);
-    if (hasSurface) {
-      return { mode: 'flutter-surface' };
+    const contract = await readAppReadyContract(page);
+    if (
+      contract &&
+      !contract.malformed &&
+      contract.contractVersion === APP_READY_CONTRACT_VERSION &&
+      contract.ready === true
+    ) {
+      return { mode: 'app-ready-contract', contractReady: true };
     }
 
+    const hasSurface = await page.$(FLUTTER_SURFACE_SELECTOR);
     const bootMessage = await page
       .$eval('#boot-msg', (el) => (el.textContent || '').trim())
       .catch(() => '');
@@ -29,7 +56,11 @@ async function waitForUiFallbackOrSurface(page, timeoutMs) {
         bootMessage.includes('Unable to load app runtime') ||
         bootMessage.includes('Still loading'))
     ) {
-      return { mode: 'fallback', bootMessage };
+      return {
+        mode: 'fallback',
+        bootMessage,
+        contractReady: Boolean(contract && contract.ready === true),
+      };
     }
 
     await page.waitForTimeout(250);
@@ -120,6 +151,7 @@ async function runScenario(name, fn) {
     return {
       name,
       status: 'PASS',
+      reason: 'policy_rejection',
       durationMs: Date.now() - started,
       result,
     };
@@ -127,38 +159,70 @@ async function runScenario(name, fn) {
     return {
       name,
       status: 'FAIL',
+      reason: 'probe_failure',
       durationMs: Date.now() - started,
-      error: error && error.message ? error.message : String(error),
+      error: toErrorText(error),
     };
   }
 }
 
 async function main() {
-  const browser = await chromium.launch({ headless: true });
+  const startedAtMs = Date.now();
+  let browser;
+  let scenarios = [];
+  let status = 'FAIL';
+  let reason = 'UNINITIALIZED';
 
-  const scenarios = [];
-  scenarios.push(await runScenario('slow_3g_startup', () => runSlow3gScenario(browser)));
-  scenarios.push(await runScenario('offline_launch_fallback', () => runOfflineScenario(browser)));
-  scenarios.push(await runScenario('firebase_timeout_fallback', () => runFirebaseTimeoutScenario(browser)));
-  scenarios.push(await runScenario('reconnect_reload_recovery', () => runReconnectScenario(browser)));
+  try {
+    browser = await chromium.launch({ headless: true });
 
-  await browser.close();
+    scenarios.push(await runScenario('slow_3g_startup', () => runSlow3gScenario(browser)));
+    scenarios.push(await runScenario('offline_launch_fallback', () => runOfflineScenario(browser)));
+    scenarios.push(await runScenario('firebase_timeout_fallback', () => runFirebaseTimeoutScenario(browser)));
+    scenarios.push(await runScenario('reconnect_reload_recovery', () => runReconnectScenario(browser)));
 
-  const report = {
-    generatedAt: new Date().toISOString(),
-    appUrl: APP_URL,
-    scenarios,
-  };
+    const failed = scenarios.filter((s) => s.status !== 'PASS');
+    if (failed.length > 0) {
+      status = 'FAIL';
+      reason = 'probe_failure';
+    } else {
+      status = 'PASS';
+      reason = 'policy_rejection';
+    }
+  } catch (error) {
+    status = 'FAIL';
+    reason = 'probe_failure';
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (_) {
+        // Ignore close errors; report still written.
+      }
+    }
 
-  await fs.mkdir(path.dirname(REPORT_PATH), { recursive: true });
-  await fs.writeFile(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+    const report = {
+      contractVersion: 'web_smoke_report_v1',
+      generatedAt: new Date().toISOString(),
+      appUrl: APP_URL,
+      status,
+      reason,
+      durationMs: Date.now() - startedAtMs,
+      appReadyContractKey: APP_READY_CONTRACT_KEY,
+      appReadyContractVersion: APP_READY_CONTRACT_VERSION,
+      scenarios,
+    };
 
-  const failed = scenarios.filter((s) => s.status !== 'PASS');
-  if (failed.length > 0) {
-    throw new Error(`Web failure smoke suite failed scenarios: ${failed.map((s) => s.name).join(', ')}`);
+    await fs.mkdir(path.dirname(REPORT_PATH), { recursive: true });
+    await fs.writeFile(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+
+    if (status !== 'PASS') {
+      console.error(`Web failure smoke suite failed. ${reason}`);
+      process.exit(1);
+    }
+
+    console.log(`Web failure smoke suite passed. Report: ${REPORT_PATH}`);
   }
-
-  console.log(`Web failure smoke suite passed. Report: ${REPORT_PATH}`);
 }
 
 main().catch((error) => {

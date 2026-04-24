@@ -13,16 +13,16 @@ permissions:
 jobs:
   startup-gate:
     name: Startup Gate (Governance)
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     env:
+      PRECHECK_PORT: "9090"
       STARTUP_LOG_PATH: tools/reports/startup_timeline.log
-      STARTUP_APP_URL: http://127.0.0.1:8080/
-      STARTUP_HISTORY_PATH: tools/run_history.jsonl
-      STARTUP_HISTORY_WINDOW: "10"
-      STARTUP_SLA_PATH: STARTUP_SLA.json
-      STARTUP_WEIGHTS_PATH: STARTUP_WEIGHTS.json
-      STARTUP_POLICY_PATH: STARTUP_GATE_POLICY.json
+      STARTUP_PROBE_REPORT_PATH: tools/reports/startup_probe_report.json
+      STARTUP_APP_URL: http://127.0.0.1:9090/
       WEB_SMOKE_REPORT_PATH: tools/reports/web_failure_smoke_report.json
+      PORT_PREFLIGHT_REPORT_PATH: artifacts/port_preflight_report.json
+      DEPLOYMENT_CONTRACT_PATH: artifacts/deployment_contract.json
+      DEPLOYMENT_CONTRACT_VALIDATION_PATH: artifacts/deployment_contract_validation.json
 
     steps:
       - name: Checkout
@@ -36,157 +36,201 @@ jobs:
       - name: Setup Node (for web runtime probes)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Playwright runtime probes
+        shell: pwsh
         run: |
           npm install --no-save playwright@1.53.0
-          npx playwright install --with-deps chromium
+          npm install --no-save http-server@14.1.1
+          npx playwright install chromium
+
+      - name: Detect execution environment
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File tools/detect_execution_environment.ps1 -EmitGitHubEnv
 
       - name: Build release web bundle
         run: flutter build web --release --base-href "/"
 
-      - name: Produce startup timeline from real web runtime
+      - name: Port preflight (stage 2)
+        shell: pwsh
         run: |
-          python3 -m http.server 8080 --directory build/web >/tmp/mixvy_web_server.log 2>&1 &
-          SERVER_PID=$!
-          trap "kill ${SERVER_PID}" EXIT
-          for i in $(seq 1 40); do
-            if curl -fsS "${STARTUP_APP_URL}" >/dev/null; then
-              break
-            fi
-            if [ "$i" -eq 40 ]; then
-              echo "Static web server did not become ready in time." >&2
-              exit 1
-            fi
-            sleep 1
-          done
-          node tools/ci_capture_startup_log.js
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+
+          $mode = if ($env:GITHUB_ACTIONS -eq 'true' -or $env:CI -eq 'true') { 'Force' } else { 'Safe' }
+          & powershell -ExecutionPolicy Bypass -File tools/port_preflight_guard.ps1 -Port ([int]$env:PRECHECK_PORT) -Mode $mode -ExecutionEnvironment auto -TimeoutSeconds 45 -StabilizationSeconds 3
+          $exitCode = $LASTEXITCODE
+
+          $portOwnership = 'unknown'
+          try {
+            $conn = Get-NetTCPConnection -LocalPort ([int]$env:PRECHECK_PORT) -State Listen -ErrorAction Stop | Select-Object -First 1
+            if ($conn) {
+              if ([int]$conn.OwningProcess -eq 4) {
+                $portOwnership = 'system'
+              } else {
+                $svc = Get-CimInstance Win32_Service -Filter "ProcessId = $($conn.OwningProcess)" -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($svc) { $portOwnership = 'service' } else { $portOwnership = 'user' }
+              }
+            }
+          } catch {
+            $portOwnership = 'unknown'
+          }
+
+          @{
+            status = if ($exitCode -eq 0) { 'PASS' } else { 'FAIL' }
+            port = [int]$env:PRECHECK_PORT
+            exitCode = $exitCode
+            portOwnership = $portOwnership
+          } | ConvertTo-Json -Depth 5 | Set-Content -Path $env:PORT_PREFLIGHT_REPORT_PATH -Encoding utf8
+
+      - name: Produce startup timeline from real web runtime
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File tools/run_startup_probe.ps1 -Mode startup -SkipPreflight -Port 9090 -BuildPath build/web -AppUrl $env:STARTUP_APP_URL -StartupLogPath $env:STARTUP_LOG_PATH -StartupReportPath $env:STARTUP_PROBE_REPORT_PATH -WebSmokeReportPath $env:WEB_SMOKE_REPORT_PATH
 
       - name: Run deterministic web failure-mode smoke suite
+        continue-on-error: true
+        shell: pwsh
         run: |
-          python3 -m http.server 8080 --directory build/web >/tmp/mixvy_web_server_smoke.log 2>&1 &
-          SERVER_PID=$!
-          trap "kill ${SERVER_PID}" EXIT
-          for i in $(seq 1 40); do
-            if curl -fsS "${STARTUP_APP_URL}" >/dev/null; then
-              break
-            fi
-            if [ "$i" -eq 40 ]; then
-              echo "Static web server did not become ready in time." >&2
-              exit 1
-            fi
-            sleep 1
-          done
-          node tools/ci_web_failure_smoke.js
+          powershell -ExecutionPolicy Bypass -File tools/run_startup_probe.ps1 -Mode smoke -SkipPreflight -Port 9090 -BuildPath build/web -AppUrl $env:STARTUP_APP_URL -StartupLogPath $env:STARTUP_LOG_PATH -StartupReportPath $env:STARTUP_PROBE_REPORT_PATH -WebSmokeReportPath $env:WEB_SMOKE_REPORT_PATH
 
-      - name: Ensure reports directory
-        run: mkdir -p tools/reports
-
-      - name: Restore authoritative startup history cache
-        id: restore_history
-        uses: actions/cache/restore@v4
-        with:
-          path: tools/run_history.jsonl
-          key: startup-history-main
-          restore-keys: |
-            startup-history-main-
-
-      - name: Validate startup log input contract
+      - name: Build deployment contract (stage 5)
+        if: always()
+        shell: pwsh
         run: |
-          if [ ! -f "${STARTUP_LOG_PATH}" ]; then
-            echo "Missing startup log at ${STARTUP_LOG_PATH}" >&2
-            echo "Provide startup timeline logs before governance evaluation." >&2
-            exit 1
-          fi
+          powershell -ExecutionPolicy Bypass -File tools/build_deployment_contract.ps1 -Port ([int]$env:PRECHECK_PORT) -StartupProbeReportPath $env:STARTUP_PROBE_REPORT_PATH -SmokeProbeReportPath $env:WEB_SMOKE_REPORT_PATH -PreflightReportPath $env:PORT_PREFLIGHT_REPORT_PATH -OutputPath $env:DEPLOYMENT_CONTRACT_PATH
 
-          if [ ! -s "${STARTUP_LOG_PATH}" ]; then
-            echo "Startup log is empty: ${STARTUP_LOG_PATH}" >&2
-            exit 1
-          fi
-
-          for cp in mainStart bindingReady firebaseReady bootstrapResolved firstFrameRendered; do
-            if ! grep -q "startup.${cp}" "${STARTUP_LOG_PATH}"; then
-              echo "Startup log missing required checkpoint startup.${cp}" >&2
-              exit 1
-            fi
-          done
-
-      - name: Run startup governance gate
+      - name: Validate deployment contract (stage 6)
+        if: always()
+        shell: pwsh
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            dart run tools/startup_gate_validator.dart "${STARTUP_LOG_PATH}" \
-              --sla "${STARTUP_SLA_PATH}" \
-              --weights "${STARTUP_WEIGHTS_PATH}" \
-              --policy "${STARTUP_POLICY_PATH}" \
-              --history "${STARTUP_HISTORY_PATH}" \
-              --history-window "${STARTUP_HISTORY_WINDOW}" \
-              --no-history-write \
-              --json > tools/reports/startup_gate_report.json
-          else
-            dart run tools/startup_gate_validator.dart "${STARTUP_LOG_PATH}" \
-              --sla "${STARTUP_SLA_PATH}" \
-              --weights "${STARTUP_WEIGHTS_PATH}" \
-              --policy "${STARTUP_POLICY_PATH}" \
-              --history "${STARTUP_HISTORY_PATH}" \
-              --history-window "${STARTUP_HISTORY_WINDOW}" \
-              --json > tools/reports/startup_gate_report.json
-          fi
+          powershell -ExecutionPolicy Bypass -File tools/validate_deployment_contract.ps1 -ContractPath $env:DEPLOYMENT_CONTRACT_PATH -SchemaPath tools/deployment_contract.schema.json -OutputPath $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH
 
-      - name: Evaluate gate decision policy
+      - name: Governance decision (stage 7)
+        shell: pwsh
         run: |
-          gate=$(jq -r '.gate' tools/reports/startup_gate_report.json)
-          score=$(jq -r '.score' tools/reports/startup_gate_report.json)
-          trend=$(jq -r '.trend.status' tools/reports/startup_gate_report.json)
-          echo "Gate=${gate} Score=${score} Trend=${trend}"
+          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_PATH)) {
+            throw 'policy_rejection'
+          }
 
-          if [ "${gate}" = "FAIL" ]; then
-            echo "Startup governance gate failed. Blocking merge/release." >&2
-            exit 1
-          fi
-
-          block_on_warn=$(jq -r '.policy.blockOnWarn' tools/reports/startup_gate_report.json)
-          if [ "${gate}" = "WARN" ] && [ "${block_on_warn}" = "true" ]; then
-            echo "Startup governance gate returned WARN and policy blocks warnings." >&2
-            exit 1
-          fi
+          $contract = Get-Content -Path $env:DEPLOYMENT_CONTRACT_PATH -Raw | ConvertFrom-Json
+          if ($contract.governance.decision -ne 'allow') {
+            throw 'policy_rejection'
+          }
 
       - name: Build startup certification bundle
         if: always()
+        shell: pwsh
         run: |
-          mkdir -p tools/reports/startup_cert_bundle
-          cp tools/reports/startup_gate_report.json tools/reports/startup_cert_bundle/gate_report.json || true
-          cp "${WEB_SMOKE_REPORT_PATH}" tools/reports/startup_cert_bundle/web_failure_smoke_report.json || true
-          cp "${STARTUP_LOG_PATH}" tools/reports/startup_cert_bundle/startup_timeline.log || true
-          cp "${STARTUP_SLA_PATH}" tools/reports/startup_cert_bundle/STARTUP_SLA.json || true
-          cp "${STARTUP_WEIGHTS_PATH}" tools/reports/startup_cert_bundle/STARTUP_WEIGHTS.json || true
-          cp "${STARTUP_POLICY_PATH}" tools/reports/startup_cert_bundle/STARTUP_GATE_POLICY.json || true
-          if [ -f "${STARTUP_HISTORY_PATH}" ]; then
-            cp "${STARTUP_HISTORY_PATH}" tools/reports/startup_cert_bundle/run_history.jsonl
-          fi
+          New-Item -ItemType Directory -Path tools/reports/startup_cert_bundle -Force | Out-Null
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+
+          if (-not (Test-Path $env:STARTUP_PROBE_REPORT_PATH)) {
+            @{
+              contractVersion = 'startup_probe_report_v1'
+              generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+              status = 'FAIL'
+              reason = 'probe_failure'
+            } | ConvertTo-Json -Depth 10 | Set-Content -Path $env:STARTUP_PROBE_REPORT_PATH -Encoding utf8
+          }
+
+          if (-not (Test-Path $env:WEB_SMOKE_REPORT_PATH)) {
+            @{
+              contractVersion = 'web_smoke_report_v1'
+              generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+              status = 'FAIL'
+              reason = 'probe_failure'
+              scenarios = @()
+            } | ConvertTo-Json -Depth 10 | Set-Content -Path $env:WEB_SMOKE_REPORT_PATH -Encoding utf8
+          }
+
+          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_PATH)) {
+            @{
+              artifact = @{ commitSha = 'unknown'; buildId = 'unknown'; workflowRunId = 'unknown' }
+              startup = @{ contractVersion = 'unknown'; ready = $false; checkpoints = @() }
+              environment = @{ class = 'unknown'; os = 'windows' }
+              privilege = @{ class = 'restricted' }
+              networking = @{ port = [int]$env:PRECHECK_PORT; portOwnership = 'unknown' }
+              probeResults = @{ startupProbe = 'fail'; smokeProbe = 'fail' }
+              governance = @{ decision = 'deny'; reasonCode = 'schema_invalid' }
+            } | ConvertTo-Json -Depth 20 | Set-Content -Path $env:DEPLOYMENT_CONTRACT_PATH -Encoding utf8
+          }
+
+          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH)) {
+            @{
+              status = 'FAIL'
+              reasonCode = 'schema_invalid'
+              summary = @{ error = 'missing_validation_output' }
+            } | ConvertTo-Json -Depth 20 | Set-Content -Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH -Encoding utf8
+          }
+
+          Copy-Item $env:STARTUP_PROBE_REPORT_PATH tools/reports/startup_cert_bundle/startup_probe_report.json -Force
+          Copy-Item $env:WEB_SMOKE_REPORT_PATH tools/reports/startup_cert_bundle/web_failure_smoke_report.json -Force
+          Copy-Item $env:STARTUP_LOG_PATH tools/reports/startup_cert_bundle/startup_timeline.log -ErrorAction SilentlyContinue
+          Copy-Item $env:PORT_PREFLIGHT_REPORT_PATH tools/reports/startup_cert_bundle/port_preflight_report.json -ErrorAction SilentlyContinue
+          Copy-Item $env:DEPLOYMENT_CONTRACT_PATH tools/reports/startup_cert_bundle/deployment_contract.json -Force
+          Copy-Item $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH tools/reports/startup_cert_bundle/deployment_contract_validation.json -Force
 
       - name: Write step summary
         if: always()
+        shell: pwsh
         run: |
-          echo "## Startup Release Governance" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f tools/reports/startup_gate_report.json ]; then
-            echo "- Gate: $(jq -r '.gate' tools/reports/startup_gate_report.json)" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Pipeline version: $(jq -r '.pipeline_version' tools/reports/startup_gate_report.json)" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Score: $(jq -r '.score' tools/reports/startup_gate_report.json)" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Trend: $(jq -r '.trend.status' tools/reports/startup_gate_report.json)" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Failures:" >> "$GITHUB_STEP_SUMMARY"
-            jq -r '.failures[]? | "  - " + .' tools/reports/startup_gate_report.json >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "- No startup gate report generated." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '## Startup Release Governance'
 
-      - name: Upload startup gate report artifact
+          if (Test-Path $env:DEPLOYMENT_CONTRACT_PATH) {
+            $contract = Get-Content -Path $env:DEPLOYMENT_CONTRACT_PATH -Raw | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract decision: $($contract.governance.decision)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract reason: $($contract.governance.reasonCode)"
+          }
+
+          if (Test-Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH) {
+            $validation = Get-Content -Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH -Raw | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract validation: $($validation.status) ($($validation.reasonCode))"
+          }
+
+          if (Test-Path $env:STARTUP_PROBE_REPORT_PATH) {
+            $probe = Get-Content -Path $env:STARTUP_PROBE_REPORT_PATH -Raw | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Startup probe: $($probe.status) ($($probe.reason))"
+          }
+
+          if (Test-Path $env:WEB_SMOKE_REPORT_PATH) {
+            $smoke = Get-Content -Path $env:WEB_SMOKE_REPORT_PATH -Raw | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Web smoke: $($smoke.status) ($($smoke.reason))"
+          }
+
+      - name: Upload deployment contract artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: startup-gate-report-${{ github.run_id }}
-          path: tools/reports/startup_gate_report.json
-          if-no-files-found: warn
+          name: deployment-contract-${{ github.run_id }}
+          path: artifacts/deployment_contract.json
+          if-no-files-found: error
+
+      - name: Upload deployment contract validation artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-contract-validation-${{ github.run_id }}
+          path: artifacts/deployment_contract_validation.json
+          if-no-files-found: error
+
+      - name: Upload startup probe report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-probe-report-${{ github.run_id }}
+          path: tools/reports/startup_probe_report.json
+          if-no-files-found: error
+
+      - name: Upload web smoke report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-smoke-report-${{ github.run_id }}
+          path: tools/reports/web_failure_smoke_report.json
+          if-no-files-found: error
 
       - name: Upload startup certification bundle artifact
         if: always()
@@ -194,11 +238,4 @@ jobs:
         with:
           name: startup-certification-bundle-${{ github.run_id }}
           path: tools/reports/startup_cert_bundle
-          if-no-files-found: warn
-
-      - name: Save authoritative startup history cache (main only)
-        if: github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v4
-        with:
-          path: tools/run_history.jsonl
-          key: startup-history-main-${{ github.run_id }}
+          if-no-files-found: error

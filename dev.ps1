@@ -26,6 +26,11 @@ switch ($cmd) {
         Run "Starting Flutter Web" "flutter run -d chrome"
     }
 
+    "reset" {
+        Header "Reset Dev Environment"
+        Run "Release common dev ports" "powershell -ExecutionPolicy Bypass -File tools/reset_dev_environment.ps1"
+    }
+
     "build" {
         Header "Production Build"
         Run "Building release" "flutter build web --release"
@@ -94,6 +99,7 @@ switch ($cmd) {
         Write-Host "Commands:"
         Write-Host "  .\dev.ps1 clean"
         Write-Host "  .\dev.ps1 run"
+        Write-Host "  .\dev.ps1 reset"
         Write-Host "  .\dev.ps1 build"
         Write-Host "  .\dev.ps1 firebase:deploy"
         Write-Host "  .\dev.ps1 audit:streams"
