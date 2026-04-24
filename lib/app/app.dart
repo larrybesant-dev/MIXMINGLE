@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,14 +25,20 @@ import '../features/after_dark/theme/after_dark_theme.dart';
 import '../features/profile/profile_controller.dart';
 import '../services/presence_controller.dart';
 import '../core/events/event_providers.dart';
+import '../observability/startup_timeline.dart';
 
 final appBootstrapProvider = FutureProvider<void>((ref) async {
+  final startup = StartupProfiler.instance;
   final bootStateNotifier = ref.read(bootStateProvider.notifier);
   if (Firebase.apps.isEmpty) {
     bootStateNotifier.setFailed();
     developer.log(
       'Firebase app is not initialized during bootstrap',
       name: 'appBootstrapProvider',
+    );
+    startup.markBootstrapResolved(
+      resolution: BootstrapResolution.failed,
+      detail: 'reason=firebase_apps_empty',
     );
     return;
   }
@@ -51,6 +58,10 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
         .first;
     // Auth check succeeded; boot is ready
     bootStateNotifier.setReady();
+    startup.markBootstrapResolved(
+      resolution: BootstrapResolution.ready,
+      detail: 'user=${auth.currentUser != null}',
+    );
   } catch (error, stackTrace) {
     developer.log(
       'Auth state check failed during bootstrap',
@@ -59,6 +70,11 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
       name: 'appBootstrapProvider',
     );
     bootStateNotifier.setDegraded();
+    startup.markBootstrapResolved(
+      resolution: BootstrapResolution.degraded,
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 
   if (!kIsWeb) {
@@ -76,6 +92,37 @@ class MixVyApp extends ConsumerStatefulWidget {
 class _MixVyAppState extends ConsumerState<MixVyApp> {
   bool _runtimeStarted = false;
   bool _runtimeQueued = false;
+  int _bootHintIndex = 0;
+  Timer? _bootHintTimer;
+
+  static const List<String> _bootHints = <String>[
+    'Connecting...',
+    'Preparing your space...',
+    'Almost ready...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _bootHintTimer = Timer.periodic(const Duration(milliseconds: 1400), (
+      timer,
+    ) {
+      if (!mounted || _bootHintIndex >= _bootHints.length - 1) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        _bootHintIndex += 1;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _bootHintTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _startRuntimeServices() async {
     if (_runtimeStarted || _runtimeQueued) return;
@@ -86,9 +133,7 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        await ref
-            .read(profileControllerProvider.notifier)
-            .loadCurrentProfile();
+        await ref.read(profileControllerProvider.notifier).loadCurrentProfile();
       }
 
       ref.read(presenceControllerProvider);
@@ -108,30 +153,119 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
     }
   }
 
-  Widget _buildBootShell({String message = 'Starting MixVy...'}) {
+  Widget _buildBootShell({String? message}) {
+    final bootMessage = message ?? _bootHints[_bootHintIndex];
     final body = Scaffold(
       backgroundColor: VelvetNoir.surface,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                color: VelvetNoir.primary,
-              ),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF130F0C), VelvetNoir.surface, Color(0xFF221118)],
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: VelvetNoir.primary.withValues(alpha: 0.45),
+                    ),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0x33D4AF37), Color(0x33781E2B)],
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33781E2B),
+                        blurRadius: 28,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'M',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: VelvetNoir.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'MixVy',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: VelvetNoir.onSurface,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.06),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Column(
+                    key: ValueKey<String>(bootMessage),
+                    children: [
+                      Text(
+                        bootMessage,
+                        style: const TextStyle(
+                          color: VelvetNoir.onSurface,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Loading your rooms, profile, and live state.',
+                        style: TextStyle(
+                          color: Color(0xCCF7EDE2),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    color: VelvetNoir.primary,
+                    strokeWidth: 2.6,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: const TextStyle(
-                color: VelvetNoir.onSurface,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -142,8 +276,7 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
       theme: AppTheme.light,
       darkTheme: midnightCreativeTheme,
       home: body,
-      onGenerateRoute: (_) =>
-          MaterialPageRoute(builder: (_) => body),
+      onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => body),
     );
   }
 
@@ -215,19 +348,18 @@ class _MixVyAppState extends ConsumerState<MixVyApp> {
         final locale = Locale(settings.localeCode);
         final afterDark = ref.watch(afterDarkSessionProvider);
 
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          StartupProfiler.instance.markFirstFrameRendered();
+        });
+
         return MaterialApp.router(
           title: 'MixVy',
           theme: afterDark ? afterDarkTheme : AppTheme.light,
-          darkTheme:
-              afterDark ? afterDarkTheme : midnightCreativeTheme,
-          themeMode:
-              afterDark ? ThemeMode.dark : settings.themeMode,
+          darkTheme: afterDark ? afterDarkTheme : midnightCreativeTheme,
+          themeMode: afterDark ? ThemeMode.dark : settings.themeMode,
           locale: locale,
-          supportedLocales: const [
-            Locale('en'),
-            Locale('es'),
-            Locale('fr'),
-          ],
+          supportedLocales: const [Locale('en'), Locale('es'), Locale('fr')],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

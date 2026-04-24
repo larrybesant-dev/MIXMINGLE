@@ -3,13 +3,19 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'observability/startup_timeline.dart';
 import 'app/app.dart';
 import 'app/boot_state.dart';
 import 'app/boot_state_notifier.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
+  final startup = StartupProfiler.instance;
+  startup.markMainStart();
+
   WidgetsFlutterBinding.ensureInitialized();
+  startup.markBindingReady();
+
   var initialBootState = BootState.loading;
 
   FlutterError.onError = (details) {
@@ -23,6 +29,7 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     initialBootState = BootState.loading;
+    startup.markFirebaseReady(success: true);
   } catch (error, stackTrace) {
     initialBootState = BootState.failed;
     developer.log(
@@ -30,6 +37,11 @@ Future<void> main() async {
       error: error,
       stackTrace: stackTrace,
       name: 'main',
+    );
+    startup.markFirebaseReady(
+      success: false,
+      error: error,
+      stackTrace: stackTrace,
     );
   }
 
