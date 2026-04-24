@@ -1,4 +1,5 @@
 {
+  "pipeline_version": "1.0.0",
   "bindingReady": 0.10,
   "firebaseReady": 0.15,
   "bootstrapResolved": 0.25,

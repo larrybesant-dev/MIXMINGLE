@@ -1,67 +1,33 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
-enum StartupCheckpoint {
-  mainStart,
-  bindingReady,
-  firebaseReady,
-  bootstrapResolved,
-  firstFrameRendered,
-}
+import 'run_history_store.dart';
+import 'startup_baseline_engine.dart';
+import 'startup_pipeline_models.dart';
+import 'startup_run_schema_validator.dart';
+import 'startup_scoring_engine.dart';
+import 'startup_trend_engine.dart';
 
-const List<StartupCheckpoint> kRequiredCheckpoints = <StartupCheckpoint>[
-  StartupCheckpoint.mainStart,
-  StartupCheckpoint.bindingReady,
-  StartupCheckpoint.firebaseReady,
-  StartupCheckpoint.bootstrapResolved,
-  StartupCheckpoint.firstFrameRendered,
-];
-
-const List<StartupCheckpoint> kSlaCheckpoints = <StartupCheckpoint>[
-  StartupCheckpoint.bindingReady,
-  StartupCheckpoint.firebaseReady,
-  StartupCheckpoint.bootstrapResolved,
-  StartupCheckpoint.firstFrameRendered,
-];
-
-final RegExp _timelineRegExp = RegExp(r'\+(\d+)ms\s+startup\.([a-zA-Z]+)\b');
-
-class RunSample {
-  RunSample(this.id);
-
-  final int id;
-  final Map<StartupCheckpoint, int> values = <StartupCheckpoint, int>{};
-}
-
-class Stats {
-  const Stats({required this.p50, required this.p95, required this.worst});
-
-  final int p50;
-  final int p95;
-  final int worst;
-}
-
-class ValidationReport {
-  const ValidationReport({
-    required this.pass,
-    required this.failures,
-    required this.runs,
-    required this.statsByCheckpoint,
-    required this.startupStats,
+class ArgConfig {
+  const ArgConfig({
+    required this.inputPath,
+    required this.slaPath,
+    required this.weightsPath,
+    required this.historyPath,
+    required this.historyWindow,
+    required this.historyWrite,
+    required this.jsonOutput,
+    required this.showHelp,
   });
 
-  final bool pass;
-  final List<String> failures;
-  final List<RunSample> runs;
-  final Map<StartupCheckpoint, Stats> statsByCheckpoint;
-  final Stats startupStats;
-}
-
-class BaselineData {
-  const BaselineData(this.p95ByCheckpoint);
-
-  final Map<StartupCheckpoint, int> p95ByCheckpoint;
+  final String? inputPath;
+  final String slaPath;
+  final String weightsPath;
+  final String historyPath;
+  final int historyWindow;
+  final bool historyWrite;
+  final bool jsonOutput;
+  final bool showHelp;
 }
 
 Future<void> main(List<String> args) async {
@@ -69,9 +35,7 @@ Future<void> main(List<String> args) async {
   try {
     config = _parseArgs(args);
   } catch (error) {
-    stderr.writeln('STARTUP GATE: FAIL');
-    stderr.writeln('- invalid arguments: $error');
-    exitCode = 1;
+    _fail('invalid arguments: $error');
     return;
   }
 
@@ -85,9 +49,7 @@ Future<void> main(List<String> args) async {
   try {
     inputText = await _readInput(config.inputPath);
   } catch (error) {
-    stderr.writeln('STARTUP GATE: FAIL');
-    stderr.writeln('- unable to read input: $error');
-    exitCode = 1;
+    _fail('unable to read input: $error');
     return;
   }
 
@@ -95,55 +57,94 @@ Future<void> main(List<String> args) async {
   try {
     sla = _loadSla(config.slaPath);
   } catch (error) {
-    stderr.writeln('STARTUP GATE: FAIL');
-    stderr.writeln('- invalid SLA config: $error');
-    exitCode = 1;
+    _fail('invalid SLA config: $error');
     return;
   }
 
-  BaselineData? baseline;
-  if (config.baselinePath != null) {
-    try {
-      baseline = _loadBaseline(config.baselinePath!);
-    } catch (error) {
-      stderr.writeln('STARTUP GATE: FAIL');
-      stderr.writeln('- invalid baseline config: $error');
-      exitCode = 1;
-      return;
-    }
+  final WeightsConfig weights;
+  try {
+    weights = _loadWeights(config.weightsPath);
+  } catch (error) {
+    _fail('invalid weights config: $error');
+    return;
   }
 
-  final ValidationReport report = _validate(inputText, sla, baseline: baseline);
+  final RunHistoryStore historyStore = RunHistoryStore(config.historyPath);
+  final List<Map<String, Object?>> historyEntries = await historyStore
+      .loadEntries();
+
+  final StartupRunSchemaValidator schemaValidator =
+      const StartupRunSchemaValidator();
+  final List<String> historySchemaFailures = schemaValidator.validateEntries(
+    historyEntries,
+  );
+  if (historySchemaFailures.isNotEmpty) {
+    _fail(historySchemaFailures.first);
+    return;
+  }
+
+  final StartupBaselineEngine baselineEngine = const StartupBaselineEngine();
+  final StartupTrendEngine trendEngine = const StartupTrendEngine();
+
+  final Map<StartupCheckpoint, int> baseline = baselineEngine
+      .computeFromHistory(
+        entries: historyEntries,
+        window: config.historyWindow,
+      );
+
+  final TrendAnalysis trend = trendEngine.analyze(
+    entries: historyEntries,
+    window: config.historyWindow,
+  );
+
+  final StartupScoringEngine scoringEngine = StartupScoringEngine(
+    sla: sla,
+    weights: weights.weights,
+    passThreshold: weights.passThreshold,
+    warnThreshold: weights.warnThreshold,
+  );
+
+  final ParseResult parsed = scoringEngine.parseRuns(inputText);
+  final ScoringResult scoring = scoringEngine.evaluate(
+    parsed: parsed,
+    baseline: baseline,
+    trend: trend,
+  );
+
+  final Map<String, Object?> output = _buildOutput(
+    scoring: scoring,
+    trend: trend,
+    baseline: baseline,
+    sla: sla,
+    runCount: parsed.runs.length,
+  );
+
+  if (config.historyWrite) {
+    await historyStore.appendEntry(
+      _buildHistoryEntry(
+        scoring: scoring,
+        trend: trend,
+        runCount: parsed.runs.length,
+      ),
+    );
+  }
 
   if (config.jsonOutput) {
-    stdout.writeln(jsonEncode(_toJson(report, sla, baseline: baseline)));
+    stdout.writeln(jsonEncode(output));
   } else {
-    _printHuman(report, sla);
+    _printHuman(output);
   }
 
-  exitCode = report.pass ? 0 : 1;
-}
-
-class ArgConfig {
-  const ArgConfig({
-    required this.inputPath,
-    required this.slaPath,
-    required this.baselinePath,
-    required this.jsonOutput,
-    required this.showHelp,
-  });
-
-  final String? inputPath;
-  final String slaPath;
-  final String? baselinePath;
-  final bool jsonOutput;
-  final bool showHelp;
+  exitCode = scoring.decision == GateDecision.fail ? 1 : 0;
 }
 
 ArgConfig _parseArgs(List<String> args) {
   String? inputPath;
   String slaPath = 'STARTUP_SLA.json';
-  String? baselinePath;
+  String weightsPath = 'STARTUP_WEIGHTS.json';
+  String historyPath = 'tools/run_history.jsonl';
+  int historyWindow = 10;
+  bool historyWrite = true;
   bool jsonOutput = false;
   bool showHelp = false;
 
@@ -162,11 +163,29 @@ ArgConfig _parseArgs(List<String> args) {
         }
         slaPath = args[++i];
         break;
-      case '--baseline':
+      case '--weights':
         if (i + 1 >= args.length) {
-          throw ArgumentError('Missing value for --baseline');
+          throw ArgumentError('Missing value for --weights');
         }
-        baselinePath = args[++i];
+        weightsPath = args[++i];
+        break;
+      case '--history':
+        if (i + 1 >= args.length) {
+          throw ArgumentError('Missing value for --history');
+        }
+        historyPath = args[++i];
+        break;
+      case '--history-window':
+        if (i + 1 >= args.length) {
+          throw ArgumentError('Missing value for --history-window');
+        }
+        historyWindow = int.parse(args[++i]);
+        if (historyWindow <= 1) {
+          throw ArgumentError('--history-window must be > 1');
+        }
+        break;
+      case '--no-history-write':
+        historyWrite = false;
         break;
       case '--json':
         jsonOutput = true;
@@ -189,40 +208,22 @@ ArgConfig _parseArgs(List<String> args) {
   return ArgConfig(
     inputPath: inputPath,
     slaPath: slaPath,
-    baselinePath: baselinePath,
+    weightsPath: weightsPath,
+    historyPath: historyPath,
+    historyWindow: historyWindow,
+    historyWrite: historyWrite,
     jsonOutput: jsonOutput,
     showHelp: showHelp,
   );
-}
-
-void _printUsage() {
-  stdout.writeln(
-    'Usage: dart run tools/startup_gate_validator.dart [logs.txt] [options]',
-  );
-  stdout.writeln('');
-  stdout.writeln('Options:');
-  stdout.writeln(
-    '  --input <path>   Read logs from file path (default: positional path or stdin)',
-  );
-  stdout.writeln(
-    '  --sla <path>     SLA config JSON path (default: STARTUP_SLA.json)',
-  );
-  stdout.writeln(
-    '  --baseline <path>  Optional baseline JSON for p95 regression comparison',
-  );
-  stdout.writeln('  --json           Emit JSON output for CI dashboards');
-  stdout.writeln('  --help, -h       Show this help message');
 }
 
 Future<String> _readInput(String? inputPath) async {
   if (inputPath != null && inputPath.isNotEmpty) {
     return File(inputPath).readAsString();
   }
-
   if (stdin.hasTerminal) {
     throw StateError('No --input file provided and stdin is empty/interactive');
   }
-
   return stdin.transform(utf8.decoder).join();
 }
 
@@ -232,330 +233,240 @@ Map<StartupCheckpoint, int> _loadSla(String path) {
     throw StateError('SLA file not found: $path');
   }
 
-  final String content = file.readAsStringSync();
-  final Object? decoded = jsonDecode(content);
+  final Object? decoded = jsonDecode(file.readAsStringSync());
   if (decoded is! Map<String, Object?>) {
     throw FormatException('SLA file must be a JSON object');
   }
 
-  final Map<StartupCheckpoint, int> sla = <StartupCheckpoint, int>{};
-  final Set<String> expected = kSlaCheckpoints
-      .map((StartupCheckpoint cp) => cp.name)
-      .toSet();
-
-  for (final MapEntry<String, Object?> entry in decoded.entries) {
-    if (!expected.contains(entry.key)) {
-      throw FormatException('Unknown SLA checkpoint: ${entry.key}');
-    }
-
-    final StartupCheckpoint checkpoint = StartupCheckpoint.values.firstWhere(
-      (StartupCheckpoint cp) => cp.name == entry.key,
+  final Object? version = decoded['pipeline_version'];
+  if (version is! String || version != startupPipelineVersion) {
+    throw FormatException(
+      'SLA pipeline_version must be "$startupPipelineVersion"',
     );
+  }
 
-    final Object? raw = entry.value;
+  final Map<StartupCheckpoint, int> result = <StartupCheckpoint, int>{};
+  for (final StartupCheckpoint checkpoint in gateCheckpoints) {
+    final Object? raw = decoded[checkpoint.name];
     if (raw is! num) {
-      throw FormatException('SLA value for ${entry.key} must be numeric');
+      throw FormatException(
+        'Missing numeric SLA for checkpoint: ${checkpoint.name}',
+      );
     }
-
     final int value = raw.round();
     if (value <= 0) {
-      throw FormatException('SLA value for ${entry.key} must be > 0');
+      throw FormatException('SLA value for ${checkpoint.name} must be > 0');
     }
-    sla[checkpoint] = value;
+    result[checkpoint] = value;
   }
 
-  for (final StartupCheckpoint checkpoint in kSlaCheckpoints) {
-    if (!sla.containsKey(checkpoint)) {
-      throw FormatException('Missing SLA for checkpoint: ${checkpoint.name}');
-    }
-  }
-
-  return sla;
+  return result;
 }
 
-BaselineData _loadBaseline(String path) {
+WeightsConfig _loadWeights(String path) {
   final File file = File(path);
   if (!file.existsSync()) {
-    throw StateError('Baseline file not found: $path');
+    throw StateError('Weights file not found: $path');
   }
 
   final Object? decoded = jsonDecode(file.readAsStringSync());
   if (decoded is! Map<String, Object?>) {
-    throw FormatException('Baseline file must be a JSON object');
+    throw FormatException('Weights file must be a JSON object');
   }
 
-  final Map<StartupCheckpoint, int> result = <StartupCheckpoint, int>{};
-
-  for (final StartupCheckpoint checkpoint in kSlaCheckpoints) {
-    final Object? raw = decoded[checkpoint.name];
-    if (raw == null) {
-      continue;
-    }
-
-    if (raw is num) {
-      result[checkpoint] = raw.round();
-      continue;
-    }
-
-    if (raw is Map<String, Object?>) {
-      final Object? nested = raw['p95Ms'];
-      if (nested is num) {
-        result[checkpoint] = nested.round();
-        continue;
-      }
-    }
-  }
-
-  // Support validator JSON output format: { checkpoints: { cp: { p95Ms: ... } } }
-  final Object? checkpointsRaw = decoded['checkpoints'];
-  if (checkpointsRaw is Map<String, Object?>) {
-    for (final StartupCheckpoint checkpoint in kSlaCheckpoints) {
-      if (result.containsKey(checkpoint)) continue;
-      final Object? entry = checkpointsRaw[checkpoint.name];
-      if (entry is Map<String, Object?> && entry['p95Ms'] is num) {
-        result[checkpoint] = (entry['p95Ms'] as num).round();
-      }
-    }
-  }
-
-  if (result.isEmpty) {
+  final Object? version = decoded['pipeline_version'];
+  if (version is! String || version != startupPipelineVersion) {
     throw FormatException(
-      'Baseline must provide p95 values for at least one checkpoint',
+      'Weights pipeline_version must be "$startupPipelineVersion"',
     );
   }
 
-  return BaselineData(result);
-}
-
-ValidationReport _validate(
-  String input,
-  Map<StartupCheckpoint, int> sla, {
-  BaselineData? baseline,
-}) {
-  final List<String> failures = <String>[];
-  final List<RunSample> runs = <RunSample>[];
-
-  final List<String> lines = const LineSplitter().convert(input);
-  RunSample? current;
-  int runCounter = 0;
-
-  for (final String line in lines) {
-    if (!line.contains('startup.')) {
-      continue;
-    }
-
-    final Match? match = _timelineRegExp.firstMatch(line);
-    if (match == null) {
-      failures.add('malformed log data: $line');
-      continue;
-    }
-
-    final int delta = int.parse(match.group(1)!);
-    final String checkpointName = match.group(2)!;
-
-    final StartupCheckpoint? checkpoint = StartupCheckpoint.values
-        .where((StartupCheckpoint cp) => cp.name == checkpointName)
-        .cast<StartupCheckpoint?>()
-        .firstWhere((StartupCheckpoint? cp) => cp != null, orElse: () => null);
-
-    if (checkpoint == null) {
-      failures.add(
-        'malformed log data: unknown checkpoint startup.$checkpointName',
+  final Map<StartupCheckpoint, double> weights = <StartupCheckpoint, double>{};
+  for (final StartupCheckpoint checkpoint in gateCheckpoints) {
+    final Object? raw = decoded[checkpoint.name];
+    if (raw is! num) {
+      throw FormatException(
+        'Missing numeric weight for checkpoint: ${checkpoint.name}',
       );
-      continue;
     }
-
-    if (checkpoint == StartupCheckpoint.mainStart) {
-      if (current != null && current.values.isNotEmpty) {
-        runs.add(current);
-      }
-      runCounter += 1;
-      current = RunSample(runCounter);
-    }
-
-    if (current == null) {
-      failures.add(
-        'malformed log data: checkpoint startup.${checkpoint.name} before startup.mainStart',
-      );
-      continue;
-    }
-
-    if (current.values.containsKey(checkpoint)) {
-      failures.add(
-        'malformed log data: duplicate checkpoint startup.${checkpoint.name} in run ${current.id}',
-      );
-      continue;
-    }
-
-    current.values[checkpoint] = delta;
+    weights[checkpoint] = raw.toDouble();
   }
 
-  if (current != null && current.values.isNotEmpty) {
-    runs.add(current);
+  final double sum = weights.values.fold<double>(
+    0,
+    (double a, double b) => a + b,
+  );
+  if ((sum - 1.0).abs() > 0.001) {
+    throw FormatException('Checkpoint weights must sum to 1.0');
   }
 
-  if (runs.isEmpty) {
-    failures.add('missing checkpoint data: no startup runs found');
+  final Object? passThresholdRaw = decoded['passThreshold'];
+  final Object? warnThresholdRaw = decoded['warnThreshold'];
+  if (passThresholdRaw is! num || warnThresholdRaw is! num) {
+    throw FormatException('passThreshold and warnThreshold must be numeric');
   }
 
-  for (final RunSample run in runs) {
-    for (final StartupCheckpoint checkpoint in kRequiredCheckpoints) {
-      if (!run.values.containsKey(checkpoint)) {
-        failures.add(
-          'missing checkpoint: startup.${checkpoint.name} in run ${run.id}',
-        );
-      }
-    }
-  }
-
-  final Map<StartupCheckpoint, Stats> statsByCheckpoint =
-      <StartupCheckpoint, Stats>{};
-
-  for (final StartupCheckpoint checkpoint in StartupCheckpoint.values) {
-    final List<int> samples = runs
-        .map((RunSample run) => run.values[checkpoint])
-        .whereType<int>()
-        .toList();
-
-    if (samples.isNotEmpty) {
-      statsByCheckpoint[checkpoint] = _computeStats(samples);
-    }
-  }
-
-  final Stats startupStats =
-      statsByCheckpoint[StartupCheckpoint.firstFrameRendered] ??
-      const Stats(p50: 0, p95: 0, worst: 0);
-
-  final Stats? firstFrameStats =
-      statsByCheckpoint[StartupCheckpoint.firstFrameRendered];
-  final int? firstFrameSla = sla[StartupCheckpoint.firstFrameRendered];
-  if (firstFrameStats != null &&
-      firstFrameSla != null &&
-      firstFrameStats.worst > firstFrameSla) {
-    failures.add(
-      'firstFrameRendered: ${firstFrameStats.worst}ms (limit ${firstFrameSla}ms)',
+  final double passThreshold = passThresholdRaw.toDouble();
+  final double warnThreshold = warnThresholdRaw.toDouble();
+  if (!(passThreshold > 0 && warnThreshold > passThreshold)) {
+    throw FormatException(
+      'Expected thresholds: 0 < passThreshold < warnThreshold',
     );
   }
 
-  for (final StartupCheckpoint checkpoint in kSlaCheckpoints) {
-    final Stats? stats = statsByCheckpoint[checkpoint];
-    final int? limit = sla[checkpoint];
-    if (stats == null || limit == null) {
-      continue;
-    }
-
-    final int p95Limit = (limit * 1.2).ceil();
-    if (stats.p95 > p95Limit) {
-      failures.add(
-        'p95 regression ${checkpoint.name}: ${stats.p95}ms (20% ceiling ${p95Limit}ms)',
-      );
-    }
-
-    final int? baselineP95 = baseline?.p95ByCheckpoint[checkpoint];
-    if (baselineP95 != null) {
-      final int baselineCeiling = (baselineP95 * 1.2).ceil();
-      if (stats.p95 > baselineCeiling) {
-        failures.add(
-          'baseline regression ${checkpoint.name}: ${stats.p95}ms (baseline p95 ${baselineP95}ms, +20% ceiling ${baselineCeiling}ms)',
-        );
-      }
-    }
-  }
-
-  final bool pass = failures.isEmpty;
-
-  return ValidationReport(
-    pass: pass,
-    failures: failures,
-    runs: runs,
-    statsByCheckpoint: statsByCheckpoint,
-    startupStats: startupStats,
+  return WeightsConfig(
+    weights: weights,
+    passThreshold: passThreshold,
+    warnThreshold: warnThreshold,
   );
 }
 
-Stats _computeStats(List<int> samples) {
-  final List<int> sorted = List<int>.from(samples)..sort();
-  final int p50 = _percentileNearestRank(sorted, 0.50);
-  final int p95 = _percentileNearestRank(sorted, 0.95);
-  final int worst = sorted.last;
-  return Stats(p50: p50, p95: p95, worst: worst);
-}
-
-int _percentileNearestRank(List<int> sorted, double percentile) {
-  if (sorted.isEmpty) return 0;
-  final int rank = max(1, (percentile * sorted.length).ceil());
-  final int index = min(sorted.length - 1, rank - 1);
-  return sorted[index];
-}
-
-void _printHuman(ValidationReport report, Map<StartupCheckpoint, int> sla) {
-  void printCheckpoint(StartupCheckpoint checkpoint) {
-    final Stats? stats = report.statsByCheckpoint[checkpoint];
-    if (stats == null) return;
-    stdout.writeln('');
-    stdout.writeln('${checkpoint.name}:');
-    stdout.writeln('- p50: ${stats.p50}ms');
-    stdout.writeln('- p95: ${stats.p95}ms');
-    stdout.writeln('- worst: ${stats.worst}ms');
-  }
-
-  if (report.pass) {
-    stdout.writeln('STARTUP GATE: PASS');
-
-    for (final StartupCheckpoint checkpoint in kSlaCheckpoints) {
-      printCheckpoint(checkpoint);
-    }
-
-    stdout.writeln('');
-    stdout.writeln('All checkpoints within SLA');
-    return;
-  }
-
-  stdout.writeln('STARTUP GATE: FAIL');
-  for (final StartupCheckpoint checkpoint in kSlaCheckpoints) {
-    printCheckpoint(checkpoint);
-  }
-
-  stdout.writeln('');
-  for (final String failure in report.failures) {
-    stdout.writeln('- $failure');
-  }
-  stdout.writeln('');
-  stdout.writeln('RELEASE BLOCKED');
-}
-
-Map<String, Object?> _toJson(
-  ValidationReport report,
-  Map<StartupCheckpoint, int> sla, {
-  BaselineData? baseline,
+Map<String, Object?> _buildOutput({
+  required ScoringResult scoring,
+  required TrendAnalysis trend,
+  required Map<StartupCheckpoint, int> baseline,
+  required Map<StartupCheckpoint, int> sla,
+  required int runCount,
 }) {
-  final Map<String, Object?> stats = <String, Object?>{};
-  report.statsByCheckpoint.forEach((StartupCheckpoint checkpoint, Stats value) {
-    stats[checkpoint.name] = <String, Object?>{
-      'p50Ms': value.p50,
-      'p95Ms': value.p95,
-      'worstMs': value.worst,
-      'slaMs': sla[checkpoint],
-      'p95CeilingMs': sla[checkpoint] == null
+  final Map<String, Object?> checkpointOutput = <String, Object?>{};
+
+  scoring.statsByCheckpoint.forEach((
+    StartupCheckpoint cp,
+    CheckpointStats stats,
+  ) {
+    checkpointOutput[cp.name] = <String, Object?>{
+      'p50Ms': stats.p50,
+      'p95Ms': stats.p95,
+      'worstMs': stats.worst,
+      'slaMs': sla[cp],
+      'p95CeilingMs': sla[cp] == null ? null : (sla[cp]! * 1.2).ceil(),
+      'baselineP95Ms': baseline[cp],
+      'baselineP95CeilingMs': baseline[cp] == null
           ? null
-          : (sla[checkpoint]! * 1.2).ceil(),
-      'baselineP95Ms': baseline?.p95ByCheckpoint[checkpoint],
-      'baselineP95CeilingMs': baseline?.p95ByCheckpoint[checkpoint] == null
-          ? null
-          : (baseline!.p95ByCheckpoint[checkpoint]! * 1.2).ceil(),
+          : (baseline[cp]! * 1.2).ceil(),
     };
   });
 
   return <String, Object?>{
-    'gate': report.pass ? 'PASS' : 'FAIL',
-    'pass': report.pass,
-    'runCount': report.runs.length,
-    'failures': report.failures,
-    'startup': <String, Object?>{
-      'p50Ms': report.startupStats.p50,
-      'p95Ms': report.startupStats.p95,
-      'worstMs': report.startupStats.worst,
+    'gate': scoring.decision.name.toUpperCase(),
+    'pipeline_version': startupPipelineVersion,
+    'pass': scoring.decision != GateDecision.fail,
+    'runCount': runCount,
+    'score': scoring.score,
+    'trend': <String, Object?>{
+      'status': trend.status.name,
+      'slopePct': trend.slopePct,
+      'driftPct': trend.driftPct,
+      'variance': trend.variance,
+      'sampleCount': trend.sampleCount,
     },
-    'checkpoints': stats,
+    'failures': scoring.failures,
+    'startup': <String, Object?>{
+      'p50Ms': scoring.startupStats.p50,
+      'p95Ms': scoring.startupStats.p95,
+      'worstMs': scoring.startupStats.worst,
+    },
+    'checkpoints': checkpointOutput,
   };
+}
+
+Map<String, Object?> _buildHistoryEntry({
+  required ScoringResult scoring,
+  required TrendAnalysis trend,
+  required int runCount,
+}) {
+  final String commit =
+      Platform.environment['GITHUB_SHA'] ??
+      Platform.environment['CI_COMMIT_SHA'] ??
+      Platform.environment['BUILD_SOURCEVERSION'] ??
+      'unknown';
+
+  final Map<String, Object?> metrics = <String, Object?>{};
+  for (final StartupCheckpoint cp in gateCheckpoints) {
+    final CheckpointStats? stats = scoring.statsByCheckpoint[cp];
+    if (stats == null) continue;
+    metrics[cp.name] = stats.p95;
+  }
+
+  return <String, Object?>{
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+    'commit': commit,
+    'pipeline_version': startupPipelineVersion,
+    'decision': scoring.decision.name.toUpperCase(),
+    'score': scoring.score,
+    'runCount': runCount,
+    'trend': trend.status.name,
+    'metrics': metrics,
+  };
+}
+
+void _printHuman(Map<String, Object?> output) {
+  stdout.writeln('STARTUP GATE: ${output['gate']}');
+
+  final Object? checkpointsRaw = output['checkpoints'];
+  if (checkpointsRaw is Map<String, Object?>) {
+    for (final StartupCheckpoint cp in gateCheckpoints) {
+      final Object? entryRaw = checkpointsRaw[cp.name];
+      if (entryRaw is! Map<String, Object?>) continue;
+      stdout.writeln('');
+      stdout.writeln('${cp.name}:');
+      stdout.writeln('- p50: ${entryRaw['p50Ms']}ms');
+      stdout.writeln('- p95: ${entryRaw['p95Ms']}ms');
+      stdout.writeln('- worst: ${entryRaw['worstMs']}ms');
+    }
+  }
+
+  final Object? trendRaw = output['trend'];
+  if (trendRaw is Map<String, Object?>) {
+    stdout.writeln('');
+    stdout.writeln(
+      '- trend: ${trendRaw['status']} (slope ${((((trendRaw['slopePct'] as num?) ?? 0) * 100)).toStringAsFixed(2)}%)',
+    );
+  }
+
+  final Object? failuresRaw = output['failures'];
+  if (failuresRaw is List && failuresRaw.isNotEmpty) {
+    stdout.writeln('');
+    for (final Object failure in failuresRaw) {
+      stdout.writeln('- $failure');
+    }
+    if (output['gate'] == 'FAIL') {
+      stdout.writeln('');
+      stdout.writeln('RELEASE BLOCKED');
+    }
+  }
+}
+
+void _printUsage() {
+  stdout.writeln(
+    'Usage: dart run tools/startup_gate_validator.dart [logs.txt] [options]',
+  );
+  stdout.writeln('');
+  stdout.writeln('Options:');
+  stdout.writeln(
+    '  --input <path>        Read logs from file path (default: positional path or stdin)',
+  );
+  stdout.writeln(
+    '  --sla <path>          SLA config JSON path (default: STARTUP_SLA.json)',
+  );
+  stdout.writeln(
+    '  --weights <path>      Weights config JSON path (default: STARTUP_WEIGHTS.json)',
+  );
+  stdout.writeln(
+    '  --history <path>      Run history JSONL path (default: tools/run_history.jsonl)',
+  );
+  stdout.writeln(
+    '  --history-window <n>  Rolling history window size (default: 10)',
+  );
+  stdout.writeln(
+    '  --no-history-write    Do not append this run to history store',
+  );
+  stdout.writeln('  --json                Emit JSON output for CI dashboards');
+  stdout.writeln('  --help, -h            Show this help message');
+}
+
+void _fail(String message) {
+  stderr.writeln('STARTUP GATE: FAIL');
+  stderr.writeln('- $message');
+  exitCode = 1;
 }
