@@ -3,6 +3,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "authority",
+    "contractState",
+    "contractHash",
+    "previousContractHash",
     "artifact",
     "startup",
     "environment",
@@ -12,6 +16,24 @@
     "governance"
   ],
   "properties": {
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "ci", "resolvedBy"],
+      "properties": {
+        "runtime": { "type": "string", "enum": ["flutter"] },
+        "ci": { "type": "string", "enum": ["github-actions"] },
+        "resolvedBy": { "type": "string", "enum": ["deployment_contract"] }
+      }
+    },
+    "contractState": {
+      "type": "string",
+      "enum": ["INIT", "COLLECTING", "VALIDATED", "GOVERNED", "BOOTSTRAP", "FINAL"]
+    },
+    "contractHash": { "type": "string" },
+    "previousContractHash": {
+      "type": ["string", "null"]
+    },
     "artifact": {
       "type": "object",
       "additionalProperties": false,

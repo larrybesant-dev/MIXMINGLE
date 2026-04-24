@@ -171,7 +171,7 @@ async function main() {
   let browser;
   let scenarios = [];
   let status = 'FAIL';
-  let reason = 'UNINITIALIZED';
+  let reason = 'schema_invalid';
 
   try {
     browser = await chromium.launch({ headless: true });

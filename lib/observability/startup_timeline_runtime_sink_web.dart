@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:collection';
 import 'dart:js_interop';
 
 import 'package:web/web.dart' as web;
@@ -41,15 +42,15 @@ void _updateAppReadyContract(String message) {
     ...?((contract['checkpoints'] as Map?)?.cast<String, dynamic>()),
   };
   checkpoints[checkpoint] = message;
+  final sortedCheckpoints = SplayTreeMap<String, dynamic>.from(checkpoints);
 
   final ready = checkpoint == 'firstFrameRendered' || contract['ready'] == true;
 
   final next = <String, dynamic>{
     'contractVersion': _contractVersion,
     'ready': ready,
-    'readyCheckpoint': ready ? 'firstFrameRendered' : null,
-    'updatedAtUtc': DateTime.now().toUtc().toIso8601String(),
-    'checkpoints': checkpoints,
+    'readyCheckpoint': ready ? 'firstFrameRendered' : 'pending',
+    'checkpoints': sortedCheckpoints,
   };
 
   storage.setItem(_appReadyContractKey, jsonEncode(next));

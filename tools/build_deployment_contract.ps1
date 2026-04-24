@@ -3,10 +3,22 @@ param(
   [string]$StartupProbeReportPath = 'tools/reports/startup_probe_report.json',
   [string]$SmokeProbeReportPath = 'tools/reports/web_failure_smoke_report.json',
   [string]$PreflightReportPath = 'artifacts/port_preflight_report.json',
+  [string]$PreviousHashPath = 'artifacts/hash_chain/previous_contract_hash.txt',
   [string]$OutputPath = 'artifacts/deployment_contract.json'
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Write-Utf8NoBom {
+  param(
+    [string]$Path,
+    [string]$Content
+  )
+
+  New-Item -ItemType Directory -Path (Split-Path -Path $Path -Parent) -Force | Out-Null
+  $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+  [System.IO.File]::WriteAllText($Path, $Content, $utf8NoBom)
+}
 
 function Get-OsClass {
   if ($env:RUNNER_OS) {
@@ -24,35 +36,29 @@ function Get-OsClass {
 }
 
 function Resolve-EnvironmentClass {
-  try {
-    $raw = & powershell -ExecutionPolicy Bypass -File tools/detect_execution_environment.ps1 -JsonOnly
-    $parsed = $raw | ConvertFrom-Json
-    if ($parsed.environment -in @('ci', 'local', 'unknown')) {
-      return [string]$parsed.environment
+  param($PreflightReport)
+
+  if ($null -ne $PreflightReport) {
+    $candidate = [string]$PreflightReport.environmentClass
+    if ($candidate -in @('ci', 'local', 'unknown')) {
+      return $candidate
     }
-  } catch {
-    # Fall back to static environment probes.
-  }
-
-  if ($env:GITHUB_ACTIONS -eq 'true' -or $env:CI -eq 'true') {
-    return 'ci'
-  }
-
-  if (-not [string]::IsNullOrWhiteSpace($env:USERNAME)) {
-    return 'local'
   }
 
   return 'unknown'
 }
 
-function Resolve-IsAdmin {
-  try {
-    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = [Security.Principal.WindowsPrincipal]::new($identity)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-  } catch {
-    return $false
+function Resolve-PrivilegeClass {
+  param($PreflightReport)
+
+  if ($null -ne $PreflightReport) {
+    $candidate = [string]$PreflightReport.privilegeClass
+    if ($candidate -in @('admin', 'non-admin', 'restricted')) {
+      return $candidate
+    }
   }
+
+  return 'restricted'
 }
 
 function Resolve-PortOwnership {
@@ -139,19 +145,12 @@ if ($null -ne $startupReport -and $null -ne $startupReport.finalContract) {
   $startupReady = [bool]$startupReport.finalContract.ready
 
   if ($null -ne $startupReport.finalContract.checkpoints) {
-    $startupCheckpoints = @($startupReport.finalContract.checkpoints.PSObject.Properties.Name)
+    $startupCheckpoints = @($startupReport.finalContract.checkpoints.PSObject.Properties.Name | Sort-Object)
   }
 }
 
-$environmentClass = Resolve-EnvironmentClass
-$isAdmin = Resolve-IsAdmin
-$privilegeClass = if ($isAdmin) {
-  'admin'
-} elseif ($environmentClass -eq 'ci') {
-  'restricted'
-} else {
-  'non-admin'
-}
+$environmentClass = Resolve-EnvironmentClass -PreflightReport $preflightReport
+$privilegeClass = Resolve-PrivilegeClass -PreflightReport $preflightReport
 
 $portOwnership = Resolve-PortOwnership -TargetPort $Port
 if ($null -ne $preflightReport -and -not [string]::IsNullOrWhiteSpace([string]$preflightReport.portOwnership)) {
@@ -164,32 +163,27 @@ if ($null -ne $preflightReport -and -not [string]::IsNullOrWhiteSpace([string]$p
 $startupProbeStatus = Get-ProbeStatus -Report $startupReport
 $smokeProbeStatus = Get-ProbeStatus -Report $smokeReport
 
-$decision = 'deny'
-$reasonCode = 'policy_rejection'
-
-$serviceConflict = ($portOwnership -in @('service', 'system'))
-$probeFailure = ($startupProbeStatus -eq 'fail' -or $smokeProbeStatus -eq 'fail')
-$appContractInvalid = ([string]::IsNullOrWhiteSpace($startupContractVersion) -or $startupContractVersion -eq 'unknown' -or -not $startupReady)
-$privilegePolicyBlocked = (($environmentClass -eq 'unknown' -and $privilegeClass -ne 'admin') -or ($environmentClass -eq 'ci' -and $privilegeClass -eq 'restricted' -and -not $serviceConflict))
-
-if ($probeFailure) {
-  $decision = 'deny'
-  $reasonCode = 'probe_failure'
-} elseif ($appContractInvalid) {
-  $decision = 'deny'
-  $reasonCode = 'app_contract_failure'
-} elseif ($privilegePolicyBlocked) {
-  $decision = 'deny'
-  $reasonCode = 'env_privilege_blocked'
-} elseif ($serviceConflict -and $privilegeClass -ne 'admin') {
-  $decision = 'allow-with-degradation'
-  $reasonCode = 'service_ownership_blocked'
-} else {
-  $decision = 'allow'
-  $reasonCode = 'policy_rejection'
+$previousContractHash = $null
+if (Test-Path $PreviousHashPath) {
+  try {
+    $rawHash = (Get-Content -Path $PreviousHashPath -Raw).Trim()
+    if (-not [string]::IsNullOrWhiteSpace($rawHash)) {
+      $previousContractHash = $rawHash
+    }
+  } catch {
+    $previousContractHash = $null
+  }
 }
 
 $contract = [ordered]@{
+  authority = [ordered]@{
+    runtime = 'flutter'
+    ci = 'github-actions'
+    resolvedBy = 'deployment_contract'
+  }
+  contractState = 'INIT'
+  contractHash = 'unknown'
+  previousContractHash = $previousContractHash
   artifact = [ordered]@{
     commitSha = if ([string]::IsNullOrWhiteSpace($env:GITHUB_SHA)) {
       try { (& git rev-parse HEAD 2>$null).Trim() } catch { 'unknown' }
@@ -220,11 +214,12 @@ $contract = [ordered]@{
     smokeProbe = $smokeProbeStatus
   }
   governance = [ordered]@{
-    decision = $decision
-    reasonCode = $reasonCode
+    decision = 'deny'
+    reasonCode = 'schema_invalid'
   }
 }
 
 New-Item -ItemType Directory -Path (Split-Path -Path $OutputPath -Parent) -Force | Out-Null
-$contract | ConvertTo-Json -Depth 10 | Set-Content -Path $OutputPath -Encoding utf8
+$json = $contract | ConvertTo-Json -Depth 10
+Write-Utf8NoBom -Path $OutputPath -Content $json
 Write-Host "[deployment-contract] Wrote $OutputPath"

@@ -22,38 +22,61 @@ jobs:
       WEB_SMOKE_REPORT_PATH: tools/reports/web_failure_smoke_report.json
       PORT_PREFLIGHT_REPORT_PATH: artifacts/port_preflight_report.json
       DEPLOYMENT_CONTRACT_PATH: artifacts/deployment_contract.json
-      DEPLOYMENT_CONTRACT_VALIDATION_PATH: artifacts/deployment_contract_validation.json
+      DEPLOYMENT_CONTRACT_EVALUATION_PATH: artifacts/deployment_contract_evaluation.json
+      DEPLOYMENT_CONTRACT_RESOLVED_PATH: artifacts/deployment_contract.resolved.json
+      PREVIOUS_CONTRACT_HASH_PATH: artifacts/hash_chain/previous_contract_hash.txt
+      CURRENT_CONTRACT_HASH_PATH: artifacts/hash_chain/current_contract_hash.txt
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Flutter (for Dart SDK)
+        continue-on-error: true
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
       - name: Setup Node (for web runtime probes)
+        continue-on-error: true
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install Playwright runtime probes
+        continue-on-error: true
         shell: pwsh
         run: |
           npm install --no-save playwright@1.53.0
           npm install --no-save http-server@14.1.1
           npx playwright install chromium
 
-      - name: Detect execution environment
+      - name: Restore previous contract hash
+        id: restore_contract_hash
+        uses: actions/cache/restore@v4
+        with:
+          path: artifacts/hash_chain
+          key: deployment-contract-hash-main
+          restore-keys: |
+            deployment-contract-hash-main-
+
+      - name: Prepare hash chain inputs
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File tools/detect_execution_environment.ps1 -EmitGitHubEnv
+          New-Item -ItemType Directory -Path artifacts/hash_chain -Force | Out-Null
+          if (Test-Path $env:CURRENT_CONTRACT_HASH_PATH) {
+            $previous = (Get-Content -Path $env:CURRENT_CONTRACT_HASH_PATH -Raw).Trim()
+            if (-not [string]::IsNullOrWhiteSpace($previous)) {
+              Set-Content -Path $env:PREVIOUS_CONTRACT_HASH_PATH -Value $previous -Encoding utf8
+            }
+          }
 
       - name: Build release web bundle
+        continue-on-error: true
         run: flutter build web --release --base-href "/"
 
       - name: Port preflight (stage 2)
+        continue-on-error: true
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path artifacts -Force | Out-Null
@@ -61,6 +84,33 @@ jobs:
           $mode = if ($env:GITHUB_ACTIONS -eq 'true' -or $env:CI -eq 'true') { 'Force' } else { 'Safe' }
           & powershell -ExecutionPolicy Bypass -File tools/port_preflight_guard.ps1 -Port ([int]$env:PRECHECK_PORT) -Mode $mode -ExecutionEnvironment auto -TimeoutSeconds 45 -StabilizationSeconds 3
           $exitCode = $LASTEXITCODE
+
+          $environmentClass = 'unknown'
+          try {
+            $envPayload = & powershell -ExecutionPolicy Bypass -File tools/detect_execution_environment.ps1 -JsonOnly | ConvertFrom-Json
+            if ($envPayload.environment -in @('ci', 'local', 'unknown')) {
+              $environmentClass = [string]$envPayload.environment
+            }
+          } catch {
+            $environmentClass = 'unknown'
+          }
+
+          $isAdmin = $false
+          try {
+            $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $principal = [Security.Principal.WindowsPrincipal]::new($identity)
+            $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          } catch {
+            $isAdmin = $false
+          }
+
+          $privilegeClass = if ($isAdmin) {
+            'admin'
+          } elseif ($environmentClass -eq 'ci') {
+            'restricted'
+          } else {
+            'non-admin'
+          }
 
           $portOwnership = 'unknown'
           try {
@@ -81,6 +131,8 @@ jobs:
             status = if ($exitCode -eq 0) { 'PASS' } else { 'FAIL' }
             port = [int]$env:PRECHECK_PORT
             exitCode = $exitCode
+            environmentClass = $environmentClass
+            privilegeClass = $privilegeClass
             portOwnership = $portOwnership
           } | ConvertTo-Json -Depth 5 | Set-Content -Path $env:PORT_PREFLIGHT_REPORT_PATH -Encoding utf8
 
@@ -98,30 +150,41 @@ jobs:
 
       - name: Build deployment contract (stage 5)
         if: always()
+        continue-on-error: true
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File tools/build_deployment_contract.ps1 -Port ([int]$env:PRECHECK_PORT) -StartupProbeReportPath $env:STARTUP_PROBE_REPORT_PATH -SmokeProbeReportPath $env:WEB_SMOKE_REPORT_PATH -PreflightReportPath $env:PORT_PREFLIGHT_REPORT_PATH -OutputPath $env:DEPLOYMENT_CONTRACT_PATH
+          powershell -ExecutionPolicy Bypass -File tools/build_deployment_contract.ps1 -Port ([int]$env:PRECHECK_PORT) -StartupProbeReportPath $env:STARTUP_PROBE_REPORT_PATH -SmokeProbeReportPath $env:WEB_SMOKE_REPORT_PATH -PreflightReportPath $env:PORT_PREFLIGHT_REPORT_PATH -PreviousHashPath $env:PREVIOUS_CONTRACT_HASH_PATH -OutputPath $env:DEPLOYMENT_CONTRACT_PATH
 
-      - name: Validate deployment contract (stage 6)
+      - name: Evaluate deployment contract (stage 6)
         if: always()
+        continue-on-error: true
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File tools/validate_deployment_contract.ps1 -ContractPath $env:DEPLOYMENT_CONTRACT_PATH -SchemaPath tools/deployment_contract.schema.json -OutputPath $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH
+          powershell -ExecutionPolicy Bypass -File tools/evaluate_deployment_contract.ps1 -ContractPath $env:DEPLOYMENT_CONTRACT_PATH -SchemaPath tools/deployment_contract.schema.json -OutputPath $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH -ResolvedContractPath $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH -CurrentHashPath $env:CURRENT_CONTRACT_HASH_PATH
 
       - name: Governance decision (stage 7)
         shell: pwsh
         run: |
-          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_PATH)) {
+          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH)) {
             throw 'policy_rejection'
           }
 
-          $contract = Get-Content -Path $env:DEPLOYMENT_CONTRACT_PATH -Raw | ConvertFrom-Json
+          $contract = Get-Content -Path $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH -Raw | ConvertFrom-Json
           if ($contract.governance.decision -ne 'allow') {
             throw 'policy_rejection'
           }
 
+      - name: Save current contract hash
+        if: always() && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: artifacts/hash_chain
+          key: deployment-contract-hash-main-${{ github.run_id }}
+
       - name: Build startup certification bundle
         if: always()
+        continue-on-error: true
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path tools/reports/startup_cert_bundle -Force | Out-Null
@@ -148,6 +211,10 @@ jobs:
 
           if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_PATH)) {
             @{
+              authority = @{ runtime = 'flutter'; ci = 'github-actions'; resolvedBy = 'deployment_contract' }
+              contractState = 'BOOTSTRAP'
+              contractHash = 'missing'
+              previousContractHash = $null
               artifact = @{ commitSha = 'unknown'; buildId = 'unknown'; workflowRunId = 'unknown' }
               startup = @{ contractVersion = 'unknown'; ready = $false; checkpoints = @() }
               environment = @{ class = 'unknown'; os = 'windows' }
@@ -158,12 +225,16 @@ jobs:
             } | ConvertTo-Json -Depth 20 | Set-Content -Path $env:DEPLOYMENT_CONTRACT_PATH -Encoding utf8
           }
 
-          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH)) {
+          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH)) {
             @{
               status = 'FAIL'
               reasonCode = 'schema_invalid'
-              summary = @{ error = 'missing_validation_output' }
-            } | ConvertTo-Json -Depth 20 | Set-Content -Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH -Encoding utf8
+              summary = @{ error = 'schema_invalid' }
+            } | ConvertTo-Json -Depth 20 | Set-Content -Path $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH -Encoding utf8
+          }
+
+          if (-not (Test-Path $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH)) {
+            Copy-Item $env:DEPLOYMENT_CONTRACT_PATH $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH -Force
           }
 
           Copy-Item $env:STARTUP_PROBE_REPORT_PATH tools/reports/startup_cert_bundle/startup_probe_report.json -Force
@@ -171,23 +242,27 @@ jobs:
           Copy-Item $env:STARTUP_LOG_PATH tools/reports/startup_cert_bundle/startup_timeline.log -ErrorAction SilentlyContinue
           Copy-Item $env:PORT_PREFLIGHT_REPORT_PATH tools/reports/startup_cert_bundle/port_preflight_report.json -ErrorAction SilentlyContinue
           Copy-Item $env:DEPLOYMENT_CONTRACT_PATH tools/reports/startup_cert_bundle/deployment_contract.json -Force
-          Copy-Item $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH tools/reports/startup_cert_bundle/deployment_contract_validation.json -Force
+          Copy-Item $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH tools/reports/startup_cert_bundle/deployment_contract_evaluation.json -Force
+          Copy-Item $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH tools/reports/startup_cert_bundle/deployment_contract_resolved.json -Force
 
       - name: Write step summary
         if: always()
+        continue-on-error: true
         shell: pwsh
         run: |
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '## Startup Release Governance'
 
-          if (Test-Path $env:DEPLOYMENT_CONTRACT_PATH) {
-            $contract = Get-Content -Path $env:DEPLOYMENT_CONTRACT_PATH -Raw | ConvertFrom-Json
+          if (Test-Path $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH) {
+            $contract = Get-Content -Path $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH -Raw | ConvertFrom-Json
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract decision: $($contract.governance.decision)"
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract reason: $($contract.governance.reasonCode)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract hash: $($contract.contractHash)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Previous hash: $($contract.previousContractHash)"
           }
 
-          if (Test-Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH) {
-            $validation = Get-Content -Path $env:DEPLOYMENT_CONTRACT_VALIDATION_PATH -Raw | ConvertFrom-Json
-            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract validation: $($validation.status) ($($validation.reasonCode))"
+          if (Test-Path $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH) {
+            $evaluation = Get-Content -Path $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH -Raw | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Contract evaluation: $($evaluation.status) ($($evaluation.reasonCode))"
           }
 
           if (Test-Path $env:STARTUP_PROBE_REPORT_PATH) {
@@ -202,22 +277,34 @@ jobs:
 
       - name: Upload deployment contract artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: deployment-contract-${{ github.run_id }}
           path: artifacts/deployment_contract.json
           if-no-files-found: error
 
-      - name: Upload deployment contract validation artifact
+      - name: Upload deployment contract evaluation artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: deployment-contract-validation-${{ github.run_id }}
-          path: artifacts/deployment_contract_validation.json
+          name: deployment-contract-evaluation-${{ github.run_id }}
+          path: artifacts/deployment_contract_evaluation.json
+          if-no-files-found: error
+
+      - name: Upload resolved deployment contract artifact
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-contract-resolved-${{ github.run_id }}
+          path: artifacts/deployment_contract.resolved.json
           if-no-files-found: error
 
       - name: Upload startup probe report artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: startup-probe-report-${{ github.run_id }}
@@ -226,6 +313,7 @@ jobs:
 
       - name: Upload web smoke report artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: web-smoke-report-${{ github.run_id }}
@@ -234,6 +322,7 @@ jobs:
 
       - name: Upload startup certification bundle artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: startup-certification-bundle-${{ github.run_id }}

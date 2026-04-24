@@ -11,6 +11,21 @@ function Test-IsAdmin {
   return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+function Get-OsClass {
+  if ($env:RUNNER_OS) {
+    switch ($env:RUNNER_OS.ToLowerInvariant()) {
+      'windows' { return 'windows' }
+      'linux' { return 'linux' }
+      'macos' { return 'macos' }
+    }
+  }
+
+  if ($IsWindows) { return 'windows' }
+  if ($IsLinux) { return 'linux' }
+  if ($IsMacOS) { return 'macos' }
+  return 'windows'
+}
+
 $environmentName = 'unknown'
 if ($env:GITHUB_ACTIONS -eq 'true' -or $env:CI -eq 'true') {
   $environmentName = 'ci'
@@ -18,16 +33,21 @@ if ($env:GITHUB_ACTIONS -eq 'true' -or $env:CI -eq 'true') {
   $environmentName = 'local'
 }
 
+$isAdmin = (Test-IsAdmin)
+$privilegeClass = if ($isAdmin) {
+  'admin'
+} elseif ($environmentName -eq 'ci') {
+  'restricted'
+} else {
+  'non-admin'
+}
+
 $result = [ordered]@{
-  contractVersion = 'mixvy.execution_environment.v1'
-  detectedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+  contractVersion = 'mixvy.execution_environment.v2'
   environment = $environmentName
-  isCi = ($environmentName -eq 'ci')
-  isLocal = ($environmentName -eq 'local')
-  isGitHubActions = ($env:GITHUB_ACTIONS -eq 'true')
-  isAdmin = (Test-IsAdmin)
-  machineName = $env:COMPUTERNAME
-  userName = $env:USERNAME
+  privilegeClass = $privilegeClass
+  os = (Get-OsClass)
+  isAdmin = $isAdmin
 }
 
 $json = $result | ConvertTo-Json -Depth 5
