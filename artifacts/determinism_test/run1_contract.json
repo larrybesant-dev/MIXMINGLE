@@ -8,7 +8,7 @@
     "contractHash":  "unknown",
     "previousContractHash":  null,
     "artifact":  {
-                     "commitSha":  "92cc591c5757318b5291c211b8938fb57d10bc6e",
+                     "commitSha":  "3f986263dfd19cdba7fb6e906ed629e827fe7ebb",
                      "buildId":  "unknown",
                      "workflowRunId":  "unknown"
                  },

@@ -4,8 +4,8 @@
                       "ci":  "github-actions",
                       "resolvedBy":  "deployment_contract"
                   },
-    "contractState":  "INIT",
-    "contractHash":  "unknown",
+    "contractState":  "FINAL",
+    "contractHash":  "7f9eae1b0c26fdbc4f2af3390f0d07f1a979c900bb9cd4092121de240c01ce17",
     "previousContractHash":  null,
     "artifact":  {
                      "commitSha":  "3f986263dfd19cdba7fb6e906ed629e827fe7ebb",
@@ -36,6 +36,6 @@
                      },
     "governance":  {
                        "decision":  "deny",
-                       "reasonCode":  "schema_invalid"
+                       "reasonCode":  "app_contract_failure"
                    }
 }

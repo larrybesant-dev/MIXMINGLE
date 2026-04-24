@@ -48,7 +48,6 @@ $run2HashPath = 'artifacts/determinism_test/run2_current_hash.txt'
 
 $testResult = [ordered]@{
   testName = 'contract_determinism'
-  timestamp = [datetime]::UtcNow.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
   runs = @(
     @{ run = 1; contractHash = $null; resolvedHash = $null; evaluationHash = $null; status = 'pending' },
     @{ run = 2; contractHash = $null; resolvedHash = $null; evaluationHash = $null; status = 'pending' }
@@ -68,7 +67,7 @@ function Get-FileHash {
   return ([System.BitConverter]::ToString($hash)).Replace('-', '').ToLowerInvariant()
 }
 
-function Run-BuildAndEvaluation {
+function Invoke-BuildAndEvaluation {
   param(
     [int]$RunNumber,
     [string]$WorkContractPath,
@@ -79,6 +78,11 @@ function Run-BuildAndEvaluation {
 
   Write-Host ""
   Write-Host "--- RUN ${RunNumber}: Building Contract ---"
+
+  Remove-Item -Path $WorkContractPath -ErrorAction SilentlyContinue
+  Remove-Item -Path $WorkResolvedPath -ErrorAction SilentlyContinue
+  Remove-Item -Path $WorkEvalPath -ErrorAction SilentlyContinue
+  Remove-Item -Path $WorkHashPath -ErrorAction SilentlyContinue
   
   try {
     & powershell -ExecutionPolicy Bypass -File tools/build_deployment_contract.ps1 `
@@ -90,22 +94,22 @@ function Run-BuildAndEvaluation {
       -OutputPath $WorkContractPath
     
     if ($LASTEXITCODE -ne 0) {
-      Write-Host "⚠️  Build exited with code $LASTEXITCODE (expected for some states)"
+      Write-Host "WARN: Build exited with code $LASTEXITCODE (expected for some states)"
     }
   }
   catch {
-    Write-Host "❌ Build failed: $_"
+    Write-Host "ERROR: Build failed: $_"
     $testResult.failures += "Run $RunNumber build error: $_"
     return $false
   }
 
   if (-not (Test-Path $WorkContractPath)) {
-    Write-Host "❌ Contract not created"
+    Write-Host "ERROR: Contract not created"
     $testResult.failures += "Run ${RunNumber}: contract file not created"
     return $false
   }
 
-  Write-Host "✓ Contract generated"
+  Write-Host "OK: Contract generated"
 
   Write-Host "--- RUN ${RunNumber}: Evaluating Contract ---"
   
@@ -115,25 +119,26 @@ function Run-BuildAndEvaluation {
       -SchemaPath $SchemaPath `
       -OutputPath $WorkEvalPath `
       -ResolvedContractPath $WorkResolvedPath `
-      -CurrentHashPath $WorkHashPath
+      -CurrentHashPath $WorkHashPath `
+      -DeterminismReportPath '__skip_determinism_check__'
     
     if ($LASTEXITCODE -ne 0) {
-      Write-Host "⚠️  Evaluation exited with code $LASTEXITCODE (expected for deny decisions)"
+      Write-Host "WARN: Evaluation exited with code $LASTEXITCODE (expected for deny decisions)"
     }
   }
   catch {
-    Write-Host "❌ Evaluation failed: $_"
+    Write-Host "ERROR: Evaluation failed: $_"
     $testResult.failures += "Run $RunNumber evaluation error: $_"
     return $false
   }
 
   if (-not (Test-Path $WorkResolvedPath)) {
-    Write-Host "❌ Resolved contract not created"
+    Write-Host "ERROR: Resolved contract not created"
     $testResult.failures += "Run ${RunNumber}: resolved contract file not created"
     return $false
   }
 
-  Write-Host "✓ Contract evaluated"
+  Write-Host "OK: Contract evaluated"
 
   $contractHash = Get-FileHash $WorkContractPath
   $resolvedHash = Get-FileHash $WorkResolvedPath
@@ -153,7 +158,7 @@ function Run-BuildAndEvaluation {
 # Execute RUN 1
 Write-Host ""
 Write-Host "========== RUN 1 =========="
-$run1Results = Run-BuildAndEvaluation -RunNumber 1 `
+$run1Results = Invoke-BuildAndEvaluation -RunNumber 1 `
   -WorkContractPath $run1ContractPath `
   -WorkResolvedPath $run1ResolvedPath `
   -WorkEvalPath $run1EvalPath `
@@ -164,7 +169,7 @@ if ($run1Results -is [bool] -and -not $run1Results) {
   $testResult.deterministic = $false
   $testResultJson = $testResult | ConvertTo-Json -Depth 10
   Write-Host ""
-  Write-Host "❌ DETERMINISM TEST FAILED (Run 1 error)"
+  Write-Host "ERROR: DETERMINISM TEST FAILED (Run 1 error)"
   Write-Host $testResultJson
   exit 1
 }
@@ -177,7 +182,7 @@ $testResult.runs[0].status = 'completed'
 # Execute RUN 2
 Write-Host ""
 Write-Host "========== RUN 2 =========="
-$run2Results = Run-BuildAndEvaluation -RunNumber 2 `
+$run2Results = Invoke-BuildAndEvaluation -RunNumber 2 `
   -WorkContractPath $run2ContractPath `
   -WorkResolvedPath $run2ResolvedPath `
   -WorkEvalPath $run2EvalPath `
@@ -188,7 +193,7 @@ if ($run2Results -is [bool] -and -not $run2Results) {
   $testResult.deterministic = $false
   $testResultJson = $testResult | ConvertTo-Json -Depth 10
   Write-Host ""
-  Write-Host "❌ DETERMINISM TEST FAILED (Run 2 error)"
+  Write-Host "ERROR: DETERMINISM TEST FAILED (Run 2 error)"
   Write-Host $testResultJson
   exit 1
 }
@@ -207,10 +212,10 @@ $allMatch = $true
 
 # Compare contract hashes
 if ($run1Results.contractHash -eq $run2Results.contractHash) {
-  Write-Host "✓ Contract hashes match: $($run1Results.contractHash)"
+  Write-Host "OK: Contract hashes match: $($run1Results.contractHash)"
 }
 else {
-  Write-Host "❌ Contract hashes DIFFER"
+  Write-Host "ERROR: Contract hashes differ"
   Write-Host "   Run 1: $($run1Results.contractHash)"
   Write-Host "   Run 2: $($run2Results.contractHash)"
   $testResult.failures += "Contract hash mismatch between runs"
@@ -219,10 +224,10 @@ else {
 
 # Compare resolved contract hashes
 if ($run1Results.resolvedHash -eq $run2Results.resolvedHash) {
-  Write-Host "✓ Resolved contract hashes match: $($run1Results.resolvedHash)"
+  Write-Host "OK: Resolved contract hashes match: $($run1Results.resolvedHash)"
 }
 else {
-  Write-Host "❌ Resolved contract hashes DIFFER"
+  Write-Host "ERROR: Resolved contract hashes differ"
   Write-Host "   Run 1: $($run1Results.resolvedHash)"
   Write-Host "   Run 2: $($run2Results.resolvedHash)"
   $testResult.failures += "Resolved contract hash mismatch between runs"
@@ -231,10 +236,10 @@ else {
 
 # Compare evaluation hashes
 if ($run1Results.evaluationHash -eq $run2Results.evaluationHash) {
-  Write-Host "✓ Evaluation output hashes match: $($run1Results.evaluationHash)"
+  Write-Host "OK: Evaluation output hashes match: $($run1Results.evaluationHash)"
 }
 else {
-  Write-Host "❌ Evaluation output hashes DIFFER"
+  Write-Host "ERROR: Evaluation output hashes differ"
   Write-Host "   Run 1: $($run1Results.evaluationHash)"
   Write-Host "   Run 2: $($run2Results.evaluationHash)"
   $testResult.failures += "Evaluation output hash mismatch between runs"
@@ -283,7 +288,7 @@ $testResultJson = $testResult | ConvertTo-Json -Depth 10
 Write-Host ""
 Write-Host "================================================"
 if ($allMatch) {
-  Write-Host "✓ DETERMINISM VERIFIED"
+  Write-Host "PASS: DETERMINISM VERIFIED"
   Write-Host "================================================"
   Write-Host ""
   Write-Host "All contract generation and evaluation outputs are deterministic."
@@ -292,7 +297,7 @@ if ($allMatch) {
   exit 0
 }
 else {
-  Write-Host "❌ DETERMINISM VIOLATIONS DETECTED"
+  Write-Host "FAIL: DETERMINISM VIOLATIONS DETECTED"
   Write-Host "================================================"
   Write-Host ""
   Write-Host "Failures:"

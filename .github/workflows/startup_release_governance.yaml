@@ -155,19 +155,19 @@ jobs:
         run: |
           powershell -ExecutionPolicy Bypass -File tools/build_deployment_contract.ps1 -Port ([int]$env:PRECHECK_PORT) -StartupProbeReportPath $env:STARTUP_PROBE_REPORT_PATH -SmokeProbeReportPath $env:WEB_SMOKE_REPORT_PATH -PreflightReportPath $env:PORT_PREFLIGHT_REPORT_PATH -PreviousHashPath $env:PREVIOUS_CONTRACT_HASH_PATH -OutputPath $env:DEPLOYMENT_CONTRACT_PATH
 
-      - name: Evaluate deployment contract (stage 6)
-        if: always()
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          powershell -ExecutionPolicy Bypass -File tools/evaluate_deployment_contract.ps1 -ContractPath $env:DEPLOYMENT_CONTRACT_PATH -SchemaPath tools/deployment_contract.schema.json -OutputPath $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH -ResolvedContractPath $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH -CurrentHashPath $env:CURRENT_CONTRACT_HASH_PATH
-
       - name: Determinism verification test (preflight)
         if: always()
         continue-on-error: true
         shell: pwsh
         run: |
           powershell -ExecutionPolicy Bypass -File tools/test_contract_determinism.ps1 -Port ([int]$env:PRECHECK_PORT) -StartupProbeReportPath $env:STARTUP_PROBE_REPORT_PATH -SmokeProbeReportPath $env:WEB_SMOKE_REPORT_PATH -PreflightReportPath $env:PORT_PREFLIGHT_REPORT_PATH -PreviousHashPath $env:PREVIOUS_CONTRACT_HASH_PATH
+
+      - name: Evaluate deployment contract (stage 6)
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File tools/evaluate_deployment_contract.ps1 -ContractPath $env:DEPLOYMENT_CONTRACT_PATH -SchemaPath tools/deployment_contract.schema.json -OutputPath $env:DEPLOYMENT_CONTRACT_EVALUATION_PATH -ResolvedContractPath $env:DEPLOYMENT_CONTRACT_RESOLVED_PATH -CurrentHashPath $env:CURRENT_CONTRACT_HASH_PATH -DeterminismReportPath artifacts/determinism_test/verification_result.json
 
       - name: Governance decision (stage 7)
         shell: pwsh

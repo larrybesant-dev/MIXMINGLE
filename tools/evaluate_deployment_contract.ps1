@@ -3,7 +3,8 @@ param(
   [string]$SchemaPath = 'tools/deployment_contract.schema.json',
   [string]$OutputPath = 'artifacts/deployment_contract_evaluation.json',
   [string]$ResolvedContractPath = 'artifacts/deployment_contract.resolved.json',
-  [string]$CurrentHashPath = 'artifacts/hash_chain/current_contract_hash.txt'
+  [string]$CurrentHashPath = 'artifacts/hash_chain/current_contract_hash.txt',
+  [string]$DeterminismReportPath = 'artifacts/determinism_test/verification_result.json'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -257,6 +258,46 @@ if ($contract.contractState -ne 'INIT') {
 
 $final.contractState = 'COLLECTING'
 $final.contractState = 'VALIDATED'
+
+if (-not [string]::IsNullOrWhiteSpace($DeterminismReportPath) -and $DeterminismReportPath -ne '__skip_determinism_check__') {
+  if (-not (Test-Path $DeterminismReportPath)) {
+    $final.contractState = 'FINAL'
+    Set-Deny -Contract $final -ReasonCode 'policy_rejection'
+    $final.contractHash = Get-CanonicalHash -Contract $final
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $final
+  }
+
+  try {
+    $determinismReport = Get-Content -Path $DeterminismReportPath -Raw | ConvertFrom-Json
+  }
+  catch {
+    $final.contractState = 'FINAL'
+    Set-Deny -Contract $final -ReasonCode 'schema_invalid'
+    $final.contractHash = Get-CanonicalHash -Contract $final
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
+  }
+
+  if (-not (Test-ExactShape -Object $determinismReport -RequiredKeys @('testName', 'runs', 'deterministic', 'failures') -AllowedKeys @('testName', 'runs', 'deterministic', 'failures'))) {
+    $final.contractState = 'FINAL'
+    Set-Deny -Contract $final -ReasonCode 'schema_invalid'
+    $final.contractHash = Get-CanonicalHash -Contract $final
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
+  }
+
+  if ($determinismReport.deterministic -isnot [bool]) {
+    $final.contractState = 'FINAL'
+    Set-Deny -Contract $final -ReasonCode 'schema_invalid'
+    $final.contractHash = Get-CanonicalHash -Contract $final
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
+  }
+
+  if (-not [bool]$determinismReport.deterministic) {
+    $final.contractState = 'FINAL'
+    Set-Deny -Contract $final -ReasonCode 'policy_rejection'
+    $final.contractHash = Get-CanonicalHash -Contract $final
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $final
+  }
+}
 
 if ($final.environment.class -eq 'ci' -and $null -eq $final.previousContractHash) {
   $final.contractState = 'BOOTSTRAP'
