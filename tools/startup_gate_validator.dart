@@ -13,6 +13,7 @@ class ArgConfig {
     required this.inputPath,
     required this.slaPath,
     required this.weightsPath,
+    required this.policyPath,
     required this.historyPath,
     required this.historyWindow,
     required this.historyWrite,
@@ -23,6 +24,7 @@ class ArgConfig {
   final String? inputPath;
   final String slaPath;
   final String weightsPath;
+  final String policyPath;
   final String historyPath;
   final int historyWindow;
   final bool historyWrite;
@@ -69,6 +71,14 @@ Future<void> main(List<String> args) async {
     return;
   }
 
+  final GatePolicyConfig policy;
+  try {
+    policy = _loadPolicy(config.policyPath);
+  } catch (error) {
+    _fail('invalid policy config: $error');
+    return;
+  }
+
   final RunHistoryStore historyStore = RunHistoryStore(config.historyPath);
   final List<Map<String, Object?>> historyEntries = await historyStore
       .loadEntries();
@@ -91,6 +101,9 @@ Future<void> main(List<String> args) async {
         entries: historyEntries,
         window: config.historyWindow,
       );
+  final Map<StartupCheckpoint, int> lastGreen = baselineEngine.lastGreenMetrics(
+    entries: historyEntries,
+  );
 
   final TrendAnalysis trend = trendEngine.analyze(
     entries: historyEntries,
@@ -113,8 +126,10 @@ Future<void> main(List<String> args) async {
 
   final Map<String, Object?> output = _buildOutput(
     scoring: scoring,
+    policy: policy,
     trend: trend,
     baseline: baseline,
+    lastGreen: lastGreen,
     sla: sla,
     runCount: parsed.runs.length,
   );
@@ -135,13 +150,17 @@ Future<void> main(List<String> args) async {
     _printHuman(output);
   }
 
-  exitCode = scoring.decision == GateDecision.fail ? 1 : 0;
+  final bool shouldFail =
+      scoring.decision == GateDecision.fail ||
+      (scoring.decision == GateDecision.warn && policy.blockOnWarn);
+  exitCode = shouldFail ? 1 : 0;
 }
 
 ArgConfig _parseArgs(List<String> args) {
   String? inputPath;
   String slaPath = 'STARTUP_SLA.json';
   String weightsPath = 'STARTUP_WEIGHTS.json';
+  String policyPath = 'STARTUP_GATE_POLICY.json';
   String historyPath = 'tools/run_history.jsonl';
   int historyWindow = 10;
   bool historyWrite = true;
@@ -168,6 +187,12 @@ ArgConfig _parseArgs(List<String> args) {
           throw ArgumentError('Missing value for --weights');
         }
         weightsPath = args[++i];
+        break;
+      case '--policy':
+        if (i + 1 >= args.length) {
+          throw ArgumentError('Missing value for --policy');
+        }
+        policyPath = args[++i];
         break;
       case '--history':
         if (i + 1 >= args.length) {
@@ -209,6 +234,7 @@ ArgConfig _parseArgs(List<String> args) {
     inputPath: inputPath,
     slaPath: slaPath,
     weightsPath: weightsPath,
+    policyPath: policyPath,
     historyPath: historyPath,
     historyWindow: historyWindow,
     historyWrite: historyWrite,
@@ -321,10 +347,47 @@ WeightsConfig _loadWeights(String path) {
   );
 }
 
+GatePolicyConfig _loadPolicy(String path) {
+  final File file = File(path);
+  if (!file.existsSync()) {
+    throw StateError('Policy file not found: $path');
+  }
+
+  final Object? decoded = jsonDecode(file.readAsStringSync());
+  if (decoded is! Map<String, Object?>) {
+    throw FormatException('Policy file must be a JSON object');
+  }
+
+  final Object? version = decoded['pipeline_version'];
+  if (version is! String || version != startupPipelineVersion) {
+    throw FormatException(
+      'Policy pipeline_version must be "$startupPipelineVersion"',
+    );
+  }
+
+  final Object? blockOnWarn = decoded['blockOnWarn'];
+  if (blockOnWarn is! bool) {
+    throw FormatException('Policy blockOnWarn must be boolean');
+  }
+
+  final Object? policyMode = decoded['policyMode'];
+  if (policyMode is! String || policyMode.isEmpty) {
+    throw FormatException('Policy policyMode must be non-empty string');
+  }
+
+  return GatePolicyConfig(
+    pipelineVersion: version,
+    blockOnWarn: blockOnWarn,
+    policyMode: policyMode,
+  );
+}
+
 Map<String, Object?> _buildOutput({
   required ScoringResult scoring,
+  required GatePolicyConfig policy,
   required TrendAnalysis trend,
   required Map<StartupCheckpoint, int> baseline,
+  required Map<StartupCheckpoint, int> lastGreen,
   required Map<StartupCheckpoint, int> sla,
   required int runCount,
 }) {
@@ -344,12 +407,21 @@ Map<String, Object?> _buildOutput({
       'baselineP95CeilingMs': baseline[cp] == null
           ? null
           : (baseline[cp]! * 1.2).ceil(),
+      'lastGreenP95Ms': lastGreen[cp],
+      'regressionDiffVsLastGreenMs': lastGreen[cp] == null
+          ? null
+          : (stats.p95 - lastGreen[cp]!),
     };
   });
 
   return <String, Object?>{
     'gate': scoring.decision.name.toUpperCase(),
     'pipeline_version': startupPipelineVersion,
+    'policy': <String, Object?>{
+      'policyMode': policy.policyMode,
+      'blockOnWarn': policy.blockOnWarn,
+      'pipelineVersion': policy.pipelineVersion,
+    },
     'pass': scoring.decision != GateDecision.fail,
     'runCount': runCount,
     'score': scoring.score,
@@ -361,6 +433,12 @@ Map<String, Object?> _buildOutput({
       'sampleCount': trend.sampleCount,
     },
     'failures': scoring.failures,
+    'explainability': <String, Object?>{
+      'violation_count': scoring.violations.length,
+      'violations': scoring.violations
+          .map((PolicyViolation violation) => violation.toJson())
+          .toList(),
+    },
     'startup': <String, Object?>{
       'p50Ms': scoring.startupStats.p50,
       'p95Ms': scoring.startupStats.p95,
@@ -380,6 +458,11 @@ Map<String, Object?> _buildHistoryEntry({
       Platform.environment['CI_COMMIT_SHA'] ??
       Platform.environment['BUILD_SOURCEVERSION'] ??
       'unknown';
+  final String runId =
+      Platform.environment['GITHUB_RUN_ID'] ??
+      Platform.environment['CI_PIPELINE_ID'] ??
+      Platform.environment['BUILD_BUILDID'] ??
+      DateTime.now().millisecondsSinceEpoch.toString();
 
   final Map<String, Object?> metrics = <String, Object?>{};
   for (final StartupCheckpoint cp in gateCheckpoints) {
@@ -391,6 +474,7 @@ Map<String, Object?> _buildHistoryEntry({
   return <String, Object?>{
     'timestamp': DateTime.now().millisecondsSinceEpoch,
     'commit': commit,
+    'run_id': runId,
     'pipeline_version': startupPipelineVersion,
     'decision': scoring.decision.name.toUpperCase(),
     'score': scoring.score,
@@ -451,6 +535,9 @@ void _printUsage() {
   );
   stdout.writeln(
     '  --weights <path>      Weights config JSON path (default: STARTUP_WEIGHTS.json)',
+  );
+  stdout.writeln(
+    '  --policy <path>       Policy config JSON path (default: STARTUP_GATE_POLICY.json)',
   );
   stdout.writeln(
     '  --history <path>      Run history JSONL path (default: tools/run_history.jsonl)',

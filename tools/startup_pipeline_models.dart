@@ -61,6 +61,18 @@ class WeightsConfig {
   final double warnThreshold;
 }
 
+class GatePolicyConfig {
+  const GatePolicyConfig({
+    required this.pipelineVersion,
+    required this.blockOnWarn,
+    required this.policyMode,
+  });
+
+  final String pipelineVersion;
+  final bool blockOnWarn;
+  final String policyMode;
+}
+
 enum TrendStatus { stable, degrading, regressing }
 
 class TrendAnalysis {
@@ -93,6 +105,7 @@ class ScoringResult {
     required this.decision,
     required this.score,
     required this.failures,
+    required this.violations,
     required this.statsByCheckpoint,
     required this.startupStats,
   });
@@ -100,6 +113,37 @@ class ScoringResult {
   final GateDecision decision;
   final double score;
   final List<String> failures;
+  final List<PolicyViolation> violations;
   final Map<StartupCheckpoint, CheckpointStats> statsByCheckpoint;
   final CheckpointStats startupStats;
+}
+
+class PolicyViolation {
+  const PolicyViolation({
+    required this.ruleId,
+    required this.checkpoint,
+    required this.message,
+    this.triggerValue,
+    this.thresholdValue,
+    this.delta,
+    this.contributionWeight,
+  });
+
+  final String ruleId;
+  final String checkpoint;
+  final String message;
+  final double? triggerValue;
+  final double? thresholdValue;
+  final double? delta;
+  final double? contributionWeight;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'rule_id': ruleId,
+    'checkpoint': checkpoint,
+    'message': message,
+    'trigger_value': triggerValue,
+    'threshold_value': thresholdValue,
+    'delta': delta,
+    'contribution_weight': contributionWeight,
+  };
 }

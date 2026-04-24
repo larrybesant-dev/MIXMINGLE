@@ -27,12 +27,16 @@ class StartupScoringEngine {
         .computeStats(parsed.runs);
 
     final StartupPolicyEngine policyEngine = StartupPolicyEngine(sla: sla);
-    final List<String> failures = policyEngine.evaluateFailures(
+    final List<PolicyViolation> violations = policyEngine.evaluateViolations(
       parseFailures: parsed.failures,
       stats: stats,
       baseline: baseline,
       trend: trend,
+      weights: weights,
     );
+    final List<String> failures = violations
+        .map((PolicyViolation violation) => violation.message)
+        .toList();
 
     final StartupDecisionEngine decisionEngine = StartupDecisionEngine(
       sla: sla,
@@ -58,6 +62,7 @@ class StartupScoringEngine {
       decision: decision,
       score: score,
       failures: failures,
+      violations: violations,
       statsByCheckpoint: stats,
       startupStats: startupStats,
     );

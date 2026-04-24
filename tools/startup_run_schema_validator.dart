@@ -23,8 +23,11 @@ class StartupRunSchemaValidator {
       }
 
       final Object? pipelineVersion = entry['pipeline_version'];
-      if (pipelineVersion is! String || pipelineVersion.isEmpty) {
-        failures.add('history schema error row $row: missing pipeline_version');
+      if (pipelineVersion is! String ||
+          pipelineVersion != startupPipelineVersion) {
+        failures.add(
+          'history schema error row $row: pipeline_version must be $startupPipelineVersion',
+        );
       }
 
       final Object? decision = entry['decision'];

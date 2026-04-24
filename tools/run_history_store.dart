@@ -35,6 +35,14 @@ class RunHistoryStore {
   Future<void> appendEntry(Map<String, Object?> entry) async {
     final File file = File(path);
     file.parent.createSync(recursive: true);
-    await file.writeAsString('${jsonEncode(entry)}\n', mode: FileMode.append);
+
+    final String existing = file.existsSync() ? await file.readAsString() : '';
+
+    final String tmpPath =
+        '$path.tmp.${DateTime.now().millisecondsSinceEpoch}.${pid.toString()}';
+    final File tmp = File(tmpPath);
+    await tmp.writeAsString('$existing${jsonEncode(entry)}\n');
+
+    await tmp.rename(path);
   }
 }
