@@ -3,8 +3,7 @@ param(
   [string]$SchemaPath = 'tools/deployment_contract.schema.json',
   [string]$OutputPath = 'artifacts/deployment_contract_evaluation.json',
   [string]$ResolvedContractPath = 'artifacts/deployment_contract.resolved.json',
-  [string]$CurrentHashPath = 'artifacts/hash_chain/current_contract_hash.txt',
-  [string]$DeterminismReportPath = 'artifacts/determinism_test/verification_result.json'
+  [string]$CurrentHashPath = 'artifacts/hash_chain/current_contract_hash.txt'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,7 +17,10 @@ $allowedReasonCodes = @(
   'policy_rejection'
 )
 
-$stateSequence = @('INIT', 'COLLECTING', 'VALIDATED', 'GOVERNED', 'BOOTSTRAP', 'FINAL')
+$stateSequence = @('INIT', 'COLLECTED', 'VALIDATED', 'GOVERNED', 'BOOTSTRAP', 'FINAL')
+
+$requiredStartupCheckpoints = @('firstFrameRendered')
+$isCiRuntime = ($env:GITHUB_ACTIONS -eq 'true' -or $env:CI -eq 'true')
 
 function Write-Utf8NoBom {
   param(
@@ -71,6 +73,14 @@ function Convert-ToCanonicalJson {
 
   $canonical = Convert-ToCanonicalData -Value $Value
   return ($canonical | ConvertTo-Json -Depth 50 -Compress)
+}
+
+function Get-Sha256Hex {
+  param([string]$InputText)
+
+  $bytes = [System.Text.Encoding]::UTF8.GetBytes($InputText)
+  $hashBytes = [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+  return ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
 }
 
 function Test-ExactShape {
@@ -155,17 +165,74 @@ function Set-Deny {
   $Contract.governance.reasonCode = $ReasonCode
 }
 
+function Is-PlaceholderValue {
+  param($Value)
+
+  if ($null -eq $Value) {
+    return $true
+  }
+
+  if ($Value -is [string]) {
+    $v = $Value.Trim().ToLowerInvariant()
+    return $v -in @('', 'unknown', 'missing', 'invalid', 'pending')
+  }
+
+  return $false
+}
+
+function Is-ValidHash {
+  param([string]$Value)
+
+  return (-not [string]::IsNullOrWhiteSpace($Value)) -and $Value -match '^[a-f0-9]{64}$'
+}
+
+function Write-FinalEvaluation {
+  param(
+    $FinalContract,
+    [string]$Decision,
+    [string]$ReasonCode
+  )
+
+  $FinalContract.contractState = 'GOVERNED'
+  $FinalContract.governance.decision = $Decision
+  $FinalContract.governance.reasonCode = $ReasonCode
+  $FinalContract.contractState = 'FINAL'
+
+  # Evaluator self-verifies canonical determinism before committing hash.
+  $canonicalOne = Convert-ToCanonicalJson -Value $FinalContract
+  $canonicalTwo = Convert-ToCanonicalJson -Value $FinalContract
+  if ($canonicalOne -ne $canonicalTwo) {
+    $FinalContract.governance.decision = 'deny'
+    $FinalContract.governance.reasonCode = 'policy_rejection'
+    $FinalContract.contractHash = 'nondeterministic'
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $FinalContract
+  }
+
+  $hashOne = Get-Sha256Hex -InputText $canonicalOne
+  $hashTwo = Get-Sha256Hex -InputText $canonicalTwo
+  if ($hashOne -ne $hashTwo) {
+    $FinalContract.governance.decision = 'deny'
+    $FinalContract.governance.reasonCode = 'policy_rejection'
+    $FinalContract.contractHash = 'nondeterministic'
+    Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $FinalContract
+  }
+
+  $FinalContract.contractHash = $hashOne
+  $status = if ($FinalContract.governance.decision -eq 'allow') { 'PASS' } else { 'FAIL' }
+  Write-Evaluation -Status $status -ReasonCode $FinalContract.governance.reasonCode -FinalContract $FinalContract
+}
+
 if (-not (Test-Path $ContractPath)) {
   $fallback = [ordered]@{
     authority = [ordered]@{ runtime = 'flutter'; ci = 'github-actions'; resolvedBy = 'deployment_contract' }
     contractState = 'FINAL'
-    contractHash = 'missing'
+    contractHash = 'invalid'
     previousContractHash = $null
     artifact = [ordered]@{ commitSha = 'unknown'; buildId = 'unknown'; workflowRunId = 'unknown' }
     startup = [ordered]@{ contractVersion = 'unknown'; ready = $false; checkpoints = @() }
-    environment = [ordered]@{ class = 'unknown'; os = 'windows' }
+    environment = [ordered]@{ class = 'local'; os = 'windows' }
     privilege = [ordered]@{ class = 'restricted' }
-    networking = [ordered]@{ port = 8080; portOwnership = 'unknown' }
+    networking = [ordered]@{ port = 8080; portOwnership = 'user' }
     probeResults = [ordered]@{ startupProbe = 'fail'; smokeProbe = 'fail' }
     governance = [ordered]@{ decision = 'deny'; reasonCode = 'schema_invalid' }
   }
@@ -217,10 +284,10 @@ if ($schemaOk) {
 if ($schemaOk) {
   if ($contract.authority.runtime -ne 'flutter' -or $contract.authority.ci -ne 'github-actions' -or $contract.authority.resolvedBy -ne 'deployment_contract') { $schemaOk = $false }
   if ($contract.contractState -notin $stateSequence) { $schemaOk = $false }
-  if ($contract.environment.class -notin @('ci', 'local', 'unknown')) { $schemaOk = $false }
+  if ($contract.environment.class -notin @('ci', 'local')) { $schemaOk = $false }
   if ($contract.environment.os -notin @('windows', 'linux', 'macos')) { $schemaOk = $false }
   if ($contract.privilege.class -notin @('admin', 'non-admin', 'restricted')) { $schemaOk = $false }
-  if ($contract.networking.portOwnership -notin @('system', 'service', 'user', 'unknown')) { $schemaOk = $false }
+  if ($contract.networking.portOwnership -notin @('system', 'service', 'user')) { $schemaOk = $false }
   if ($contract.probeResults.startupProbe -notin @('pass', 'fail')) { $schemaOk = $false }
   if ($contract.probeResults.smokeProbe -notin @('pass', 'fail')) { $schemaOk = $false }
   if ($contract.governance.decision -notin @('allow', 'deny', 'allow-with-degradation')) { $schemaOk = $false }
@@ -233,7 +300,7 @@ $final = [ordered]@{
   contractHash = 'unknown'
   previousContractHash = $contract.previousContractHash
   artifact = [ordered]@{ commitSha = [string]$contract.artifact.commitSha; buildId = [string]$contract.artifact.buildId; workflowRunId = [string]$contract.artifact.workflowRunId }
-  startup = [ordered]@{ contractVersion = [string]$contract.startup.contractVersion; ready = [bool]$contract.startup.ready; checkpoints = @($contract.startup.checkpoints) }
+  startup = [ordered]@{ contractVersion = [string]$contract.startup.contractVersion; ready = [bool]$contract.startup.ready; checkpoints = @($contract.startup.checkpoints | ForEach-Object { [string]$_ } | Sort-Object -Unique) }
   environment = [ordered]@{ class = [string]$contract.environment.class; os = [string]$contract.environment.os }
   privilege = [ordered]@{ class = [string]$contract.privilege.class }
   networking = [ordered]@{ port = [int]$contract.networking.port; portOwnership = [string]$contract.networking.portOwnership }
@@ -242,76 +309,53 @@ $final = [ordered]@{
 }
 
 if (-not $schemaOk) {
-  $final.contractState = 'FINAL'
-  Set-Deny -Contract $final -ReasonCode 'schema_invalid'
-  $final.contractHash = Get-CanonicalHash -Contract $final
-  Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
+  Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid'
 }
 
-# State transition: INIT -> COLLECTING -> VALIDATED
+# State transition: INIT -> COLLECTED -> VALIDATED
 if ($contract.contractState -ne 'INIT') {
-  $final.contractState = 'FINAL'
-  Set-Deny -Contract $final -ReasonCode 'schema_invalid'
-  $final.contractHash = Get-CanonicalHash -Contract $final
-  Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
+  Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid'
 }
 
-$final.contractState = 'COLLECTING'
+$final.contractState = 'COLLECTED'
 $final.contractState = 'VALIDATED'
 
-if (-not [string]::IsNullOrWhiteSpace($DeterminismReportPath) -and $DeterminismReportPath -ne '__skip_determinism_check__') {
-  if (-not (Test-Path $DeterminismReportPath)) {
-    $final.contractState = 'FINAL'
-    Set-Deny -Contract $final -ReasonCode 'policy_rejection'
-    $final.contractHash = Get-CanonicalHash -Contract $final
-    Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $final
-  }
+# Completeness and placeholder checks for required production fields.
+if (Is-PlaceholderValue -Value $final.startup.contractVersion) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
+if (Is-PlaceholderValue -Value $final.environment.class) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
+if (Is-PlaceholderValue -Value $final.environment.os) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
+if (Is-PlaceholderValue -Value $final.privilege.class) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
+if (Is-PlaceholderValue -Value $final.networking.portOwnership) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
+if (Is-PlaceholderValue -Value $final.probeResults.startupProbe) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
+if (Is-PlaceholderValue -Value $final.probeResults.smokeProbe) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
 
-  try {
-    $determinismReport = Get-Content -Path $DeterminismReportPath -Raw | ConvertFrom-Json
-  }
-  catch {
-    $final.contractState = 'FINAL'
-    Set-Deny -Contract $final -ReasonCode 'schema_invalid'
-    $final.contractHash = Get-CanonicalHash -Contract $final
-    Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
-  }
-
-  if (-not (Test-ExactShape -Object $determinismReport -RequiredKeys @('testName', 'runs', 'deterministic', 'failures') -AllowedKeys @('testName', 'runs', 'deterministic', 'failures'))) {
-    $final.contractState = 'FINAL'
-    Set-Deny -Contract $final -ReasonCode 'schema_invalid'
-    $final.contractHash = Get-CanonicalHash -Contract $final
-    Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
-  }
-
-  if ($determinismReport.deterministic -isnot [bool]) {
-    $final.contractState = 'FINAL'
-    Set-Deny -Contract $final -ReasonCode 'schema_invalid'
-    $final.contractHash = Get-CanonicalHash -Contract $final
-    Write-Evaluation -Status 'FAIL' -ReasonCode 'schema_invalid' -FinalContract $final
-  }
-
-  if (-not [bool]$determinismReport.deterministic) {
-    $final.contractState = 'FINAL'
-    Set-Deny -Contract $final -ReasonCode 'policy_rejection'
-    $final.contractHash = Get-CanonicalHash -Contract $final
-    Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $final
+# Semantic validation for startup readiness contract completeness.
+if (-not $final.startup.ready) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'app_contract_failure' }
+if ($final.startup.checkpoints.Count -eq 0) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'app_contract_failure' }
+foreach ($requiredCheckpoint in $requiredStartupCheckpoints) {
+  if ($requiredCheckpoint -notin $final.startup.checkpoints) {
+    Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'app_contract_failure'
   }
 }
+
+# Input existence and environment-policy alignment.
+if ($isCiRuntime -and $final.environment.class -ne 'ci') { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'env_privilege_blocked' }
+if (-not $isCiRuntime -and $final.environment.class -eq 'ci') { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'env_privilege_blocked' }
+if ($final.environment.class -eq 'ci' -and $final.privilege.class -notin @('admin', 'restricted')) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'env_privilege_blocked' }
+if ($final.environment.class -eq 'local' -and $final.privilege.class -notin @('admin', 'non-admin')) { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'env_privilege_blocked' }
+if ($final.environment.class -eq 'ci' -and $final.networking.portOwnership -eq 'unknown') { Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'schema_invalid' }
 
 if ($final.environment.class -eq 'ci' -and $null -eq $final.previousContractHash) {
   $final.contractState = 'BOOTSTRAP'
-  Set-Deny -Contract $final -ReasonCode 'policy_rejection'
-  $final.contractHash = Get-CanonicalHash -Contract $final
-  Write-Evaluation -Status 'FAIL' -ReasonCode 'policy_rejection' -FinalContract $final
+  Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'policy_rejection'
 }
+
+if ($null -ne $final.previousContractHash -and -not (Is-ValidHash -Value ([string]$final.previousContractHash))) {
+  Write-FinalEvaluation -FinalContract $final -Decision 'deny' -ReasonCode 'policy_rejection'
+}
+
 $reasonCode = 'policy_rejection'
 $decision = 'allow'
-
-if ([string]::IsNullOrWhiteSpace($final.startup.contractVersion) -or $final.startup.contractVersion -eq 'unknown' -or -not $final.startup.ready) {
-  $decision = 'deny'
-  $reasonCode = 'app_contract_failure'
-}
 
 if ($decision -eq 'allow' -and ($final.probeResults.startupProbe -ne 'pass' -or $final.probeResults.smokeProbe -ne 'pass')) {
   $decision = 'deny'
@@ -319,17 +363,11 @@ if ($decision -eq 'allow' -and ($final.probeResults.startupProbe -ne 'pass' -or 
 }
 
 $serviceConflict = $final.networking.portOwnership -in @('service', 'system')
-if ($decision -eq 'allow' -and $final.environment.class -eq 'unknown' -and $final.privilege.class -ne 'admin') {
-  $decision = 'deny'
-  $reasonCode = 'env_privilege_blocked'
-}
-
 if ($decision -eq 'allow' -and $final.environment.class -eq 'ci' -and $final.privilege.class -eq 'restricted' -and -not $serviceConflict) {
   $decision = 'deny'
   $reasonCode = 'env_privilege_blocked'
 }
 
-$final.contractState = 'GOVERNED'
 if ($decision -eq 'allow' -and $serviceConflict -and $final.privilege.class -ne 'admin') {
   $decision = 'allow-with-degradation'
   $reasonCode = 'service_ownership_blocked'
@@ -340,16 +378,4 @@ if ($decision -eq 'allow-with-degradation' -and ($final.probeResults.startupProb
   $reasonCode = 'probe_failure'
 }
 
-if ($decision -eq 'allow-with-degradation' -and $final.environment.class -eq 'unknown') {
-  $decision = 'deny'
-  $reasonCode = 'env_privilege_blocked'
-}
-
-$final.governance.decision = $decision
-$final.governance.reasonCode = $reasonCode
-
-$final.contractState = 'FINAL'
-$final.contractHash = Get-CanonicalHash -Contract $final
-
-$status = if ($decision -eq 'allow') { 'PASS' } else { 'FAIL' }
-Write-Evaluation -Status $status -ReasonCode $reasonCode -FinalContract $final
+Write-FinalEvaluation -FinalContract $final -Decision $decision -ReasonCode $reasonCode

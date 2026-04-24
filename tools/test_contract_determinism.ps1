@@ -119,8 +119,7 @@ function Invoke-BuildAndEvaluation {
       -SchemaPath $SchemaPath `
       -OutputPath $WorkEvalPath `
       -ResolvedContractPath $WorkResolvedPath `
-      -CurrentHashPath $WorkHashPath `
-      -DeterminismReportPath '__skip_determinism_check__'
+      -CurrentHashPath $WorkHashPath
     
     if ($LASTEXITCODE -ne 0) {
       Write-Host "WARN: Evaluation exited with code $LASTEXITCODE (expected for deny decisions)"
