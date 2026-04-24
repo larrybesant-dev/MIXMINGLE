@@ -1,0 +1,14 @@
+{
+    "status":  "FAIL",
+    "port":  9090,
+    "exitCode":  [
+                     "[preflight] Starting preflight guard on port 9090 in mode \u0027Safe\u0027.",
+                     "[preflight] Execution environment: local",
+                     "[preflight] Admin session: False",
+                     "[preflight] Port 9090 is already free.",
+                     0
+                 ],
+    "environmentClass":  "local",
+    "privilegeClass":  "non-admin",
+    "portOwnership":  "user"
+}
