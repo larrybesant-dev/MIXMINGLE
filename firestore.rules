@@ -401,18 +401,13 @@ service cloud.firestore {
       }
 
       match /speakers/{speakerId} {
-        allow read: if signedIn();
-        allow create: if signedIn()
-          && isRoomParticipant(roomId)
-          && ((speakerId == request.auth.uid
-              && request.resource.data.userId == request.auth.uid)
-            || isRoomStaff(roomId));
-        allow update: if signedIn()
-          && (isRoomStaff(roomId)
-            || (speakerId == request.auth.uid
-              && request.resource.data.userId == request.auth.uid));
-        allow delete: if signedIn()
-          && (isRoomStaff(roomId) || speakerId == request.auth.uid);
+        // READ: Room participants can see speakers (public stage state).
+        allow read: if signedIn() && isRoomParticipant(roomId);
+
+        // WRITE: Blocked for all clients. Mic authority is exclusively granted
+        // through the guarded grabMic and inviteToMic Cloud Functions.
+        // Only server-side writes (via admin SDK) are permitted.
+        allow create, update, delete: if false;
       }
 
       match /presence/{userId} {

@@ -306,38 +306,25 @@ class RoomRepository {
       }
     }
 
-    final resolvedDisplayName = displayName?.trim() ?? '';
-    final resolvedRole = normalizeRoomRole(
-      _asString(
-        role,
-        fallback: _asString(participantData['role'], fallback: roomRoleStage),
-      ),
-      fallbackRole: roomRoleStage,
-    );
-    final participantRole = canManageStageRole(resolvedRole)
-        ? resolvedRole
-        : roomRoleStage;
+    // Route all mic state mutations through the guarded grabMic callable.
+    // This ensures rate limiting, policy enforcement, and transaction isolation.
+    final functions = _functions;
+    if (functions == null) {
+      throw StateError(
+        'Live media backend is unavailable. Please try again.',
+      );
+    }
 
-    final batch = _firestore.batch();
-    batch.set(_speakerRef(roomId, normalizedUserId), {
-      'userId': normalizedUserId,
-      if (resolvedDisplayName.isNotEmpty) 'name': resolvedDisplayName,
-      'joinedAt': FieldValue.serverTimestamp(),
-      'role': participantRole == 'stage' ? 'speaker' : participantRole,
-    }, SetOptions(merge: true));
-    batch.set(_participantRef(roomId, normalizedUserId), {
-      'userId': normalizedUserId,
-      'micOn': true,
-      'isMuted': false,
-      'lastActiveAt': FieldValue.serverTimestamp(),
-      if (resolvedDisplayName.isNotEmpty) 'displayName': resolvedDisplayName,
-    }, SetOptions(merge: true));
-    batch.set(_memberRef(roomId, normalizedUserId), {
-      'userId': normalizedUserId,
-      'lastActiveAt': FieldValue.serverTimestamp(),
-      if (resolvedDisplayName.isNotEmpty) 'displayName': resolvedDisplayName,
-    }, SetOptions(merge: true));
-    await batch.commit();
+    try {
+      final callable = functions.httpsCallable('grabMic');
+      await callable.call<Map<String, dynamic>>({
+        'roomId': roomId,
+      });
+    } catch (e) {
+      throw StateError(
+        'Failed to take the mic: ${e.toString()}',
+      );
+    }
   }
 
   Future<void> releaseMic({
@@ -363,17 +350,21 @@ class RoomRepository {
         ? currentRole
         : roomRoleAudience;
 
-    final batch = _firestore.batch();
-    batch.delete(_speakerRef(roomId, normalizedUserId));
-    batch.set(_participantRef(roomId, normalizedUserId), {
-      'userId': normalizedUserId,
-      'role': nextRole,
-      'micOn': false,
-      'isMuted': false,
-      'lastActiveAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    await batch.commit();
+    // Demote from stage to audience. This is a safe operation (user releasing their own mic).
+    // Direct update is acceptable here; caller is the one being demoted.
+    try {
+      await _participantRef(roomId, normalizedUserId).set({
+        'userId': normalizedUserId,
+        'role': nextRole,
+        'micOn': false,
+        'isMuted': false,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      // Best effort; if update fails, user remains in current state
+      // but can try again or refresh room state.
+    }
   }
 
   Future<void> forceRemoveSpeaker({

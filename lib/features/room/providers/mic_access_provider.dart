@@ -254,62 +254,40 @@ class MicAccessController {
     });
   }
 
-  /// Grants the mic by creating the shared speaker doc.
+  /// Deprecated: grabMicDirectly is no longer called. Mic authority is now
+  /// exclusively granted through the guarded grabMic Cloud Function.
+  /// This method is retained for backward compatibility but should not be used.
+  @Deprecated('Use grabMic callable instead')
   Future<void> grabMicDirectly({
     required String roomId,
     required String userId,
   }) async {
-    await _db.collection('rooms').doc(roomId).set({
-      'maxSpeakers': 4,
-      'speakerSyncVersion': 1,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    await _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('speakers')
-        .doc(userId)
-        .set({
-          'userId': userId,
-          'joinedAt': FieldValue.serverTimestamp(),
-          'role': 'speaker',
-        }, SetOptions(merge: true));
-    await _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants')
-        .doc(userId)
-        .set({
-          'userId': userId,
-          'role': 'stage',
-          'micOn': true,
-          'isMuted': false,
-          'lastActiveAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+    throw UnsupportedError(
+      'Direct mic grants are no longer supported. Use the grabMic callable.',
+    );
   }
 
-  /// Releases the mic by removing the shared speaker doc.
+  /// Releases the mic by demoting the user from stage role.
+  /// This is a safe operation: the user is releasing their own mic.
   Future<void> releaseMic({
     required String roomId,
     required String userId,
   }) async {
-    await _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('speakers')
-        .doc(userId)
-        .delete();
-    await _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants')
-        .doc(userId)
-        .set({
-          'userId': userId,
-          'role': 'member',
-          'micOn': false,
-          'lastActiveAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+    try {
+      await _db
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId)
+          .set({
+            'userId': userId,
+            'role': 'member',
+            'micOn': false,
+            'lastActiveAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+    } catch (e) {
+      // Best effort; if update fails, user remains in current state.
+    }
   }
 
   Future<void> approveRequest(
