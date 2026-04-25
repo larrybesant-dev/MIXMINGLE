@@ -22,6 +22,14 @@ class AdPayment {
         ),
       );
       await Stripe.instance.presentPaymentSheet();
+      // Notify backend of successful payment so the transaction is recorded
+      // and any reward/credit logic is applied server-side.
+      await PaymentApi.notifySuccess(
+        recipientId: businessId,
+        amount: amount,
+        paymentIntentId: intent.paymentIntentId,
+        idempotencyKey: intent.idempotencyKey,
+      );
       Logger.log('Payment successful for business: $businessId');
     } catch (e) {
       ErrorHandler.handle(e);

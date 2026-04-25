@@ -1823,6 +1823,62 @@ exports.submitBetaFeedback = onCall(async (request) => {
   return submitBetaFeedbackHandler(request);
 });
 
+// ── claimDailyCheckin ───────────────────────────────────────────────────────
+// Server-authoritative daily check-in reward. Client must NOT write coin
+// balances directly; this function is the only path that increments coins.
+exports.claimDailyCheckin = onCall(async (request) => {
+  const userId = requireAuth(request);
+  enforceRateLimit("claimDailyCheckin", userId);
+
+  const userRef = db.collection("users").doc(userId);
+
+  return await db.runTransaction(async (tx) => {
+    const userSnap = await tx.get(userRef);
+    if (!userSnap.exists) {
+      throw new HttpsError("not-found", "User profile not found.");
+    }
+    const data = userSnap.data();
+
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const lastCheckinRaw = data.lastCheckinDate;
+    let lastDate = null;
+    if (lastCheckinRaw && lastCheckinRaw.toDate) {
+      lastDate = lastCheckinRaw.toDate();
+    } else if (typeof lastCheckinRaw === "string") {
+      lastDate = new Date(lastCheckinRaw);
+    }
+
+    const lastDateStr = lastDate ? lastDate.toISOString().slice(0, 10) : null;
+
+    if (lastDateStr === todayStr) {
+      throw new HttpsError("already-exists", "Daily reward already claimed today.");
+    }
+
+    // Calculate streak
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+    const currentStreak = (typeof data.checkinStreak === "number") ? data.checkinStreak : 0;
+    const newStreak = (lastDateStr === yesterdayStr) ? currentStreak + 1 : 1;
+
+    // Reward: streak day clamped to 1–7, then × 10 coins
+    const rewardDay = Math.min(Math.max(newStreak, 1), 7);
+    const reward = rewardDay * 10;
+
+    tx.update(userRef, {
+      lastCheckinDate: admin.firestore.FieldValue.serverTimestamp(),
+      checkinStreak: newStreak,
+      balance: admin.firestore.FieldValue.increment(reward),
+      coinBalance: admin.firestore.FieldValue.increment(reward),
+    });
+
+    return { reward, streak: newStreak };
+  });
+});
+
 exports.syncPostCommentCount = onDocumentWritten(
   "posts/{postId}/comments/{commentId}",
   async (event) => {
