@@ -29,16 +29,30 @@ function Invoke-NodeScript {
 
 $envInfoRaw = & powershell -ExecutionPolicy Bypass -File tools/detect_execution_environment.ps1 -JsonOnly
 $envInfo = $envInfoRaw | ConvertFrom-Json
-$isCi = [bool]$envInfo.isCi
+$isCi = ([string]$envInfo.environment -eq 'ci')
 $preflightMode = if ($isCi) { 'Force' } else { 'Safe' }
 
 Write-Info "Environment=$($envInfo.environment) Admin=$($envInfo.isAdmin) Mode=$Mode"
 if (-not $SkipPreflight) {
   Write-Info "Running preflight guard for port $Port using mode $preflightMode"
 
-  & powershell -ExecutionPolicy Bypass -File tools/port_preflight_guard.ps1 -Port $Port -Mode $preflightMode -TimeoutSeconds 45 -StabilizationSeconds 3
+  $preflightContractPath = "artifacts/preflight_contract.startup_probe.$Port.json"
+  & powershell -ExecutionPolicy Bypass -File tools/port_preflight_guard.ps1 -Port $Port -Mode $preflightMode -TimeoutSeconds 45 -StabilizationSeconds 3 -OutputPath $preflightContractPath
   if ($LASTEXITCODE -ne 0) {
-    throw "Port preflight failed for port $Port (exit=$LASTEXITCODE)"
+    throw "Port preflight execution failed for port $Port (exit=$LASTEXITCODE)"
+  }
+
+  if (-not (Test-Path $preflightContractPath)) {
+    throw "Port preflight did not produce contract output: $preflightContractPath"
+  }
+
+  $preflightContract = Get-Content -Path $preflightContractPath -Raw | ConvertFrom-Json
+  if ([string]$preflightContract.status -ne 'pass') {
+    $reason = [string]$preflightContract.reasonCode
+    if ([string]::IsNullOrWhiteSpace($reason)) {
+      $reason = 'probe_failure'
+    }
+    throw "Port preflight classified port $Port as blocked ($reason)"
   }
 } else {
   Write-Info "Skipping embedded preflight guard (external preflight stage expected)."

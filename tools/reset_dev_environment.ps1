@@ -14,18 +14,37 @@ $results = @()
 
 foreach ($port in $Ports) {
   Write-Info "Running deterministic port preflight cleanup for port $port"
-  & powershell -ExecutionPolicy Bypass -File tools/port_preflight_guard.ps1 -Port $port -Mode Force -TimeoutSeconds 45 -StabilizationSeconds 3
+  $preflightContractPath = "artifacts/preflight_contract.reset.$port.json"
+  & powershell -ExecutionPolicy Bypass -File tools/port_preflight_guard.ps1 -Port $port -Mode Force -TimeoutSeconds 45 -StabilizationSeconds 3 -OutputPath $preflightContractPath
   $exitCode = $LASTEXITCODE
+
+  $preflightStatus = 'failed'
+  $preflightReason = 'probe_failure'
+  if ($exitCode -eq 0 -and (Test-Path $preflightContractPath)) {
+    try {
+      $preflightContract = Get-Content -Path $preflightContractPath -Raw | ConvertFrom-Json
+      $preflightStatus = [string]$preflightContract.status
+      $preflightReason = [string]$preflightContract.reasonCode
+      if ([string]::IsNullOrWhiteSpace($preflightReason)) {
+        $preflightReason = 'none'
+      }
+    } catch {
+      $preflightStatus = 'failed'
+      $preflightReason = 'schema_invalid'
+    }
+  }
 
   $result = [ordered]@{
     port = $port
     preflightExitCode = $exitCode
-    released = ($exitCode -eq 0)
+    preflightStatus = $preflightStatus
+    reasonCode = $preflightReason
+    released = ($exitCode -eq 0 -and $preflightStatus -eq 'pass')
   }
   $results += $result
 
-  if ($exitCode -ne 0) {
-    Write-Info "Failed to release port $port. Check service ownership and run elevated if required."
+  if (-not $result.released) {
+    Write-Info "Failed to release port $port (status=$preflightStatus reason=$preflightReason). Check blocking ownership and privileges."
   }
 }
 

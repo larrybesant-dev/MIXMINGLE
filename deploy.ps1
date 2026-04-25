@@ -10,13 +10,17 @@ $PSNativeCommandUseErrorActionPreference = $false
 $startupLogPath = 'tools/reports/startup_timeline.log'
 $startupReportPath = 'tools/reports/startup_probe_report.json'
 $smokeReportPath = 'tools/reports/web_failure_smoke_report.json'
-$preflightReportPath = 'artifacts/port_preflight_report.json'
+$preflightContractPath = 'artifacts/preflight_contract.json'
 $contractPath = 'artifacts/deployment_contract.json'
 $evaluationPath = 'artifacts/deployment_contract_evaluation.json'
 $resolvedContractPath = 'artifacts/deployment_contract.resolved.json'
 $previousHashPath = 'artifacts/hash_chain/previous_contract_hash.txt'
 $currentHashPath = 'artifacts/hash_chain/current_contract_hash.txt'
+$devEnvironmentContractPath = 'artifacts/dev_environment_contract.json'
+$localDevEnvironmentHashPath = 'artifacts/dev_environment_contract.hash.local.txt'
+$ciDevEnvironmentHashPath = 'artifacts/dev_environment_contract.hash.ci.txt'
 $appUrl = "http://127.0.0.1:$Port/"
+$global:StageResults = @()
 
 function Write-Stage {
   param([string]$Name)
@@ -31,12 +35,30 @@ function Invoke-PowerShellScript {
     [switch]$AllowFailure
   )
 
-  & powershell -ExecutionPolicy Bypass -File $ScriptPath @Arguments | Out-Null
-  if (-not $AllowFailure -and $LASTEXITCODE -ne 0) {
-    throw "Script failed: $ScriptPath (exit=$LASTEXITCODE)"
-  }
+  $stdoutPath = Join-Path $env:TEMP ("mixvy-" + [guid]::NewGuid().ToString() + "-stdout.log")
+  $stderrPath = Join-Path $env:TEMP ("mixvy-" + [guid]::NewGuid().ToString() + "-stderr.log")
+  $argumentList = @('-ExecutionPolicy', 'Bypass', '-File', $ScriptPath) + $Arguments
 
-  return $LASTEXITCODE
+  try {
+    $proc = Start-Process -FilePath 'powershell' -ArgumentList $argumentList -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+
+    if (Test-Path $stdoutPath) {
+      Get-Content -Path $stdoutPath | ForEach-Object { Write-Host $_ }
+    }
+    if (Test-Path $stderrPath) {
+      Get-Content -Path $stderrPath | ForEach-Object { Write-Host $_ }
+    }
+
+    if (-not $AllowFailure -and $proc.ExitCode -ne 0) {
+      throw "Script failed: $ScriptPath (exit=$($proc.ExitCode))"
+    }
+
+    return $proc.ExitCode
+  }
+  finally {
+    Remove-Item -Path $stdoutPath -ErrorAction SilentlyContinue
+    Remove-Item -Path $stderrPath -ErrorAction SilentlyContinue
+  }
 }
 
 function Invoke-CommandWithExitCode {
@@ -74,48 +96,6 @@ function Wait-AppReady {
   throw "App did not become ready at $Url within $TimeoutSeconds seconds."
 }
 
-function Resolve-PortOwnershipClass {
-  param([int]$TargetPort)
-
-  $listenerPid = $null
-  try {
-    $conn = Get-NetTCPConnection -LocalPort $TargetPort -State Listen -ErrorAction Stop | Select-Object -First 1
-    if ($conn) {
-      $listenerPid = [int]$conn.OwningProcess
-    }
-  }
-  catch {
-    try {
-      $line = netstat -ano -p tcp | Select-String -Pattern "^\s*TCP\s+\S+:$TargetPort\s+\S+\s+LISTENING\s+(\d+)\s*$" | Select-Object -First 1
-      if ($line) {
-        $m = [regex]::Match($line.Line, "^\s*TCP\s+\S+:$TargetPort\s+\S+\s+LISTENING\s+(\d+)\s*$")
-        if ($m.Success) {
-          $listenerPid = [int]$m.Groups[1].Value
-        }
-      }
-    }
-    catch {
-      $listenerPid = $null
-    }
-  }
-
-  # Free port is modeled as user-available capacity for deterministic governance.
-  if ($null -eq $listenerPid) {
-    return 'user'
-  }
-
-  if ($listenerPid -eq 4) {
-    return 'system'
-  }
-
-  $svc = Get-CimInstance Win32_Service -Filter "ProcessId = $listenerPid" -ErrorAction SilentlyContinue | Select-Object -First 1
-  if ($svc) {
-    return 'service'
-  }
-
-  return 'user'
-}
-
 function Write-Utf8NoBom {
   param(
     [string]$Path,
@@ -127,12 +107,64 @@ function Write-Utf8NoBom {
   [System.IO.File]::WriteAllText($Path, $Content, $utf8NoBom)
 }
 
+function Add-StageResult {
+  param(
+    [string]$Stage,
+    [string]$Status,
+    [string]$ReasonCode,
+    [int]$ExitCode
+  )
+
+  $global:StageResults += [ordered]@{
+    stage = $Stage
+    status = $Status
+    reasonCode = $ReasonCode
+    exitCode = $ExitCode
+  }
+}
+
+function Write-ReleaseTelemetryFooter {
+  param(
+    $Evaluation
+  )
+
+  # Projection-only invariant: this footer must summarize evaluator output as-is and must never add authority logic.
+  $decision = if ($null -ne $Evaluation.summary -and $null -ne $Evaluation.summary.governance -and -not [string]::IsNullOrWhiteSpace([string]$Evaluation.summary.governance.decision)) { [string]$Evaluation.summary.governance.decision } else { 'unknown' }
+  $contractHash = if ($null -ne $Evaluation.summary -and -not [string]::IsNullOrWhiteSpace([string]$Evaluation.summary.contractHash)) { [string]$Evaluation.summary.contractHash } else { 'unknown' }
+  $previousHash = if ($null -ne $Evaluation.summary -and -not [string]::IsNullOrWhiteSpace([string]$Evaluation.summary.previousContractHash)) { [string]$Evaluation.summary.previousContractHash } else { 'unknown' }
+  $devContractHash = if ($null -ne $Evaluation.summary -and $null -ne $Evaluation.summary.environment -and $null -ne $Evaluation.summary.environment.contract -and -not [string]::IsNullOrWhiteSpace([string]$Evaluation.summary.environment.contract.hash)) { [string]$Evaluation.summary.environment.contract.hash } else { 'unknown' }
+  $evaluationState = if ($null -ne $Evaluation.summary -and -not [string]::IsNullOrWhiteSpace([string]$Evaluation.summary.contractState)) { [string]$Evaluation.summary.contractState } else { 'unknown' }
+
+  $observationCount = 0
+  $driftDetected = $false
+  if ($null -ne $Evaluation.observations) {
+    $observationCount = @($Evaluation.observations).Count
+    foreach ($obs in @($Evaluation.observations)) {
+      if ($null -ne $obs -and [string]$obs.reasonCode -eq 'environment_drift_detected') {
+        $driftDetected = $true
+        break
+      }
+    }
+  }
+
+  Write-Host '=== MIXVY RELEASE SUMMARY ==='
+  Write-Host "decision: $decision"
+  Write-Host "contractHash: $contractHash"
+  Write-Host "previousHash: $previousHash"
+  Write-Host "devContractHash: $devContractHash"
+  Write-Host "driftDetected: $driftDetected"
+  Write-Host "observationCount: $observationCount"
+  Write-Host "evaluationState: $evaluationState"
+  Write-Host '============================='
+}
+
 function Persist-AuditHistory {
   param(
     [string]$Root,
     [string]$ContractFile,
     [string]$ResolvedFile,
     [string]$EvaluationFile,
+    [string]$DevEnvironmentContractFile,
     $ResolvedContract
   )
 
@@ -147,6 +179,15 @@ function Persist-AuditHistory {
   Copy-Item -Path $ContractFile -Destination (Join-Path $historyDir 'deployment_contract.json') -Force
   Copy-Item -Path $ResolvedFile -Destination (Join-Path $historyDir 'deployment_contract.resolved.json') -Force
   Copy-Item -Path $EvaluationFile -Destination (Join-Path $historyDir 'evaluation.json') -Force
+  if (-not [string]::IsNullOrWhiteSpace($DevEnvironmentContractFile) -and (Test-Path $DevEnvironmentContractFile)) {
+    Copy-Item -Path $DevEnvironmentContractFile -Destination (Join-Path $historyDir 'dev_environment_contract.json') -Force
+  }
+  if (Test-Path $localDevEnvironmentHashPath) {
+    Copy-Item -Path $localDevEnvironmentHashPath -Destination (Join-Path $historyDir 'dev_environment_contract.hash.local.txt') -Force
+  }
+  if (Test-Path $ciDevEnvironmentHashPath) {
+    Copy-Item -Path $ciDevEnvironmentHashPath -Destination (Join-Path $historyDir 'dev_environment_contract.hash.ci.txt') -Force
+  }
   Write-Utf8NoBom -Path (Join-Path $historyDir 'hash.txt') -Content "contractHash=$($ResolvedContract.contractHash)`npreviousHash=$($ResolvedContract.previousContractHash)"
 }
 
@@ -160,6 +201,7 @@ try {
   $buildExitCode = 0
   $startupProbeExitCode = 0
   $smokeProbeExitCode = 0
+  $devEnvironmentContractExitCode = 0
   $contractBuildExitCode = 0
   $evaluateExitCode = 0
 
@@ -167,6 +209,9 @@ try {
   $resetExitCode = Invoke-PowerShellScript -ScriptPath 'tools/reset_dev_environment.ps1' -AllowFailure
   if ($resetExitCode -ne 0) {
     Write-Host "[stage-fail] reset_dev_environment exit=$resetExitCode"
+    Add-StageResult -Stage 'reset_dev_environment' -Status 'failed' -ReasonCode 'env_privilege_blocked' -ExitCode $resetExitCode
+  } else {
+    Add-StageResult -Stage 'reset_dev_environment' -Status 'success' -ReasonCode 'none' -ExitCode $resetExitCode
   }
 
   Write-Stage 'Port preflight'
@@ -176,42 +221,32 @@ try {
     '-Mode', $mode,
     '-ExecutionEnvironment', 'auto',
     '-TimeoutSeconds', '45',
-    '-StabilizationSeconds', '3'
+    '-StabilizationSeconds', '3',
+    '-OutputPath', $preflightContractPath
   ) -AllowFailure
-  if ($preflightExitCode -ne 0) {
-    Write-Host "[stage-fail] port_preflight_guard exit=$preflightExitCode"
-  }
-
-  $environmentClass = 'unknown'
-  $privilegeClass = 'restricted'
-  $envPayloadRaw = & powershell -ExecutionPolicy Bypass -File tools/detect_execution_environment.ps1 -JsonOnly
-  if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($envPayloadRaw)) {
+  if ($preflightExitCode -ne 0 -or -not (Test-Path $preflightContractPath)) {
+    Write-Host "[stage-fail] port_preflight_guard execution failure exit=$preflightExitCode"
+    Add-StageResult -Stage 'port_preflight' -Status 'failed' -ReasonCode 'probe_failure' -ExitCode $preflightExitCode
+  } else {
     try {
-      $envPayload = $envPayloadRaw | ConvertFrom-Json
-      if ([string]$envPayload.environment -in @('ci', 'local')) {
-        $environmentClass = [string]$envPayload.environment
+      $preflightContract = Get-Content -Path $preflightContractPath -Raw | ConvertFrom-Json
+      $preflightStatus = [string]$preflightContract.status
+      $preflightReason = [string]$preflightContract.reasonCode
+      if ([string]::IsNullOrWhiteSpace($preflightReason)) {
+        $preflightReason = 'none'
       }
-      if ([string]$envPayload.privilegeClass -in @('admin', 'non-admin', 'restricted')) {
-        $privilegeClass = [string]$envPayload.privilegeClass
+
+      if ($preflightStatus -eq 'pass') {
+        Add-StageResult -Stage 'port_preflight' -Status 'success' -ReasonCode 'none' -ExitCode 0
+      } else {
+        Add-StageResult -Stage 'port_preflight' -Status 'failed' -ReasonCode $preflightReason -ExitCode 0
       }
     }
     catch {
-      Write-Host '[stage-fail] detect_execution_environment produced invalid JSON'
+      Write-Host '[stage-fail] preflight contract parse failed'
+      Add-StageResult -Stage 'port_preflight' -Status 'failed' -ReasonCode 'schema_invalid' -ExitCode 0
     }
   }
-
-  $portOwnership = Resolve-PortOwnershipClass -TargetPort $Port
-
-  $preflightReport = [ordered]@{
-    status = if ($preflightExitCode -eq 0) { 'PASS' } else { 'FAIL' }
-    port = $Port
-    exitCode = $preflightExitCode
-    environmentClass = $environmentClass
-    privilegeClass = $privilegeClass
-    portOwnership = $portOwnership
-  }
-  $preflightJson = $preflightReport | ConvertTo-Json -Depth 10
-  Write-Utf8NoBom -Path $preflightReportPath -Content $preflightJson
 
   Write-Stage 'Build Flutter web'
   $buildExitCode = Invoke-CommandWithExitCode -Name 'flutter build web --release' -Command {
@@ -219,6 +254,9 @@ try {
   }
   if ($buildExitCode -ne 0) {
     Write-Host "[stage-fail] flutter build web --release exit=$buildExitCode"
+    Add-StageResult -Stage 'build_flutter_web' -Status 'failed' -ReasonCode 'probe_failure' -ExitCode $buildExitCode
+  } else {
+    Add-StageResult -Stage 'build_flutter_web' -Status 'success' -ReasonCode 'none' -ExitCode $buildExitCode
   }
 
   Write-Stage 'Run startup probe'
@@ -234,6 +272,9 @@ try {
   ) -AllowFailure
   if ($startupProbeExitCode -ne 0) {
     Write-Host "[stage-fail] startup probe exit=$startupProbeExitCode"
+    Add-StageResult -Stage 'startup_probe' -Status 'failed' -ReasonCode 'probe_failure' -ExitCode $startupProbeExitCode
+  } else {
+    Add-StageResult -Stage 'startup_probe' -Status 'success' -ReasonCode 'none' -ExitCode $startupProbeExitCode
   }
 
   if (-not (Test-Path $startupReportPath)) {
@@ -280,6 +321,12 @@ try {
     Write-Host '[stage-fail] smoke probe did not produce report file'
   }
 
+  if ($smokeProbeExitCode -ne 0) {
+    Add-StageResult -Stage 'smoke_probe' -Status 'failed' -ReasonCode 'probe_failure' -ExitCode $smokeProbeExitCode
+  } else {
+    Add-StageResult -Stage 'smoke_probe' -Status 'success' -ReasonCode 'none' -ExitCode $smokeProbeExitCode
+  }
+
   if (-not (Test-Path $smokeReportPath)) {
     $smokeFallback = [ordered]@{
       contractVersion = 'web_smoke_report_v1'
@@ -288,6 +335,29 @@ try {
       scenarios = @()
     }
     Write-Utf8NoBom -Path $smokeReportPath -Content ($smokeFallback | ConvertTo-Json -Depth 10)
+  }
+
+  Write-Stage 'Build developer environment contract'
+  $runId = if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_RUN_ID)) { [string]$env:GITHUB_RUN_ID } else { 'local' }
+  $devEnvironmentContractExitCode = Invoke-PowerShellScript -ScriptPath 'tools/build_dev_environment_contract.ps1' -Arguments @(
+    '-OutputPath', $devEnvironmentContractPath,
+    '-SettingsPath', '.vscode/settings.json',
+    '-RunId', $runId
+  ) -AllowFailure
+  if ($devEnvironmentContractExitCode -ne 0) {
+    Write-Host "[stage-fail] build_dev_environment_contract exit=$devEnvironmentContractExitCode"
+    Add-StageResult -Stage 'build_dev_environment_contract' -Status 'failed' -ReasonCode 'probe_failure' -ExitCode $devEnvironmentContractExitCode
+  } else {
+    Add-StageResult -Stage 'build_dev_environment_contract' -Status 'success' -ReasonCode 'none' -ExitCode $devEnvironmentContractExitCode
+  }
+
+  if (Test-Path $devEnvironmentContractPath) {
+    $localHash = (Get-FileHash -Path $devEnvironmentContractPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    Write-Utf8NoBom -Path $localDevEnvironmentHashPath -Content ("sha256:" + $localHash)
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($env:MIXVY_CI_DEV_CONTRACT_HASH)) {
+    Write-Utf8NoBom -Path $ciDevEnvironmentHashPath -Content ([string]$env:MIXVY_CI_DEV_CONTRACT_HASH)
   }
 
   Write-Stage 'Build deployment contract'
@@ -302,12 +372,15 @@ try {
     '-Port', "$Port",
     '-StartupProbeReportPath', $startupReportPath,
     '-SmokeProbeReportPath', $smokeReportPath,
-    '-PreflightReportPath', $preflightReportPath,
+    '-PreflightContractPath', $preflightContractPath,
     '-PreviousHashPath', $previousHashPath,
     '-OutputPath', $contractPath
   ) -AllowFailure
   if ($contractBuildExitCode -ne 0) {
     Write-Host "[stage-fail] build_deployment_contract exit=$contractBuildExitCode"
+    Add-StageResult -Stage 'build_deployment_contract' -Status 'failed' -ReasonCode 'probe_failure' -ExitCode $contractBuildExitCode
+  } else {
+    Add-StageResult -Stage 'build_deployment_contract' -Status 'success' -ReasonCode 'none' -ExitCode $contractBuildExitCode
   }
 
   Write-Stage 'Evaluate contract'
@@ -316,19 +389,33 @@ try {
     '-SchemaPath', 'tools/deployment_contract.schema.json',
     '-OutputPath', $evaluationPath,
     '-ResolvedContractPath', $resolvedContractPath,
-    '-CurrentHashPath', $currentHashPath
+    '-CurrentHashPath', $currentHashPath,
+    '-DevEnvironmentContractPath', $devEnvironmentContractPath,
+    '-LocalDevContractHashPath', $localDevEnvironmentHashPath,
+    '-CiDevContractHashPath', $ciDevEnvironmentHashPath
   ) -AllowFailure
+  if ($evaluateExitCode -ne 0) {
+    Add-StageResult -Stage 'evaluate_deployment_contract' -Status 'failed' -ReasonCode 'policy_rejection' -ExitCode $evaluateExitCode
+  } else {
+    Add-StageResult -Stage 'evaluate_deployment_contract' -Status 'success' -ReasonCode 'none' -ExitCode $evaluateExitCode
+  }
 
   if (-not (Test-Path $resolvedContractPath)) {
     throw 'Missing resolved contract output.'
   }
+
+  if (-not (Test-Path $evaluationPath)) {
+    throw 'Missing evaluation output.'
+  }
+
+  $evaluation = Get-Content -Path $evaluationPath -Raw | ConvertFrom-Json
 
   $contract = Get-Content -Path $resolvedContractPath -Raw | ConvertFrom-Json
 
   if ($contract.governance.decision -ne 'allow') {
     Write-Host "DEPLOYMENT BLOCKED: $($contract.governance.reasonCode)"
 
-    Persist-AuditHistory -Root $DeployRoot -ContractFile $contractPath -ResolvedFile $resolvedContractPath -EvaluationFile $evaluationPath -ResolvedContract $contract
+    Persist-AuditHistory -Root $DeployRoot -ContractFile $contractPath -ResolvedFile $resolvedContractPath -EvaluationFile $evaluationPath -DevEnvironmentContractFile $devEnvironmentContractPath -ResolvedContract $contract
 
     Write-Host ''
     Write-Host 'Release Summary:'
@@ -337,7 +424,9 @@ try {
     Write-Host "- Contract Hash: $($contract.contractHash)"
     Write-Host "- Previous Hash: $($contract.previousContractHash)"
     Write-Host "- Environment: $($contract.environment.class)"
-    Write-Host "- Stage Exit Codes: reset=$resetExitCode preflight=$preflightExitCode build=$buildExitCode startupProbe=$startupProbeExitCode smokeProbe=$smokeProbeExitCode contractBuild=$contractBuildExitCode evaluate=$evaluateExitCode"
+    Write-Host "- Stage Exit Codes: reset=$resetExitCode preflight=$preflightExitCode build=$buildExitCode startupProbe=$startupProbeExitCode smokeProbe=$smokeProbeExitCode devEnvironment=$devEnvironmentContractExitCode contractBuild=$contractBuildExitCode evaluate=$evaluateExitCode"
+    Write-Host ''
+    Write-ReleaseTelemetryFooter -Evaluation $evaluation
 
     exit 1
   }
@@ -371,7 +460,7 @@ try {
   }
   Rename-Item -Path $currentTempDir -NewName 'current'
 
-  Persist-AuditHistory -Root $DeployRoot -ContractFile $contractPath -ResolvedFile $resolvedContractPath -EvaluationFile $evaluationPath -ResolvedContract $contract
+  Persist-AuditHistory -Root $DeployRoot -ContractFile $contractPath -ResolvedFile $resolvedContractPath -EvaluationFile $evaluationPath -DevEnvironmentContractFile $devEnvironmentContractPath -ResolvedContract $contract
 
   Write-Host 'DEPLOY SUCCESS'
   Write-Host "contractHash: $($contract.contractHash)"
@@ -384,7 +473,9 @@ try {
   Write-Host "- Contract Hash: $($contract.contractHash)"
   Write-Host "- Previous Hash: $($contract.previousContractHash)"
   Write-Host "- Environment: $($contract.environment.class)"
-  Write-Host "- Stage Exit Codes: reset=$resetExitCode preflight=$preflightExitCode build=$buildExitCode startupProbe=$startupProbeExitCode smokeProbe=$smokeProbeExitCode contractBuild=$contractBuildExitCode evaluate=$evaluateExitCode"
+  Write-Host "- Stage Exit Codes: reset=$resetExitCode preflight=$preflightExitCode build=$buildExitCode startupProbe=$startupProbeExitCode smokeProbe=$smokeProbeExitCode devEnvironment=$devEnvironmentContractExitCode contractBuild=$contractBuildExitCode evaluate=$evaluateExitCode"
+  Write-Host ''
+  Write-ReleaseTelemetryFooter -Evaluation $evaluation
 }
 catch {
   Write-Host "DEPLOYMENT FAILED: $($_.Exception.Message)"

@@ -28,7 +28,7 @@
     },
     "contractState": {
       "type": "string",
-      "enum": ["INIT", "COLLECTING", "VALIDATED", "GOVERNED", "BOOTSTRAP", "FINAL"]
+      "enum": ["INIT", "COLLECTED", "VALIDATED", "GOVERNED", "BOOTSTRAP", "FINAL"]
     },
     "contractHash": { "type": "string" },
     "previousContractHash": {
@@ -69,6 +69,16 @@
         "os": {
           "type": "string",
           "enum": ["windows", "linux", "macos"]
+        },
+        "contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "properties": {
+            "status": { "type": "string", "enum": ["missing", "invalid", "present"] },
+            "hash": { "type": ["string", "null"] },
+            "summaryFlags": { "type": ["object", "null"] }
+          }
         }
       }
     },

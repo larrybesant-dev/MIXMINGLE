@@ -2,7 +2,7 @@ param(
   [int]$Port = 8080,
   [string]$StartupProbeReportPath = 'tools/reports/startup_probe_report.json',
   [string]$SmokeProbeReportPath = 'tools/reports/web_failure_smoke_report.json',
-  [string]$PreflightReportPath = 'artifacts/port_preflight_report.json',
+  [string]$PreflightContractPath = 'artifacts/preflight_contract.json',
   [string]$PreviousHashPath = 'artifacts/hash_chain/previous_contract_hash.txt',
   [string]$OutputPath = 'artifacts/deployment_contract.json'
 )
@@ -36,10 +36,10 @@ function Get-OsClass {
 }
 
 function Resolve-EnvironmentClass {
-  param($PreflightReport)
+  param($PreflightContract)
 
-  if ($null -ne $PreflightReport) {
-    $candidate = [string]$PreflightReport.environmentClass
+  if ($null -ne $PreflightContract -and $null -ne $PreflightContract.environment) {
+    $candidate = [string]$PreflightContract.environment.class
     if ($candidate -in @('ci', 'local', 'unknown')) {
       return $candidate
     }
@@ -49,10 +49,10 @@ function Resolve-EnvironmentClass {
 }
 
 function Resolve-PrivilegeClass {
-  param($PreflightReport)
+  param($PreflightContract)
 
-  if ($null -ne $PreflightReport) {
-    $candidate = [string]$PreflightReport.privilegeClass
+  if ($null -ne $PreflightContract -and $null -ne $PreflightContract.environment) {
+    $candidate = [string]$PreflightContract.environment.privilegeClass
     if ($candidate -in @('admin', 'non-admin', 'restricted')) {
       return $candidate
     }
@@ -62,39 +62,25 @@ function Resolve-PrivilegeClass {
 }
 
 function Resolve-PortOwnership {
-  param([int]$TargetPort)
+  param($PreflightContract)
 
-  $listenerPid = $null
-  try {
-    $conn = Get-NetTCPConnection -LocalPort $TargetPort -State Listen -ErrorAction Stop | Select-Object -First 1
-    if ($conn) {
-      $listenerPid = [int]$conn.OwningProcess
-    }
-  } catch {
-    try {
-      $line = netstat -ano -p tcp | Select-String -Pattern "^\s*TCP\s+\S+:$TargetPort\s+\S+\s+LISTENING\s+(\d+)\s*$" | Select-Object -First 1
-      if ($line) {
-        $m = [regex]::Match($line.Line, "^\s*TCP\s+\S+:$TargetPort\s+\S+\s+LISTENING\s+(\d+)\s*$")
-        if ($m.Success) {
-          $listenerPid = [int]$m.Groups[1].Value
-        }
-      }
-    } catch {
-      $listenerPid = $null
-    }
-  }
-
-  if ($null -eq $listenerPid) {
+  if ($null -eq $PreflightContract -or $null -eq $PreflightContract.preflight) {
     return 'unknown'
   }
 
-  if ($listenerPid -eq 4) {
-    return 'system'
+  $finalListeners = @($PreflightContract.preflight.finalListeners)
+  if ($finalListeners.Count -eq 0) {
+    return 'user'
   }
 
-  $services = @(Get-CimInstance Win32_Service -Filter "ProcessId = $listenerPid" -ErrorAction SilentlyContinue)
-  if ($services.Count -gt 0) {
-    return 'service'
+  foreach ($listener in $finalListeners) {
+    $ownership = [string]$listener.ownership
+    if ($ownership -in @('kernel_listener', 'system_service')) {
+      return 'system'
+    }
+    if ($ownership -eq 'service') {
+      return 'service'
+    }
   }
 
   return 'user'
@@ -131,7 +117,7 @@ function Read-JsonIfPresent {
 
 $startupReport = Read-JsonIfPresent -Path $StartupProbeReportPath
 $smokeReport = Read-JsonIfPresent -Path $SmokeProbeReportPath
-$preflightReport = Read-JsonIfPresent -Path $PreflightReportPath
+$preflightContract = Read-JsonIfPresent -Path $PreflightContractPath
 
 $startupContractVersion = 'unknown'
 $startupReady = $false
@@ -149,16 +135,9 @@ if ($null -ne $startupReport -and $null -ne $startupReport.finalContract) {
   }
 }
 
-$environmentClass = Resolve-EnvironmentClass -PreflightReport $preflightReport
-$privilegeClass = Resolve-PrivilegeClass -PreflightReport $preflightReport
-
-$portOwnership = Resolve-PortOwnership -TargetPort $Port
-if ($null -ne $preflightReport -and -not [string]::IsNullOrWhiteSpace([string]$preflightReport.portOwnership)) {
-  $candidate = [string]$preflightReport.portOwnership
-  if ($candidate -in @('system', 'service', 'user', 'unknown')) {
-    $portOwnership = $candidate
-  }
-}
+$environmentClass = Resolve-EnvironmentClass -PreflightContract $preflightContract
+$privilegeClass = Resolve-PrivilegeClass -PreflightContract $preflightContract
+$portOwnership = Resolve-PortOwnership -PreflightContract $preflightContract
 
 $startupProbeStatus = Get-ProbeStatus -Report $startupReport
 $smokeProbeStatus = Get-ProbeStatus -Report $smokeReport

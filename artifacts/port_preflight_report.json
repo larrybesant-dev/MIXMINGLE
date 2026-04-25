@@ -4,5 +4,9 @@
     "exitCode":  0,
     "environmentClass":  "local",
     "privilegeClass":  "non-admin",
-    "portOwnership":  "user"
+    "portOwnership":  "user",
+    "terminationAttempt":  {
+                               "status":  "success",
+                               "reasonCode":  "none"
+                           }
 }

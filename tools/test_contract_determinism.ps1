@@ -2,7 +2,7 @@ param(
   [int]$Port = 8080,
   [string]$StartupProbeReportPath = 'tools/reports/startup_probe_report.json',
   [string]$SmokeProbeReportPath = 'tools/reports/web_failure_smoke_report.json',
-  [string]$PreflightReportPath = 'artifacts/port_preflight_report.json',
+  [string]$PreflightContractPath = 'artifacts/preflight_contract.json',
   [string]$PreviousHashPath = 'artifacts/hash_chain/previous_contract_hash.txt',
   [string]$ContractPath = 'artifacts/deployment_contract.json',
   [string]$SchemaPath = 'tools/deployment_contract.schema.json',
@@ -28,7 +28,7 @@ Write-Host "Testing determinism with inputs:"
 Write-Host "  - Port: $Port"
 Write-Host "  - Startup Report: $StartupProbeReportPath"
 Write-Host "  - Smoke Report: $SmokeProbeReportPath"
-Write-Host "  - Preflight Report: $PreflightReportPath"
+Write-Host "  - Preflight Contract: $PreflightContractPath"
 Write-Host "  - Previous Hash: $PreviousHashPath"
 Write-Host ""
 
@@ -89,7 +89,7 @@ function Invoke-BuildAndEvaluation {
       -Port $Port `
       -StartupProbeReportPath $StartupProbeReportPath `
       -SmokeProbeReportPath $SmokeProbeReportPath `
-      -PreflightReportPath $PreflightReportPath `
+      -PreflightContractPath $PreflightContractPath `
       -PreviousHashPath $PreviousHashPath `
       -OutputPath $WorkContractPath
     
