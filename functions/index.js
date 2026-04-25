@@ -394,7 +394,7 @@ async function createCheckoutSessionHandler(req, res, deps = {}) {
     return res.json({url: session.url});
   } catch (error) {
     console.error(error);
-    return res.status(500).send(error.MessageModel);
+    return res.status(500).send(error.message);
   }
 }
 
@@ -1595,7 +1595,7 @@ async function generateTurnCredentialsHandler(request) {
   } catch (err) {
     logger.warn("generateTurnCredentials upstream unavailable; serving fallback", {
       authUid,
-      error: err instanceof Error ? err.MessageModel : String(err),
+      error: err instanceof Error ? err.message : String(err),
       hasCachedIceServers: cachedTurnIceServers != null,
     });
 
@@ -1752,17 +1752,17 @@ exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}
       process.env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err) {
-    console.error("Webhook signature failed:", err.MessageModel);
+    console.error("Webhook signature failed:", err.message);
     try {
       await db.collection("logs").add({
         type: "stripe_webhook_error",
-        MessageModel: err.MessageModel,
+        message: err.message,
         time: admin.firestore.FieldValue.serverTimestamp(),
       });
     } catch (logErr) {
-      console.error("Failed to log webhook error:", logErr.MessageModel);
+      console.error("Failed to log webhook error:", logErr.message);
     }
-    return res.status(400).send(`Webhook Error: ${err.MessageModel}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === "checkout.session.completed") {
@@ -2123,6 +2123,9 @@ exports.cleanupExpiredMessageModels = onSchedule("every 6 hours", async () => {
   );
 });
 
+/* TEMPORARILY COMMENTED OUT — Requires Firestore Realtime Database to be enabled.
+   Re-enable after setting up RTDB or adjust to use Firestore-only presence.
+
 // ── RTDB presence -> Firestore aggregate sync ───────────────────────────────
 // Keeps Firestore `presence/{userId}` truthful using RTDB onDisconnect-driven
 // session state. This is the canonical bridge from transport truth to UI truth.
@@ -2198,6 +2201,8 @@ exports.syncPresenceFromRtdbSessions = functionsV1.database
       {merge: true},
     );
   });
+
+*/
 
 // ── Friend-online notification ────────────────────────────────────────────────
 // Triggers whenever a presence document is written.  When ``isOnline`` flips

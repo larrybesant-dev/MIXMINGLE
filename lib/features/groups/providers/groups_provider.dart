@@ -71,6 +71,7 @@ class GroupsController {
     await _firestore.collection('groups').add({
       'name': name,
       'description': description,
+      'creatorId': userId,
       'adminId': userId,
       'memberIds': [userId],
       'memberCount': 1,

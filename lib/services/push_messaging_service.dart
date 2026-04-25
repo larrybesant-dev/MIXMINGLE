@@ -286,7 +286,7 @@ class PushMessagingService {
         final roomId = data['roomId'] as String? ?? '';
         route = roomId.isNotEmpty ? '/room/$roomId' : '/speed-dating';
       case 'payment':
-        route = '/wallet';
+        route = '/payments';
       case 'notification':
       default:
         route = '/notifications';
