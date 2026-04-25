@@ -1742,11 +1742,13 @@ exports.createCheckoutSessionCallable = onCall({secrets: [STRIPE_SECRET]}, async
 );
 
 // Stripe Webhook
-exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}).https.onRequest(async (req, res) => {
+async function stripeWebhookHandler(req, res, deps = {}) {
   const sig = req.headers["stripe-signature"];
   let event;
+  const firestore = deps.firestore || db;
+  const stripeClient = deps.stripeClient || getStripe();
   try {
-    event = getStripe().webhooks.constructEvent(
+    event = stripeClient.webhooks.constructEvent(
       req.rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET,
@@ -1754,7 +1756,7 @@ exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}
   } catch (err) {
     console.error("Webhook signature failed:", err.message);
     try {
-      await db.collection("logs").add({
+      await firestore.collection("logs").add({
         type: "stripe_webhook_error",
         message: err.message,
         time: admin.firestore.FieldValue.serverTimestamp(),
@@ -1767,9 +1769,13 @@ exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    await handleCheckoutSessionCompleted(session);
+    await handleCheckoutSessionCompleted(session, {firestore});
   }
-  res.json({received: true});
+  return res.json({received: true});
+}
+
+exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}).https.onRequest(async (req, res) => {
+  return stripeWebhookHandler(req, res);
 });
 
 // ---------------------------------------------------------------------------
@@ -1826,13 +1832,14 @@ exports.submitBetaFeedback = onCall(async (request) => {
 // ── claimDailyCheckin ───────────────────────────────────────────────────────
 // Server-authoritative daily check-in reward. Client must NOT write coin
 // balances directly; this function is the only path that increments coins.
-exports.claimDailyCheckin = onCall(async (request) => {
+async function claimDailyCheckinHandler(request, deps = {}) {
   const userId = requireAuth(request);
   enforceRateLimit("claimDailyCheckin", userId);
 
-  const userRef = db.collection("users").doc(userId);
+  const firestore = deps.firestore || db;
+  const userRef = firestore.collection("users").doc(userId);
 
-  return await db.runTransaction(async (tx) => {
+  return await firestore.runTransaction(async (tx) => {
     const userSnap = await tx.get(userRef);
     if (!userSnap.exists) {
       throw new HttpsError("not-found", "User profile not found.");
@@ -1877,7 +1884,9 @@ exports.claimDailyCheckin = onCall(async (request) => {
 
     return { reward, streak: newStreak };
   });
-});
+}
+
+exports.claimDailyCheckin = onCall(async (request) => claimDailyCheckinHandler(request));
 
 exports.syncPostCommentCount = onDocumentWritten(
   "posts/{postId}/comments/{commentId}",
@@ -2580,6 +2589,7 @@ exports.inviteToMic = onCall(async (request) => inviteToMicHandler(request));
 exports.__testing = {
   createPaymentIntentHandler,
   recordStripePaymentSuccessHandler,
+  claimDailyCheckinHandler,
   sendCoinTransferHandler,
   requestCoinTransferHandler,
   generateReferralCodeHandler,
@@ -2609,6 +2619,7 @@ exports.__testing = {
   parseOptionalIdempotencyKey,
   buildIdempotentTransactionDocId,
   validateStripePaymentIntent,
+  stripeWebhookHandler,
   registerFcmTokenHandler,
   unregisterFcmTokenHandler,
   sendPushForNotification,

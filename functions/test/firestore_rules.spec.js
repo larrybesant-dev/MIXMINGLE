@@ -164,4 +164,45 @@ describe("firestore rules", () => {
     await assertFails(getDoc(doc(anonDb, "presence", "user-1")));
     await assertFails(getDoc(doc(anonDb, "speed_dating_sessions", "session-1")));
   });
+
+  it("blocks direct client writes to transactions even when senderId matches auth", async () => {
+    const senderDb = testEnv.authenticatedContext("user-1").firestore();
+
+    await assertFails(setDoc(doc(senderDb, "transactions", "tx-user-1"), {
+      senderId: "user-1",
+      receiverId: "user-2",
+      participants: ["user-1", "user-2"],
+      amount: 5,
+      status: "sent",
+      timestamp: Timestamp.now(),
+    }));
+  });
+
+  it("blocks direct client writes to room speakers while still allowing participant reads", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, "rooms", "room-1"), {
+        hostId: "host-1",
+        ownerId: "host-1",
+        isLocked: false,
+      });
+      await setDoc(doc(db, "rooms", "room-1", "participants", "user-1"), {
+        userId: "user-1",
+        role: "member",
+      });
+      await setDoc(doc(db, "rooms", "room-1", "speakers", "host-1"), {
+        userId: "host-1",
+        role: "speaker",
+      });
+    });
+
+    const participantDb = testEnv.authenticatedContext("user-1").firestore();
+
+    await assertSucceeds(getDoc(doc(participantDb, "rooms", "room-1", "speakers", "host-1")));
+    await assertFails(setDoc(doc(participantDb, "rooms", "room-1", "speakers", "user-1"), {
+      userId: "user-1",
+      role: "speaker",
+      joinedAt: Timestamp.now(),
+    }));
+  });
 });

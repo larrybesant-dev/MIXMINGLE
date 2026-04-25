@@ -7,7 +7,6 @@ void main() {
       expect(
         shouldTrackMicLevel(
           isCallReady: true,
-          hasRtcService: true,
           isMicMuted: false,
         ),
         isTrue,
@@ -16,7 +15,6 @@ void main() {
       expect(
         shouldTrackMicLevel(
           isCallReady: false,
-          hasRtcService: true,
           isMicMuted: false,
         ),
         isFalse,
@@ -25,16 +23,6 @@ void main() {
       expect(
         shouldTrackMicLevel(
           isCallReady: true,
-          hasRtcService: false,
-          isMicMuted: false,
-        ),
-        isFalse,
-      );
-
-      expect(
-        shouldTrackMicLevel(
-          isCallReady: true,
-          hasRtcService: true,
           isMicMuted: true,
         ),
         isFalse,

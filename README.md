@@ -7,6 +7,7 @@ MixVy is a Flutter social/live-room app with Firebase, Riverpod, payments, moder
 - Dart SDK (bundled with Flutter)
 - Firebase project configured for Auth, Firestore, Functions, Storage
 - Node.js 22 (for Firebase Functions)
+- Java 21+ (required for Firebase Firestore emulator and `npm --prefix functions run test:rules`)
 
 ## Local Setup
 1. Install dependencies:
@@ -44,6 +45,18 @@ MixVy is a Flutter social/live-room app with Firebase, Riverpod, payments, moder
 Run focused tests:
 - flutter test test/app_router_redirect_test.dart
 - flutter test test/room_service_test.dart
+
+Run Firestore rules verification:
+- npm --prefix functions run test:rules
+- pwsh -File tools/run_firestore_rules_tests.ps1
+
+Run launch load harness (room + payment replay/idempotency):
+- pwsh -File tools/run_launch_load_harness.ps1 -Cycles 3 -PressureRepeatsPerCycle 1 -Shuffle
+- pwsh -File tools/run_launch_load_harness.ps1 -Cycles 2 -PressureRepeatsPerCycle 1 -IncludeRulesValidation
+
+CI launch gate profiles:
+- PR/Push: blocking lightweight profile (`Cycles=1`, `PressureRepeatsPerCycle=0`)
+- Nightly/manual: deeper pressure profile with rules validation (`Cycles=3`, `PressureRepeatsPerCycle=1`, `-IncludeRulesValidation`)
 
 Run full suite:
 - flutter test

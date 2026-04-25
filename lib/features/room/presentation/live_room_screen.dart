@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../controllers/live_room_media_controller.dart';
 import '../controllers/webrtc_controller.dart';
 import '../providers/message_providers.dart';
 import '../repository/room_repository.dart';
@@ -60,6 +61,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (!mounted) return;
     final user = ref.read(userProvider);
     if (user == null) return;
+    final mediaController = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId).notifier,
+    );
+    mediaController.beginConnecting();
 
     // ── 1. Firestore presence join ──────────────────────────────────────────
     await _roomController.joinRoom(
@@ -77,9 +82,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       final webrtcCtrl = ref.read(webrtcControllerProvider);
       // Fetch TURN credentials from Cloud Function so P2P works across
       // different networks and NAT types. Falls back to STUN-only on error.
-      final iceServers = await ref
-          .read(roomRepositoryProvider)
-          .fetchIceServers();
+      List<Map<String, dynamic>>? iceServers;
+      try {
+        iceServers = await ref
+            .read(roomRepositoryProvider)
+            .fetchIceServers();
+      } catch (e) {
+        // Keep RTC join alive even when TURN credential fetch fails.
+        // WebRtcRoomService can still run on browser default/STUN behavior.
+        developer.log(
+          'TURN credential fetch failed, continuing with fallback ICE config: $e',
+          name: 'LiveRoomScreen',
+        );
+        iceServers = null;
+      }
       final service = await webrtcCtrl.createTransport(
         userId: user.id,
         iceServers: iceServers,
@@ -100,6 +116,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
       _rtcService = service;
       _rtcServiceNotifier.state = service;
+      mediaController.markReady(
+        rtcUid: _stableUid(user.id),
+        cameraStatus: 'RTC connected.',
+        isMicMuted: service.isLocalAudioMuted,
+        isVideoEnabled: service.isLocalVideoCapturing,
+      );
       // ── Show "Connected to Room" banner (once per room entry) ───────────
       if (mounted && !_connectedShown) {
         _connectedShown = true;
@@ -111,6 +133,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     } catch (e) {
       // RTC failure is non-fatal: Firestore presence + chat still work.
       developer.log('RTC join failed: $e', name: 'LiveRoomScreen');
+      mediaController.markConnectionFailed(
+        callError:
+            'Live media is degraded. Chat still works, and controls will retry when media reconnects.',
+        cameraStatus: 'RTC degraded',
+      );
     }
   }
 
@@ -130,6 +157,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     // ── RTC teardown (safe: uses cached references) ─────────────────────────
     _rtcService?.dispose().ignore();
     _rtcServiceNotifier.state = null;
+    ref
+        .read(liveRoomMediaControllerProvider(widget.roomId).notifier)
+        .resetDisconnected();
     // ── Firestore session teardown ───────────────────────────────────────────
     _roomController.leaveRoom().ignore();
     // Reset diff tracker so the next room starts with a clean baseline.
@@ -526,60 +556,196 @@ class _RoomActionBar extends ConsumerStatefulWidget {
 }
 
 class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
-  bool _micActive = false;
-  bool _micConnecting = false;
-  bool get _audioShareAvailable => false;
-  bool _sharingAudio = false;
+  /// Ensure RTC is initialized before attempting media actions.
+  /// This is the tap-time resolution entry point that guarantees RTC readiness.
+  Future<void> ensureRtcInitialized() async {
+    final mediaController = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId).notifier,
+    );
+    final mediaState = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId),
+    );
+
+    // Already ready or initializing — no need to do anything.
+    if (mediaState.rtcState == RtcState.ready ||
+        mediaState.rtcState == RtcState.initializing) {
+      return;
+    }
+
+    // Mark as initializing
+    mediaController.setRtcState(RtcState.initializing);
+
+    try {
+      // Wait for the RTC service to become available (up to 10s)
+      var attempts = 0;
+      final maxAttempts = 20; // 20 × 500ms = 10s
+      while (ref.read(rtcServiceProvider(widget.roomId)) == null &&
+          attempts < maxAttempts) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        attempts++;
+      }
+
+      final service = ref.read(rtcServiceProvider(widget.roomId));
+      if (service != null) {
+        mediaController.markRtcReady();
+      } else {
+        mediaController.markRtcDegraded();
+      }
+    } catch (e) {
+      developer.log(
+        'ensureRtcInitialized failed: $e',
+        name: 'LiveRoomScreen',
+      );
+      mediaController.markRtcDegraded();
+    }
+  }
 
   Future<void> _toggleMic() async {
+    await ensureRtcInitialized();
+
+    final mediaState = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId),
+    );
+
+    // If RTC failed, we cannot proceed
+    if (mediaState.rtcState == RtcState.failed) {
+      developer.log(
+        '_toggleMic: RTC failed — cannot proceed',
+        name: 'LiveRoomScreen',
+      );
+      return;
+    }
+
     final service = ref.read(rtcServiceProvider(widget.roomId));
-    if (service == null) return;
+    if (service == null) {
+      developer.log(
+        '_toggleMic: RTC service not available',
+        name: 'LiveRoomScreen',
+      );
+      return;
+    }
 
-    setState(() => _micConnecting = true);
+    final mediaController = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId).notifier,
+    );
+    final isCurrentlyMuted = service.isLocalAudioMuted;
 
-    if (!_micActive) {
+    mediaController.beginMicAction();
+
+    if (isCurrentlyMuted) {
       try {
         await service.setBroadcaster(true);
         await service.mute(false);
-        if (!mounted) return;
-        setState(() {
-          _micActive = true;
-          _micConnecting = false;
-        });
+        mediaController.finishMicAction(isMuted: service.isLocalAudioMuted);
       } catch (e) {
         developer.log('_toggleMic: enable failed — $e', name: 'LiveRoomScreen');
-        if (!mounted) return;
-        setState(() {
-          _micActive = false;
-          _micConnecting = false;
-        });
+        mediaController.endMicAction();
+        mediaController.markRtcDegraded();
       }
     } else {
       try {
         await service.mute(true);
         await service.setBroadcaster(false);
+        mediaController.finishMicAction(isMuted: service.isLocalAudioMuted);
       } catch (e) {
         developer.log('_toggleMic: disable failed — $e', name: 'LiveRoomScreen');
+        mediaController.endMicAction();
+        mediaController.markRtcDegraded();
       }
-      if (!mounted) return;
-      setState(() {
-        _micActive = false;
-        _micConnecting = false;
-      });
+    }
+  }
+
+  Future<void> _toggleSystemAudio() async {
+    await ensureRtcInitialized();
+
+    final mediaState = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId),
+    );
+
+    if (mediaState.rtcState == RtcState.failed) {
+      return;
+    }
+
+    final service = ref.read(rtcServiceProvider(widget.roomId));
+    final mediaController = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId).notifier,
+    );
+
+    if (service == null || !kIsWeb || mediaState.isSystemAudioActionInFlight) {
+      return;
+    }
+
+    final target = !service.isSharingSystemAudio;
+    mediaController.beginSystemAudioAction();
+    try {
+      // shareSystemAudio properly handles getDisplayMedia with audio: true
+      // This restores screen share audio which was previously gated by dead UI
+      await service.shareSystemAudio(target);
+      mediaController.finishSystemAudioAction(
+        isSharing: service.isSharingSystemAudio,
+      );
+    } catch (e) {
+      developer.log(
+        '_toggleSystemAudio failed — $e',
+        name: 'LiveRoomScreen',
+      );
+      mediaController.endSystemAudioAction();
+      mediaController.markRtcDegraded();
     }
   }
 
   Future<void> _stopScreenShare() async {
-    if (!mounted) return;
-    setState(() => _sharingAudio = false);
+    await ensureRtcInitialized();
+
+    final mediaState = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId),
+    );
+
+    if (mediaState.rtcState == RtcState.failed) {
+      return;
+    }
+
+    final service = ref.read(rtcServiceProvider(widget.roomId));
+    final mediaController = ref.read(
+      liveRoomMediaControllerProvider(widget.roomId).notifier,
+    );
+    if (service == null) return;
+    mediaController.beginSystemAudioAction();
+    try {
+      await service.shareSystemAudio(false);
+      mediaController.finishSystemAudioAction(
+        isSharing: service.isSharingSystemAudio,
+      );
+    } catch (e) {
+      developer.log('_stopScreenShare failed — $e', name: 'LiveRoomScreen');
+      mediaController.endSystemAudioAction();
+      mediaController.markRtcDegraded();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // Mic button is active only once the RTC channel has connected.
-    final rtcReady = ref.watch(rtcServiceProvider(widget.roomId)) != null;
-    final micEnabled = rtcReady && !_micConnecting;
+    final service = ref.watch(rtcServiceProvider(widget.roomId));
+    final mediaState = ref.watch(liveRoomMediaControllerProvider(widget.roomId));
+    
+    // Get actual media state from service if available, otherwise use defaults
+    final sharingAudio = service?.isSharingSystemAudio ?? false;
+    final micActive = service != null ? !service.isLocalAudioMuted : false;
+    final micActionInFlight = mediaState.isMicActionInFlight;
+    final systemAudioActionInFlight = mediaState.isSystemAudioActionInFlight;
+    
+    // Buttons are ALWAYS enabled now — they resolve at tap-time via ensureRtcInitialized()
+    // No more silent disabling based on hasRtcService
+    final micButtonEnabled = !micActionInFlight;
+
+    final statusLabel = mediaState.rtcState == RtcState.initializing
+        ? 'Connecting audio…'
+        : mediaState.rtcState == RtcState.degraded
+        ? 'Limited connection'
+        : mediaState.rtcState == RtcState.failed
+        ? 'RTC failed'
+        : null;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -595,7 +761,7 @@ class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _micConnecting
+                micActionInFlight
                     ? Padding(
                         padding: const EdgeInsets.all(8),
                         child: SizedBox(
@@ -608,66 +774,76 @@ class _RoomActionBarState extends ConsumerState<_RoomActionBar> {
                         ),
                       )
                     : IconButton.filledTonal(
-                        tooltip: !rtcReady
-                            ? 'Connecting to room…'
-                            : (_micActive ? 'Mute mic' : 'Unmute mic'),
-                        onPressed: micEnabled ? () => _toggleMic() : null,
-                        style: micEnabled && _micActive
+                        tooltip: micActive ? 'Mute mic' : 'Unmute mic',
+                        onPressed: micButtonEnabled ? () => _toggleMic() : null,
+                        style: micButtonEnabled && micActive
                             ? IconButton.styleFrom(
                                 backgroundColor: cs.error,
                                 foregroundColor: cs.onError,
                               )
-                            : micEnabled && !_micActive
+                            : micButtonEnabled && !micActive
                                 ? IconButton.styleFrom(
                                     backgroundColor: cs.errorContainer,
                                     foregroundColor: cs.onErrorContainer,
                                   )
                                 : null,
                         icon: Icon(
-                          _micActive
+                          micActive
                               ? Icons.mic_rounded
                               : Icons.mic_off_rounded,
                         ),
                       ),
                 Text(
-                  _micConnecting
+                  micActionInFlight
                       ? 'Connecting…'
-                      : _micActive
+                      : micActive
                           ? 'You are speaking'
                           : 'Muted',
                   style: TextStyle(
                     fontSize: 10,
-                    color: _micActive ? cs.error : cs.onSurfaceVariant,
-                    fontWeight: _micActive ? FontWeight.w600 : FontWeight.w400,
+                    color: micActive ? cs.error : cs.onSurfaceVariant,
+                    fontWeight: micActive ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
               ],
             ),
             const SizedBox(width: 4),
-            // ── Audio share (no-op until getDisplayMedia integration) ────
-            IconButton.filledTonal(
-              tooltip: !_audioShareAvailable
-                  ? 'Screen sharing unavailable (web permission required)'
-                  : _sharingAudio
-                      ? 'Stop audio share'
-                      : 'Share audio',
-              onPressed: !_audioShareAvailable
-                  ? null
-                  : () async {
-                      if (_sharingAudio) await _stopScreenShare();
-                    },
-              style: _audioShareAvailable && _sharingAudio
-                  ? IconButton.styleFrom(
-                      backgroundColor: cs.primaryContainer,
-                      foregroundColor: cs.onPrimaryContainer,
-                    )
-                  : null,
-              icon: Icon(
-                _audioShareAvailable && _sharingAudio
-                    ? Icons.graphic_eq
-                    : Icons.screen_share_outlined,
+            // ── Audio share (always enabled on web, resolves at tap-time) ────
+            if (kIsWeb)
+              IconButton.filledTonal(
+                tooltip: sharingAudio ? 'Stop audio share' : 'Share audio',
+                onPressed: systemAudioActionInFlight
+                    ? null
+                    : () async {
+                        if (sharingAudio) {
+                          await _stopScreenShare();
+                        } else {
+                          await _toggleSystemAudio();
+                        }
+                      },
+                style: sharingAudio
+                    ? IconButton.styleFrom(
+                        backgroundColor: cs.primaryContainer,
+                        foregroundColor: cs.onPrimaryContainer,
+                      )
+                    : null,
+                icon: Icon(
+                  sharingAudio
+                      ? Icons.graphic_eq
+                      : Icons.screen_share_outlined,
+                ),
               ),
-            ),
+            if (statusLabel != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
             const Spacer(),
           ],
         ),

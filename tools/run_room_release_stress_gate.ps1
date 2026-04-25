@@ -15,6 +15,29 @@ if (-not (Test-Path $ReportsDir)) {
   New-Item -Path $ReportsDir -ItemType Directory | Out-Null
 }
 
+function Get-FailureBucket {
+  param(
+    [object]$Run
+  )
+
+  $signal = "$(($Run.caseId)) $(($Run.caseName)) $(($Run.category)) $(($Run.failureClass)) $(($Run.command)) $(($Run.negativeMatches -join ' '))".ToLowerInvariant()
+  $exitCode = [int]$Run.exitCode
+
+  if ($exitCode -in @(124, 130, 137, 143) -or $signal -match 'timeout|timed out|cancelled|killed|infra|network|econn|socket|dns|service unavailable|resource exhausted') {
+    return 'TIMEOUT / INFRA FAILURE'
+  }
+  if ($signal -match 'payment|stripe|checkout|coin|webhook|idempotency|double_debit|double_credit|lh-py-|py-') {
+    return 'PAYMENT FAILURE'
+  }
+  if ($signal -match 'rules|firestore|security enforcement|emulator|rule' -or $Run.caseId -match '^(LH-RL-|RL-)') {
+    return 'RULES FAILURE'
+  }
+  if ($signal -match 'room|presence|host|mic|speaker|live|reconnect|participant|slot|rs-|ps-|lh-rm-') {
+    return 'ROOM FAILURE'
+  }
+  return 'TIMEOUT / INFRA FAILURE'
+}
+
 $cases = @(
   [ordered]@{
     Id = 'RS-1'
@@ -153,6 +176,7 @@ function Invoke-GateCase {
     signalPass = $signalPass
     positiveMatches = $positiveMatches
     negativeMatches = $negativeMatches
+    retryCount = 0
     passed = $passed
   }
 }
@@ -181,6 +205,31 @@ $failedRuns = @($resultList | Where-Object { -not $_.passed }).Count
 $totalRuns = $resultList.Count
 $verdict = if ($failedRuns -eq 0) { 'PASS' } else { 'FAIL' }
 
+$failureCounts = [ordered]@{
+  'ROOM FAILURE' = 0
+  'PAYMENT FAILURE' = 0
+  'RULES FAILURE' = 0
+  'TIMEOUT / INFRA FAILURE' = 0
+}
+
+$failedResults = @($resultList | Where-Object { -not $_.passed })
+$failedClassifications = @()
+foreach ($failed in $failedResults) {
+  $bucket = Get-FailureBucket -Run $failed
+  $failureCounts[$bucket] = [int]$failureCounts[$bucket] + 1
+  $failedClassifications += [PSCustomObject]@{
+    caseId = $failed.caseId
+    caseName = $failed.caseName
+    failureBucket = $bucket
+  }
+}
+
+$primaryFailureBucket = if ($failedResults.Count -eq 0) {
+  'NONE'
+} else {
+  ($failureCounts.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+}
+
 $categorySummary = $resultList | Group-Object category | ForEach-Object {
   $runs = @($_.Group)
   [PSCustomObject]@{
@@ -204,6 +253,11 @@ $report = [ordered]@{
   passedRuns = $passedRuns
   failedRuns = $failedRuns
   failedCaseIds = @($failedCases)
+  failureClassificationSummary = [ordered]@{
+    primaryFailureBucket = $primaryFailureBucket
+    counts = [PSCustomObject]$failureCounts
+    failedClassifications = @($failedClassifications)
+  }
   categorySummary = @($categorySummary)
   cases = @($resultList)
 }
@@ -219,6 +273,11 @@ $lines = @(
   "- TotalRuns: $totalRuns",
   "- PassedRuns: $passedRuns",
   "- FailedRuns: $failedRuns",
+  "- PrimaryFailureBucket: $primaryFailureBucket",
+  "- ROOM FAILURE: $($failureCounts.'ROOM FAILURE')",
+  "- PAYMENT FAILURE: $($failureCounts.'PAYMENT FAILURE')",
+  "- RULES FAILURE: $($failureCounts.'RULES FAILURE')",
+  "- TIMEOUT / INFRA FAILURE: $($failureCounts.'TIMEOUT / INFRA FAILURE')",
   '',
   '| Case | Category | Result | DurationMs | Failure Class |',
   '| --- | --- | --- | ---: | --- |'

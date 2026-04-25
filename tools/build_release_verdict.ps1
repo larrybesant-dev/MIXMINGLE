@@ -3,7 +3,8 @@ param(
   [string]$OutputPath = 'tools/reports/release_candidate_verdict.json',
   [string]$MarkdownOutputPath = 'tools/reports/release_candidate_verdict.md',
   [string]$HistoryDir = 'tools/reports/history',
-  [string]$HistoryIndexPath = 'tools/reports/history/verdict_index.json'
+  [string]$HistoryIndexPath = 'tools/reports/history/verdict_index.json',
+  [int]$HistoryWindow = 10
 )
 
 $ErrorActionPreference = 'Stop'
@@ -81,6 +82,327 @@ function Build-GateSummary {
     cycles = $cycles
     sourceReport = $Report.Name
     caseSummary = $caseSummary
+    rawReport = $reportData
+  }
+}
+
+function Get-RunRows {
+  param(
+    [object]$GateSummary
+  )
+
+  if ($null -eq $GateSummary -or $null -eq $GateSummary.rawReport) {
+    return @()
+  }
+
+  if ($null -ne $GateSummary.rawReport.runs) {
+    return @($GateSummary.rawReport.runs)
+  }
+
+  if ($null -ne $GateSummary.caseSummary) {
+    return @($GateSummary.caseSummary)
+  }
+
+  return @()
+}
+
+function Get-Text {
+  param(
+    [object]$Value
+  )
+
+  if ($null -eq $Value) {
+    return ''
+  }
+
+  return [string]$Value
+}
+
+function Get-FailureBucket {
+  param(
+    [string]$Gate,
+    [object]$Run
+  )
+
+  $gateValue = Get-Text -Value $Gate
+  $caseId = Get-Text -Value (Get-FirstPropertyValue -Object $Run -Names @('caseId', 'CaseId') -Default '')
+  $caseName = Get-Text -Value (Get-FirstPropertyValue -Object $Run -Names @('caseName', 'CaseName') -Default '')
+  $category = Get-Text -Value (Get-FirstPropertyValue -Object $Run -Names @('category', 'Category') -Default '')
+  $failureClass = Get-Text -Value (Get-FirstPropertyValue -Object $Run -Names @('failureClass', 'FailureClass') -Default '')
+  $command = Get-Text -Value (Get-FirstPropertyValue -Object $Run -Names @('command', 'Command') -Default '')
+  $negativeMatches = Get-Text -Value ((Get-FirstPropertyValue -Object $Run -Names @('negativeMatches') -Default @()) -join ' ')
+  $signal = "$gateValue $caseId $caseName $category $failureClass $command $negativeMatches".ToLowerInvariant()
+  $exitCode = [int](Get-Numeric -Value (Get-FirstPropertyValue -Object $Run -Names @('exitCode', 'ExitCode') -Default 0))
+
+  $isInfra = (
+    $exitCode -in @(124, 130, 137, 143) -or
+    $signal -match 'timeout|timed out|cancelled|killed|infra|network|econn|socket|dns|service unavailable|resource exhausted'
+  )
+  if ($isInfra) {
+    return 'TIMEOUT / INFRA FAILURE'
+  }
+
+  if ($signal -match 'payment|stripe|checkout|coin|webhook|idempotency|double_debit|double_credit|lh-py-|py-') {
+    return 'PAYMENT FAILURE'
+  }
+
+  if ($signal -match 'rules|firestore|security enforcement|emulator|rule' -or $caseId -match '^(LH-RL-|RL-)') {
+    return 'RULES FAILURE'
+  }
+
+  if ($signal -match 'room|presence|host|mic|speaker|live|reconnect|participant|slot|rs-|ps-|lh-rm-' -or $gateValue -eq 'room') {
+    return 'ROOM FAILURE'
+  }
+
+  return 'TIMEOUT / INFRA FAILURE'
+}
+
+function Build-FailureClassification {
+  param(
+    [object[]]$GateSummaries
+  )
+
+  $counts = [ordered]@{
+    'ROOM FAILURE' = 0
+    'PAYMENT FAILURE' = 0
+    'RULES FAILURE' = 0
+    'TIMEOUT / INFRA FAILURE' = 0
+  }
+
+  $classifiedFailures = @()
+
+  foreach ($gate in @($GateSummaries)) {
+    $runs = Get-RunRows -GateSummary $gate
+    foreach ($run in $runs) {
+      $passedValue = Get-FirstPropertyValue -Object $run -Names @('passed', 'Passed') -Default $null
+      $failedCount = Get-Numeric -Value (Get-FirstPropertyValue -Object $run -Names @('Fails') -Default 0)
+
+      $isFailedRun = $false
+      if ($null -ne $passedValue) {
+        $isFailedRun = -not [bool]$passedValue
+      } elseif ($failedCount -gt 0) {
+        $isFailedRun = $true
+      }
+
+      if (-not $isFailedRun) {
+        continue
+      }
+
+      $bucket = Get-FailureBucket -Gate $gate.gate -Run $run
+      $counts[$bucket] = [int]$counts[$bucket] + 1
+
+      $classifiedFailures += [PSCustomObject]@{
+        gate = $gate.gate
+        caseId = Get-FirstPropertyValue -Object $run -Names @('caseId', 'CaseId') -Default 'unknown'
+        caseName = Get-FirstPropertyValue -Object $run -Names @('caseName', 'CaseName') -Default 'unknown'
+        failureBucket = $bucket
+      }
+    }
+  }
+
+  $primaryBucket = ($counts.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+  if (($counts.Values | Measure-Object -Sum).Sum -eq 0) {
+    $primaryBucket = 'NONE'
+  }
+
+  return [PSCustomObject]@{
+    modelVersion = 'failure_classification_v1'
+    primaryFailureBucket = $primaryBucket
+    counts = [PSCustomObject]$counts
+    classifiedFailures = @($classifiedFailures)
+  }
+}
+
+function Build-ExecutionSummary {
+  param(
+    [object[]]$GateSummaries
+  )
+
+  $gateExecution = @()
+  $totalDurationMs = 0.0
+  $totalRetries = 0
+  $totalRetryableRuns = 0
+
+  foreach ($gate in @($GateSummaries)) {
+    $runs = Get-RunRows -GateSummary $gate
+    $durations = @()
+    $gateRetries = 0
+    $gateRetryableRuns = 0
+
+    foreach ($run in $runs) {
+      $duration = Get-Numeric -Value (Get-FirstPropertyValue -Object $run -Names @('durationMs', 'DurationMs') -Default 0)
+      if ($duration -gt 0) {
+        $durations += $duration
+      }
+
+      $retryCount = [int](Get-Numeric -Value (Get-FirstPropertyValue -Object $run -Names @('retryCount', 'RetryCount') -Default 0))
+      $isPressure = [bool](Get-FirstPropertyValue -Object $run -Names @('isPressure', 'IsPressure') -Default $false)
+
+      if ($isPressure -or $retryCount -gt 0) {
+        $gateRetryableRuns += 1
+      }
+      $gateRetries += [Math]::Max(0, $retryCount)
+    }
+
+    $gateTotalDurationMs = if ($durations.Count -eq 0) { 0 } else { [math]::Round((($durations | Measure-Object -Sum).Sum), 2) }
+    $gateTotalRuns = [int](Get-Numeric -Value $gate.totalRuns)
+    $gateRetryRate = if ($gateTotalRuns -eq 0) { 0 } else { [math]::Round(($gateRetries / $gateTotalRuns) * 100, 2) }
+
+    $gateExecution += [PSCustomObject]@{
+      gate = $gate.gate
+      totalDurationMs = $gateTotalDurationMs
+      retryCount = $gateRetries
+      retryRate = $gateRetryRate
+    }
+
+    $totalDurationMs += $gateTotalDurationMs
+    $totalRetries += $gateRetries
+    $totalRetryableRuns += $gateRetryableRuns
+  }
+
+  $overallRuns = [int](Get-Numeric -Value (@($GateSummaries | Measure-Object -Property totalRuns -Sum).Sum))
+  $overallRetryRate = if ($overallRuns -eq 0) { 0 } else { [math]::Round(($totalRetries / $overallRuns) * 100, 2) }
+
+  return [PSCustomObject]@{
+    modelVersion = 'execution_summary_v1'
+    totalDurationMs = [math]::Round($totalDurationMs, 2)
+    retryCount = $totalRetries
+    retryRate = $overallRetryRate
+    gateExecution = @($gateExecution)
+  }
+}
+
+function Build-RegressionComparison {
+  param(
+    [string]$HistoryDir,
+    [int]$WindowSize,
+    [object]$CurrentPoint
+  )
+
+  $points = @()
+
+  if (Test-Path $HistoryDir) {
+    $historyFiles = @(Get-ChildItem -Path $HistoryDir -Filter 'release_candidate_verdict_*.json' -File | Sort-Object LastWriteTimeUtc)
+    foreach ($historyFile in $historyFiles) {
+      try {
+        $raw = Get-Content -Path $historyFile.FullName -Raw | ConvertFrom-Json
+      } catch {
+        continue
+      }
+
+      $totalRuns = 0.0
+      $failedRuns = 0.0
+      if ($null -ne $raw.gates) {
+        $totalRuns = Get-Numeric -Value (@($raw.gates | Measure-Object -Property totalRuns -Sum).Sum)
+        $failedRuns = Get-Numeric -Value (@($raw.gates | Measure-Object -Property failedRuns -Sum).Sum)
+      }
+
+      $failureRate = if ($totalRuns -eq 0) { 0 } else { [math]::Round(($failedRuns / $totalRuns) * 100, 2) }
+
+      $qualitySignals = Get-FirstPropertyValue -Object $raw -Names @('qualitySignals') -Default $null
+      $executionTotalMs = 0
+      $retryRate = 0
+      if ($null -ne $qualitySignals) {
+        $executionTotalMs = Get-Numeric -Value (Get-FirstPropertyValue -Object $qualitySignals.execution -Names @('totalDurationMs') -Default 0)
+        $retryRate = Get-Numeric -Value (Get-FirstPropertyValue -Object $qualitySignals.reliability -Names @('overallRetryRate') -Default 0)
+      }
+
+      $points += [PSCustomObject]@{
+        generatedAtUtc = Get-IsoTimeOrNow -Value $raw.generatedAtUtc
+        executionTotalMs = $executionTotalMs
+        failureRate = $failureRate
+        retryRate = $retryRate
+      }
+    }
+  }
+
+  $points += [PSCustomObject]@{
+    generatedAtUtc = Get-IsoTimeOrNow -Value $CurrentPoint.generatedAtUtc
+    executionTotalMs = Get-Numeric -Value $CurrentPoint.executionTotalMs
+    failureRate = Get-Numeric -Value $CurrentPoint.failureRate
+    retryRate = Get-Numeric -Value $CurrentPoint.retryRate
+  }
+
+  $ordered = @($points | Sort-Object generatedAtUtc)
+  if ($ordered.Count -gt $WindowSize) {
+    $ordered = @($ordered | Select-Object -Last $WindowSize)
+  }
+
+  $latest = $ordered[-1]
+  $baselinePoints = if ($ordered.Count -gt 1) { @($ordered | Select-Object -SkipLast 1) } else { @() }
+
+  $baselineExecution = if ($baselinePoints.Count -eq 0) { 0 } else { [math]::Round((($baselinePoints | Measure-Object -Property executionTotalMs -Average).Average), 2) }
+  $baselineFailureRate = if ($baselinePoints.Count -eq 0) { 0 } else { [math]::Round((($baselinePoints | Measure-Object -Property failureRate -Average).Average), 2) }
+  $baselineRetryRate = if ($baselinePoints.Count -eq 0) { 0 } else { [math]::Round((($baselinePoints | Measure-Object -Property retryRate -Average).Average), 2) }
+
+  $executionTimeDriftPercent = if ($baselineExecution -eq 0) { 0 } else { [math]::Round((($latest.executionTotalMs - $baselineExecution) / $baselineExecution) * 100, 2) }
+  $failureFrequencyDrift = [math]::Round(($latest.failureRate - $baselineFailureRate), 2)
+  $retryRateDrift = [math]::Round(($latest.retryRate - $baselineRetryRate), 2)
+
+  return [PSCustomObject]@{
+    modelVersion = 'run_regression_v1'
+    windowSize = $WindowSize
+    comparedRunCount = $ordered.Count
+    latest = [PSCustomObject]@{
+      executionTotalMs = [math]::Round($latest.executionTotalMs, 2)
+      failureRate = [math]::Round($latest.failureRate, 2)
+      retryRate = [math]::Round($latest.retryRate, 2)
+    }
+    baseline = [PSCustomObject]@{
+      executionTotalMs = $baselineExecution
+      failureRate = $baselineFailureRate
+      retryRate = $baselineRetryRate
+    }
+    drift = [PSCustomObject]@{
+      executionTimeDriftPercent = $executionTimeDriftPercent
+      failureFrequencyDrift = $failureFrequencyDrift
+      retryRateDrift = $retryRateDrift
+    }
+  }
+}
+
+function Build-PreLaunchScore {
+  param(
+    [bool]$ReleasePass,
+    [double]$CyclePassRate,
+    [double]$AverageDriftScore,
+    [double]$FailureRate,
+    [double]$RetryRate,
+    [double]$ExecutionTimeDriftPercent
+  )
+
+  $stressPenalty = ($FailureRate * 1.0) + ($RetryRate * 2.0) + ([math]::Max(0, $ExecutionTimeDriftPercent) * 0.2) + ((100 - $AverageDriftScore) * 0.6)
+  $stressResilience = [math]::Max(0, [math]::Round((100 - [math]::Min(100, $stressPenalty)), 2))
+
+  $stabilityScore = [math]::Round((0.65 * $CyclePassRate) + (0.35 * $stressResilience), 2)
+  $stabilityScore = [math]::Max(0, [math]::Min(100, $stabilityScore))
+
+  if (-not $ReleasePass) {
+    $stabilityScore = [math]::Min($stabilityScore, 49)
+  }
+
+  $band = if ($stabilityScore -ge 90) {
+    'launch_ready'
+  } elseif ($stabilityScore -ge 75) {
+    'candidate'
+  } elseif ($stabilityScore -ge 60) {
+    'watch'
+  } else {
+    'hold'
+  }
+
+  return [PSCustomObject]@{
+    modelVersion = 'pre_launch_score_v1'
+    stabilityScore = $stabilityScore
+    scoreBand = $band
+    components = [PSCustomObject]@{
+      cyclePassRate = [math]::Round($CyclePassRate, 2)
+      stressResilience = $stressResilience
+      averageDriftScore = [math]::Round($AverageDriftScore, 2)
+      failureRate = [math]::Round($FailureRate, 2)
+      retryRate = [math]::Round($RetryRate, 2)
+      executionTimeDriftPercent = [math]::Round($ExecutionTimeDriftPercent, 2)
+    }
   }
 }
 
@@ -121,6 +443,22 @@ function Get-Numeric {
   }
 
   return $Default
+}
+
+function Get-IsoTimeOrNow {
+  param(
+    [object]$Value
+  )
+
+  if ($null -eq $Value) {
+    return (Get-Date).ToUniversalTime()
+  }
+
+  try {
+    return ([datetime]$Value).ToUniversalTime()
+  } catch {
+    return (Get-Date).ToUniversalTime()
+  }
 }
 
 function Build-DriftSummary {
@@ -216,6 +554,27 @@ if (-not $releasePass) {
   $confidenceScore = [math]::Min($confidenceScore, 49)
 }
 
+$gateSummaries = @($tier0Summary, $tier1Summary, $roomSummary)
+$executionSummary = Build-ExecutionSummary -GateSummaries $gateSummaries
+$failureClassification = Build-FailureClassification -GateSummaries $gateSummaries
+
+$overallTotalRuns = Get-Numeric -Value (@($gateSummaries | Measure-Object -Property totalRuns -Sum).Sum)
+$overallFailedRuns = Get-Numeric -Value (@($gateSummaries | Measure-Object -Property failedRuns -Sum).Sum)
+$overallPassedRuns = [math]::Max(0, ($overallTotalRuns - $overallFailedRuns))
+$overallFailureRate = if ($overallTotalRuns -eq 0) { 0 } else { [math]::Round(($overallFailedRuns / $overallTotalRuns) * 100, 2) }
+$overallRetryRate = [double]$executionSummary.retryRate
+$averageDriftScore = [math]::Round((($tier0Drift.driftScore + $tier1Drift.driftScore + $roomDrift.driftScore) / 3), 2)
+
+$regressionComparison = Build-RegressionComparison -HistoryDir $HistoryDir -WindowSize $HistoryWindow -CurrentPoint ([PSCustomObject]@{
+  generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+  executionTotalMs = $executionSummary.totalDurationMs
+  failureRate = $overallFailureRate
+  retryRate = $overallRetryRate
+})
+
+$cyclePassRate = if ($overallTotalRuns -eq 0) { 0 } else { [math]::Round(($overallPassedRuns / $overallTotalRuns) * 100, 2) }
+$preLaunchScore = Build-PreLaunchScore -ReleasePass $releasePass -CyclePassRate $cyclePassRate -AverageDriftScore $averageDriftScore -FailureRate $overallFailureRate -RetryRate $overallRetryRate -ExecutionTimeDriftPercent $regressionComparison.drift.executionTimeDriftPercent
+
 $confidenceBand = if ($confidenceScore -ge 90) {
   'very_high'
 } elseif ($confidenceScore -ge 75) {
@@ -236,7 +595,7 @@ $verdict = [ordered]@{
   releaseConfidenceScore = $confidenceScore
   releaseConfidenceBand = $confidenceBand
   scoringModel = [ordered]@{
-    modelVersion = 'rc_confidence_v2'
+    modelVersion = 'rc_confidence_v3'
     tierWeight = [ordered]@{
       tier0 = 0.4
       tier1 = 0.4
@@ -244,6 +603,19 @@ $verdict = [ordered]@{
     }
     gateScoreFormula = 'gateScore = 0.75*passRate + 0.25*driftScore - failurePenalty(40 when failedRuns>0)'
     driftFormula = 'driftScore = 100 - min(100, avg((max-min)/avg)*100)'
+  }
+  qualitySignals = [ordered]@{
+    failureClassification = $failureClassification
+    execution = $executionSummary
+    reliability = [ordered]@{
+      totalRuns = [int]$overallTotalRuns
+      passedRuns = [int]$overallPassedRuns
+      failedRuns = [int]$overallFailedRuns
+      overallFailureRate = $overallFailureRate
+      overallRetryRate = $overallRetryRate
+    }
+    regressionComparison = $regressionComparison
+    preLaunchScore = $preLaunchScore
   }
   gateScores = @(
     [ordered]@{
@@ -347,6 +719,28 @@ $mdLines = @(
   "| tier1 | $($tier1Summary.pass) | $($tier1Summary.totalRuns) | $($tier1Summary.passedRuns) | $($tier1Summary.failedRuns) | $tier1Score | $($tier1Drift.driftScore) | $($tier1Drift.averageVariabilityRatio) | $($tier1Drift.maxVariabilityRatio) | $($tier1Summary.sourceReport) |",
   "| room | $($roomSummary.pass) | $($roomSummary.totalRuns) | $($roomSummary.passedRuns) | $($roomSummary.failedRuns) | $roomScore | $($roomDrift.driftScore) | $($roomDrift.averageVariabilityRatio) | $($roomDrift.maxVariabilityRatio) | $($roomSummary.sourceReport) |",
   '',
+  '## Failure Classification',
+  '',
+  "- PrimaryFailureBucket: $($failureClassification.primaryFailureBucket)",
+  "- ROOM FAILURE: $($failureClassification.counts.'ROOM FAILURE')",
+  "- PAYMENT FAILURE: $($failureClassification.counts.'PAYMENT FAILURE')",
+  "- RULES FAILURE: $($failureClassification.counts.'RULES FAILURE')",
+  "- TIMEOUT / INFRA FAILURE: $($failureClassification.counts.'TIMEOUT / INFRA FAILURE')",
+  '',
+  '## Regression Comparison',
+  '',
+  "- ComparedRunCount: $($regressionComparison.comparedRunCount)",
+  "- ExecutionTimeDriftPercent: $($regressionComparison.drift.executionTimeDriftPercent)",
+  "- FailureFrequencyDrift: $($regressionComparison.drift.failureFrequencyDrift)",
+  "- RetryRateDrift: $($regressionComparison.drift.retryRateDrift)",
+  '',
+  '## Pre-Launch Score',
+  '',
+  "- StabilityScore: $($preLaunchScore.stabilityScore)",
+  "- ScoreBand: $($preLaunchScore.scoreBand)",
+  "- CyclePassRate: $($preLaunchScore.components.cyclePassRate)",
+  "- StressResilience: $($preLaunchScore.components.stressResilience)",
+  '',
   '## Top Drift Cases',
   '',
   '### Tier 0',
@@ -385,7 +779,10 @@ $mdLines += @(
   '## Notes',
   "- Decision policy: releaseCandidateVerdict must be PASS to release.",
   "- Confidence policy: tier0, tier1, and room stability all contribute to the score.",
-  "- Model: rc_confidence_v2"
+  "- Classification: failure_classification_v1",
+  "- Regression: run_regression_v1",
+  "- PreLaunch: pre_launch_score_v1",
+  "- Model: rc_confidence_v3"
 )
 
 $mdDir = Split-Path -Path $MarkdownOutputPath -Parent

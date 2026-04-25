@@ -4,10 +4,21 @@ import 'room_state.dart';
 
 enum LiveRoomMediaPhase { idle, connecting, ready, reconnecting, failed }
 
+/// RTC state machine - tracks the initialization and health of the RTC service.
+/// This is the single source of truth for RTC readiness.
+enum RtcState {
+  idle,       // RTC not yet initialized
+  initializing,  // RTC initialization in progress
+  ready,      // RTC fully initialized and ready for media actions
+  degraded,   // RTC partially initialized (some operations may fail)
+  failed,     // RTC initialization failed
+}
+
 class LiveRoomMediaState {
   const LiveRoomMediaState({
     this.phase = LiveRoomMediaPhase.idle,
     this.connectPhase = 'idle',
+    this.rtcState = RtcState.idle,
     this.isMicMuted = false,
     this.isVideoEnabled = false,
     this.isSharingSystemAudio = false,
@@ -27,6 +38,7 @@ class LiveRoomMediaState {
 
   final LiveRoomMediaPhase phase;
   final String connectPhase;
+  final RtcState rtcState;
   final bool isMicMuted;
   final bool isVideoEnabled;
   final bool isSharingSystemAudio;
@@ -52,6 +64,7 @@ class LiveRoomMediaState {
   LiveRoomMediaState copyWith({
     LiveRoomMediaPhase? phase,
     String? connectPhase,
+    RtcState? rtcState,
     bool? isMicMuted,
     bool? isVideoEnabled,
     bool? isSharingSystemAudio,
@@ -71,6 +84,7 @@ class LiveRoomMediaState {
     return LiveRoomMediaState(
       phase: phase ?? this.phase,
       connectPhase: connectPhase ?? this.connectPhase,
+      rtcState: rtcState ?? this.rtcState,
       isMicMuted: isMicMuted ?? this.isMicMuted,
       isVideoEnabled: isVideoEnabled ?? this.isVideoEnabled,
       isSharingSystemAudio: isSharingSystemAudio ?? this.isSharingSystemAudio,
@@ -312,5 +326,29 @@ class LiveRoomMediaController
 
   void resetDisconnected() {
     state = const LiveRoomMediaState();
+  }
+
+  /// Set the RTC state - used to track initialization progress.
+  void setRtcState(RtcState rtcState) {
+    state = state.copyWith(rtcState: rtcState);
+  }
+
+  /// RTC is ready - mark it as such.
+  void markRtcReady() {
+    state = state.copyWith(rtcState: RtcState.ready);
+  }
+
+  /// RTC failed - mark state as degraded or failed.
+  void markRtcDegraded() {
+    state = state.copyWith(rtcState: RtcState.degraded);
+  }
+
+  void markRtcFailed() {
+    state = state.copyWith(rtcState: RtcState.failed);
+  }
+
+  /// Reset RTC state to idle (e.g., for retry).
+  void resetRtcState() {
+    state = state.copyWith(rtcState: RtcState.idle);
   }
 }

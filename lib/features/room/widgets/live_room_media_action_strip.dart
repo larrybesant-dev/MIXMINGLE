@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 
 bool shouldTrackMicLevel({
   required bool isCallReady,
-  required bool hasRtcService,
   required bool isMicMuted,
 }) {
-  return isCallReady && hasRtcService && !isMicMuted;
+  return isCallReady && !isMicMuted;
 }
 
 class LiveRoomMediaActionStrip extends StatelessWidget {
   const LiveRoomMediaActionStrip({
     super.key,
     required this.isCallReady,
-    required this.hasRtcService,
     required this.isMicMuted,
     required this.isVideoEnabled,
     required this.isSharingSystemAudio,
@@ -37,7 +35,6 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
   });
 
   final bool isCallReady;
-  final bool hasRtcService;
   final bool isMicMuted;
   final bool isVideoEnabled;
   final bool isSharingSystemAudio;
@@ -60,12 +57,12 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
   final Color mutedColor;
   final Color activeSystemAudioColor;
 
-  bool get _disableMic => !isCallReady || !hasRtcService || isMicActionInFlight;
-  bool get _disableVideo =>
-      !isCallReady || !hasRtcService || isVideoActionInFlight;
-  bool get _disableSystemAudio =>
-      !isCallReady || !hasRtcService || isSystemAudioActionInFlight;
-  bool get _disableGrabMic => !hasRtcService || isMicActionInFlight;
+  // Buttons are always enabled unless an action is in flight.
+  // Resolution happens at tap-time via ensureRtcInitialized().
+  bool get _disableMic => isMicActionInFlight;
+  bool get _disableVideo => isVideoActionInFlight;
+  bool get _disableSystemAudio => isSystemAudioActionInFlight;
+  bool get _disableGrabMic => isMicActionInFlight;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +95,6 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
         if (showMicLevel &&
             shouldTrackMicLevel(
               isCallReady: isCallReady,
-              hasRtcService: hasRtcService,
               isMicMuted: isMicMuted,
             ))
           Padding(
@@ -140,8 +136,8 @@ class LiveRoomMediaActionStrip extends StatelessWidget {
                   : const Color(0xFFD4A853),
             ),
             onPressed: _disableGrabMic ? null : onGrabMicAction,
-          )
-        else if (showSystemAudioButton)
+          ),
+        if (showSystemAudioButton)
           IconButton(
             tooltip: isSharingSystemAudio
                 ? 'Stop sharing computer audio'

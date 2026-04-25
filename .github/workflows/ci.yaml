@@ -9,6 +9,9 @@ on:
     tags: [ 'rc-*', 'v*' ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
 
 jobs:
   flutter-tier0:
@@ -112,6 +115,131 @@ jobs:
 
       - name: Test
         run: npm test
+
+  functions-rules:
+    name: Firestore Rules Verification
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Set up Java 21 (Firestore emulator requirement)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Firestore rules tests
+        run: npm run test:rules
+
+  launch-load-gate:
+    name: Launch Load Gate (PR/Push)
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install function dependencies
+        run: npm --prefix functions ci
+
+      - name: Run launch load harness (blocking profile)
+        shell: pwsh
+        run: ./tools/run_launch_load_harness.ps1 -Cycles 1 -PressureRepeatsPerCycle 0 -ValidationMode enforce
+
+      - name: Upload launch load artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launch-load-gate-${{ github.run_id }}
+          path: tools/reports/launch_load_harness_*.json
+          if-no-files-found: warn
+
+  launch-load-nightly:
+    name: Launch Load Gate (Nightly)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Set up Java 21 (for optional rules validation)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install function dependencies
+        run: npm --prefix functions ci
+
+      - name: Run launch load harness (nightly pressure profile)
+        shell: pwsh
+        run: ./tools/run_launch_load_harness.ps1 -Cycles 3 -PressureRepeatsPerCycle 1 -Shuffle -IncludeRulesValidation -ValidationMode enforce
+
+      - name: Upload nightly launch load artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launch-load-nightly-${{ github.run_id }}
+          path: |
+            tools/reports/launch_load_harness_*.json
+            tools/reports/launch_load_harness_*.md
+          if-no-files-found: warn
 
   rc-burnin-tier0:
     name: RC Burn-In Tier 0

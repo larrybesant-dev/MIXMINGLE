@@ -6,6 +6,7 @@ const paymentFunctions = require("../index");
 const {
   createPaymentIntentHandler,
   recordStripePaymentSuccessHandler,
+  claimDailyCheckinHandler,
   sendCoinTransferHandler,
   requestCoinTransferHandler,
   generateReferralCodeHandler,
@@ -20,6 +21,7 @@ const {
   createCheckoutSessionHandler,
   handleCheckoutSessionCompleted,
   getCheckoutBaseUrl,
+  stripeWebhookHandler,
   grabMicHandler,
   inviteToMicHandler,
 } = paymentFunctions.__testing;
@@ -42,6 +44,10 @@ function applyFieldValues(prev, data) {
     } else if (value && typeof value === "object" && value.methodName === "FieldValue.serverTimestamp") {
       const now = Date.now();
       result[key] = {toMillis: () => now, _isMockTimestamp: true};
+    } else if (value && typeof value === "object" && value.methodName === "FieldValue.increment") {
+      const operand = typeof value.operand === "number" ? value.operand : 0;
+      const previous = typeof result[key] === "number" ? result[key] : 0;
+      result[key] = previous + operand;
     } else {
       result[key] = value;
     }
@@ -109,14 +115,17 @@ function createFirestoreDouble(initialUsers = {}) {
       },
       async set(data, options = {}) {
         const previous = store.get(id) || {};
-        store.set(id, options.merge ? {...previous, ...data} : {...data});
+        store.set(
+            id,
+            options.merge ? applyFieldValues(previous, data) : applyFieldValues({}, data),
+        );
       },
       async update(data) {
         const previous = store.get(id);
         if (previous === undefined) {
           throw new Error(`Missing document ${name}/${id}`);
         }
-        store.set(id, {...previous, ...data});
+        store.set(id, applyFieldValues(previous, data));
       },
       async delete() {
         store.delete(id);
@@ -529,6 +538,27 @@ describe("payment callable handlers", () => {
     );
   });
 
+  it("sendCoinTransferHandler deduplicates repeated idempotent calls", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 20},
+      "user-2": {balance: 3},
+    });
+
+    const first = await sendCoinTransferHandler(
+        makeRequest({receiverId: "user-2", amount: 5, idempotencyKey: "send-replay-1"}),
+        {firestore},
+    );
+    const second = await sendCoinTransferHandler(
+        makeRequest({receiverId: "user-2", amount: 5, idempotencyKey: "send-replay-1"}),
+        {firestore},
+    );
+
+    assert.equal(first.transactionId, second.transactionId);
+    assert.equal(firestore.__state.users.get("user-1").balance, 15);
+    assert.equal(firestore.__state.users.get("user-2").balance, 8);
+    assert.equal(firestore.__state.transactions.size, 1);
+  });
+
   it("handleCheckoutSessionCompleted credits coin purchases once", async () => {
     const firestore = createFirestoreDouble({
       "user-1": {balance: 10},
@@ -551,6 +581,131 @@ describe("payment callable handlers", () => {
     assert.equal(firestore.__state.users.get("user-1").balance, 80);
     assert.equal(firestore.__state.users.get("user-1").coinBalance, 80);
     assert.equal(firestore.__state.wallets.get("user-1").coinBalance, 80);
+  });
+
+  it("stripeWebhookHandler credits checkout.session.completed only once during replay", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 10, coinBalance: 10},
+    });
+    const stripeClient = {
+      webhooks: {
+        constructEvent: () => ({
+          type: "checkout.session.completed",
+          data: {
+            object: {
+              id: "cs_replay_1",
+              metadata: {
+                userId: "user-1",
+                productType: "coin_package",
+                coins: "70",
+              },
+            },
+          },
+        }),
+      },
+    };
+
+    const firstRes = createResponseDouble();
+    const secondRes = createResponseDouble();
+    const req = {
+      rawBody: Buffer.from("{}"),
+      headers: {"stripe-signature": "sig_test"},
+    };
+
+    await stripeWebhookHandler(req, firstRes, {firestore, stripeClient});
+    await stripeWebhookHandler(req, secondRes, {firestore, stripeClient});
+
+    assert.equal(firstRes.statusCode, 200);
+    assert.equal(secondRes.statusCode, 200);
+    assert.equal(firestore.__state.users.get("user-1").balance, 80);
+    assert.equal(firestore.__state.users.get("user-1").coinBalance, 80);
+    assert.equal(firestore.__state.wallets.get("user-1").coinBalance, 80);
+    assert.equal(firestore.__state.stripeWebhookEvents.size, 1);
+  });
+
+  it("stripeWebhookHandler ignores out-of-order unrelated webhook events", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 10, coinBalance: 10},
+    });
+    const stripeClient = {
+      webhooks: {
+        constructEvent: () => ({
+          type: "payment_intent.succeeded",
+          data: {object: {id: "pi_ignored"}},
+        }),
+      },
+    };
+
+    const res = createResponseDouble();
+    const req = {
+      rawBody: Buffer.from("{}"),
+      headers: {"stripe-signature": "sig_test"},
+    };
+
+    await stripeWebhookHandler(req, res, {firestore, stripeClient});
+
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.jsonBody, {received: true});
+    assert.equal(firestore.__state.users.get("user-1").balance, 10);
+    assert.equal(firestore.__state.stripeWebhookEvents.size, 0);
+  });
+
+  it("stripeWebhookHandler returns 400 and logs when signature verification fails", async () => {
+    const firestore = createFirestoreDouble();
+    const stripeClient = {
+      webhooks: {
+        constructEvent: () => {
+          throw new Error("bad signature");
+        },
+      },
+    };
+
+    const res = createResponseDouble();
+    const req = {
+      rawBody: Buffer.from("{}"),
+      headers: {"stripe-signature": "sig_bad"},
+    };
+
+    await stripeWebhookHandler(req, res, {firestore, stripeClient});
+
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.textBody, "Webhook Error: bad signature");
+    assert.equal(firestore.__state.logs.size, 1);
+    const loggedError = [...firestore.__state.logs.values()][0];
+    assert.equal(loggedError.type, "stripe_webhook_error");
+    assert.equal(loggedError.message, "bad signature");
+  });
+
+  it("claimDailyCheckinHandler increments balance once per day", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 40, coinBalance: 40, checkinStreak: 0},
+    });
+
+    const response = await claimDailyCheckinHandler(
+        makeRequest({}, "user-1"),
+        {firestore},
+    );
+
+    assert.equal(response.reward, 10);
+    assert.equal(response.streak, 1);
+    assert.equal(firestore.__state.users.get("user-1").balance, 50);
+    assert.equal(firestore.__state.users.get("user-1").coinBalance, 50);
+  });
+
+  it("claimDailyCheckinHandler rejects duplicate same-day claims", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {
+        balance: 40,
+        coinBalance: 40,
+        checkinStreak: 3,
+        lastCheckinDate: {toDate: () => new Date()},
+      },
+    });
+
+    await assert.rejects(
+        () => claimDailyCheckinHandler(makeRequest({}, "user-1"), {firestore}),
+        (error) => error.code === "already-exists",
+    );
   });
 
   it("generateReferralCodeHandler reuses an active code for the same user", async () => {

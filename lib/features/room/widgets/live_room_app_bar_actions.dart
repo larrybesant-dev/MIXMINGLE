@@ -10,7 +10,6 @@ class LiveRoomAppBarActions extends StatelessWidget {
   const LiveRoomAppBarActions({
     super.key,
     required this.isCallReady,
-    required this.hasRtcService,
     required this.isMicMuted,
     required this.isVideoEnabled,
     required this.isSharingSystemAudio,
@@ -43,7 +42,6 @@ class LiveRoomAppBarActions extends StatelessWidget {
   });
 
   final bool isCallReady;
-  final bool hasRtcService;
   final bool isMicMuted;
   final bool isVideoEnabled;
   final bool isSharingSystemAudio;
@@ -83,7 +81,6 @@ class LiveRoomAppBarActions extends StatelessWidget {
       children: [
         LiveRoomMediaActionStrip(
           isCallReady: isCallReady,
-          hasRtcService: hasRtcService,
           isMicMuted: isMicMuted,
           isVideoEnabled: isVideoEnabled,
           isSharingSystemAudio: isSharingSystemAudio,
